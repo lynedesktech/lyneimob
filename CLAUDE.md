@@ -143,6 +143,7 @@ MCPs são integrações externas instaladas por projeto via `.mcp.json`.
 
 - **pesquisa** — etapa 1 do metodo: pesquisa qualquer tema e gera `planejamento/pesquisas/pesquisa-[tema].md`. Nao executa nada, nao altera o projeto — produto final e apenas o arquivo .md
 - **requisitos** — etapa 2 do metodo: le uma pesquisa (ou trabalha com escopo conhecido) e gera `planejamento/requisitos/requisito-[tema].md` com o plano de execucao completo. Nao executa nada, nao implementa, nao altera o codigo — produto final e apenas o arquivo .md
+- **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Quando conclui, gera tarefas executaveis no roadmap.md. Nao implementa nada, nao altera codigo — produto final sao as tarefas no roadmap
 - **frontend-design** — OBRIGATORIO para qualquer alteracao visual (layout, componentes, CSS, paginas)
 - **busca-no-yt** — buscar videos no YouTube
 
