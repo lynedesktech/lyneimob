@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find '/c/Users/Lynedesk/Desktop/Tech/Pasta Template' -type f \\\\\\(-name *.md -o -name *.txt -o -name *.js -o -name *.py -o -name *.sh -o -name *.json \\\\\\))",
+      "Bash(ls -la \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\"\" 2>/dev/null | grep -E \"^d \")",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -type f -name package.json -o -name tsconfig.json -o -name vite.config.ts -o -name .env*)",
+      "Bash(grep -E \"\\\\.\\(json|ts|tsx|jsx|js|md\\)$\")",
+      "WebSearch",
+      "WebFetch(domain:docs.bullmq.io)",
+      "WebFetch(domain:supabase.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:gurusup.com)",
+      "Bash(ls -la \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\.claude\\\\skills\"\" 2>/dev/null || echo \"Directory not found or error \")"
+    ]
+  }
+}
