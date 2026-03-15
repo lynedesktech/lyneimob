@@ -24,90 +24,126 @@ Todo plano deve ser escrito como conversa, nao como documentacao tecnica. Usar l
 
 ## Projeto
 
-<!-- PREENCHER -->
-**Nome**: [nome do projeto]
-**Descricao**: [descricao curta do que o projeto faz e para quem]
-**Objetivo principal**: [qual problema resolve ou qual valor entrega]
-<!-- /PREENCHER -->
+**Nome**: LyneImob
+**Descricao**: CRM imobiliario SaaS com IA integrada em todos os modulos, para corretores e imobiliarias
+**Objetivo principal**: ajudar corretores a vender mais com IA que analisa, sugere e automatiza — desde o cadastro do imovel ate o fechamento do negocio
 
 ## Tecnologias
 
-<!-- PREENCHER -->
-- **Frontend**: [ex: React 18 + TypeScript + Vite + Tailwind CSS]
-- **Backend**: [ex: Supabase, Node.js, etc.]
-- **Banco de dados**: [ex: PostgreSQL via Supabase]
-- **Outras libs**: [listar libs relevantes]
-- **Alias de caminho**: [ex: `@/` aponta para `./src/`]
-<!-- /PREENCHER -->
+- **Framework**: Next.js 16 (App Router) + TypeScript
+- **Estilo**: Tailwind CSS 4 + shadcn/ui (Base UI)
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Server State**: TanStack Query v5
+- **Formularios**: React Hook Form + Zod v4
+- **IA**: OpenAI GPT-4o-mini (SDK `openai`)
+- **Icones**: Lucide React
+- **Alias de caminho**: `@/` aponta para `./src/`
+- **Paleta principal**: azul-marinho `#1e3a5f`
 
 ## Comandos
 
-<!-- PREENCHER -->
 ```bash
-# Desenvolvimento
-npm run dev          # [descrever]
-
-# Build
-npm run build        # [descrever]
-
-# Testes
-npm run test         # [descrever]
+npm run dev          # Inicia servidor de desenvolvimento em localhost:3000
+npm run build        # Gera build de producao otimizado
+npm run start        # Roda o build de producao localmente
+npm run lint         # Roda ESLint para verificar erros de codigo
 ```
-<!-- /PREENCHER -->
 
 ## Estrutura de Pastas
 
-<!-- PREENCHER -->
 ```
-projeto/
-├── src/
-│   ├── components/    # [descrever]
-│   ├── pages/         # [descrever]
-│   ├── hooks/         # [descrever]
-│   ├── lib/           # [descrever]
-│   └── types/         # [descrever]
-├── .tmp/              # Arquivos temporarios (ignorado pelo git)
-├── planejamento/      # Arquivos de planejamento (pesquisas e requisitos)
-│   ├── pesquisas/     # Arquivos gerados pela skill pesquisa (pesquisa-[tema].md)
-│   └── requisitos/    # Planos de execucao gerados pela skill requisitos (requisito-[tema].md)
-└── ...
+src/
+├── app/
+│   ├── (auth)/                # Paginas de autenticacao (login, cadastro, esqueci-senha)
+│   ├── (dashboard)/           # Paginas do CRM protegidas (layout com sidebar + header)
+│   │   ├── layout.tsx         # Layout principal: sidebar + header + providers
+│   │   ├── page.tsx           # Dashboard com resumo
+│   │   ├── providers.tsx      # QueryClientProvider (TanStack Query)
+│   │   ├── imoveis/           # Modulo de imoveis
+│   │   │   ├── page.tsx       # Listagem com filtros e paginacao
+│   │   │   ├── novo/page.tsx  # Formulario de criacao
+│   │   │   └── [id]/          # Detalhe e edicao
+│   │   │       ├── page.tsx   # Detalhe com tabs (info, fotos, IA)
+│   │   │       └── editar/page.tsx  # Formulario de edicao
+│   │   ├── clientes/          # Modulo de clientes
+│   │   │   ├── page.tsx       # Listagem com filtros e paginacao
+│   │   │   ├── novo/page.tsx  # Formulario de criacao
+│   │   │   └── [id]/          # Detalhe e edicao
+│   │   │       ├── page.tsx   # Detalhe com 5 tabs (info, interesses, timeline, match, IA)
+│   │   │       └── editar/page.tsx  # Formulario de edicao
+│   │   └── negocios/          # Modulo de negocios/pipeline
+│   │       ├── page.tsx       # Pipeline Kanban com drag-and-drop e filtros
+│   │       ├── novo/page.tsx  # Formulario de criacao de negocio
+│   │       └── [id]/          # Detalhe e edicao
+│   │           ├── page.tsx   # Detalhe com tabs (info, IA) + acoes (ganhar, perder, reabrir)
+│   │           └── editar/page.tsx  # Formulario de edicao
+│   ├── auth/callback/         # Route handler para callback do Supabase Auth
+│   ├── api/                   # API Routes (webhooks, XML, IA)
+│   ├── layout.tsx             # Root layout (fontes, Toaster)
+│   └── globals.css            # Estilos globais + variaveis de cor shadcn
+├── components/
+│   ├── ui/                    # Componentes shadcn/ui (Button, Input, Card, Select, Tabs, Badge, Dialog, Table, etc.)
+│   ├── layout/                # Componentes do layout (AppSidebar, Header, UsuarioMenu)
+│   ├── imoveis/               # Componentes do modulo de imoveis (formulario, card, filtros, galeria, IA, etc.)
+│   ├── clientes/              # Componentes do modulo de clientes (formulario, card, filtros, interesses, timeline, match, IA)
+│   └── negocios/              # Componentes do modulo de negocios (kanban-board, kanban-coluna, kanban-card, formulario, filtros, acoes, IA)
+├── lib/
+│   ├── supabase/              # Clientes Supabase (client.ts, server.ts, admin.ts, middleware.ts)
+│   ├── openai.ts              # Cliente OpenAI (GPT-4o-mini para IA em imoveis)
+│   └── utils.ts               # Funcao cn() do shadcn
+├── hooks/                     # Custom hooks (use-organizacao, use-usuario, use-mobile, use-lista-imoveis, use-imovel, use-lista-clientes, use-cliente, use-pipeline, use-negocio)
+├── types/                     # Tipos TypeScript (database.ts, auth.ts, imoveis.ts, clientes.ts, negocios.ts, formulario.ts)
+├── actions/                   # Server Actions (auth.ts, imoveis.ts, ia-imoveis.ts, clientes.ts, ia-clientes.ts, negocios.ts, ia-negocios.ts)
+└── middleware.ts               # Middleware de auth (protecao de rotas)
+
+supabase/
+└── migrations/                # Migrations SQL do banco (001_organizacoes_usuarios.sql, 002_imoveis.sql, 003_clientes.sql, 004_negocios.sql)
+
+planejamento/
+├── pesquisas/                 # Pesquisas geradas pela skill /pesquisa
+└── requisitos/                # Requisitos gerados pela skill /requisitos
 ```
-<!-- /PREENCHER -->
 
 ## Arquitetura
 
-<!-- PREENCHER -->
-[Descrever a arquitetura do projeto: camadas, fluxo de dados, autenticacao, rotas, etc.]
-<!-- /PREENCHER -->
+- **Multi-tenancy com RLS**: toda tabela tem `organizacao_id` e policies que garantem isolamento total entre imobiliarias
+- **Auth**: Supabase Auth com email/senha. Trigger no banco cria organizacao + usuario automaticamente no cadastro
+- **Server Components + Server Actions**: dados buscados no servidor, acoes executadas via Server Actions
+- **Middleware**: intercepta todas as requisicoes, valida sessao, redireciona se nao autenticado
+- **Grupos de rotas**: `(auth)` para paginas publicas, `(dashboard)` para paginas protegidas
+- **Clientes Supabase**: 3 variantes — browser (componentes client), server (Server Components/Actions), admin (bypassa RLS)
 
 ## Padroes de Codigo
 
-<!-- PREENCHER -->
-[Descrever padroes adotados: tratamento de erro, loading states, formularios, hooks, etc.]
-<!-- /PREENCHER -->
+- **Formularios**: React Hook Form + Zod para validacao client+server. Schemas em `types/`
+- **Server Actions**: recebem `FormData`, validam com Zod, retornam `{ erro?: string, sucesso?: string }`
+- **Hooks**: prefixo `use-`, retornam `{ dados, carregando, erro }` via TanStack Query
+- **Nomenclatura**: tudo em portugues brasileiro (nomes de funcoes, variaveis, componentes, tabelas)
+- **Erros**: toast via Sonner para feedback ao usuario, mensagens claras em portugues
+- **shadcn/ui Base UI**: esta versao usa `render` prop em vez de `asChild` para composicao de componentes
 
 ## Variaveis de Ambiente
 
-<!-- PREENCHER -->
-Obrigatorias no `.env`:
+Obrigatorias no `.env.local`:
 ```
-CHAVE_1=descricao
-CHAVE_2=descricao
+NEXT_PUBLIC_SUPABASE_URL=url-do-projeto-supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=chave-publica-do-supabase
+SUPABASE_SERVICE_ROLE_KEY=chave-admin-do-supabase (nunca expor no browser)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+OPENAI_API_KEY=chave-da-openai (nunca expor no browser, usada apenas em Server Actions)
 ```
-<!-- /PREENCHER -->
 
 ## Arquivos Sensiveis / Nao Modificar
 
-<!-- PREENCHER -->
-- `.env` — contem segredos
-- [outros arquivos auto-gerados ou sensiveis]
-<!-- /PREENCHER -->
+- `.env.local` — contem segredos do Supabase
+- `supabase/migrations/` — migrations ja executadas no banco (nao alterar, criar novas)
+- `src/components/ui/` — componentes gerados pelo shadcn/ui (alterar com cuidado)
 
 ## Divida Tecnica Conhecida
 
-<!-- PREENCHER -->
-[Listar problemas conhecidos, decisoes temporarias, codigo legado a limpar]
-<!-- /PREENCHER -->
+- Tipos do banco em `types/database.ts` sao manuais — trocar por `supabase gen types` quando o CLI estiver configurado
+- Middleware do Next.js 16 usa convencao deprecated (`middleware.ts`) — migrar para `proxy` quando a nova API estabilizar
+- Paginas de auth e dashboard precisam de polimento visual com a skill `frontend-design`
 
 ---
 
@@ -132,12 +168,7 @@ MCPs são integrações externas instaladas por projeto via `.mcp.json`.
 - **Context7** — busca documentação atualizada de bibliotecas e frameworks
 
 ### Específicos do projeto
-<!-- PREENCHER com os MCPs do projeto:
-- **Supabase** — banco, autenticação e functions
-- **GitHub** — repositório e controle de versão
-- **Railway** — deploy e infraestrutura
-- **Stripe** — pagamentos e assinaturas
--->
+(nenhum adicional por enquanto)
 
 ## Ferramentas Disponiveis (Skills)
 
