@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { labelsTipoNegocio } from "@/lib/constantes"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import type { NegocioComRelacoes, PipelineEtapa } from "@/types/database"
 
@@ -98,8 +99,11 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="venda">Venda</SelectItem>
-                  <SelectItem value="aluguel">Aluguel</SelectItem>
+                  {Object.entries(labelsTipoNegocio).map(([valor, label]) => (
+                    <SelectItem key={valor} value={valor}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

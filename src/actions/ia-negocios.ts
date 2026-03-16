@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { openai } from "@/lib/openai"
+import { verificarLimiteConversasIA, registrarUsoConversaIA } from "@/lib/verificar-limites"
 import type { EstadoFormulario } from "@/types/formulario"
 
 // ============================================================
@@ -34,6 +35,9 @@ export async function analisarNegocio(
 ): Promise<EstadoFormulario & { texto?: string }> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
+
+  const limite = await verificarLimiteConversasIA(usuario.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
 
   const supabase = await criarClienteServer()
 
@@ -124,6 +128,7 @@ Responda em português brasileiro, em 3-4 parágrafos curtos:
       .update({ analise_ia: texto })
       .eq("id", negocioId)
 
+    await registrarUsoConversaIA(usuario.organizacao_id)
     revalidatePath(`/negocios/${negocioId}`)
     return { sucesso: "Análise gerada com sucesso", texto }
   } catch {
@@ -141,6 +146,9 @@ export async function sugerirAcao(
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
 
+  const limite = await verificarLimiteConversasIA(usuario.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
+
   const supabase = await criarClienteServer()
 
   const { data: negocio, error } = await supabase
@@ -153,12 +161,21 @@ export async function sugerirAcao(
 
   if (error || !negocio) return { erro: "Negócio não encontrado" }
 
-  // Buscar interações recentes
+  // Buscar interações recentes do cliente
   const { data: interacoes } = await supabase
     .from("cliente_interacoes")
     .select("tipo, descricao, data")
     .eq("cliente_id", negocio.cliente_id)
     .order("data", { ascending: false })
+    .limit(3)
+
+  // Buscar atividades pendentes do negócio
+  const { data: atividadesPendentes } = await supabase
+    .from("atividades")
+    .select("titulo, tipo, data_inicio, prioridade")
+    .eq("negocio_id", negocioId)
+    .eq("status", "pendente")
+    .order("data_inicio", { ascending: true })
     .limit(3)
 
   const etapaNome = (negocio.pipeline_etapas as Record<string, unknown>)?.nome || "N/A"
@@ -183,10 +200,33 @@ ${
     : "Nenhuma interação registrada"
 }
 
-Responda em português brasileiro de forma direta e prática:
-1. AÇÃO: o que o corretor deve fazer agora (1 frase)
-2. COMO: passo a passo simples (2-3 bullets)
-3. SCRIPT: se for ligação ou mensagem, sugira um texto pronto para usar`
+ATIVIDADES PENDENTES:
+${
+  atividadesPendentes && atividadesPendentes.length > 0
+    ? atividadesPendentes
+        .map(
+          (a) =>
+            `- [${a.tipo}] ${a.titulo} — ${new Date(a.data_inicio).toLocaleDateString("pt-BR")} (${a.prioridade})`
+        )
+        .join("\n")
+    : "Nenhuma atividade pendente"
+}
+
+Responda EXCLUSIVAMENTE com um JSON válido (sem markdown, sem backticks) no formato:
+{
+  "acao_resumida": "Frase curta do que fazer agora (máx 60 caracteres)",
+  "tipo_atividade": "ligacao|email|visita|reuniao|follow_up|proposta",
+  "prazo_dias": 2,
+  "detalhes": "Passo a passo:\n1. Primeiro passo\n2. Segundo passo\n3. Terceiro passo",
+  "script": "Texto pronto para usar em ligação ou mensagem (ou null se não aplicável)"
+}
+
+Regras:
+- acao_resumida deve ser curta e direta (ex: "Ligar para agendar visita ao imóvel")
+- tipo_atividade deve ser um dos tipos listados
+- prazo_dias é o número de dias até executar (1 = hoje, 2 = amanhã)
+- detalhes deve ter 2-3 passos práticos
+- script pode ser null se a ação não envolver comunicação direta`
 
   try {
     const resposta = await openai.chat.completions.create({
@@ -198,12 +238,24 @@ Responda em português brasileiro de forma direta e prática:
 
     const texto = resposta.choices[0].message.content || ""
 
+    // Tentar extrair o resumo do JSON
+    let resumo: string | null = null
+    try {
+      const json = JSON.parse(texto)
+      resumo = json.acao_resumida || null
+    } catch {
+      // Se não for JSON válido, usar a primeira linha como resumo
+      resumo = texto.split("\n")[0].slice(0, 80)
+    }
+
     await supabase
       .from("negocios")
-      .update({ sugestao_ia: texto })
+      .update({ sugestao_ia: texto, sugestao_ia_resumo: resumo })
       .eq("id", negocioId)
 
+    await registrarUsoConversaIA(usuario.organizacao_id)
     revalidatePath(`/negocios/${negocioId}`)
+    revalidatePath("/negocios")
     return { sucesso: "Sugestão gerada com sucesso", texto }
   } catch {
     return { erro: "Erro ao gerar sugestão. Verifique a chave da OpenAI." }
@@ -219,6 +271,9 @@ export async function analisarPerda(
 ): Promise<EstadoFormulario & { texto?: string }> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
+
+  const limite = await verificarLimiteConversasIA(usuario.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
 
   const supabase = await criarClienteServer()
 
@@ -272,6 +327,7 @@ Responda em português brasileiro:
       .update({ analise_ia: texto })
       .eq("id", negocioId)
 
+    await registrarUsoConversaIA(usuario.organizacao_id)
     revalidatePath(`/negocios/${negocioId}`)
     return { sucesso: "Análise de perda gerada", texto }
   } catch {

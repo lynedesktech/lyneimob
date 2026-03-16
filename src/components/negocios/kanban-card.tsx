@@ -3,9 +3,11 @@
 import Link from "next/link"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical, User, Building2, Calendar } from "lucide-react"
+import { GripVertical, User, Building2, Calendar, Lightbulb } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { labelsTipoNegocio } from "@/lib/constantes"
+import { formatarPreco, formatarDataCurta } from "@/lib/formatadores"
 import type { NegocioComRelacoes } from "@/types/database"
 
 interface KanbanCardProps {
@@ -26,22 +28,6 @@ export function KanbanCard({ negocio, overlay }: KanbanCardProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  }
-
-  const formatarValor = (valor: number | null) => {
-    if (!valor) return null
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(valor)
-  }
-
-  const formatarData = (data: string | null) => {
-    if (!data) return null
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "short",
-    }).format(new Date(data))
   }
 
   return (
@@ -74,7 +60,7 @@ export function KanbanCard({ negocio, overlay }: KanbanCardProps) {
               {/* Valor */}
               {negocio.valor && (
                 <p className="mt-1 text-sm font-semibold text-primary">
-                  {formatarValor(negocio.valor)}
+                  {formatarPreco(negocio.valor)}
                 </p>
               )}
 
@@ -96,16 +82,26 @@ export function KanbanCard({ negocio, overlay }: KanbanCardProps) {
                 </div>
               )}
 
+              {/* Sugestão de ação IA */}
+              {negocio.sugestao_ia_resumo && (
+                <div className="mt-2 flex items-center gap-1.5 rounded-md bg-warning/10 px-2 py-1">
+                  <Lightbulb className="h-3 w-3 shrink-0 text-warning" />
+                  <span className="truncate text-xs text-warning-foreground">
+                    {negocio.sugestao_ia_resumo}
+                  </span>
+                </div>
+              )}
+
               {/* Footer: tipo + previsão */}
               <div className="mt-2 flex items-center justify-between">
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  {negocio.tipo === "venda" ? "Venda" : "Aluguel"}
+                <Badge variant="outline" className="text-xs px-1.5 py-0">
+                  {labelsTipoNegocio[negocio.tipo]}
                 </Badge>
 
                 {negocio.previsao_fechamento && (
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    {formatarData(negocio.previsao_fechamento)}
+                    {formatarDataCurta(negocio.previsao_fechamento)}
                   </div>
                 )}
               </div>

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { toast } from "sonner"
 import {
   analisarNegocio,
   sugerirAcao,
@@ -16,53 +15,56 @@ import {
   TrendingDown,
   Loader2,
 } from "lucide-react"
+import { useAcaoIA } from "@/hooks/use-acao-ia"
+import { EstadoVazio } from "@/components/ui/estado-vazio"
 import type { NegocioComRelacoes } from "@/types/database"
 
 interface IANegocioProps {
   negocio: NegocioComRelacoes
 }
 
+/** Formata sugestão: se for JSON estruturado, exibe formatado; senão, exibe como texto */
+function formatarSugestao(texto: string): string {
+  try {
+    const json = JSON.parse(texto)
+    if (json.acao_resumida) {
+      const partes = [`AÇÃO: ${json.acao_resumida}`]
+      if (json.detalhes) partes.push(`\nCOMO:\n${json.detalhes}`)
+      if (json.script) partes.push(`\nSCRIPT:\n${json.script}`)
+      return partes.join("\n")
+    }
+    return texto
+  } catch {
+    return texto
+  }
+}
+
 export function IANegocio({ negocio }: IANegocioProps) {
   const [analise, setAnalise] = useState(negocio.analise_ia || "")
   const [sugestao, setSugestao] = useState(negocio.sugestao_ia || "")
-  const [analisandoContexto, setAnalisandoContexto] = useState(false)
-  const [sugerindo, setSugerindo] = useState(false)
-  const [analisandoPerda, setAnalisandoPerda] = useState(false)
+  const acaoAnalise = useAcaoIA()
+  const acaoSugestao = useAcaoIA()
+  const acaoPerda = useAcaoIA()
 
-  async function handleAnalisar() {
-    setAnalisandoContexto(true)
-    const resultado = await analisarNegocio(negocio.id)
-    setAnalisandoContexto(false)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else {
-      setAnalise(resultado.texto || "")
-      toast.success(resultado.sucesso)
-    }
+  function handleAnalisar() {
+    acaoAnalise.executar(
+      () => analisarNegocio(negocio.id),
+      (r) => setAnalise(r.texto || "")
+    )
   }
 
-  async function handleSugerir() {
-    setSugerindo(true)
-    const resultado = await sugerirAcao(negocio.id)
-    setSugerindo(false)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else {
-      setSugestao(resultado.texto || "")
-      toast.success(resultado.sucesso)
-    }
+  function handleSugerir() {
+    acaoSugestao.executar(
+      () => sugerirAcao(negocio.id),
+      (r) => setSugestao(r.texto || "")
+    )
   }
 
-  async function handleAnalisarPerda() {
-    setAnalisandoPerda(true)
-    const resultado = await analisarPerda(negocio.id)
-    setAnalisandoPerda(false)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else {
-      setAnalise(resultado.texto || "")
-      toast.success(resultado.sucesso)
-    }
+  function handleAnalisarPerda() {
+    acaoPerda.executar(
+      () => analisarPerda(negocio.id),
+      (r) => setAnalise(r.texto || "")
+    )
   }
 
   return (
@@ -72,10 +74,10 @@ export function IANegocio({ negocio }: IANegocioProps) {
         {negocio.status === "perdido" ? (
           <Button
             onClick={handleAnalisarPerda}
-            disabled={analisandoPerda}
+            disabled={acaoPerda.carregando}
             variant="outline"
           >
-            {analisandoPerda ? (
+            {acaoPerda.carregando ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <TrendingDown className="mr-2 h-4 w-4" />
@@ -86,10 +88,10 @@ export function IANegocio({ negocio }: IANegocioProps) {
           <>
             <Button
               onClick={handleAnalisar}
-              disabled={analisandoContexto}
+              disabled={acaoAnalise.carregando}
               variant="outline"
             >
-              {analisandoContexto ? (
+              {acaoAnalise.carregando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Brain className="mr-2 h-4 w-4" />
@@ -99,10 +101,10 @@ export function IANegocio({ negocio }: IANegocioProps) {
 
             <Button
               onClick={handleSugerir}
-              disabled={sugerindo}
+              disabled={acaoSugestao.carregando}
               variant="outline"
             >
-              {sugerindo ? (
+              {acaoSugestao.carregando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Lightbulb className="mr-2 h-4 w-4" />
@@ -145,7 +147,7 @@ export function IANegocio({ negocio }: IANegocioProps) {
             </CardHeader>
             <CardContent>
               <div className="whitespace-pre-wrap text-sm text-muted-foreground">
-                {sugestao}
+                {formatarSugestao(sugestao)}
               </div>
             </CardContent>
           </Card>
@@ -154,12 +156,12 @@ export function IANegocio({ negocio }: IANegocioProps) {
 
       {/* Estado vazio */}
       {!analise && !sugestao && (
-        <div className="rounded-lg border border-dashed p-6 text-center">
-          <Brain className="mx-auto h-8 w-8 text-muted-foreground/50" />
-          <p className="mt-2 text-sm text-muted-foreground">
-            Use os botões acima para gerar análises e sugestões com IA
-          </p>
-        </div>
+        <EstadoVazio
+          icone={Brain}
+          titulo="Sem análises ainda"
+          descricao="Use os botões acima para gerar análises e sugestões com IA"
+          className="py-6"
+        />
       )}
     </div>
   )

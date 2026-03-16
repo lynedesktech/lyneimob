@@ -6,35 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge } from "./status-badge"
-import { MapPin, BedDouble, Car, Maximize } from "lucide-react"
+import { StatusBadge, configStatusImovel } from "@/components/ui/status-badge"
+import { MapPin, BedDouble, Car, Maximize, Globe, Rss } from "lucide-react"
+import { labelsTipoImovel } from "@/lib/constantes"
+import { formatarPreco } from "@/lib/formatadores"
 import type { Imovel, ImovelFoto } from "@/types/database"
 
 type ImovelComCapa = Imovel & {
   imovel_fotos: Pick<ImovelFoto, "url" | "eh_capa">[]
-}
-
-function formatarPreco(valor: number | null): string {
-  if (!valor) return "—"
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  })
-}
-
-const labelsTipo: Record<string, string> = {
-  apartamento: "Apartamento",
-  casa: "Casa",
-  terreno: "Terreno",
-  sala_comercial: "Sala Comercial",
-  galpao: "Galpão",
-  cobertura: "Cobertura",
-  kitnet: "Kitnet",
-  fazenda: "Fazenda",
-  sitio: "Sítio",
-  loja: "Loja",
-  outro: "Outro",
 }
 
 export function CardImovel({ imovel }: { imovel: ImovelComCapa }) {
@@ -65,7 +44,7 @@ export function CardImovel({ imovel }: { imovel: ImovelComCapa }) {
             </div>
           )}
           <div className="absolute right-2 top-2">
-            <StatusBadge status={imovel.status} />
+            <StatusBadge status={imovel.status} config={configStatusImovel} />
           </div>
         </div>
 
@@ -79,7 +58,7 @@ export function CardImovel({ imovel }: { imovel: ImovelComCapa }) {
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            {labelsTipo[imovel.tipo] ?? imovel.tipo} •{" "}
+            {labelsTipoImovel[imovel.tipo] ?? imovel.tipo} •{" "}
             {imovel.finalidade === "venda"
               ? "Venda"
               : imovel.finalidade === "aluguel"
@@ -106,25 +85,41 @@ export function CardImovel({ imovel }: { imovel: ImovelComCapa }) {
             </span>
           </div>
 
-          <div className="flex gap-3 text-sm text-muted-foreground">
-            {imovel.quartos > 0 && (
-              <span className="flex items-center gap-1">
-                <BedDouble className="h-3.5 w-3.5" />
-                {imovel.quartos}
-              </span>
-            )}
-            {imovel.vagas_garagem > 0 && (
-              <span className="flex items-center gap-1">
-                <Car className="h-3.5 w-3.5" />
-                {imovel.vagas_garagem}
-              </span>
-            )}
-            {imovel.area_total && (
-              <span className="flex items-center gap-1">
-                <Maximize className="h-3.5 w-3.5" />
-                {imovel.area_total}m²
-              </span>
-            )}
+          <div className="flex items-center justify-between">
+            <div className="flex gap-3 text-sm text-muted-foreground">
+              {imovel.quartos > 0 && (
+                <span className="flex items-center gap-1">
+                  <BedDouble className="h-3.5 w-3.5" />
+                  {imovel.quartos}
+                </span>
+              )}
+              {imovel.vagas_garagem > 0 && (
+                <span className="flex items-center gap-1">
+                  <Car className="h-3.5 w-3.5" />
+                  {imovel.vagas_garagem}
+                </span>
+              )}
+              {imovel.area_total && (
+                <span className="flex items-center gap-1">
+                  <Maximize className="h-3.5 w-3.5" />
+                  {imovel.area_total}m²
+                </span>
+              )}
+            </div>
+            <div className="flex gap-1.5">
+              {imovel.publicar_site && (
+                <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                  <Globe className="h-2.5 w-2.5" />
+                  Site
+                </span>
+              )}
+              {imovel.publicar_portais && (
+                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                  <Rss className="h-2.5 w-2.5" />
+                  Portais
+                </span>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

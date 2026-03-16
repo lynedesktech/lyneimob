@@ -1,0 +1,71 @@
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
+import { criarClienteBrowser } from "@/lib/supabase/client"
+import type { AtividadeComRelacoes } from "@/types/database"
+import type { FiltrosAtividadesInput } from "@/types/atividades"
+
+export function useListaAtividades(filtros: FiltrosAtividadesInput) {
+  const supabase = criarClienteBrowser()
+
+  const { data, isLoading, error } = useQuery<{
+    atividades: AtividadeComRelacoes[]
+    total: number
+  }>({
+    queryKey: ["atividades", filtros],
+    queryFn: async () => {
+      let query = supabase
+        .from("atividades")
+        .select(
+          "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status), usuarios(id, nome)",
+          { count: "exact" }
+        )
+
+      // Filtros dinâmicos
+      if (filtros.tipo) {
+        query = query.eq("tipo", filtros.tipo)
+      }
+      if (filtros.status) {
+        query = query.eq("status", filtros.status)
+      }
+      if (filtros.prioridade) {
+        query = query.eq("prioridade", filtros.prioridade)
+      }
+      if (filtros.usuario_id) {
+        query = query.eq("usuario_id", filtros.usuario_id)
+      }
+      if (filtros.data_inicio) {
+        query = query.gte("data_inicio", filtros.data_inicio)
+      }
+      if (filtros.data_fim) {
+        query = query.lte("data_inicio", filtros.data_fim)
+      }
+
+      // Paginação
+      const pagina = filtros.pagina || 1
+      const porPagina = filtros.por_pagina || 20
+      const inicio = (pagina - 1) * porPagina
+      const fim = inicio + porPagina - 1
+
+      query = query
+        .order("data_inicio", { ascending: true })
+        .range(inicio, fim)
+
+      const { data, error, count } = await query
+
+      if (error) throw error
+
+      return {
+        atividades: (data as AtividadeComRelacoes[]) ?? [],
+        total: count ?? 0,
+      }
+    },
+  })
+
+  return {
+    atividades: data?.atividades ?? [],
+    total: data?.total ?? 0,
+    carregando: isLoading,
+    erro: error,
+  }
+}

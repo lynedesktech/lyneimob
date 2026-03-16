@@ -10,7 +10,7 @@
 
 > Tarefas em andamento agora. Só uma por vez sempre que possível.
 
-(nenhuma tarefa em andamento)
+(nada em andamento)
 
 ---
 
@@ -18,61 +18,7 @@
 
 > Tarefas prontas para execução, em ordem de prioridade.
 
-### Fase 4 — Atividades com IA
-
-- [ ] Migration: tabela atividades com RLS
-      Contexto: agenda de tarefas e compromissos dos corretores
-- [ ] CRUD de atividades — criar, editar, marcar realizada, reagendar, cancelar
-      Contexto: gestão de visitas, ligações, follow-ups, propostas
-- [ ] Visão calendário — diária, semanal e mensal
-      Contexto: corretor precisa ver sua agenda de forma visual
-- [ ] Notificações por email — lembretes de atividades via Resend
-      Contexto: corretor recebe lembrete antes de visitas e follow-ups
-- [ ] IA em atividades — sugestão pós-atividade, briefing de visita
-      Contexto: IA prepara o corretor antes da visita e sugere próximo passo depois
-
-### Fase 5 — Integração com Portais
-
-- [ ] Migration: tabela leads_portais com RLS
-      Contexto: armazenar leads que chegam dos portais imobiliários
-- [ ] Gerador XML VRSync — endpoint /api/xml/[slug].xml
-      Contexto: feed XML para publicar imóveis nos portais (ZAP, OLX, VivaReal)
-- [ ] Webhook receptor de leads — endpoint /api/webhooks/portais
-      Contexto: receber leads dos portais automaticamente
-- [ ] Normalizador de leads — ZAP, OLX, VivaReal → formato único
-      Contexto: cada portal manda dados em formato diferente, precisa padronizar
-- [ ] Auto-criação de cliente + negócio a partir do lead recebido
-      Contexto: lead chega do portal e já vira contato + negócio no pipeline
-
-### Fase 6 — Site Próprio
-
-- [ ] Rotas dinâmicas /[slug]/ — home, listagem de imóveis, detalhe, contato
-      Contexto: cada imobiliária ganha um site próprio com URL única
-- [ ] SSR + SEO — meta tags, OpenGraph, sitemap dinâmico
-      Contexto: site precisa aparecer bem no Google para gerar leads orgânicos
-- [ ] Tema customizável — cores, logo, textos configuráveis no dashboard
-      Contexto: imobiliária personaliza o visual do site sem precisar de desenvolvedor
-- [ ] Formulário de contato → cria lead automaticamente
-      Contexto: visitante do site preenche formulário e vira lead no CRM
-- [ ] Widget de chat IA no site público
-      Contexto: chatbot que responde perguntas sobre imóveis e coleta dados do visitante
-
-### Fase 7 — Agente SDR WhatsApp + Billing
-
-- [ ] Migration: tabelas conversas_ia + ia_uso com RLS
-      Contexto: histórico de conversas do agente e controle de consumo de IA
-- [ ] Webhook WhatsApp — endpoint /api/webhooks/whatsapp (Meta Business API)
-      Contexto: receber e enviar mensagens via WhatsApp Business
-- [ ] Integração n8n + Claude API para o agente SDR
-      Contexto: fluxo de automação que gerencia as conversas do agente
-- [ ] Fluxo completo do agente — receber, processar, responder, transferir para corretor
-      Contexto: agente conversa com lead, coleta dados, sugere imóveis, agenda visita
-- [ ] Painel de conversas do agente no dashboard
-      Contexto: corretor visualiza histórico de conversas e pode assumir atendimento
-- [ ] Stripe — produtos, checkout, customer portal, webhooks
-      Contexto: cobrança recorrente com 2 planos (CRM+IA e CRM+IA+SDR)
-- [ ] Middleware de limites por plano — controlar acesso a features por assinatura
-      Contexto: cada plano tem limites de corretores, imóveis e conversas IA
+- [ ] Exportação de dados (relatórios PDF, planilhas Excel)
 
 ---
 
@@ -80,31 +26,39 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
-(nenhuma tarefa aguardando validação)
+(nada aguardando validação)
 
 ---
 
-## 💡 Futuras
+## 💡 Orientações Futuras
 
-> Ideias, melhorias e implementações planejadas para mais adiante.
+> Ideias para pensar quando os blocos acima estiverem concluídos.
 
-- [ ] App mobile nativo para corretores
-- [ ] Espelho de vendas para empreendimentos
-- [ ] Módulo financeiro (comissões, repasses)
-- [ ] Dashboard avançado com BI e relatórios
-- [ ] Domínio customizado por imobiliária
-- [ ] Integração com sistemas de incorporadoras
+- [ ] Integração com Google Calendar (atividades ↔ agenda do Google)
+- [ ] Integração com e-mail (envio e tracking de abertura)
+- [ ] Relatórios e dashboards analíticos (conversão, tempo médio, performance por corretor)
+- [ ] Notificações push/email (atividades vencidas, leads novos, negócios parados)
+- [ ] IA preditiva — probabilidade de fechamento por negócio
+- [ ] App mobile (PWA ou React Native)
 
 ---
 
 ## ✔️ Concluído
 
-> Tarefas validadas. As 10 mais recentes ficam aqui para contexto.
+> Histórico de entregas em ordem cronológica de desenvolvimento.
 
-- [x] Fase 0 — Fundação completa (projeto Next.js, Supabase, auth, layout dashboard, multi-tenancy, CLAUDE.md) ✓ validado (2026-03-14)
-- [x] Fase 1 — Imóveis com IA completa (migration, CRUD, upload fotos, listagem, detalhe, IA com descrição/título) ✓ validado (2026-03-14)
-- [x] Fase 2 — Clientes com IA completa (migration, CRUD, interesses, match, timeline, IA com score/resumo/match inteligente) ✓ validado (2026-03-14)
-- [x] Fase 3 — Negócios/Pipeline com IA completa (migration, Kanban drag-and-drop, CRUD, ganhar/perder/reabrir, filtros, IA com análise/sugestão/perda) ✓ validado (2026-03-14)
-- [x] Pesquisa CRM imobiliário — mapeamento completo de CRMs, portais e funcionalidades MVP ✓ validado (2026-03-14)
-- [x] roadmap.md criado — sistema de gestão de tarefas com 5 seções e regras no CLAUDE.md ✓ validado
-- [x] CLAUDE.md hierárquico implementado — pesquisas/ e requisitos/ com contexto específico ✓ validado
+- [x] Auditoria e padronização do Design System — 6 tokens semânticos, 4 variantes (Badge/Button), 150+ cores substituídas em ~25 arquivos, tipografia e spacing padronizados ✓ validado (2026-03-15)
+- [x] Componentes reutilizáveis — constantes centralizadas, StatusBadge, ConfirmacaoExclusao, PaginacaoListagem, useAcaoIA, useFiltrosListagem (9 criados, 6 excluídos, ~25 modificados) ✓ validado por auditoria (2026-03-16)
+- [x] Auditoria e limpeza geral — constantes negócios, formulários com constantes, StatusBadge expandido, useAcaoIA expandido, formatadores centralizados, EstadoVazio, design system fix, console.error padronizados (3 novos, ~40 modificados) ✓ validado por auditoria (2026-03-16)
+- [x] Auditoria visual completa — headers responsivos (6 páginas), botão Voltar (4 formulários), cards padronizados com hover+StatusBadge (6 componentes), filtros alinhados (3 componentes), paginação reutilizável (3 páginas), tipografia Kanban, estado vazio (~22 arquivos) ✓ validado (2026-03-16)
+- [x] Gestão de canais de publicação por imóvel (site e portais) — migration 014, Switch UI, toggles no formulário, filtros em 4 queries públicas, badges no card, card Publicação no detalhe, filtro de canal no CRM ✓ validado por auditoria (2026-03-16)
+- [x] Dashboard com dados reais — 3 queries Supabase (negócios abertos, clientes, imóveis disponíveis) ✓ validado por auditoria (2026-03-16)
+- [x] Modo escuro — ThemeProvider + toggle no header (ícone Sol/Lua) ✓ validado por auditoria (2026-03-16)
+- [x] Validação OLX/VivaReal — conformidade XML VRSync + rota de validação + fallback webhook ✓ validado por auditoria (2026-03-16)
+- [x] Busca global no CRM (Bloco 3) — Command palette Ctrl+K, 4 queries paralelas, ações rápidas, navegação por teclado, StatusBadge ✓ validado por auditoria (2026-03-16)
+- [x] Onboarding guiado para novos usuários (Bloco 4) — Tour Onborda 4 passos + checklist primeiros passos + migration 015 + hook TanStack Query ✓ validado por auditoria (2026-03-16)
+- [x] Polimento visual final (frontend-design) — auth split screen, AlertCircle/CheckCircle2 nos alertas, badge trial, dark mode toggle, dashboard com ícones coloridos + grid responsivo + ações rápidas ✓ validado por auditoria (2026-03-16)
+- [x] Gestão de instância WhatsApp — migration 017, wrapper Uazapi (criar/conectar/status/desconectar/webhook), Server Actions, hook com polling, componente ConexaoWhatsapp com 4 estados visuais, fix multi-tenant webhook ✓ validado por auditoria (2026-03-16)
+- [x] Sugestão automática de próxima ação por negócio — migration 018, prompt JSON estruturado, fire-and-forget ao criar/mover negócio, Kanban card com sugestão resumida, card completo no detalhe com botão "Criar Atividade", formulário pré-preenchido via searchParams ✓ validado por auditoria (2026-03-16)
+- [x] Resumo semanal gerado por IA — migration 016, Server Action com coleta de métricas + OpenAI, componente CardResumoSemanal no dashboard, cache no banco (1x por semana), botão regenerar ✓ validado por auditoria (2026-03-16)
+- [x] Importação em massa de imóveis (CSV/Excel) — wizard 3 etapas (upload → preview → resultado), papaparse + xlsx, mapeamento de colunas com aliases PT-BR, Zod, batch insert 50, limite plano, relatório erros, modelo dinâmico ✓ validado por auditoria (2026-03-16)

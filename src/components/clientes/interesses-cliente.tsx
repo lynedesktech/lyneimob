@@ -24,30 +24,15 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Plus, Trash2, Home, MapPin, DollarSign } from "lucide-react"
 import { toast } from "sonner"
+import { labelsTipoImovel } from "@/lib/constantes"
 
-const opcoesTipoImovel = [
-  { value: "apartamento", label: "Apartamento" },
-  { value: "casa", label: "Casa" },
-  { value: "terreno", label: "Terreno" },
-  { value: "sala_comercial", label: "Sala Comercial" },
-  { value: "galpao", label: "Galpão" },
-  { value: "cobertura", label: "Cobertura" },
-  { value: "kitnet", label: "Kitnet" },
-  { value: "fazenda", label: "Fazenda" },
-  { value: "sitio", label: "Sítio" },
-  { value: "loja", label: "Loja" },
-  { value: "outro", label: "Outro" },
-]
+const opcoesTipoImovel = Object.entries(labelsTipoImovel).map(([value, label]) => ({ value, label }))
 
 const opcoesFinalidade = [
   { value: "venda", label: "Comprar" },
   { value: "aluguel", label: "Alugar" },
   { value: "venda_e_aluguel", label: "Comprar ou Alugar" },
 ]
-
-const labelsTipoImovel: Record<string, string> = Object.fromEntries(
-  opcoesTipoImovel.map((o) => [o.value, o.label])
-)
 
 type InteressesClienteProps = {
   clienteId: string

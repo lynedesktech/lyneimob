@@ -78,7 +78,7 @@ function BotaoGanhar({
     <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogTrigger
         render={
-          <Button size="sm" className="bg-green-600 hover:bg-green-700">
+          <Button variant="success" size="sm">
             <CheckCircle className="mr-2 h-4 w-4" />
             Ganhar
           </Button>
@@ -109,7 +109,7 @@ function BotaoGanhar({
           <Button
             onClick={handleGanhar}
             disabled={salvando}
-            className="bg-green-600 hover:bg-green-700"
+            variant="success"
           >
             {salvando ? "Salvando..." : "Confirmar Ganho"}
           </Button>

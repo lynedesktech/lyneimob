@@ -6,6 +6,7 @@ import { cadastrar, type EstadoFormulario } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
@@ -14,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { AlertCircle } from "lucide-react"
 
 export default function CadastroPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
@@ -24,17 +26,23 @@ export default function CadastroPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">Criar conta</CardTitle>
+        <div className="flex items-center gap-3">
+          <CardTitle className="text-2xl">Criar conta</CardTitle>
+          <Badge variant="secondary" className="bg-success/15 text-success">
+            14 dias grátis
+          </Badge>
+        </div>
         <CardDescription>
-          Comece a usar o LyneImob gratuitamente por 14 dias
+          Comece a usar o LyneImob gratuitamente — sem cartão de crédito
         </CardDescription>
       </CardHeader>
 
       <form action={formAction}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           {estado.erro && (
-            <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {estado.erro}
+            <div className="flex items-start gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{estado.erro}</span>
             </div>
           )}
 

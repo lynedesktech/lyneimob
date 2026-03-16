@@ -5,25 +5,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadgeCliente } from "./status-badge-cliente"
+import { StatusBadge, configStatusCliente } from "@/components/ui/status-badge"
 import { ScoreBadge } from "./score-badge"
 import { Phone, Mail, User } from "lucide-react"
+import { labelsTipoCliente, labelsOrigem } from "@/lib/constantes"
 import type { Cliente } from "@/types/database"
-
-const labelsTipo: Record<string, string> = {
-  comprador: "Comprador",
-  vendedor: "Vendedor",
-  locatario: "Locatário",
-  proprietario: "Proprietário",
-}
-
-const labelsOrigem: Record<string, string> = {
-  indicacao: "Indicação",
-  portal: "Portal",
-  site: "Site",
-  whatsapp: "WhatsApp",
-  outro: "Outro",
-}
 
 export function CardCliente({ cliente }: { cliente: Cliente }) {
   return (
@@ -32,7 +18,7 @@ export function CardCliente({ cliente }: { cliente: Cliente }) {
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <User className="h-4 w-4" />
               </div>
               <div>
@@ -40,11 +26,11 @@ export function CardCliente({ cliente }: { cliente: Cliente }) {
                   {cliente.nome}
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  {labelsTipo[cliente.tipo] ?? cliente.tipo} • {labelsOrigem[cliente.origem] ?? cliente.origem}
+                  {labelsTipoCliente[cliente.tipo] ?? cliente.tipo} • {labelsOrigem[cliente.origem] ?? cliente.origem}
                 </p>
               </div>
             </div>
-            <StatusBadgeCliente status={cliente.status} />
+            <StatusBadge status={cliente.status} config={configStatusCliente} />
           </div>
         </CardHeader>
 

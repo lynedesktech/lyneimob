@@ -3,7 +3,9 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { CardImovel } from "@/components/imoveis/card-imovel"
 import { FiltrosImoveis } from "@/components/imoveis/filtros-imoveis"
-import { Plus, Building2 } from "lucide-react"
+import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
+import { Plus, Building2, Upload } from "lucide-react"
+import { EstadoVazio } from "@/components/ui/estado-vazio"
 
 type SearchParams = Promise<{
   busca?: string
@@ -12,6 +14,7 @@ type SearchParams = Promise<{
   status?: string
   cidade?: string
   bairro?: string
+  canal?: string
   pagina?: string
 }>
 
@@ -41,6 +44,9 @@ export default async function ImoveisPage({
   if (params.status) query = query.eq("status", params.status)
   if (params.cidade) query = query.ilike("cidade", `%${params.cidade}%`)
   if (params.bairro) query = query.ilike("bairro", `%${params.bairro}%`)
+  if (params.canal === "site") query = query.eq("publicar_site", true)
+  if (params.canal === "portais") query = query.eq("publicar_portais", true)
+  if (params.canal === "nenhum") query = query.eq("publicar_site", false).eq("publicar_portais", false)
 
   const { data: imoveis, count } = await query
     .order("created_at", { ascending: false })
@@ -51,17 +57,23 @@ export default async function ImoveisPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Imóveis</h1>
           <p className="text-muted-foreground">
             {total} {total === 1 ? "imóvel encontrado" : "imóveis encontrados"}
           </p>
         </div>
-        <Button render={<Link href="/imoveis/novo" />}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo imóvel
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" render={<Link href="/imoveis/importar" />}>
+            <Upload className="mr-2 h-4 w-4" />
+            Importar
+          </Button>
+          <Button render={<Link href="/imoveis/novo" />}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo imóvel
+          </Button>
+        </div>
       </div>
 
       <FiltrosImoveis />
@@ -75,52 +87,26 @@ export default async function ImoveisPage({
           </div>
 
           {/* Paginação */}
-          {totalPaginas > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              {pagina > 1 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link
-                      href={`/imoveis?${new URLSearchParams({ ...params, pagina: String(pagina - 1) }).toString()}`}
-                    />
-                  }
-                >
-                  Anterior
-                </Button>
-              )}
-              <span className="text-sm text-muted-foreground">
-                Página {pagina} de {totalPaginas}
-              </span>
-              {pagina < totalPaginas && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link
-                      href={`/imoveis?${new URLSearchParams({ ...params, pagina: String(pagina + 1) }).toString()}`}
-                    />
-                  }
-                >
-                  Próxima
-                </Button>
-              )}
-            </div>
-          )}
+          <PaginacaoListagem
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            construtorHref={(p) =>
+              `/imoveis?${new URLSearchParams({ ...params, pagina: String(p) }).toString()}`
+            }
+          />
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-          <Building2 className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="text-lg font-medium">Nenhum imóvel encontrado</h3>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Comece cadastrando seu primeiro imóvel
-          </p>
-          <Button render={<Link href="/imoveis/novo" />}>
-            <Plus className="mr-2 h-4 w-4" />
-            Cadastrar imóvel
-          </Button>
-        </div>
+        <EstadoVazio
+          icone={Building2}
+          titulo="Nenhum imóvel encontrado"
+          descricao="Comece cadastrando seu primeiro imóvel"
+          acao={
+            <Button render={<Link href="/imoveis/novo" />}>
+              <Plus className="mr-2 h-4 w-4" />
+              Cadastrar imóvel
+            </Button>
+          }
+        />
       )}
     </div>
   )

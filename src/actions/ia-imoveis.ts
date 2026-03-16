@@ -3,21 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { openai } from "@/lib/openai"
+import { verificarLimiteConversasIA, registrarUsoConversaIA } from "@/lib/verificar-limites"
 import type { EstadoFormulario } from "@/types/formulario"
-
-const labelsTipo: Record<string, string> = {
-  apartamento: "Apartamento",
-  casa: "Casa",
-  terreno: "Terreno",
-  sala_comercial: "Sala Comercial",
-  galpao: "Galpão",
-  cobertura: "Cobertura",
-  kitnet: "Kitnet",
-  fazenda: "Fazenda",
-  sitio: "Sítio",
-  loja: "Loja",
-  outro: "Outro",
-}
+import { labelsTipoImovel } from "@/lib/constantes"
 
 async function buscarDadosImovel(imovelId: string) {
   const supabase = await criarClienteServer()
@@ -32,7 +20,7 @@ async function buscarDadosImovel(imovelId: string) {
 function montarContextoImovel(imovel: Record<string, unknown>): string {
   const partes: string[] = []
 
-  partes.push(`Tipo: ${labelsTipo[imovel.tipo as string] ?? imovel.tipo}`)
+  partes.push(`Tipo: ${labelsTipoImovel[imovel.tipo as string] ?? imovel.tipo}`)
   partes.push(`Localização: ${imovel.bairro ? `${imovel.bairro}, ` : ""}${imovel.cidade} - ${imovel.estado}`)
 
   if (imovel.area_total) partes.push(`Área total: ${imovel.area_total}m²`)
@@ -68,6 +56,10 @@ export async function gerarDescricaoIA(
   const imovel = await buscarDadosImovel(imovelId)
   if (!imovel) return { erro: "Imóvel não encontrado" }
 
+  // Verificar limite de conversas IA do plano
+  const limite = await verificarLimiteConversasIA(imovel.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
+
   try {
     const resposta = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -92,6 +84,7 @@ export async function gerarDescricaoIA(
     const texto = resposta.choices[0]?.message?.content?.trim()
     if (!texto) return { erro: "A IA não retornou texto" }
 
+    await registrarUsoConversaIA(imovel.organizacao_id)
     return { sucesso: "Descrição gerada com sucesso", texto }
   } catch {
     return { erro: "Erro ao gerar descrição. Verifique sua chave da OpenAI." }
@@ -108,6 +101,9 @@ export async function melhorarTextoIA(
 ): Promise<EstadoFormulario & { texto?: string }> {
   const imovel = await buscarDadosImovel(imovelId)
   if (!imovel) return { erro: "Imóvel não encontrado" }
+
+  const limite = await verificarLimiteConversasIA(imovel.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
 
   try {
     const resposta = await openai.chat.completions.create({
@@ -133,6 +129,7 @@ export async function melhorarTextoIA(
     const textoMelhorado = resposta.choices[0]?.message?.content?.trim()
     if (!textoMelhorado) return { erro: "A IA não retornou texto" }
 
+    await registrarUsoConversaIA(imovel.organizacao_id)
     return { sucesso: "Texto melhorado com sucesso", texto: textoMelhorado }
   } catch {
     return { erro: "Erro ao melhorar texto. Verifique sua chave da OpenAI." }
@@ -148,6 +145,9 @@ export async function gerarTituloIA(
 ): Promise<EstadoFormulario & { texto?: string }> {
   const imovel = await buscarDadosImovel(imovelId)
   if (!imovel) return { erro: "Imóvel não encontrado" }
+
+  const limite = await verificarLimiteConversasIA(imovel.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
 
   try {
     const resposta = await openai.chat.completions.create({
@@ -173,6 +173,7 @@ export async function gerarTituloIA(
     const titulo = resposta.choices[0]?.message?.content?.trim()
     if (!titulo) return { erro: "A IA não retornou texto" }
 
+    await registrarUsoConversaIA(imovel.organizacao_id)
     return { sucesso: "Título gerado com sucesso", texto: titulo }
   } catch {
     return { erro: "Erro ao gerar título. Verifique sua chave da OpenAI." }

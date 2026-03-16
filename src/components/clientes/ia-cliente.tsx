@@ -25,7 +25,7 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react"
-import { toast } from "sonner"
+import { useAcaoIA } from "@/hooks/use-acao-ia"
 
 type SugestaoMatch = {
   imovel_id: string
@@ -44,47 +44,32 @@ export function IACliente({ clienteId, scoreAtual, resumoAtual }: IAClienteProps
   const [resumo, setResumo] = useState(resumoAtual ?? "")
   const [sugestoes, setSugestoes] = useState<SugestaoMatch[]>([])
 
-  const [calculandoScore, setCalculandoScore] = useState(false)
-  const [gerandoResumo, setGerandoResumo] = useState(false)
-  const [buscandoMatch, setBuscandoMatch] = useState(false)
+  const acaoScore = useAcaoIA()
+  const acaoResumo = useAcaoIA()
+  const acaoMatch = useAcaoIA()
 
-  async function handleCalcularScore() {
-    setCalculandoScore(true)
-    const resultado = await gerarScoreLead(clienteId)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else if (resultado.score !== undefined) {
-      setScore(resultado.score)
-      toast.success(resultado.sucesso)
-    }
-    setCalculandoScore(false)
+  function handleCalcularScore() {
+    acaoScore.executar(
+      () => gerarScoreLead(clienteId),
+      (r) => { if (r.score !== undefined) setScore(r.score as number) }
+    )
   }
 
-  async function handleGerarResumo() {
-    setGerandoResumo(true)
-    const resultado = await gerarResumoCliente(clienteId)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else if (resultado.texto) {
-      setResumo(resultado.texto)
-      toast.success(resultado.sucesso)
-    }
-    setGerandoResumo(false)
+  function handleGerarResumo() {
+    acaoResumo.executar(
+      () => gerarResumoCliente(clienteId),
+      (r) => setResumo(r.texto || "")
+    )
   }
 
-  async function handleMatchInteligente() {
-    setBuscandoMatch(true)
-    const resultado = await matchInteligente(clienteId)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else if (resultado.sugestoes) {
-      setSugestoes(resultado.sugestoes)
-      toast.success(resultado.sucesso)
-    }
-    setBuscandoMatch(false)
+  function handleMatchInteligente() {
+    acaoMatch.executar(
+      () => matchInteligente(clienteId),
+      (r) => { if (r.sugestoes) setSugestoes(r.sugestoes as SugestaoMatch[]) }
+    )
   }
 
-  const processando = calculandoScore || gerandoResumo || buscandoMatch
+  const processando = acaoScore.carregando || acaoResumo.carregando || acaoMatch.carregando
 
   return (
     <div className="space-y-4">
@@ -110,7 +95,7 @@ export function IACliente({ clienteId, scoreAtual, resumoAtual }: IAClienteProps
               onClick={handleCalcularScore}
               disabled={processando}
             >
-              {calculandoScore ? (
+              {acaoScore.carregando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <TrendingUp className="mr-2 h-4 w-4" />
@@ -147,7 +132,7 @@ export function IACliente({ clienteId, scoreAtual, resumoAtual }: IAClienteProps
             onClick={handleGerarResumo}
             disabled={processando}
           >
-            {gerandoResumo ? (
+            {acaoResumo.carregando ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Sparkles className="mr-2 h-4 w-4" />
@@ -185,7 +170,7 @@ export function IACliente({ clienteId, scoreAtual, resumoAtual }: IAClienteProps
             onClick={handleMatchInteligente}
             disabled={processando}
           >
-            {buscandoMatch ? (
+            {acaoMatch.carregando ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Sparkles className="mr-2 h-4 w-4" />

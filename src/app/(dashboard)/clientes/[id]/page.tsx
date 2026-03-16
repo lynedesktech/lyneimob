@@ -9,13 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StatusBadgeCliente } from "@/components/clientes/status-badge-cliente"
+import { StatusBadge, configStatusCliente } from "@/components/ui/status-badge"
 import { ScoreBadge } from "@/components/clientes/score-badge"
 import { InteressesCliente } from "@/components/clientes/interesses-cliente"
 import { TimelineInteracoes } from "@/components/clientes/timeline-interacoes"
 import { MatchImoveis } from "@/components/clientes/match-imoveis"
 import { IACliente } from "@/components/clientes/ia-cliente"
-import { BotaoExcluirCliente } from "@/components/clientes/botao-excluir-cliente"
+import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
+import { excluirCliente } from "@/actions/clientes"
 import {
   ArrowLeft,
   Pencil,
@@ -26,23 +27,9 @@ import {
   FileText,
   Sparkles,
 } from "lucide-react"
+import { labelsTipoCliente, labelsOrigem } from "@/lib/constantes"
 
 type Params = Promise<{ id: string }>
-
-const labelsTipo: Record<string, string> = {
-  comprador: "Comprador",
-  vendedor: "Vendedor",
-  locatario: "Locatário",
-  proprietario: "Proprietário",
-}
-
-const labelsOrigem: Record<string, string> = {
-  indicacao: "Indicação",
-  portal: "Portal",
-  site: "Site",
-  whatsapp: "WhatsApp",
-  outro: "Outro",
-}
 
 export default async function DetalheClientePage({
   params,
@@ -80,13 +67,13 @@ export default async function DetalheClientePage({
               <h1 className="text-2xl font-bold tracking-tight">
                 {cliente.nome}
               </h1>
-              <StatusBadgeCliente status={cliente.status} />
+              <StatusBadge status={cliente.status} config={configStatusCliente} />
               {cliente.score_lead > 0 && (
                 <ScoreBadge score={cliente.score_lead} />
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {labelsTipo[cliente.tipo] ?? cliente.tipo} • Origem:{" "}
+              {labelsTipoCliente[cliente.tipo] ?? cliente.tipo} • Origem:{" "}
               {labelsOrigem[cliente.origem] ?? cliente.origem}
             </p>
           </div>
@@ -100,7 +87,11 @@ export default async function DetalheClientePage({
             <Pencil className="mr-2 h-4 w-4" />
             Editar
           </Button>
-          <BotaoExcluirCliente clienteId={id} />
+          <ConfirmacaoExclusao
+              titulo="Excluir cliente"
+              descricao="Tem certeza que deseja excluir este cliente? Todos os interesses, interações e dados serão perdidos. Esta ação não pode ser desfeita."
+              onConfirmar={() => excluirCliente(id)}
+            />
         </div>
       </div>
 
@@ -143,7 +134,7 @@ export default async function DetalheClientePage({
                 <div>
                   <p className="text-sm text-muted-foreground">Tipo</p>
                   <p className="font-medium">
-                    {labelsTipo[cliente.tipo] ?? cliente.tipo}
+                    {labelsTipoCliente[cliente.tipo] ?? cliente.tipo}
                   </p>
                 </div>
                 <div>

@@ -13,10 +13,17 @@ import {
   Calendar,
   DollarSign,
   ArrowLeft,
+  MessageCircle,
 } from "lucide-react"
+import { labelsTipoNegocio } from "@/lib/constantes"
+import { formatarPreco, formatarData } from "@/lib/formatadores"
+import { StatusBadge, configStatusNegocio } from "@/components/ui/status-badge"
 import { AcoesNegocio } from "@/components/negocios/acoes-negocio"
-import { BotaoExcluirNegocio } from "@/components/negocios/botao-excluir-negocio"
+import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
+import { excluirNegocio } from "@/actions/negocios"
 import { IANegocio } from "@/components/negocios/ia-negocio"
+import { CardSugestaoAcao } from "@/components/negocios/card-sugestao-acao"
+import { buscarConversaPorNegocio } from "@/actions/whatsapp"
 import type { NegocioComRelacoes } from "@/types/database"
 
 interface Props {
@@ -39,35 +46,13 @@ export default async function DetalheNegocioPage({ params }: Props) {
 
   const n = negocio as unknown as NegocioComRelacoes
 
-  const formatarValor = (valor: number | null) => {
-    if (!valor) return "Não definido"
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(valor)
-  }
-
-  const formatarData = (data: string | null) => {
-    if (!data) return "—"
-    return new Intl.DateTimeFormat("pt-BR").format(new Date(data))
-  }
-
-  const corStatus = {
-    aberto: "default" as const,
-    ganho: "default" as const,
-    perdido: "destructive" as const,
-  }
-
-  const labelStatus = {
-    aberto: "Aberto",
-    ganho: "Ganho",
-    perdido: "Perdido",
-  }
+  // Busca conversa WhatsApp vinculada ao negócio
+  const conversaWhatsapp = await buscarConversaPorNegocio(id)
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" render={<Link href="/negocios" />}>
@@ -77,17 +62,14 @@ export default async function DetalheNegocioPage({ params }: Props) {
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{n.titulo}</h1>
           <div className="flex items-center gap-2">
-            <Badge variant={corStatus[n.status]}>
-              {n.status === "ganho" && "✓ "}
-              {labelStatus[n.status]}
-            </Badge>
+            <StatusBadge status={n.status} config={configStatusNegocio} />
             {n.pipeline_etapas && (
               <Badge variant="outline" style={{ borderColor: n.pipeline_etapas.cor }}>
                 {n.pipeline_etapas.nome}
               </Badge>
             )}
             <Badge variant="outline">
-              {n.tipo === "venda" ? "Venda" : "Aluguel"}
+              {labelsTipoNegocio[n.tipo]}
             </Badge>
           </div>
         </div>
@@ -98,7 +80,12 @@ export default async function DetalheNegocioPage({ params }: Props) {
             <Pencil className="mr-2 h-4 w-4" />
             Editar
           </Button>
-          <BotaoExcluirNegocio negocioId={n.id} titulo={n.titulo} />
+          <ConfirmacaoExclusao
+              titulo="Excluir negócio"
+              descricao={`Tem certeza que deseja excluir o negócio "${n.titulo}"? Esta ação não pode ser desfeita.`}
+              onConfirmar={() => excluirNegocio(n.id)}
+              tamanho="sm"
+            />
         </div>
       </div>
 
@@ -117,7 +104,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
                 <DollarSign className="h-8 w-8 text-primary" />
                 <div>
                   <p className="text-xs text-muted-foreground">Valor</p>
-                  <p className="text-lg font-bold">{formatarValor(n.valor)}</p>
+                  <p className="text-lg font-bold">{formatarPreco(n.valor)}</p>
                 </div>
               </CardContent>
             </Card>
@@ -173,6 +160,15 @@ export default async function DetalheNegocioPage({ params }: Props) {
             </Card>
           </div>
 
+          {/* Sugestão de próxima ação (apenas negócios abertos) */}
+          {n.status === "aberto" && (
+            <CardSugestaoAcao
+              negocioId={n.id}
+              sugestaoIA={n.sugestao_ia}
+              sugestaoResumo={n.sugestao_ia_resumo}
+            />
+          )}
+
           {/* Detalhes */}
           <Card>
             <CardHeader>
@@ -193,7 +189,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
                   <Separator />
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Data do ganho</span>
-                    <span className="text-green-600 font-medium">
+                    <span className="text-success font-medium">
                       {formatarData(n.data_ganho)}
                     </span>
                   </div>
@@ -230,6 +226,48 @@ export default async function DetalheNegocioPage({ params }: Props) {
               )}
             </CardContent>
           </Card>
+
+          {/* Conversa WhatsApp vinculada */}
+          {conversaWhatsapp && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-success" />
+                  Conversa WhatsApp
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Contato</span>
+                  <span>{conversaWhatsapp.nome_cliente || conversaWhatsapp.numero_cliente}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant="outline">{conversaWhatsapp.status.replace("_", " ")}</Badge>
+                </div>
+                {conversaWhatsapp.resumo_ia && (
+                  <>
+                    <Separator />
+                    <div>
+                      <span className="text-muted-foreground">Resumo da IA</span>
+                      <p className="mt-1 text-muted-foreground/80">{conversaWhatsapp.resumo_ia}</p>
+                    </div>
+                  </>
+                )}
+                <Separator />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  render={<Link href={`/conversas/${conversaWhatsapp.id}`} />}
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Ver conversa completa
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="ia">

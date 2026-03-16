@@ -9,8 +9,11 @@ import {
   Building2,
   CalendarCheck,
   Plug,
-  Bot,
+  Globe,
   Settings,
+  MessageCircle,
+  CreditCard,
+  UsersRound,
 } from "lucide-react"
 import {
   Sidebar,
@@ -25,16 +28,30 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar"
 import { UsuarioMenu } from "@/components/layout/usuario-menu"
+import type { Acao } from "@/lib/permissoes"
+import { temPermissao } from "@/lib/permissoes"
 
-const itensNavegacao = [
+type Cargo = "admin" | "corretor" | "gerente"
+
+type ItemNavegacao = {
+  titulo: string
+  href: string
+  icone: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  permissao?: Acao
+}
+
+const itensNavegacao: ItemNavegacao[] = [
   { titulo: "Dashboard", href: "/", icone: LayoutDashboard },
   { titulo: "Negócios", href: "/negocios", icone: Handshake },
   { titulo: "Clientes", href: "/clientes", icone: Users },
   { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
   { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
-  { titulo: "Integrações", href: "/integracoes", icone: Plug },
-  { titulo: "IA", href: "/ia", icone: Bot },
-  { titulo: "Configurações", href: "/configuracoes", icone: Settings },
+  { titulo: "Conversas", href: "/conversas", icone: MessageCircle, permissao: "ver_conversas_whatsapp" },
+  { titulo: "Integrações", href: "/integracoes", icone: Plug, permissao: "ver_integracoes" },
+  { titulo: "Meu Site", href: "/meu-site", icone: Globe, permissao: "gerenciar_site" },
+  { titulo: "Equipe", href: "/usuarios", icone: UsersRound, permissao: "gerenciar_usuarios" },
+  { titulo: "Planos", href: "/planos", icone: CreditCard, permissao: "gerenciar_plano" },
+  { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
 ]
 
 interface AppSidebarProps {
@@ -51,6 +68,11 @@ interface AppSidebarProps {
 
 export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
   const pathname = usePathname()
+  const cargo = (usuario.cargo as Cargo) || "corretor"
+
+  const itensVisiveis = itensNavegacao.filter(
+    (item) => !item.permissao || temPermissao(cargo, item.permissao)
+  )
 
   return (
     <Sidebar className="border-r-0">
@@ -78,8 +100,8 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
             Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {itensNavegacao.map((item) => {
+            <SidebarMenu id="onborda-sidebar-nav">
+              {itensVisiveis.map((item) => {
                 const ativo =
                   item.href === "/"
                     ? pathname === "/"

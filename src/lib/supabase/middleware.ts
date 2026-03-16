@@ -33,24 +33,71 @@ export async function atualizarSessao(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Rotas públicas que não precisam de auth
-  const rotasPublicas = ["/login", "/cadastro", "/esqueci-senha", "/auth/callback"]
-  const ehRotaPublica = rotasPublicas.some((rota) =>
-    request.nextUrl.pathname.startsWith(rota)
-  )
+  const pathname = request.nextUrl.pathname
+
+  // Rotas que EXIGEM autenticação (dashboard e sub-rotas)
+  const rotasProtegidas = [
+    "/imoveis",
+    "/clientes",
+    "/negocios",
+    "/atividades",
+    "/integracoes",
+    "/conversas",
+    "/meu-site",
+    "/planos",
+    "/configuracoes",
+    "/usuarios",
+  ]
+  const ehRotaProtegida =
+    pathname === "/" ||
+    rotasProtegidas.some((rota) => pathname.startsWith(rota))
+
+  // Rotas de autenticação (login, cadastro, etc.)
+  const rotasAuth = ["/login", "/cadastro", "/esqueci-senha", "/auth/callback"]
+  const ehRotaAuth = rotasAuth.some((rota) => pathname.startsWith(rota))
+
+  // Site público e outras rotas: não é dashboard nem auth → passar sem checar
+  if (!ehRotaProtegida && !ehRotaAuth) {
+    return supabaseResponse
+  }
 
   // Se não está autenticado e tenta acessar rota protegida → redireciona para login
-  if (!user && !ehRotaPublica) {
+  if (!user && ehRotaProtegida) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 
   // Se está autenticado e tenta acessar rota de auth → redireciona para dashboard
-  if (user && ehRotaPublica) {
+  if (user && ehRotaAuth) {
     const url = request.nextUrl.clone()
     url.pathname = "/"
     return NextResponse.redirect(url)
+  }
+
+  // Verificar trial expirado para usuários autenticados
+  // Rotas permitidas mesmo com trial expirado
+  const rotasLivresTrial = ["/planos", "/configuracoes"]
+  const ehRotaLivreTrial = rotasLivresTrial.some((rota) =>
+    pathname.startsWith(rota)
+  )
+
+  if (user && ehRotaProtegida && !ehRotaLivreTrial) {
+    // Buscar plano e trial da organização
+    const { data: org } = await supabase
+      .from("organizacoes")
+      .select("plano, trial_fim_em")
+      .single()
+
+    if (org?.plano === "trial" && org.trial_fim_em) {
+      const trialFim = new Date(org.trial_fim_em)
+      if (trialFim < new Date()) {
+        const url = request.nextUrl.clone()
+        url.pathname = "/planos"
+        url.searchParams.set("trial_expirado", "true")
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   return supabaseResponse

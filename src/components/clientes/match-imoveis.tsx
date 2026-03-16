@@ -12,29 +12,8 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, BedDouble, DollarSign, Search } from "lucide-react"
-
-const labelsTipo: Record<string, string> = {
-  apartamento: "Apartamento",
-  casa: "Casa",
-  terreno: "Terreno",
-  sala_comercial: "Sala Comercial",
-  galpao: "Galpão",
-  cobertura: "Cobertura",
-  kitnet: "Kitnet",
-  fazenda: "Fazenda",
-  sitio: "Sítio",
-  loja: "Loja",
-  outro: "Outro",
-}
-
-function formatarPreco(valor: number | null): string {
-  if (!valor) return "—"
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  })
-}
+import { labelsTipoImovel } from "@/lib/constantes"
+import { formatarPreco } from "@/lib/formatadores"
 
 type MatchImoveisProps = {
   organizacaoId: string
@@ -151,7 +130,7 @@ export function MatchImoveis({ organizacaoId, interesses }: MatchImoveisProps) {
                     {imovel.titulo}
                   </CardTitle>
                   <Badge variant="outline" className="shrink-0 text-xs">
-                    {labelsTipo[imovel.tipo] ?? imovel.tipo}
+                    {labelsTipoImovel[imovel.tipo] ?? imovel.tipo}
                   </Badge>
                 </div>
               </CardHeader>

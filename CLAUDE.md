@@ -36,6 +36,8 @@ Todo plano deve ser escrito como conversa, nao como documentacao tecnica. Usar l
 - **Server State**: TanStack Query v5
 - **Formularios**: React Hook Form + Zod v4
 - **IA**: OpenAI GPT-4o-mini (SDK `openai`)
+- **Pagamentos**: Stripe (`stripe`) — checkout, assinaturas, webhooks, customer portal
+- **Cache/Fila**: Upstash Redis (`@upstash/redis`) — debounce e memoria de conversa do agente WhatsApp
 - **Icones**: Lucide React
 - **Alias de caminho**: `@/` aponta para `./src/`
 - **Paleta principal**: azul-marinho `#1e3a5f`
@@ -54,14 +56,15 @@ npm run lint         # Roda ESLint para verificar erros de codigo
 ```
 src/
 ├── app/
-│   ├── (auth)/                # Paginas de autenticacao (login, cadastro, esqueci-senha)
+│   ├── (auth)/                # Paginas de autenticacao (login, cadastro, esqueci-senha, convite)
 │   ├── (dashboard)/           # Paginas do CRM protegidas (layout com sidebar + header)
-│   │   ├── layout.tsx         # Layout principal: sidebar + header + providers
-│   │   ├── page.tsx           # Dashboard com resumo
+│   │   ├── layout.tsx         # Layout principal: sidebar + header + providers + onboarding
+│   │   ├── page.tsx           # Dashboard com resumo semanal IA + checklist de onboarding
 │   │   ├── providers.tsx      # QueryClientProvider (TanStack Query)
 │   │   ├── imoveis/           # Modulo de imoveis
-│   │   │   ├── page.tsx       # Listagem com filtros e paginacao
+│   │   │   ├── page.tsx       # Listagem com filtros e paginacao + botao importar
 │   │   │   ├── novo/page.tsx  # Formulario de criacao
+│   │   │   ├── importar/page.tsx  # Importacao em massa (CSV/Excel) — wizard 3 etapas
 │   │   │   └── [id]/          # Detalhe e edicao
 │   │   │       ├── page.tsx   # Detalhe com tabs (info, fotos, IA)
 │   │   │       └── editar/page.tsx  # Formulario de edicao
@@ -71,33 +74,99 @@ src/
 │   │   │   └── [id]/          # Detalhe e edicao
 │   │   │       ├── page.tsx   # Detalhe com 5 tabs (info, interesses, timeline, match, IA)
 │   │   │       └── editar/page.tsx  # Formulario de edicao
-│   │   └── negocios/          # Modulo de negocios/pipeline
-│   │       ├── page.tsx       # Pipeline Kanban com drag-and-drop e filtros
-│   │       ├── novo/page.tsx  # Formulario de criacao de negocio
-│   │       └── [id]/          # Detalhe e edicao
-│   │           ├── page.tsx   # Detalhe com tabs (info, IA) + acoes (ganhar, perder, reabrir)
-│   │           └── editar/page.tsx  # Formulario de edicao
+│   │   ├── negocios/          # Modulo de negocios/pipeline
+│   │   │   ├── page.tsx       # Pipeline Kanban com drag-and-drop e filtros
+│   │   │   ├── novo/page.tsx  # Formulario de criacao de negocio
+│   │   │   └── [id]/          # Detalhe e edicao
+│   │   │       ├── page.tsx   # Detalhe com tabs (info, IA) + acoes (ganhar, perder, reabrir) + card sugestao acao IA
+│   │   │       └── editar/page.tsx  # Formulario de edicao
+│   │   ├── atividades/        # Modulo de atividades/agenda
+│   │   │   ├── page.tsx       # Listagem com filtros, paginacao e toggle lista/calendario
+│   │   │   ├── novo/page.tsx  # Formulario de criacao de atividade (aceita searchParams: titulo, tipo, negocio_id)
+│   │   │   └── [id]/          # Detalhe e edicao
+│   │   │       ├── page.tsx   # Detalhe com tabs (info, IA) + acoes (concluir, reagendar, cancelar)
+│   │   │       └── editar/page.tsx  # Formulario de edicao
+│   │   ├── usuarios/           # Gestao de equipe (admin only)
+│   │   │   └── page.tsx       # Listagem de membros, convites, alterar cargo
+│   │   ├── planos/             # Pagina de planos e billing
+│   │   │   └── page.tsx       # Listagem dos 3 planos (Trial, CRM+IA, CRM+IA+SDR)
+│   │   ├── conversas/          # Painel de conversas WhatsApp
+│   │   │   ├── page.tsx       # Listagem com filtros (status, busca) e paginacao
+│   │   │   └── [id]/
+│   │   │       └── page.tsx   # Detalhe com historico de chat + qualificacao do lead
+│   │   ├── integracoes/       # Modulo de integracoes com portais
+│   │   │   └── page.tsx       # Feed XML, webhook de leads, listagem de leads recebidos
+│   │   ├── meu-site/          # Painel de customizacao do site publico
+│   │   │   └── page.tsx       # Configuracoes de cores, hero, sobre nos, logo
+│   │   └── configuracoes/     # Configuracoes de integracoes (chaves de API)
+│   │       └── page.tsx       # Formulario de chaves (Stripe, OpenAI, WhatsApp, Redis)
+│   ├── [slug]/                # Site publico da imobiliaria (por slug)
+│   │   ├── layout.tsx         # Layout publico (header + footer + validacao slug)
+│   │   ├── page.tsx           # Home do site (hero + imoveis destaque + sobre)
+│   │   ├── not-found.tsx      # Pagina 404 personalizada
+│   │   ├── imoveis/
+│   │   │   ├── page.tsx       # Listagem publica com filtros e paginacao
+│   │   │   └── [id]/
+│   │   │       └── page.tsx   # Detalhe do imovel (galeria + info + contato)
+│   │   ├── contato/
+│   │   │   └── page.tsx       # Formulario de contato (cria lead automaticamente)
+│   │   └── sobre/
+│   │       └── page.tsx       # Pagina Sobre Nos (historia, missao, visao, valores)
 │   ├── auth/callback/         # Route handler para callback do Supabase Auth
-│   ├── api/                   # API Routes (webhooks, XML, IA)
+│   ├── api/                   # API Routes
+│   │   ├── xml/[slug]/route.ts      # Feed XML VRSync (GET — publico, retorna XML dos imoveis)
+│   │   └── webhooks/
+│   │       ├── portais/route.ts     # Webhook receptor de leads dos portais (POST)
+│   │       ├── stripe/route.ts      # Webhook Stripe — eventos de pagamento e assinatura (POST)
+│   │       └── whatsapp/route.ts    # Webhook receptor de mensagens WhatsApp via Uazapi (POST)
 │   ├── layout.tsx             # Root layout (fontes, Toaster)
 │   └── globals.css            # Estilos globais + variaveis de cor shadcn
 ├── components/
-│   ├── ui/                    # Componentes shadcn/ui (Button, Input, Card, Select, Tabs, Badge, Dialog, Table, etc.)
-│   ├── layout/                # Componentes do layout (AppSidebar, Header, UsuarioMenu)
-│   ├── imoveis/               # Componentes do modulo de imoveis (formulario, card, filtros, galeria, IA, etc.)
+│   ├── ui/                    # Componentes shadcn/ui (Button, Input, Card, Select, Tabs, Badge, Dialog, Table, Switch, etc.) + customizados (StatusBadge, ConfirmacaoExclusao, PaginacaoListagem, EstadoVazio)
+│   ├── layout/                # Componentes do layout (AppSidebar, Header, UsuarioMenu, BuscaGlobal — provider + dialog + trigger)
+│   ├── imoveis/               # Componentes do modulo de imoveis (formulario, card, filtros, galeria, IA, importador-imoveis)
 │   ├── clientes/              # Componentes do modulo de clientes (formulario, card, filtros, interesses, timeline, match, IA)
-│   └── negocios/              # Componentes do modulo de negocios (kanban-board, kanban-coluna, kanban-card, formulario, filtros, acoes, IA)
+│   ├── negocios/              # Componentes do modulo de negocios (kanban-board, kanban-coluna, kanban-card, formulario, filtros, acoes, IA, card-sugestao-acao)
+│   ├── atividades/            # Componentes do modulo de atividades (formulario, card, filtros, acoes, excluir, ia-atividade)
+│   │   └── calendario/        # Componentes do calendario (calendario-atividades, visao-mensal, visao-semanal, visao-diaria)
+│   ├── conversas-whatsapp/    # Componentes do painel de conversas (conexao-whatsapp, card-conversa, conversas-conteudo, filtros-conversas, historico-conversa, info-qualificacao)
+│   ├── integracoes/           # Componentes de integracoes (feed-xml-info, webhook-info, integracoes-conteudo, card-lead, acoes-lead, filtros-leads, config-distribuicao, carga-corretores)
+│   ├── site/                  # Componentes do site publico (header-site, footer-site, card-imovel-publico, filtros-imoveis-publico, galeria-imovel, formulario-contato, secao-hero, paginacao-site)
+│   ├── planos/                # Componentes do modulo de billing (card-plano, pagina-planos, banner-trial, banner-trial-layout)
+│   ├── meu-site/              # Componentes do painel de customizacao (formulario-configuracoes-site, upload-imagem-site, preview-cores, configuracao-dominio)
+│   ├── dashboard/             # Componentes do dashboard (card-resumo-semanal)
+│   ├── onboarding/            # Componentes de onboarding (provedor-onboarding, card-onboarding, checklist-onboarding)
+│   ├── configuracoes/         # Componentes de configuracoes (formulario-configuracoes-integracoes)
+│   └── usuarios/              # Componentes de gestao de equipe (pagina-usuarios, formulario-convite)
 ├── lib/
 │   ├── supabase/              # Clientes Supabase (client.ts, server.ts, admin.ts, middleware.ts)
+│   ├── site/                  # Funcoes de busca de dados publicos (buscar-dados-site.ts — buscarOrganizacaoPorSlug, buscarOrganizacaoPorDominio, buscarDominioOrganizacao)
+│   ├── xml/                   # Gerador XML VRSync (vrsync.ts — feed para portais imobiliarios)
+│   ├── leads/                 # Normalizador de leads dos portais (normalizador.ts)
+│   ├── whatsapp/              # Agente SDR WhatsApp
+│   │   ├── uazapi.ts          # Wrapper da API Uazapi (enviar texto, imagem, simular digitando, gestao de instancia — criar, conectar, status, desconectar, webhook)
+│   │   ├── humanizar.ts       # Envio humanizado (quebrar mensagem, delay, digitacao)
+│   │   ├── processar-midia.ts # Processamento de midia (Whisper audio, Vision imagem, PDF)
+│   │   ├── debounce.ts        # Debounce com Redis (agrupa mensagens em janela de 20s)
+│   │   ├── agente-sdr.ts      # Orquestrador do agente IA (contexto, OpenAI, tools, resposta)
+│   │   ├── prompt-sdr.ts      # Prompt do agente SDR (persona, qualificacao, regras)
+│   │   ├── tools-sdr.ts       # Tools function calling (buscar imoveis, criar cliente/negocio/atividade)
+│   │   └── memoria.ts         # Memoria de conversa com Redis (20 mensagens, TTL 24h)
+│   ├── stripe.ts              # Cliente Stripe singleton (billing)
+│   ├── permissoes.ts          # Mapa de permissoes centralizado (temPermissao, verificarPermissao, obterPermissoes)
+│   ├── verificar-limites.ts   # Verificacao de limites por plano (imoveis, corretores, IA, modulos)
+│   ├── distribuicao-leads.ts  # Distribuicao de leads entre corretores (obterProximoCorretor — manual/roleta/balanceamento)
+│   ├── redis.ts               # Cliente Upstash Redis (debounce + memoria de conversa)
 │   ├── openai.ts              # Cliente OpenAI (GPT-4o-mini para IA em imoveis)
+│   ├── formatadores.ts        # Funcoes utilitarias de formatacao (formatarPreco, formatarData, formatarDataHora, formatarDataCurta, formatarDataHoraCurta)
 │   └── utils.ts               # Funcao cn() do shadcn
-├── hooks/                     # Custom hooks (use-organizacao, use-usuario, use-mobile, use-lista-imoveis, use-imovel, use-lista-clientes, use-cliente, use-pipeline, use-negocio)
-├── types/                     # Tipos TypeScript (database.ts, auth.ts, imoveis.ts, clientes.ts, negocios.ts, formulario.ts)
-├── actions/                   # Server Actions (auth.ts, imoveis.ts, ia-imoveis.ts, clientes.ts, ia-clientes.ts, negocios.ts, ia-negocios.ts)
+├── hooks/                     # Custom hooks (use-organizacao, use-usuario, use-mobile, use-plano, use-lista-imoveis, use-imovel, use-lista-clientes, use-cliente, use-pipeline, use-negocio, use-lista-atividades, use-atividade, use-atividades-calendario, use-lista-leads, use-lista-conversas, use-conversa-whatsapp, use-lista-usuarios, use-config-distribuicao, use-config-whatsapp, use-instancia-whatsapp, use-busca-global, use-onboarding)
+├── types/                     # Tipos TypeScript (database.ts, auth.ts, imoveis.ts, clientes.ts, negocios.ts, atividades.ts, leads-portais.ts, formulario.ts, billing.ts, configuracoes-site.ts, configuracoes-integracoes.ts, whatsapp.ts, distribuicao-leads.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao.ts)
+├── actions/                   # Server Actions (auth.ts, imoveis.ts, ia-imoveis.ts, clientes.ts, ia-clientes.ts, negocios.ts, ia-negocios.ts, atividades.ts, ia-atividades.ts, billing.ts, leads-portais.ts, site-contato.ts, configuracoes-site.ts, configuracoes-integracoes.ts, usuarios.ts, convites.ts, distribuicao-leads.ts, whatsapp.ts, instancia-whatsapp.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao-imoveis.ts)
 └── middleware.ts               # Middleware de auth (protecao de rotas)
 
 supabase/
-└── migrations/                # Migrations SQL do banco (001_organizacoes_usuarios.sql, 002_imoveis.sql, 003_clientes.sql, 004_negocios.sql)
+└── migrations/                # Migrations SQL do banco (001_organizacoes_usuarios.sql, 002_imoveis.sql, 003_clientes.sql, 004_negocios.sql, 005_atividades.sql, 006_leads_portais.sql, 007_site_assets_bucket.sql, 008_whatsapp.sql, 009_configuracoes_integracoes.sql, 010_billing.sql, 011_convites_usuarios.sql, 012_distribuicao_leads.sql, 013_dominios_customizados.sql, 014_canais_publicacao.sql, 015_onboarding.sql, 016_resumos_semanais.sql, 017_whatsapp_instance_id.sql, 018_sugestao_ia_resumo.sql)
 
 planejamento/
 ├── pesquisas/                 # Pesquisas geradas pela skill /pesquisa
@@ -131,6 +200,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=chave-publica-do-supabase
 SUPABASE_SERVICE_ROLE_KEY=chave-admin-do-supabase (nunca expor no browser)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 OPENAI_API_KEY=chave-da-openai (nunca expor no browser, usada apenas em Server Actions)
+STRIPE_SECRET_KEY=chave-secreta-do-stripe (nunca expor no browser)
+STRIPE_WEBHOOK_SECRET=secret-do-webhook-stripe
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=chave-publica-do-stripe
+STRIPE_PRICE_ID_CRM_IA=price-id-do-plano-crm-ia (criado no dashboard Stripe)
+STRIPE_PRICE_ID_CRM_IA_SDR=price-id-do-plano-crm-ia-sdr (criado no dashboard Stripe)
+UPSTASH_REDIS_REST_URL=url-do-redis-upstash
+UPSTASH_REDIS_REST_TOKEN=token-do-redis-upstash
 ```
 
 ## Arquivos Sensiveis / Nao Modificar

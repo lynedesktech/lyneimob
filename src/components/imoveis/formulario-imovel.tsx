@@ -22,35 +22,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Globe, Rss } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { labelsTipoImovel, labelsFinalidade, labelsStatusImovel, opcoesDeLabels } from "@/lib/constantes"
 
-const opcoesTipo = [
-  { value: "apartamento", label: "Apartamento" },
-  { value: "casa", label: "Casa" },
-  { value: "terreno", label: "Terreno" },
-  { value: "sala_comercial", label: "Sala Comercial" },
-  { value: "galpao", label: "Galpão" },
-  { value: "cobertura", label: "Cobertura" },
-  { value: "kitnet", label: "Kitnet" },
-  { value: "fazenda", label: "Fazenda" },
-  { value: "sitio", label: "Sítio" },
-  { value: "loja", label: "Loja" },
-  { value: "outro", label: "Outro" },
-]
-
-const opcoesFinalidade = [
-  { value: "venda", label: "Venda" },
-  { value: "aluguel", label: "Aluguel" },
-  { value: "venda_e_aluguel", label: "Venda e Aluguel" },
-]
-
-const opcoesStatus = [
-  { value: "disponivel", label: "Disponível" },
-  { value: "reservado", label: "Reservado" },
-  { value: "vendido", label: "Vendido" },
-  { value: "alugado", label: "Alugado" },
-  { value: "inativo", label: "Inativo" },
-]
+const opcoesTipo = opcoesDeLabels(labelsTipoImovel)
+const opcoesFinalidade = opcoesDeLabels(labelsFinalidade)
+const opcoesStatus = opcoesDeLabels(labelsStatusImovel)
 
 const estados = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
@@ -446,6 +424,46 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               rows={3}
               defaultValue={imovel?.observacoes_internas ?? ""}
             />
+          </CardContent>
+        </Card>
+
+        {/* Canais de Publicação */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Canais de publicação</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Escolha onde este imóvel ficará visível. Apenas imóveis com status &quot;Disponível&quot; aparecem nos canais selecionados.
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Switch
+                  name="publicar_site"
+                  defaultChecked={imovel?.publicar_site ?? true}
+                />
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Site público</p>
+                    <p className="text-xs text-muted-foreground">Aparece no site da imobiliária</p>
+                  </div>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Switch
+                  name="publicar_portais"
+                  defaultChecked={imovel?.publicar_portais ?? true}
+                />
+                <div className="flex items-center gap-2">
+                  <Rss className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Portais imobiliários</p>
+                    <p className="text-xs text-muted-foreground">Aparece no OLX, VivaReal, etc. via feed XML</p>
+                  </div>
+                </div>
+              </label>
+            </div>
           </CardContent>
         </Card>
 

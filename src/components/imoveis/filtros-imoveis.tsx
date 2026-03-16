@@ -12,34 +12,11 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
+import { labelsTipoImovel, labelsFinalidade, labelsStatusImovel } from "@/lib/constantes"
 
-const opcoesTipo = [
-  { value: "apartamento", label: "Apartamento" },
-  { value: "casa", label: "Casa" },
-  { value: "terreno", label: "Terreno" },
-  { value: "sala_comercial", label: "Sala Comercial" },
-  { value: "galpao", label: "Galpão" },
-  { value: "cobertura", label: "Cobertura" },
-  { value: "kitnet", label: "Kitnet" },
-  { value: "fazenda", label: "Fazenda" },
-  { value: "sitio", label: "Sítio" },
-  { value: "loja", label: "Loja" },
-  { value: "outro", label: "Outro" },
-]
-
-const opcoesFinalidade = [
-  { value: "venda", label: "Venda" },
-  { value: "aluguel", label: "Aluguel" },
-  { value: "venda_e_aluguel", label: "Venda e Aluguel" },
-]
-
-const opcoesStatus = [
-  { value: "disponivel", label: "Disponível" },
-  { value: "reservado", label: "Reservado" },
-  { value: "vendido", label: "Vendido" },
-  { value: "alugado", label: "Alugado" },
-  { value: "inativo", label: "Inativo" },
-]
+const opcoesTipo = Object.entries(labelsTipoImovel).map(([value, label]) => ({ value, label }))
+const opcoesFinalidade = Object.entries(labelsFinalidade).map(([value, label]) => ({ value, label }))
+const opcoesStatus = Object.entries(labelsStatusImovel).map(([value, label]) => ({ value, label }))
 
 export function FiltrosImoveis() {
   const router = useRouter()
@@ -67,10 +44,11 @@ export function FiltrosImoveis() {
     searchParams.has("busca") ||
     searchParams.has("tipo") ||
     searchParams.has("finalidade") ||
-    searchParams.has("status")
+    searchParams.has("status") ||
+    searchParams.has("canal")
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-end gap-3">
       <div className="relative flex-1 min-w-[200px]">
         <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -133,6 +111,20 @@ export function FiltrosImoveis() {
               {opcao.label}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={searchParams.get("canal") ?? undefined}
+        onValueChange={(valor) => atualizarFiltro("canal", valor || null)}
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="Canal" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="site">Site</SelectItem>
+          <SelectItem value="portais">Portais</SelectItem>
+          <SelectItem value="nenhum">Não publicado</SelectItem>
         </SelectContent>
       </Select>
 

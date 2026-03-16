@@ -1,6 +1,17 @@
 import { z } from "zod"
 
 // ============================================================
+// Siglas válidas dos estados brasileiros
+// ============================================================
+export const SIGLAS_ESTADOS_BR = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+  "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+] as const
+
+export type SiglaEstado = (typeof SIGLAS_ESTADOS_BR)[number]
+
+// ============================================================
 // Schema de criação de imóvel
 // ============================================================
 export const schemaCriarImovel = z.object({
@@ -32,7 +43,10 @@ export const schemaCriarImovel = z.object({
   complemento: z.string().optional(),
   bairro: z.string().optional(),
   cidade: z.string().min(1, "Cidade é obrigatória"),
-  estado: z.string().length(2, "Use a sigla do estado (ex: SP)"),
+  estado: z.string().length(2, "Use a sigla do estado (ex: SP)").transform(v => v.toUpperCase()).refine(
+    (v) => (SIGLAS_ESTADOS_BR as readonly string[]).includes(v),
+    "Sigla de estado inválida"
+  ),
   preco_venda: z.coerce.number().positive("Preço deve ser positivo").optional(),
   preco_aluguel: z.coerce
     .number()
@@ -54,6 +68,8 @@ export const schemaCriarImovel = z.object({
   vagas_garagem: z.coerce.number().int().min(0).default(0),
   andares: z.coerce.number().int().positive().optional(),
   observacoes_internas: z.string().optional(),
+  publicar_site: z.coerce.boolean().default(true),
+  publicar_portais: z.coerce.boolean().default(true),
 })
 
 // ============================================================
@@ -79,6 +95,7 @@ export const schemaFiltrosImoveis = z.object({
   preco_min: z.coerce.number().optional(),
   preco_max: z.coerce.number().optional(),
   quartos_min: z.coerce.number().optional(),
+  canal: z.enum(["todos", "site", "portais", "nenhum"]).optional(),
   pagina: z.coerce.number().default(1),
   por_pagina: z.coerce.number().default(12),
 })

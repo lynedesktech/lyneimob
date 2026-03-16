@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { AlertCircle } from "lucide-react"
 
 export default function LoginPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
@@ -31,10 +32,11 @@ export default function LoginPage() {
       </CardHeader>
 
       <form action={formAction}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           {estado.erro && (
-            <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {estado.erro}
+            <div className="flex items-start gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{estado.erro}</span>
             </div>
           )}
 
@@ -55,7 +57,7 @@ export default function LoginPage() {
               <Label htmlFor="senha">Senha</Label>
               <Link
                 href="/esqueci-senha"
-                className="text-xs text-muted-foreground hover:text-primary"
+                className="text-sm text-primary hover:underline"
               >
                 Esqueci minha senha
               </Link>

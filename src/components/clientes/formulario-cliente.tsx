@@ -23,28 +23,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
+import { labelsTipoCliente, labelsOrigem, labelsStatusCliente, opcoesDeLabels } from "@/lib/constantes"
 
-const opcoesTipo = [
-  { value: "comprador", label: "Comprador" },
-  { value: "vendedor", label: "Vendedor" },
-  { value: "locatario", label: "Locatário" },
-  { value: "proprietario", label: "Proprietário" },
-]
-
-const opcoesOrigem = [
-  { value: "indicacao", label: "Indicação" },
-  { value: "portal", label: "Portal" },
-  { value: "site", label: "Site" },
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "outro", label: "Outro" },
-]
-
-const opcoesStatus = [
-  { value: "ativo", label: "Ativo" },
-  { value: "inativo", label: "Inativo" },
-  { value: "negociando", label: "Negociando" },
-  { value: "fechado", label: "Fechado" },
-]
+const opcoesTipo = opcoesDeLabels(labelsTipoCliente)
+const opcoesOrigem = opcoesDeLabels(labelsOrigem)
+const opcoesStatus = opcoesDeLabels(labelsStatusCliente)
 
 type FormularioClienteProps = {
   cliente?: Cliente

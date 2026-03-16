@@ -9,10 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StatusBadge } from "@/components/imoveis/status-badge"
+import { StatusBadge, configStatusImovel } from "@/components/ui/status-badge"
 import { GaleriaFotos } from "@/components/imoveis/galeria-fotos"
 import { IAImovel } from "@/components/imoveis/ia-imovel"
-import { BotaoExcluir } from "@/components/imoveis/botao-excluir"
+import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
+import { excluirImovel } from "@/actions/imoveis"
 import {
   ArrowLeft,
   Pencil,
@@ -23,29 +24,12 @@ import {
   Maximize,
   Building,
   Layers,
+  Globe,
+  Rss,
 } from "lucide-react"
+import { labelsTipoImovel, labelsFinalidade } from "@/lib/constantes"
 
 type Params = Promise<{ id: string }>
-
-const labelsTipo: Record<string, string> = {
-  apartamento: "Apartamento",
-  casa: "Casa",
-  terreno: "Terreno",
-  sala_comercial: "Sala Comercial",
-  galpao: "Galpão",
-  cobertura: "Cobertura",
-  kitnet: "Kitnet",
-  fazenda: "Fazenda",
-  sitio: "Sítio",
-  loja: "Loja",
-  outro: "Outro",
-}
-
-const labelsFinalidade: Record<string, string> = {
-  venda: "Venda",
-  aluguel: "Aluguel",
-  venda_e_aluguel: "Venda e Aluguel",
-}
 
 function formatarPreco(valor: number | null): string {
   if (!valor) return "—"
@@ -91,10 +75,10 @@ export default async function DetalheImovelPage({
               <h1 className="text-2xl font-bold tracking-tight">
                 {imovel.titulo}
               </h1>
-              <StatusBadge status={imovel.status} />
+              <StatusBadge status={imovel.status} config={configStatusImovel} />
             </div>
             <p className="text-sm text-muted-foreground">
-              Código: {imovel.codigo} • {labelsTipo[imovel.tipo]} •{" "}
+              Código: {imovel.codigo} • {labelsTipoImovel[imovel.tipo]} •{" "}
               {labelsFinalidade[imovel.finalidade]}
             </p>
           </div>
@@ -108,7 +92,11 @@ export default async function DetalheImovelPage({
             <Pencil className="mr-2 h-4 w-4" />
             Editar
           </Button>
-          <BotaoExcluir imovelId={id} />
+          <ConfirmacaoExclusao
+              titulo="Excluir imóvel"
+              descricao="Tem certeza que deseja excluir este imóvel? Todas as fotos e dados serão removidos permanentemente. Esta ação não pode ser desfeita."
+              onConfirmar={() => excluirImovel(id)}
+            />
         </div>
       </div>
 
@@ -273,6 +261,36 @@ export default async function DetalheImovelPage({
                       </div>
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Publicação */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Globe className="h-4 w-4" />
+                  Publicação
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>Site público</span>
+                  </div>
+                  <span className={imovel.publicar_site ? "font-medium text-primary" : "text-muted-foreground"}>
+                    {imovel.publicar_site ? "Sim" : "Não"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Rss className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>Portais (OLX, VivaReal...)</span>
+                  </div>
+                  <span className={imovel.publicar_portais ? "font-medium text-primary" : "text-muted-foreground"}>
+                    {imovel.publicar_portais ? "Sim" : "Não"}
+                  </span>
                 </div>
               </CardContent>
             </Card>

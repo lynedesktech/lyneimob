@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/dist/tailwind.css";
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -22,6 +22,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -66,6 +72,12 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+  --success: oklch(0.55 0.18 145);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.205 0 0);
+  --info: oklch(0.55 0.15 250);
+  --info-foreground: oklch(0.985 0 0);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -101,6 +113,12 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+  --success: oklch(0.65 0.18 145);
+  --success-foreground: oklch(0.205 0 0);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.205 0 0);
+  --info: oklch(0.65 0.15 250);
+  --info-foreground: oklch(0.205 0 0);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);

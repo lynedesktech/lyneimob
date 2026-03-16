@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { verificarPermissao } from "@/lib/permissoes"
 import {
   schemaCriarNegocio,
   schemaAtualizarNegocio,
@@ -89,6 +90,11 @@ export async function criarNegocio(
     return { erro: "Erro ao criar negócio. Tente novamente." }
   }
 
+  // Gerar sugestão de ação automaticamente (fire-and-forget, import dinâmico)
+  import("@/actions/ia-negocios").then(({ sugerirAcao }) =>
+    sugerirAcao(negocio.id).catch(() => {})
+  )
+
   redirect(`/negocios/${negocio.id}`)
 }
 
@@ -150,8 +156,9 @@ export async function excluirNegocio(id: string): Promise<EstadoFormulario> {
     return { erro: "Usuário não autenticado" }
   }
 
-  if (usuario.cargo !== "admin") {
-    return { erro: "Apenas administradores podem excluir negócios" }
+  const permissao = verificarPermissao(usuario.cargo as "admin" | "corretor" | "gerente", "excluir_registros")
+  if (permissao.erro) {
+    return permissao
   }
 
   const supabase = await criarClienteServer()
@@ -189,6 +196,11 @@ export async function moverNegocio(
   if (error) {
     return { erro: "Erro ao mover negócio. Tente novamente." }
   }
+
+  // Atualizar sugestão de ação ao mudar de etapa (fire-and-forget, import dinâmico)
+  import("@/actions/ia-negocios").then(({ sugerirAcao }) =>
+    sugerirAcao(negocioId).catch(() => {})
+  )
 
   revalidatePath("/negocios")
   return { sucesso: "Negócio movido com sucesso" }

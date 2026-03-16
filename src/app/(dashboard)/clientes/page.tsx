@@ -3,7 +3,9 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { CardCliente } from "@/components/clientes/card-cliente"
 import { FiltrosClientes } from "@/components/clientes/filtros-clientes"
+import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Users } from "lucide-react"
+import { EstadoVazio } from "@/components/ui/estado-vazio"
 
 type SearchParams = Promise<{
   busca?: string
@@ -47,7 +49,7 @@ export default async function ClientesPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
           <p className="text-muted-foreground">
@@ -71,52 +73,26 @@ export default async function ClientesPage({
           </div>
 
           {/* Paginação */}
-          {totalPaginas > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              {pagina > 1 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link
-                      href={`/clientes?${new URLSearchParams({ ...params, pagina: String(pagina - 1) }).toString()}`}
-                    />
-                  }
-                >
-                  Anterior
-                </Button>
-              )}
-              <span className="text-sm text-muted-foreground">
-                Página {pagina} de {totalPaginas}
-              </span>
-              {pagina < totalPaginas && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link
-                      href={`/clientes?${new URLSearchParams({ ...params, pagina: String(pagina + 1) }).toString()}`}
-                    />
-                  }
-                >
-                  Próxima
-                </Button>
-              )}
-            </div>
-          )}
+          <PaginacaoListagem
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            construtorHref={(p) =>
+              `/clientes?${new URLSearchParams({ ...params, pagina: String(p) }).toString()}`
+            }
+          />
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-          <Users className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="text-lg font-medium">Nenhum cliente encontrado</h3>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Comece cadastrando seu primeiro cliente
-          </p>
-          <Button render={<Link href="/clientes/novo" />}>
-            <Plus className="mr-2 h-4 w-4" />
-            Cadastrar cliente
-          </Button>
-        </div>
+        <EstadoVazio
+          icone={Users}
+          titulo="Nenhum cliente encontrado"
+          descricao="Comece cadastrando seu primeiro cliente"
+          acao={
+            <Button render={<Link href="/clientes/novo" />}>
+              <Plus className="mr-2 h-4 w-4" />
+              Cadastrar cliente
+            </Button>
+          }
+        />
       )}
     </div>
   )

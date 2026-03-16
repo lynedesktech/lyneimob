@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 
 export default function EsqueciSenhaPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
@@ -31,16 +32,18 @@ export default function EsqueciSenhaPage() {
       </CardHeader>
 
       <form action={formAction}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           {estado.erro && (
-            <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {estado.erro}
+            <div className="flex items-start gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{estado.erro}</span>
             </div>
           )}
 
           {estado.sucesso && (
-            <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
-              {estado.sucesso}
+            <div className="flex items-start gap-3 rounded-lg bg-success/10 px-4 py-3 text-sm text-success">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{estado.sucesso}</span>
             </div>
           )}
 

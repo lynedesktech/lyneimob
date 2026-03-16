@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { verificarLimiteImoveis } from "@/lib/verificar-limites"
+import { verificarPermissao } from "@/lib/permissoes"
 import { schemaCriarImovel, schemaAtualizarImovel } from "@/types/imoveis"
 import type { EstadoFormulario } from "@/types/formulario"
 
@@ -61,6 +63,8 @@ export async function criarImovel(
     vagas_garagem: formData.get("vagas_garagem") || 0,
     andares: formData.get("andares") || undefined,
     observacoes_internas: formData.get("observacoes_internas") || undefined,
+    publicar_site: formData.get("publicar_site") === "on" || formData.get("publicar_site") === "true",
+    publicar_portais: formData.get("publicar_portais") === "on" || formData.get("publicar_portais") === "true",
   })
 
   if (!dados.success) {
@@ -70,6 +74,12 @@ export async function criarImovel(
   const usuario = await buscarUsuarioLogado()
   if (!usuario) {
     return { erro: "Usuário não autenticado" }
+  }
+
+  // Verificar limite de imóveis do plano
+  const limite = await verificarLimiteImoveis(usuario.organizacao_id)
+  if (!limite.permitido) {
+    return { erro: limite.mensagem! }
   }
 
   const supabase = await criarClienteServer()
@@ -129,6 +139,8 @@ export async function atualizarImovel(
     vagas_garagem: formData.get("vagas_garagem") || 0,
     andares: formData.get("andares") || undefined,
     observacoes_internas: formData.get("observacoes_internas") || undefined,
+    publicar_site: formData.get("publicar_site") === "on" || formData.get("publicar_site") === "true",
+    publicar_portais: formData.get("publicar_portais") === "on" || formData.get("publicar_portais") === "true",
   })
 
   if (!dados.success) {
@@ -168,8 +180,9 @@ export async function excluirImovel(id: string): Promise<EstadoFormulario> {
     return { erro: "Usuário não autenticado" }
   }
 
-  if (usuario.cargo !== "admin") {
-    return { erro: "Apenas administradores podem excluir imóveis" }
+  const permissao = verificarPermissao(usuario.cargo as "admin" | "corretor" | "gerente", "excluir_registros")
+  if (permissao.erro) {
+    return permissao
   }
 
   const supabase = await criarClienteServer()

@@ -4,6 +4,9 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
+import { BannerTrialLayout } from "@/components/planos/banner-trial-layout"
+import { ProvedorBuscaGlobal, DialogBuscaGlobal } from "@/components/layout/busca-global"
+import { ProvedorOnboarding } from "@/components/onboarding/provedor-onboarding"
 import { Providers } from "./providers"
 
 export default async function DashboardLayout({
@@ -36,7 +39,7 @@ export default async function DashboardLayout({
   // Buscar dados da organização
   const { data: organizacao } = await supabase
     .from("organizacoes")
-    .select("nome, slug")
+    .select("nome, slug, plano, trial_fim_em")
     .single()
 
   if (!organizacao) {
@@ -45,15 +48,24 @@ export default async function DashboardLayout({
 
   return (
     <Providers>
-      <TooltipProvider>
-        <SidebarProvider>
-          <AppSidebar usuario={usuario} organizacao={organizacao} />
-          <SidebarInset>
-            <Header organizacao={organizacao} />
-            <main className="flex-1 overflow-auto p-6">{children}</main>
-          </SidebarInset>
-        </SidebarProvider>
-      </TooltipProvider>
+      <ProvedorOnboarding>
+        <ProvedorBuscaGlobal>
+          <TooltipProvider>
+            <SidebarProvider>
+              <AppSidebar usuario={usuario} organizacao={organizacao} />
+              <SidebarInset>
+                <Header organizacao={organizacao} />
+                <BannerTrialLayout
+                  plano={organizacao.plano}
+                  trialFimEm={organizacao.trial_fim_em}
+                />
+                <main className="flex-1 overflow-auto p-6">{children}</main>
+              </SidebarInset>
+            </SidebarProvider>
+          </TooltipProvider>
+          <DialogBuscaGlobal />
+        </ProvedorBuscaGlobal>
+      </ProvedorOnboarding>
     </Providers>
   )
 }

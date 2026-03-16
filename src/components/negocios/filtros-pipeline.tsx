@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
+import { labelsTipoNegocio } from "@/lib/constantes"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 
 interface FiltrosPipelineProps {
@@ -86,8 +87,11 @@ export function FiltrosPipeline({ filtros, onChange }: FiltrosPipelineProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="venda">Venda</SelectItem>
-            <SelectItem value="aluguel">Aluguel</SelectItem>
+            {Object.entries(labelsTipoNegocio).map(([valor, label]) => (
+              <SelectItem key={valor} value={valor}>
+                {label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

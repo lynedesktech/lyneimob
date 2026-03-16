@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card"
 import { Sparkles, Wand2, Type, Save, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { useAcaoIA } from "@/hooks/use-acao-ia"
 
 type IAImovelProps = {
   imovelId: string
@@ -28,67 +29,45 @@ type IAImovelProps = {
 export function IAImovel({ imovelId, tituloIA, descricaoIA }: IAImovelProps) {
   const [descricao, setDescricao] = useState(descricaoIA ?? "")
   const [titulo, setTitulo] = useState(tituloIA ?? "")
-  const [gerandoDescricao, setGerandoDescricao] = useState(false)
-  const [melhorando, setMelhorando] = useState(false)
-  const [gerandoTitulo, setGerandoTitulo] = useState(false)
-  const [salvando, setSalvando] = useState(false)
+  const acaoDescricao = useAcaoIA()
+  const acaoMelhorar = useAcaoIA()
+  const acaoTitulo = useAcaoIA()
+  const acaoSalvar = useAcaoIA()
 
-  async function handleGerarDescricao() {
-    setGerandoDescricao(true)
-    const resultado = await gerarDescricaoIA(imovelId)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else if (resultado.texto) {
-      setDescricao(resultado.texto)
-      toast.success(resultado.sucesso)
-    }
-    setGerandoDescricao(false)
+  function handleGerarDescricao() {
+    acaoDescricao.executar(
+      () => gerarDescricaoIA(imovelId),
+      (r) => setDescricao(r.texto || "")
+    )
   }
 
-  async function handleMelhorarTexto() {
+  function handleMelhorarTexto() {
     if (!descricao.trim()) {
       toast.error("Escreva ou gere uma descrição primeiro")
       return
     }
-    setMelhorando(true)
-    const resultado = await melhorarTextoIA(descricao, imovelId)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else if (resultado.texto) {
-      setDescricao(resultado.texto)
-      toast.success(resultado.sucesso)
-    }
-    setMelhorando(false)
+    acaoMelhorar.executar(
+      () => melhorarTextoIA(descricao, imovelId),
+      (r) => setDescricao(r.texto || "")
+    )
   }
 
-  async function handleGerarTitulo() {
-    setGerandoTitulo(true)
-    const resultado = await gerarTituloIA(imovelId)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else if (resultado.texto) {
-      setTitulo(resultado.texto)
-      toast.success(resultado.sucesso)
-    }
-    setGerandoTitulo(false)
+  function handleGerarTitulo() {
+    acaoTitulo.executar(
+      () => gerarTituloIA(imovelId),
+      (r) => setTitulo(r.texto || "")
+    )
   }
 
-  async function handleSalvar(campo: "titulo_ia" | "descricao_ia", texto: string) {
+  function handleSalvar(campo: "titulo_ia" | "descricao_ia", texto: string) {
     if (!texto.trim()) {
       toast.error("Nenhum texto para salvar")
       return
     }
-    setSalvando(true)
-    const resultado = await salvarTextoIA(imovelId, campo, texto)
-    if (resultado.erro) {
-      toast.error(resultado.erro)
-    } else {
-      toast.success(resultado.sucesso)
-    }
-    setSalvando(false)
+    acaoSalvar.executar(() => salvarTextoIA(imovelId, campo, texto))
   }
 
-  const processando = gerandoDescricao || melhorando || gerandoTitulo
+  const processando = acaoDescricao.carregando || acaoMelhorar.carregando || acaoTitulo.carregando
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -111,7 +90,7 @@ export function IAImovel({ imovelId, tituloIA, descricaoIA }: IAImovelProps) {
               onClick={handleGerarDescricao}
               disabled={processando}
             >
-              {gerandoDescricao ? (
+              {acaoDescricao.carregando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
@@ -124,7 +103,7 @@ export function IAImovel({ imovelId, tituloIA, descricaoIA }: IAImovelProps) {
               onClick={handleMelhorarTexto}
               disabled={processando || !descricao.trim()}
             >
-              {melhorando ? (
+              {acaoMelhorar.carregando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Wand2 className="mr-2 h-4 w-4" />
@@ -144,9 +123,9 @@ export function IAImovel({ imovelId, tituloIA, descricaoIA }: IAImovelProps) {
             <Button
               size="sm"
               onClick={() => handleSalvar("descricao_ia", descricao)}
-              disabled={salvando || !descricao.trim()}
+              disabled={acaoSalvar.carregando || !descricao.trim()}
             >
-              {salvando ? (
+              {acaoSalvar.carregando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Save className="mr-2 h-4 w-4" />
@@ -175,7 +154,7 @@ export function IAImovel({ imovelId, tituloIA, descricaoIA }: IAImovelProps) {
             onClick={handleGerarTitulo}
             disabled={processando}
           >
-            {gerandoTitulo ? (
+            {acaoTitulo.carregando ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Type className="mr-2 h-4 w-4" />
@@ -194,9 +173,9 @@ export function IAImovel({ imovelId, tituloIA, descricaoIA }: IAImovelProps) {
             <Button
               size="sm"
               onClick={() => handleSalvar("titulo_ia", titulo)}
-              disabled={salvando || !titulo.trim()}
+              disabled={acaoSalvar.carregando || !titulo.trim()}
             >
-              {salvando ? (
+              {acaoSalvar.carregando ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Save className="mr-2 h-4 w-4" />

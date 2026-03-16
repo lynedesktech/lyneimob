@@ -37,3 +37,12 @@ next-env.d.ts
 
 # vercel
 .vercel
+
+# supabase temporarios
+supabase/.temp/
+
+# workflows n8n
+Agente IA.json
+
+# configuracoes locais
+.claude/settings.local.json

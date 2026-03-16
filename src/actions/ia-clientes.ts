@@ -3,45 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { openai } from "@/lib/openai"
+import { verificarLimiteConversasIA, registrarUsoConversaIA } from "@/lib/verificar-limites"
 import type { EstadoFormulario } from "@/types/formulario"
-
-const labelsTipo: Record<string, string> = {
-  comprador: "Comprador",
-  vendedor: "Vendedor",
-  locatario: "Locatário",
-  proprietario: "Proprietário",
-}
-
-const labelsOrigem: Record<string, string> = {
-  indicacao: "Indicação",
-  portal: "Portal",
-  site: "Site",
-  whatsapp: "WhatsApp",
-  outro: "Outro",
-}
-
-const labelsTipoImovel: Record<string, string> = {
-  apartamento: "Apartamento",
-  casa: "Casa",
-  terreno: "Terreno",
-  sala_comercial: "Sala Comercial",
-  galpao: "Galpão",
-  cobertura: "Cobertura",
-  kitnet: "Kitnet",
-  fazenda: "Fazenda",
-  sitio: "Sítio",
-  loja: "Loja",
-  outro: "Outro",
-}
-
-const labelsTipoInteracao: Record<string, string> = {
-  ligacao: "Ligação",
-  email: "Email",
-  visita: "Visita",
-  whatsapp: "WhatsApp",
-  reuniao: "Reunião",
-  outro: "Outro",
-}
+import { labelsTipoCliente as labelsTipo, labelsOrigem, labelsTipoImovel, labelsTipoInteracao } from "@/lib/constantes"
 
 // ============================================================
 // Helpers
@@ -121,6 +85,9 @@ export async function gerarScoreLead(
   const cliente = await buscarClienteCompleto(clienteId)
   if (!cliente) return { erro: "Cliente não encontrado" }
 
+  const limite = await verificarLimiteConversasIA(cliente.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
+
   // Cálculo determinístico (até 60 pontos)
   let scoreDeterministico = 0
 
@@ -193,6 +160,7 @@ export async function gerarScoreLead(
     .update({ score_lead: scoreTotal })
     .eq("id", clienteId)
 
+  await registrarUsoConversaIA(cliente.organizacao_id)
   revalidatePath(`/clientes/${clienteId}`)
   return { sucesso: "Score calculado com sucesso", score: scoreTotal }
 }
@@ -206,6 +174,9 @@ export async function gerarResumoCliente(
 ): Promise<EstadoFormulario & { texto?: string }> {
   const cliente = await buscarClienteCompleto(clienteId)
   if (!cliente) return { erro: "Cliente não encontrado" }
+
+  const limite = await verificarLimiteConversasIA(cliente.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
 
   try {
     const resposta = await openai.chat.completions.create({
@@ -238,6 +209,7 @@ export async function gerarResumoCliente(
       .update({ resumo_ia: texto })
       .eq("id", clienteId)
 
+    await registrarUsoConversaIA(cliente.organizacao_id)
     revalidatePath(`/clientes/${clienteId}`)
     return { sucesso: "Resumo gerado com sucesso", texto }
   } catch {
@@ -254,6 +226,9 @@ export async function matchInteligente(
 ): Promise<EstadoFormulario & { sugestoes?: Array<{ imovel_id: string; score: number; justificativa: string }> }> {
   const cliente = await buscarClienteCompleto(clienteId)
   if (!cliente) return { erro: "Cliente não encontrado" }
+
+  const limite = await verificarLimiteConversasIA(cliente.organizacao_id)
+  if (!limite.permitido) return { erro: limite.mensagem! }
 
   const supabase = await criarClienteServer()
 
@@ -308,6 +283,7 @@ export async function matchInteligente(
     if (!conteudo) return { erro: "A IA não retornou sugestões" }
 
     const sugestoes = JSON.parse(conteudo)
+    await registrarUsoConversaIA(cliente.organizacao_id)
     return { sucesso: "Match inteligente concluído", sugestoes }
   } catch {
     return { erro: "Erro ao gerar match inteligente. Verifique sua chave da OpenAI." }

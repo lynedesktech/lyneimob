@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { verificarPermissao } from "@/lib/permissoes"
 import {
   schemaCriarCliente,
   schemaAtualizarCliente,
@@ -142,8 +143,9 @@ export async function excluirCliente(id: string): Promise<EstadoFormulario> {
     return { erro: "Usuário não autenticado" }
   }
 
-  if (usuario.cargo !== "admin") {
-    return { erro: "Apenas administradores podem excluir clientes" }
+  const permissao = verificarPermissao(usuario.cargo as "admin" | "corretor" | "gerente", "excluir_registros")
+  if (permissao.erro) {
+    return permissao
   }
 
   const supabase = await criarClienteServer()

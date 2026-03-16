@@ -1,3 +1,7 @@
+import type { ConfiguracoesSite } from "./configuracoes-site"
+import type { ConfiguracoesIntegracoes } from "./configuracoes-integracoes"
+import type { ConfigDistribuicao } from "./distribuicao-leads"
+
 export type Organizacao = {
   id: string
   nome: string
@@ -16,8 +20,11 @@ export type Organizacao = {
     max_imoveis: number
     max_conversas_ia_mes: number
   }
-  configuracoes_site: Record<string, unknown>
+  configuracoes_site: ConfiguracoesSite
   configuracoes_ia: Record<string, unknown>
+  configuracoes_integracoes: ConfiguracoesIntegracoes
+  config_distribuicao: ConfigDistribuicao
+  trial_fim_em: string | null
   whatsapp_numero: string | null
   whatsapp_token: string | null
   created_at: string
@@ -92,6 +99,8 @@ export type Imovel = {
   vagas_garagem: number
   andares: number | null
   observacoes_internas: string | null
+  publicar_site: boolean
+  publicar_portais: boolean
   titulo_ia: string | null
   descricao_ia: string | null
   created_at: string
@@ -216,6 +225,7 @@ export type Negocio = {
   observacoes: string | null
   analise_ia: string | null
   sugestao_ia: string | null
+  sugestao_ia_resumo: string | null
   created_at: string
   updated_at: string
 }
@@ -230,3 +240,113 @@ export type NegocioComRelacoes = Negocio & {
 export type EtapaComNegocios = PipelineEtapa & {
   negocios: NegocioComRelacoes[]
 }
+
+// ============================================================
+// Atividades
+// ============================================================
+
+export type TipoAtividade = "ligacao" | "email" | "visita" | "reuniao" | "follow_up" | "proposta" | "outro"
+
+export type StatusAtividade = "pendente" | "concluida" | "cancelada"
+
+export type PrioridadeAtividade = "baixa" | "media" | "alta"
+
+export type Atividade = {
+  id: string
+  organizacao_id: string
+  usuario_id: string
+  negocio_id: string | null
+  cliente_id: string | null
+  imovel_id: string | null
+  titulo: string
+  descricao: string | null
+  tipo: TipoAtividade
+  status: StatusAtividade
+  prioridade: PrioridadeAtividade
+  data_inicio: string
+  data_fim: string | null
+  data_conclusao: string | null
+  lembrete: string | null
+  notas_pos_atividade: string | null
+  sugestao_ia: string | null
+  briefing_ia: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type AtividadeComRelacoes = Atividade & {
+  clientes: { id: string; nome: string; telefone: string | null } | null
+  imoveis: { id: string; titulo: string; codigo: string } | null
+  negocios: { id: string; titulo: string; status: string } | null
+  usuarios: { id: string; nome: string } | null
+}
+
+// ============================================================
+// Leads de Portais
+// ============================================================
+
+export type PortalOrigem = "zap" | "olx" | "vivareal" | "imovelweb" | "site" | "whatsapp" | "outro"
+
+export type StatusLead = "novo" | "processado" | "descartado" | "erro"
+
+export type LeadPortal = {
+  id: string
+  organizacao_id: string
+  portal: PortalOrigem
+  payload_original: Record<string, unknown> | null
+  nome: string | null
+  email: string | null
+  telefone: string | null
+  mensagem: string | null
+  imovel_codigo: string | null
+  imovel_id: string | null
+  cliente_id: string | null
+  negocio_id: string | null
+  status: StatusLead
+  erro_processamento: string | null
+  processado_em: string | null
+  created_at: string
+}
+
+export type LeadPortalComRelacoes = LeadPortal & {
+  clientes: { id: string; nome: string; telefone: string | null; email: string | null } | null
+  imoveis: { id: string; titulo: string; codigo: string } | null
+  negocios: { id: string; titulo: string; status: string } | null
+}
+
+// ============================================================
+// Convites
+// ============================================================
+
+export type StatusConvite = "pendente" | "aceito" | "expirado" | "revogado"
+
+export type Convite = {
+  id: string
+  organizacao_id: string
+  convidado_por: string
+  email: string
+  cargo: "admin" | "corretor" | "gerente"
+  token: string
+  status: StatusConvite
+  expires_at: string
+  created_at: string
+}
+
+export type ConviteComRelacoes = Convite & {
+  usuarios: { id: string; nome: string } | null
+}
+
+// ============================================================
+// WhatsApp — Agente SDR
+// ============================================================
+
+// Tipos completos em src/types/whatsapp.ts
+// Re-exportando apenas os tipos base para consistência com database.ts
+export type { ConfigWhatsapp, ConversaWhatsapp, MensagemWhatsapp, ConversaComMensagens, ConversaComRelacoes } from "./whatsapp"
+
+// ============================================================
+// Domínios Customizados
+// ============================================================
+
+// Tipos completos em src/types/dominios.ts
+export type { DominioCustomizado, StatusDominio } from "./dominios"
