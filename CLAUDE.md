@@ -122,7 +122,7 @@ src/
 │   ├── layout.tsx             # Root layout (fontes, Toaster)
 │   └── globals.css            # Estilos globais + variaveis de cor shadcn
 ├── components/
-│   ├── ui/                    # Componentes shadcn/ui (Button, Input, Card, Select, Tabs, Badge, Dialog, Table, Switch, etc.) + customizados (StatusBadge, ConfirmacaoExclusao, PaginacaoListagem, EstadoVazio)
+│   ├── ui/                    # Componentes shadcn/ui (Button, Input, Card, Select, Tabs, Badge, Dialog, Table, Switch, etc.) + customizados (StatusBadge, ConfirmacaoExclusao, PaginacaoListagem, EstadoVazio, BotaoExportar)
 │   ├── layout/                # Componentes do layout (AppSidebar, Header, UsuarioMenu, BuscaGlobal — provider + dialog + trigger)
 │   ├── imoveis/               # Componentes do modulo de imoveis (formulario, card, filtros, galeria, IA, importador-imoveis)
 │   ├── clientes/              # Componentes do modulo de clientes (formulario, card, filtros, interesses, timeline, match, IA)
@@ -158,11 +158,12 @@ src/
 │   ├── distribuicao-leads.ts  # Distribuicao de leads entre corretores (obterProximoCorretor — manual/roleta/balanceamento)
 │   ├── redis.ts               # Cliente Upstash Redis (debounce + memoria de conversa)
 │   ├── openai.ts              # Cliente OpenAI (GPT-4o-mini para IA em imoveis)
+│   ├── exportacao/             # Geradores de exportacao (gerar-excel.ts, gerar-pdf.ts, colunas.ts — definicao de colunas por modulo)
 │   ├── formatadores.ts        # Funcoes utilitarias de formatacao (formatarPreco, formatarData, formatarDataHora, formatarDataCurta, formatarDataHoraCurta)
 │   └── utils.ts               # Funcao cn() do shadcn
 ├── hooks/                     # Custom hooks (use-organizacao, use-usuario, use-mobile, use-plano, use-lista-imoveis, use-imovel, use-lista-clientes, use-cliente, use-pipeline, use-negocio, use-lista-atividades, use-atividade, use-atividades-calendario, use-lista-leads, use-lista-conversas, use-conversa-whatsapp, use-lista-usuarios, use-config-distribuicao, use-config-whatsapp, use-instancia-whatsapp, use-busca-global, use-onboarding)
-├── types/                     # Tipos TypeScript (database.ts, auth.ts, imoveis.ts, clientes.ts, negocios.ts, atividades.ts, leads-portais.ts, formulario.ts, billing.ts, configuracoes-site.ts, configuracoes-integracoes.ts, whatsapp.ts, distribuicao-leads.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao.ts)
-├── actions/                   # Server Actions (auth.ts, imoveis.ts, ia-imoveis.ts, clientes.ts, ia-clientes.ts, negocios.ts, ia-negocios.ts, atividades.ts, ia-atividades.ts, billing.ts, leads-portais.ts, site-contato.ts, configuracoes-site.ts, configuracoes-integracoes.ts, usuarios.ts, convites.ts, distribuicao-leads.ts, whatsapp.ts, instancia-whatsapp.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao-imoveis.ts)
+├── types/                     # Tipos TypeScript (database.ts, auth.ts, imoveis.ts, clientes.ts, negocios.ts, atividades.ts, leads-portais.ts, formulario.ts, billing.ts, configuracoes-site.ts, configuracoes-integracoes.ts, whatsapp.ts, distribuicao-leads.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao.ts, exportacao.ts)
+├── actions/                   # Server Actions (auth.ts, imoveis.ts, ia-imoveis.ts, clientes.ts, ia-clientes.ts, negocios.ts, ia-negocios.ts, atividades.ts, ia-atividades.ts, billing.ts, leads-portais.ts, site-contato.ts, configuracoes-site.ts, configuracoes-integracoes.ts, usuarios.ts, convites.ts, distribuicao-leads.ts, whatsapp.ts, instancia-whatsapp.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao-imoveis.ts, exportacao.ts)
 └── middleware.ts               # Middleware de auth (protecao de rotas)
 
 supabase/

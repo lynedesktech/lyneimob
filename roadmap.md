@@ -18,7 +18,7 @@
 
 > Tarefas prontas para execução, em ordem de prioridade.
 
-- [ ] Exportação de dados (relatórios PDF, planilhas Excel)
+(fila vazia)
 
 ---
 
@@ -34,12 +34,7 @@
 
 > Ideias para pensar quando os blocos acima estiverem concluídos.
 
-- [ ] Integração com Google Calendar (atividades ↔ agenda do Google)
-- [ ] Integração com e-mail (envio e tracking de abertura)
-- [ ] Relatórios e dashboards analíticos (conversão, tempo médio, performance por corretor)
-- [ ] Notificações push/email (atividades vencidas, leads novos, negócios parados)
-- [ ] IA preditiva — probabilidade de fechamento por negócio
-- [ ] App mobile (PWA ou React Native)
+(nenhuma ideia registrada)
 
 ---
 
@@ -62,3 +57,4 @@
 - [x] Sugestão automática de próxima ação por negócio — migration 018, prompt JSON estruturado, fire-and-forget ao criar/mover negócio, Kanban card com sugestão resumida, card completo no detalhe com botão "Criar Atividade", formulário pré-preenchido via searchParams ✓ validado por auditoria (2026-03-16)
 - [x] Resumo semanal gerado por IA — migration 016, Server Action com coleta de métricas + OpenAI, componente CardResumoSemanal no dashboard, cache no banco (1x por semana), botão regenerar ✓ validado por auditoria (2026-03-16)
 - [x] Importação em massa de imóveis (CSV/Excel) — wizard 3 etapas (upload → preview → resultado), papaparse + xlsx, mapeamento de colunas com aliases PT-BR, Zod, batch insert 50, limite plano, relatório erros, modelo dinâmico ✓ validado por auditoria (2026-03-16)
+- [x] Exportação de dados (relatórios PDF, planilhas Excel) — botão "Exportar" em 4 listagens, dropdown Excel/PDF, respeita filtros, geração client-side (xlsx + jspdf-autotable), Server Actions filtradas, PDF azul-marinho + paginação, limite 5000 ✓ validado por auditoria (2026-03-16)

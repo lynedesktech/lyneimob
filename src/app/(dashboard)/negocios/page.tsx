@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BotaoExportar } from "@/components/ui/botao-exportar"
 import { KanbanBoard } from "@/components/negocios/kanban-board"
 import { FiltrosPipeline } from "@/components/negocios/filtros-pipeline"
 import { usePipeline } from "@/hooks/use-pipeline"
@@ -46,10 +47,17 @@ export default function NegociosPage() {
             )}
           </p>
         </div>
-        <Button render={<Link href="/negocios/novo" />}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Negócio
-        </Button>
+        <div className="flex items-center gap-2">
+          <BotaoExportar
+            modulo="negocios"
+            filtros={filtros}
+            total={totalNegocios}
+          />
+          <Button render={<Link href="/negocios/novo" />}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Negócio
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}

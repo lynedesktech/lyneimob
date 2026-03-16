@@ -6,6 +6,7 @@ import { FiltrosClientes } from "@/components/clientes/filtros-clientes"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Users } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
+import { BotaoExportar } from "@/components/ui/botao-exportar"
 
 type SearchParams = Promise<{
   busca?: string
@@ -56,10 +57,22 @@ export default async function ClientesPage({
             {total} {total === 1 ? "cliente encontrado" : "clientes encontrados"}
           </p>
         </div>
-        <Button render={<Link href="/clientes/novo" />}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo cliente
-        </Button>
+        <div className="flex items-center gap-2">
+          <BotaoExportar
+            modulo="clientes"
+            filtros={{
+              busca: params.busca,
+              tipo: params.tipo,
+              origem: params.origem,
+              status: params.status,
+            }}
+            total={total}
+          />
+          <Button render={<Link href="/clientes/novo" />}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo cliente
+          </Button>
+        </div>
       </div>
 
       <FiltrosClientes />

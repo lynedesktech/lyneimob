@@ -10,6 +10,7 @@ import { CardAtividade } from "@/components/atividades/card-atividade"
 import { FiltrosAtividades } from "@/components/atividades/filtros-atividades"
 import { CalendarioAtividades } from "@/components/atividades/calendario/calendario-atividades"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
+import { BotaoExportar } from "@/components/ui/botao-exportar"
 import { useListaAtividades } from "@/hooks/use-lista-atividades"
 import { useFiltrosListagem } from "@/hooks/use-filtros-listagem"
 import type { FiltrosAtividadesInput } from "@/types/atividades"
@@ -60,6 +61,18 @@ export default function AtividadesPage() {
             </Button>
           </div>
 
+          <BotaoExportar
+            modulo="atividades"
+            filtros={{
+              tipo: filtros.tipo,
+              status: filtros.status,
+              prioridade: filtros.prioridade,
+              usuario_id: filtros.usuario_id,
+              data_inicio: filtros.data_inicio,
+              data_fim: filtros.data_fim,
+            }}
+            total={total}
+          />
           <Button render={<Link href="/atividades/novo" />}>
             <Plus className="mr-2 h-4 w-4" />
             Nova Atividade

@@ -169,7 +169,8 @@
       "Bash(ls -la \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\src\\\\app\\\\api\"\" 2>/dev/null || echo \"Diretório não encontrado ou vazio \")",
       "Bash(head -50 \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/imoveis/page.tsx\")",
       "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/imoveis/\")",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git push:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

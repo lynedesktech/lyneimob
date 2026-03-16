@@ -6,6 +6,7 @@ import { FiltrosImoveis } from "@/components/imoveis/filtros-imoveis"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Building2, Upload } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
+import { BotaoExportar } from "@/components/ui/botao-exportar"
 
 type SearchParams = Promise<{
   busca?: string
@@ -65,6 +66,19 @@ export default async function ImoveisPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <BotaoExportar
+            modulo="imoveis"
+            filtros={{
+              busca: params.busca,
+              tipo: params.tipo,
+              finalidade: params.finalidade,
+              status: params.status,
+              cidade: params.cidade,
+              bairro: params.bairro,
+              canal: params.canal,
+            }}
+            total={total}
+          />
           <Button variant="outline" render={<Link href="/imoveis/importar" />}>
             <Upload className="mr-2 h-4 w-4" />
             Importar
