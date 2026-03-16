@@ -1,7 +1,7 @@
 "use client"
 
+import React from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -27,6 +27,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { UsuarioMenu } from "@/components/layout/usuario-menu"
 import type { Acao } from "@/lib/permissoes"
@@ -41,18 +42,43 @@ type ItemNavegacao = {
   permissao?: Acao
 }
 
-const itensNavegacao: ItemNavegacao[] = [
-  { titulo: "Dashboard", href: "/", icone: LayoutDashboard },
-  { titulo: "Negócios", href: "/negocios", icone: Handshake },
-  { titulo: "Clientes", href: "/clientes", icone: Users },
-  { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
-  { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
-  { titulo: "Conversas", href: "/conversas", icone: MessageCircle, permissao: "ver_conversas_whatsapp" },
-  { titulo: "Integrações", href: "/integracoes", icone: Plug, permissao: "ver_integracoes" },
-  { titulo: "Meu Site", href: "/meu-site", icone: Globe, permissao: "gerenciar_site" },
-  { titulo: "Equipe", href: "/usuarios", icone: UsersRound, permissao: "gerenciar_usuarios" },
-  { titulo: "Planos", href: "/planos", icone: CreditCard, permissao: "gerenciar_plano" },
-  { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
+type GrupoNavegacao = {
+  titulo: string
+  itens: ItemNavegacao[]
+}
+
+const gruposNavegacao: GrupoNavegacao[] = [
+  {
+    titulo: "Principal",
+    itens: [
+      { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
+    ],
+  },
+  {
+    titulo: "CRM",
+    itens: [
+      { titulo: "Negócios", href: "/negocios", icone: Handshake },
+      { titulo: "Clientes", href: "/clientes", icone: Users },
+      { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
+      { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
+    ],
+  },
+  {
+    titulo: "Canais",
+    itens: [
+      { titulo: "Conversas", href: "/conversas", icone: MessageCircle, permissao: "ver_conversas_whatsapp" },
+      { titulo: "Integrações", href: "/integracoes", icone: Plug, permissao: "ver_integracoes" },
+      { titulo: "Meu Site", href: "/meu-site", icone: Globe, permissao: "gerenciar_site" },
+    ],
+  },
+  {
+    titulo: "Administração",
+    itens: [
+      { titulo: "Equipe", href: "/usuarios", icone: UsersRound, permissao: "gerenciar_usuarios" },
+      { titulo: "Planos", href: "/planos", icone: CreditCard, permissao: "gerenciar_plano" },
+      { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
+    ],
+  },
 ]
 
 interface AppSidebarProps {
@@ -71,63 +97,68 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
   const pathname = usePathname()
   const cargo = (usuario.cargo as Cargo) || "corretor"
 
-  const itensVisiveis = itensNavegacao.filter(
-    (item) => !item.permissao || temPermissao(cargo, item.permissao)
-  )
-
   return (
     <Sidebar className="border-r-0">
-      {/* Header com logo */}
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/logo-branco.png"
-            alt="LyneImob"
-            width={120}
-            height={30}
-            className="h-7 w-auto"
-          />
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-sidebar-foreground">
-              LyneImob
-            </span>
-            <span className="text-xs text-sidebar-foreground/60">
+      {/* Header — ícone + nome da org + descrição */}
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <Building2 className="h-5 w-5" />
+          </div>
+          <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
+            <span className="text-sm font-semibold text-sidebar-foreground truncate">
               {organizacao.nome}
             </span>
+            <span className="text-xs text-sidebar-foreground/60">
+              CRM Imobiliário
+            </span>
           </div>
-        </Link>
+        </div>
       </SidebarHeader>
 
-      {/* Navegação */}
+      {/* Navegação agrupada */}
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50">
-            Menu
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu id="onborda-sidebar-nav">
-              {itensVisiveis.map((item) => {
-                const ativo =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(item.href)
+        {gruposNavegacao.map((grupo, indice) => {
+          const itensVisiveis = grupo.itens.filter(
+            (item) => !item.permissao || temPermissao(cargo, item.permissao)
+          )
 
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      render={<Link href={item.href} />}
-                      isActive={ativo}
-                      tooltip={item.titulo}
-                    >
-                      <item.icone />
-                      <span>{item.titulo}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          if (itensVisiveis.length === 0) return null
+
+          return (
+            <React.Fragment key={grupo.titulo}>
+              {indice > 0 && <SidebarSeparator className="mx-4" />}
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-sidebar-foreground/50 text-[11px] uppercase tracking-wider">
+                  {grupo.titulo}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu {...(indice === 0 ? { id: "onborda-sidebar-nav" } : {})}>
+                    {itensVisiveis.map((item) => {
+                      const ativo =
+                        item.href === "/painel"
+                          ? pathname === "/painel"
+                          : pathname.startsWith(item.href)
+
+                      return (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton
+                            render={<Link href={item.href} />}
+                            isActive={ativo}
+                            tooltip={item.titulo}
+                          >
+                            <item.icone />
+                            <span>{item.titulo}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </React.Fragment>
+          )
+        })}
       </SidebarContent>
 
       {/* Footer com menu do usuário */}

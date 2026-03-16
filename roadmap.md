@@ -32,8 +32,6 @@
       Depende de: Stripe configurado
 - [ ] Deploy na Vercel
       Contexto: conectar GitHub, env vars, build de produção, webhook Stripe para URL final
-- [ ] Site institucional do LyneImob (mesmo projeto)
-      Contexto: landing page, funcionalidades, preços, contato — rotas públicas no mesmo Next.js, design profissional focado em conversão
 
 ---
 
@@ -41,7 +39,12 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
-(nenhuma tarefa aguardando validação)
+- [ ] Redesign da sidebar — auditoria completa e reorganização
+      O que foi feito: header redesenhado (ícone Building2 + nome org + "CRM Imobiliário", sem link), menus organizados em 4 grupos (Principal, CRM, Canais, Administração) com separadores visuais, labels uppercase com tracking.
+      Testar: abrir sidebar no browser, verificar grupos e separadores, testar sidebar colapsada (Ctrl+B), verificar que corretor só vê Dashboard + CRM.
+- [ ] Página de vendas do LyneImob
+      O que foi feito: landing page completa em `/` com 8 seções (header, hero, funcionalidades, vídeo, preços, FAQ, CTA, footer). Dashboard movido de `/` para `/painel`. Middleware atualizado. Toggle mensal/trimestral/anual nos preços com desconto 10% e 20%.
+      Testar: acessar `/` sem login (deve ver landing), acessar `/` logado (deve redirecionar pra `/painel`), clicar nos links âncora, testar toggle de preços, verificar responsividade mobile.
 
 ---
 
