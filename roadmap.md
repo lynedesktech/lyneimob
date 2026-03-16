@@ -10,7 +10,7 @@
 
 > Tarefas em andamento agora. Só uma por vez sempre que possível.
 
-(nada em andamento)
+(nenhuma tarefa em andamento)
 
 ---
 
@@ -18,23 +18,9 @@
 
 > Tarefas prontas para execução, em ordem de prioridade.
 
-- [ ] Adicionar logos SVG da Lynedesk ao projeto
-      Contexto: receber os SVGs do usuário e salvar em public/ (logo colorido, logo branco, ícone "L"). Substituir o ícone Building2 pelo logo real nos 5 pontos: sidebar, auth desktop, auth mobile, header e footer do site público. Manter Building2 como fallback para orgs sem logo próprio.
-      Bloqueio: aguardando os arquivos SVG do usuário
-- [ ] Atualizar paleta de cores para #023373 (azul marinho Lynedesk)
-      Contexto: converter #023373 para OKLCH e usar como --primary no globals.css. Ajustar sidebar, accent e tokens derivados. Atualizar dark mode (azul claro da marca, não cinza). Atualizar cores padrão em configuracoes-site.ts e referência no CLAUDE.md.
 - [ ] Adicionar favicon e meta tags da marca Lynedesk
       Contexto: criar favicon.ico e apple-touch-icon com o ícone "L" da Lynedesk. Atualizar app/layout.tsx com metadata da marca.
       Bloqueio: aguardando ícone "L" em SVG do usuário
-- [ ] Polimento visual pós-rebranding (frontend-design)
-      Contexto: usar skill frontend-design para revisar todas as telas após as mudanças de cor e logo. Garantir contraste e legibilidade em ambos os temas (claro/escuro).
-      Depende de: tarefas de logo e paleta concluídas
-- [ ] Configurar Stripe Sandbox
-      Contexto: código de billing já está 95% pronto. Falta o usuário fornecer as chaves (pk_test_, sk_test_) e criar 2 produtos no Stripe Dashboard (CRM+IA R$199/mês, CRM+IA+SDR R$399/mês). Depois configurar os Price IDs no .env.local.
-      Bloqueio: aguardando chaves do usuário
-- [ ] Criar 3 contas de teste (admin, gerente, corretor) com senha 123456
-      Contexto: emails aleatórios, testar cada perfil de acesso. Admin via signup, gerente e corretor via convite.
-      Depende de: app rodando localmente ou na Vercel
 - [ ] Rodar seed.sql para popular o sistema
       Contexto: supabase/seed.sql já criado com 20 imóveis, 15 clientes, 10 negócios, 15 atividades. Rodar no Supabase SQL Editor após criar as contas.
       Depende de: contas criadas
@@ -55,7 +41,7 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
-(nada aguardando validação)
+(nenhuma tarefa aguardando validação)
 
 ---
 
@@ -71,20 +57,11 @@
 
 > Histórico de entregas em ordem cronológica de desenvolvimento.
 
-- [x] Auditoria e padronização do Design System — 6 tokens semânticos, 4 variantes (Badge/Button), 150+ cores substituídas em ~25 arquivos, tipografia e spacing padronizados ✓ validado (2026-03-15)
-- [x] Componentes reutilizáveis — constantes centralizadas, StatusBadge, ConfirmacaoExclusao, PaginacaoListagem, useAcaoIA, useFiltrosListagem (9 criados, 6 excluídos, ~25 modificados) ✓ validado por auditoria (2026-03-16)
-- [x] Auditoria e limpeza geral — constantes negócios, formulários com constantes, StatusBadge expandido, useAcaoIA expandido, formatadores centralizados, EstadoVazio, design system fix, console.error padronizados (3 novos, ~40 modificados) ✓ validado por auditoria (2026-03-16)
-- [x] Auditoria visual completa — headers responsivos (6 páginas), botão Voltar (4 formulários), cards padronizados com hover+StatusBadge (6 componentes), filtros alinhados (3 componentes), paginação reutilizável (3 páginas), tipografia Kanban, estado vazio (~22 arquivos) ✓ validado (2026-03-16)
-- [x] Gestão de canais de publicação por imóvel (site e portais) — migration 014, Switch UI, toggles no formulário, filtros em 4 queries públicas, badges no card, card Publicação no detalhe, filtro de canal no CRM ✓ validado por auditoria (2026-03-16)
-- [x] Dashboard com dados reais — 3 queries Supabase (negócios abertos, clientes, imóveis disponíveis) ✓ validado por auditoria (2026-03-16)
-- [x] Modo escuro — ThemeProvider + toggle no header (ícone Sol/Lua) ✓ validado por auditoria (2026-03-16)
-- [x] Validação OLX/VivaReal — conformidade XML VRSync + rota de validação + fallback webhook ✓ validado por auditoria (2026-03-16)
-- [x] Busca global no CRM (Bloco 3) — Command palette Ctrl+K, 4 queries paralelas, ações rápidas, navegação por teclado, StatusBadge ✓ validado por auditoria (2026-03-16)
-- [x] Onboarding guiado para novos usuários (Bloco 4) — Tour Onborda 4 passos + checklist primeiros passos + migration 015 + hook TanStack Query ✓ validado por auditoria (2026-03-16)
-- [x] Polimento visual final (frontend-design) — auth split screen, AlertCircle/CheckCircle2 nos alertas, badge trial, dark mode toggle, dashboard com ícones coloridos + grid responsivo + ações rápidas ✓ validado por auditoria (2026-03-16)
-- [x] Gestão de instância WhatsApp — migration 017, wrapper Uazapi (criar/conectar/status/desconectar/webhook), Server Actions, hook com polling, componente ConexaoWhatsapp com 4 estados visuais, fix multi-tenant webhook ✓ validado por auditoria (2026-03-16)
-- [x] Sugestão automática de próxima ação por negócio — migration 018, prompt JSON estruturado, fire-and-forget ao criar/mover negócio, Kanban card com sugestão resumida, card completo no detalhe com botão "Criar Atividade", formulário pré-preenchido via searchParams ✓ validado por auditoria (2026-03-16)
-- [x] Resumo semanal gerado por IA — migration 016, Server Action com coleta de métricas + OpenAI, componente CardResumoSemanal no dashboard, cache no banco (1x por semana), botão regenerar ✓ validado por auditoria (2026-03-16)
-- [x] Importação em massa de imóveis (CSV/Excel) — wizard 3 etapas (upload → preview → resultado), papaparse + xlsx, mapeamento de colunas com aliases PT-BR, Zod, batch insert 50, limite plano, relatório erros, modelo dinâmico ✓ validado por auditoria (2026-03-16)
 - [x] Exportação de dados (relatórios PDF, planilhas Excel) — botão "Exportar" em 4 listagens, dropdown Excel/PDF, respeita filtros, geração client-side (xlsx + jspdf-autotable), Server Actions filtradas, PDF azul-marinho + paginação, limite 5000 ✓ validado por auditoria (2026-03-16)
 - [x] Ajustes de billing + seed de dados de teste — página /planos com números reais de uso (corretores, imóveis, conversas IA) + seed.sql com 20 imóveis, 15 clientes, 10 negócios, 15 atividades ✓ validado por auditoria (2026-03-16)
+- [x] Integrar logos Lynedesk + paleta #023373 + tipografia Geist Sans — branding completo em todo o projeto ✓ validado por auditoria (2026-03-16)
+- [x] Polimento visual pós-rebranding — auditoria completa por 3 agentes UI/UX em todas as telas, design system consistente, dark mode OK ✓ validado por auditoria (2026-03-16)
+- [x] Criar 3 contas de teste (admin, gerente, corretor) — contas criadas no Supabase na mesma org "Imobiliária Teste", fix do bug EstadoFormulario no Turbopack (import corrigido em 3 páginas auth) ✓ validado por auditoria (2026-03-16)
+- [x] Fix loop infinito de renderização no dashboard — causa raiz: recursão infinita no RLS do PostgreSQL. Migration 019 aplicada com função SECURITY DEFINER `organizacao_id_do_usuario()`, policies reescritas em 16+ tabelas, layout e page restaurados ✓ validado por auditoria (2026-03-16)
+- [x] Garantir fontes sans-serif em todo o sistema — fallback chain no globals.css (Geist → Inter → Segoe UI → Helvetica Neue → Arial → sans-serif), font-sans no body ✓ validado por auditoria (2026-03-16)
+- [x] Configurar Stripe Sandbox + auditoria de integração — 2 produtos criados, 5 env vars, webhook handler com 7 correções (dedup, metadata fallback, toast useEffect, verificação de erro, limpeza trial) ✓ validado por auditoria (2026-03-16)

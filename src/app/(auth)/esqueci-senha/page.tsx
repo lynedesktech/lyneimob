@@ -2,7 +2,8 @@
 
 import { useActionState } from "react"
 import Link from "next/link"
-import { recuperarSenha, type EstadoFormulario } from "@/actions/auth"
+import { recuperarSenha } from "@/actions/auth"
+import type { EstadoFormulario } from "@/types/formulario"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

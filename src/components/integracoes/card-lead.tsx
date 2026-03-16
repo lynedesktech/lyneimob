@@ -23,13 +23,13 @@ const labelsPortal: Record<string, string> = {
 }
 
 const coresPortal: Record<string, string> = {
-  zap: "bg-purple-100 text-purple-700",
-  olx: "bg-orange-100 text-orange-700",
-  vivareal: "bg-green-100 text-green-700",
-  imovelweb: "bg-blue-100 text-blue-700",
-  site: "bg-slate-100 text-slate-700",
-  whatsapp: "bg-emerald-100 text-emerald-700",
-  outro: "bg-gray-100 text-gray-700",
+  zap: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+  olx: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  vivareal: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  imovelweb: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  site: "bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300",
+  whatsapp: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  outro: "bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300",
 }
 
 export function CardLead({ lead }: CardLeadProps) {

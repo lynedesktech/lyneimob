@@ -1,6 +1,5 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Building2 } from "lucide-react"
 import type { OrganizacaoSite } from "@/lib/site/buscar-dados-site"
 
 type Props = {
@@ -24,7 +23,13 @@ export function HeaderSite({ organizacao }: Props) {
               className="rounded"
             />
           ) : (
-            <Building2 className="h-7 w-7 text-[var(--site-primaria)]" />
+            <Image
+              src="/logo-preto.png"
+              alt={organizacao.nome}
+              width={120}
+              height={30}
+              className="h-7 w-auto"
+            />
           )}
           <span className="text-lg font-bold text-[var(--site-primaria)]">
             {organizacao.nome}

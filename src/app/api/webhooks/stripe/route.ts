@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { criarClienteStripe } from "@/lib/stripe"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
-import { obterLimitesPorPlano, PLANOS } from "@/types/billing"
+import { obterLimitesPorPlano } from "@/types/billing"
 import type { TipoPlano } from "@/types/billing"
 import type Stripe from "stripe"
 
@@ -46,15 +46,34 @@ export async function POST(request: Request) {
       )
     }
 
-    // Evitar processar evento duplicado
-    const { data: eventoExistente } = await supabase
-      .from("eventos_billing")
-      .select("id")
-      .eq("stripe_event_id", evento.id)
-      .single()
+    // Fix #4: Salvar evento ANTES de processar (dedup atômica via unique constraint)
+    const organizacaoId = await extrairOrganizacaoId(supabase, evento)
+    if (organizacaoId) {
+      const { error: erroInsert } = await supabase.from("eventos_billing").insert({
+        organizacao_id: organizacaoId,
+        tipo_evento: evento.type,
+        stripe_event_id: evento.id,
+        payload: evento.data.object as unknown as Record<string, unknown>,
+      })
 
-    if (eventoExistente) {
-      return NextResponse.json({ status: "ignorado", motivo: "duplicata" })
+      // Se já existe (unique constraint em stripe_event_id), é duplicata
+      if (erroInsert) {
+        if (erroInsert.code === "23505") {
+          return NextResponse.json({ status: "ignorado", motivo: "duplicata" })
+        }
+        console.error("[Stripe Webhook] Erro ao salvar evento:", erroInsert.message)
+      }
+    } else {
+      // Sem org_id — ainda verificar duplicata pela query antiga
+      const { data: eventoExistente } = await supabase
+        .from("eventos_billing")
+        .select("id")
+        .eq("stripe_event_id", evento.id)
+        .single()
+
+      if (eventoExistente) {
+        return NextResponse.json({ status: "ignorado", motivo: "duplicata" })
+      }
     }
 
     // Processar evento por tipo
@@ -83,17 +102,6 @@ export async function POST(request: Request) {
       default:
         // Evento não tratado — só logar
         break
-    }
-
-    // Salvar evento para auditoria (buscar org_id do metadata ou do customer)
-    const organizacaoId = await extrairOrganizacaoId(supabase, evento)
-    if (organizacaoId) {
-      await supabase.from("eventos_billing").insert({
-        organizacao_id: organizacaoId,
-        tipo_evento: evento.type,
-        stripe_event_id: evento.id,
-        payload: evento.data.object as unknown as Record<string, unknown>,
-      })
     }
 
     return NextResponse.json({ status: "ok", tipo: evento.type })
@@ -133,11 +141,16 @@ async function processarCheckoutCompleto(
     return
   }
 
+  // Fix #3: Verificar erro no update
   // Associar stripe_customer_id à organização
-  await supabase
+  const { error: erroCustomer } = await supabase
     .from("organizacoes")
     .update({ stripe_customer_id: customerId })
     .eq("id", organizacaoId)
+
+  if (erroCustomer) {
+    console.error("[Stripe Webhook] Erro ao associar customer:", erroCustomer.message)
+  }
 
   // Se for subscription, buscar detalhes
   if (session.subscription) {
@@ -149,15 +162,21 @@ async function processarCheckoutCompleto(
     const subscription = await stripe.subscriptions.retrieve(subscriptionId)
     const plano = identificarPlano(subscription)
 
-    await supabase
+    // Fix #6: Limpar trial_fim_em ao assinar plano pago
+    const { error: erroPlano } = await supabase
       .from("organizacoes")
       .update({
         stripe_subscription_id: subscriptionId,
         plano: plano,
         plano_status: "active",
         limites: obterLimitesPorPlano(plano),
+        trial_fim_em: null,
       })
       .eq("id", organizacaoId)
+
+    if (erroPlano) {
+      console.error("[Stripe Webhook] Erro ao atualizar plano (checkout):", erroPlano.message)
+    }
   }
 }
 
@@ -172,16 +191,30 @@ async function processarAssinaturaCriadaOuAtualizada(
       ? subscription.customer
       : subscription.customer.id
 
-  // Buscar organização pelo stripe_customer_id
+  // Fix #2: Tentar metadata da subscription como fallback
+  // (o checkout seta organizacao_id no subscription_data.metadata)
+  let orgId: string | null = null
+
+  // Primeiro: buscar por customer_id (caminho normal)
   const { data: org } = await supabase
     .from("organizacoes")
     .select("id")
     .eq("stripe_customer_id", customerId)
     .single()
 
-  if (!org) {
+  if (org) {
+    orgId = org.id
+  } else {
+    // Fallback: buscar por metadata da subscription
+    const metadataOrgId = subscription.metadata?.organizacao_id
+    if (metadataOrgId) {
+      orgId = metadataOrgId
+    }
+  }
+
+  if (!orgId) {
     console.error(
-      `[Stripe Webhook] Organização não encontrada para customer ${customerId}`
+      `[Stripe Webhook] Organização não encontrada para customer ${customerId} (sem fallback de metadata)`
     )
     return
   }
@@ -189,7 +222,8 @@ async function processarAssinaturaCriadaOuAtualizada(
   const plano = identificarPlano(subscription)
   const status = mapearStatusAssinatura(subscription.status)
 
-  await supabase
+  // Fix #3: Verificar erro no update
+  const { error: erroUpdate } = await supabase
     .from("organizacoes")
     .update({
       stripe_subscription_id: subscription.id,
@@ -197,7 +231,11 @@ async function processarAssinaturaCriadaOuAtualizada(
       plano_status: status,
       limites: obterLimitesPorPlano(plano),
     })
-    .eq("id", org.id)
+    .eq("id", orgId)
+
+  if (erroUpdate) {
+    console.error("[Stripe Webhook] Erro ao atualizar assinatura:", erroUpdate.message)
+  }
 }
 
 async function processarAssinaturaCancelada(
@@ -219,8 +257,9 @@ async function processarAssinaturaCancelada(
 
   if (!org) return
 
+  // Fix #3: Verificar erro no update
   // Voltar para trial com limites reduzidos
-  await supabase
+  const { error: erroUpdate } = await supabase
     .from("organizacoes")
     .update({
       plano: "trial",
@@ -229,6 +268,10 @@ async function processarAssinaturaCancelada(
       stripe_subscription_id: null,
     })
     .eq("id", org.id)
+
+  if (erroUpdate) {
+    console.error("[Stripe Webhook] Erro ao cancelar assinatura:", erroUpdate.message)
+  }
 }
 
 async function processarPagamentoSucesso(
@@ -252,11 +295,16 @@ async function processarPagamentoSucesso(
 
   if (!org) return
 
+  // Fix #3: Verificar erro no update
   // Resolver inadimplência — voltar para active
-  await supabase
+  const { error: erroUpdate } = await supabase
     .from("organizacoes")
     .update({ plano_status: "active" })
     .eq("id", org.id)
+
+  if (erroUpdate) {
+    console.error("[Stripe Webhook] Erro ao atualizar pagamento sucesso:", erroUpdate.message)
+  }
 }
 
 async function processarPagamentoFalhou(
@@ -280,16 +328,22 @@ async function processarPagamentoFalhou(
 
   if (!org) return
 
-  await supabase
+  // Fix #3: Verificar erro no update
+  const { error: erroUpdate } = await supabase
     .from("organizacoes")
     .update({ plano_status: "past_due" })
     .eq("id", org.id)
+
+  if (erroUpdate) {
+    console.error("[Stripe Webhook] Erro ao registrar pagamento falho:", erroUpdate.message)
+  }
 }
 
 // ============================================================
 // Helpers
 // ============================================================
 
+// Fix #5: Remover fallback por valor — logar warning se price ID não bater
 function identificarPlano(subscription: Stripe.Subscription): TipoPlano {
   const priceId = subscription.items.data[0]?.price?.id
 
@@ -300,12 +354,10 @@ function identificarPlano(subscription: Stripe.Subscription): TipoPlano {
     return "crm_ia"
   }
 
-  // Fallback: tentar identificar pelo valor
-  const valor = subscription.items.data[0]?.price?.unit_amount
-  if (valor && valor >= PLANOS.crm_ia_sdr.preco_mensal) {
-    return "crm_ia_sdr"
-  }
-
+  // Price ID não reconhecido — logar e retornar fallback seguro
+  console.warn(
+    `[Stripe Webhook] Price ID não reconhecido: ${priceId}. Usando fallback "crm_ia".`
+  )
   return "crm_ia"
 }
 
@@ -334,7 +386,7 @@ async function extrairOrganizacaoId(
 ): Promise<string | null> {
   const objeto = evento.data.object as unknown as Record<string, unknown>
 
-  // Tentar metadata primeiro (checkout sessions)
+  // Tentar metadata primeiro (checkout sessions e subscriptions)
   const metadata = objeto.metadata as Record<string, string> | undefined
   if (metadata?.organizacao_id) {
     return metadata.organizacao_id

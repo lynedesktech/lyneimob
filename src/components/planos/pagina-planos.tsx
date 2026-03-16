@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CreditCard, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
@@ -22,17 +22,21 @@ export function PaginaPlanos({ info, ehAdmin }: PaginaPlanosProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Mensagens de retorno do Stripe
+  // Mensagens de retorno do Stripe (useEffect para rodar só uma vez)
   const sucesso = searchParams.get("sucesso")
   const cancelado = searchParams.get("cancelado")
   const trialExpirado = searchParams.get("trial_expirado")
 
-  if (sucesso) {
-    toast.success("Assinatura realizada com sucesso! Bem-vindo ao LyneImob.")
-  }
-  if (cancelado) {
-    toast.info("Checkout cancelado. Você pode tentar novamente quando quiser.")
-  }
+  useEffect(() => {
+    if (sucesso) {
+      toast.success("Assinatura realizada com sucesso! Bem-vindo ao LyneImob.")
+      router.replace("/planos")
+    }
+    if (cancelado) {
+      toast.info("Checkout cancelado. Você pode tentar novamente quando quiser.")
+      router.replace("/planos")
+    }
+  }, [sucesso, cancelado, router])
 
   async function handleAssinar(plano: TipoPlano) {
     if (!ehAdmin) {

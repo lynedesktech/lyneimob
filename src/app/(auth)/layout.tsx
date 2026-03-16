@@ -1,4 +1,4 @@
-import { Building2 } from "lucide-react"
+import Image from "next/image"
 
 export default function AuthLayout({
   children,
@@ -10,9 +10,13 @@ export default function AuthLayout({
       {/* Painel esquerdo — branding (oculto em mobile) */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-primary px-12 text-primary-foreground">
         <div className="max-w-sm space-y-6 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-foreground/15">
-            <Building2 className="h-8 w-8" />
-          </div>
+          <Image
+            src="/logo-branco.png"
+            alt="LyneImob"
+            width={200}
+            height={50}
+            className="h-12 w-auto"
+          />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">LyneImob</h1>
             <p className="mt-2 text-primary-foreground/70">
@@ -30,9 +34,13 @@ export default function AuthLayout({
         <div className="w-full max-w-md">
           {/* Logo mobile */}
           <div className="mb-8 flex flex-col items-center gap-3 lg:hidden">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Building2 className="h-6 w-6" />
-            </div>
+            <Image
+              src="/logo-preto.png"
+              alt="LyneImob"
+              width={160}
+              height={40}
+              className="h-10 w-auto"
+            />
             <div className="text-center">
               <h1 className="text-2xl font-bold text-foreground">LyneImob</h1>
               <p className="mt-1 text-sm text-muted-foreground">

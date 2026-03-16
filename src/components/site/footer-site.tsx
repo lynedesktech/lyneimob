@@ -1,4 +1,5 @@
-import { Building2, Phone, Mail, MapPin, MessageCircle } from "lucide-react"
+import Image from "next/image"
+import { Phone, Mail, MapPin, MessageCircle } from "lucide-react"
 import type { OrganizacaoSite } from "@/lib/site/buscar-dados-site"
 
 type Props = {
@@ -33,7 +34,13 @@ export function FooterSite({ organizacao }: Props) {
           {/* Sobre */}
           <div>
             <div className="mb-4 flex items-center gap-2">
-              <Building2 className="h-6 w-6" />
+              <Image
+                src="/logo-branco.png"
+                alt={organizacao.nome}
+                width={120}
+                height={30}
+                className="h-6 w-auto"
+              />
               <span className="text-lg font-bold">{organizacao.nome}</span>
             </div>
             {organizacao.creci && (

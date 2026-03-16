@@ -108,13 +108,13 @@ export function CardImovel({ imovel }: { imovel: ImovelComCapa }) {
             </div>
             <div className="flex gap-1.5">
               {imovel.publicar_site && (
-                <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                   <Globe className="h-2.5 w-2.5" />
                   Site
                 </span>
               )}
               {imovel.publicar_portais && (
-                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                   <Rss className="h-2.5 w-2.5" />
                   Portais
                 </span>

@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { criarClienteBrowser } from "@/lib/supabase/client"
+import { PLANOS } from "@/types/billing"
 import type { TipoPlano, StatusPlano, LimitesPlano } from "@/types/billing"
 
 type DadosPlano = {
@@ -47,7 +48,7 @@ export function usePlano() {
   return {
     plano: data?.plano ?? "trial",
     planoStatus: data?.plano_status ?? "trialing",
-    limites: data?.limites ?? { max_corretores: 2, max_imoveis: 50, max_conversas_ia_mes: 30 },
+    limites: data?.limites ?? PLANOS.trial.limites,
     trialFimEm: data?.trial_fim_em ?? null,
     ehTrial,
     trialExpirado,

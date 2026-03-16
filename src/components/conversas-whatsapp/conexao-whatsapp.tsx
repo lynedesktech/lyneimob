@@ -177,8 +177,8 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center pb-10">
-            {/* QR Code */}
-            <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-white p-4">
+            {/* QR Code — bg-white intencional: QR precisa de fundo claro pra ser escaneável */}
+            <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-white p-4 dark:border-muted-foreground/10">
               {qrCode ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

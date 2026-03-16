@@ -4,7 +4,6 @@ import { redirect } from "next/navigation"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { schemaLogin, schemaCadastro, schemaEsqueciSenha } from "@/types/auth"
 import type { EstadoFormulario } from "@/types/formulario"
-export type { EstadoFormulario }
 
 export async function login(
   _estado: EstadoFormulario,

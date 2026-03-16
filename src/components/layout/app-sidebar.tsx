@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -79,9 +80,13 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
       {/* Header com logo */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Building2 className="h-4 w-4" />
-          </div>
+          <Image
+            src="/logo-branco.png"
+            alt="LyneImob"
+            width={120}
+            height={30}
+            className="h-7 w-auto"
+          />
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-sidebar-foreground">
               LyneImob
