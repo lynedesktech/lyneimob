@@ -150,19 +150,19 @@ export function PaginaPlanos({ info, ehAdmin }: PaginaPlanosProps) {
           <div>
             <p className="text-sm text-muted-foreground">Corretores</p>
             <p className="text-lg font-medium">
-              — / {info.limites.max_corretores}
+              {info.uso_corretores} / {info.limites.max_corretores}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Imóveis</p>
             <p className="text-lg font-medium">
-              — / {info.limites.max_imoveis}
+              {info.uso_imoveis} / {info.limites.max_imoveis}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Conversas IA / mês</p>
             <p className="text-lg font-medium">
-              — / {info.limites.max_conversas_ia_mes}
+              {info.uso_conversas_ia} / {info.limites.max_conversas_ia_mes}
             </p>
           </div>
         </div>

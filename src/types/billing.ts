@@ -116,6 +116,9 @@ export type InfoAssinatura = {
   eh_trial: boolean
   trial_expirado: boolean
   dias_restantes_trial: number | null
+  uso_corretores: number
+  uso_imoveis: number
+  uso_conversas_ia: number
 }
 
 export type ResultadoCheckout = {

@@ -18,7 +18,18 @@
 
 > Tarefas prontas para execução, em ordem de prioridade.
 
-(fila vazia)
+- [ ] Criar 3 contas de teste (admin, gerente, corretor) com senha 123456
+      Contexto: emails aleatórios, testar cada perfil de acesso
+- [ ] Popular sistema com dados genéricos (seed.sql)
+      Contexto: ~20 imóveis, ~15 clientes, ~10 negócios, ~15 atividades distribuídos entre perfis
+- [ ] Validar permissões por perfil
+      Contexto: admin vê tudo, gerente vê registros mas não config, corretor vê só os dele
+- [ ] Validar fluxo Stripe end-to-end
+      Contexto: checkout, webhook, portal, upgrade, cancelamento — tudo com cartão de teste
+- [ ] Deploy na Vercel
+      Contexto: conectar GitHub, env vars, build de produção, webhook Stripe
+- [ ] Site institucional do LyneImob (mesmo projeto)
+      Contexto: landing page, funcionalidades, preços, contato — design profissional focado em conversão
 
 ---
 
@@ -26,7 +37,10 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
-(nada aguardando validação)
+- [ ] Ajustes de billing + seed de dados de teste
+      O que foi feito: (1) Página de planos agora mostra números reais de uso (corretores, imóveis, conversas IA) em vez de "—". (2) Criado supabase/seed.sql com 20 imóveis, 15 clientes, 7 interesses, 12 interações, 10 negócios e 15 atividades distribuídos entre 3 perfis (admin, gerente, corretor).
+      Para testar: verificar se a página /planos mostra as contagens corretas. Para o seed, rodar o SQL no Supabase após criar as contas.
+      Nota: middleware de trial expirado e registro de uso IA já estavam implementados — não precisaram de ajuste.
 
 ---
 
