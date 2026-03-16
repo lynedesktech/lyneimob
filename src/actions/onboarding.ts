@@ -18,15 +18,73 @@ export async function buscarProgressoOnboarding(): Promise<ProgressoOnboarding |
 
   const { data } = await supabase
     .from("usuarios")
-    .select("onboarding_completado, onboarding_etapas")
+    .select("onboarding_completado, onboarding_etapas, organizacao_id")
     .eq("id", user.id)
     .single()
 
   if (!data) return null
 
+  const etapas = (data.onboarding_etapas ?? {}) as EtapasOnboarding
+
+  // Auto-detecção: se já existem dados na organização, marcar etapas automaticamente
+  if (!etapas.imovel || !etapas.cliente || !etapas.negocio) {
+    const orgId = data.organizacao_id
+    const etapasAtualizadas = { ...etapas }
+    let atualizou = false
+
+    if (!etapas.imovel) {
+      const { count } = await supabase
+        .from("imoveis")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.imovel = true
+        atualizou = true
+      }
+    }
+
+    if (!etapas.cliente) {
+      const { count } = await supabase
+        .from("clientes")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.cliente = true
+        atualizou = true
+      }
+    }
+
+    if (!etapas.negocio) {
+      const { count } = await supabase
+        .from("negocios")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.negocio = true
+        atualizou = true
+      }
+    }
+
+    // Persistir no banco se alguma etapa foi detectada
+    if (atualizou) {
+      await supabase
+        .from("usuarios")
+        .update({ onboarding_etapas: etapasAtualizadas })
+        .eq("id", user.id)
+
+      return {
+        onboarding_completado: data.onboarding_completado,
+        onboarding_etapas: etapasAtualizadas,
+      }
+    }
+  }
+
   return {
     onboarding_completado: data.onboarding_completado,
-    onboarding_etapas: (data.onboarding_etapas ?? {}) as EtapasOnboarding,
+    onboarding_etapas: etapas,
   }
 }
 

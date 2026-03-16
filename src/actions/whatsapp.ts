@@ -232,7 +232,7 @@ export async function buscarConversaPorNegocio(negocioId: string) {
     .eq("negocio_id", negocioId)
     .order("ultima_mensagem_em", { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   return data
 }

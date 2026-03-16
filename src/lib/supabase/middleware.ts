@@ -37,6 +37,7 @@ export async function atualizarSessao(request: NextRequest) {
 
   // Rotas que EXIGEM autenticação (dashboard e sub-rotas)
   const rotasProtegidas = [
+    "/painel",
     "/imoveis",
     "/clientes",
     "/negocios",
@@ -49,12 +50,18 @@ export async function atualizarSessao(request: NextRequest) {
     "/usuarios",
   ]
   const ehRotaProtegida =
-    pathname === "/" ||
     rotasProtegidas.some((rota) => pathname.startsWith(rota))
 
   // Rotas de autenticação (login, cadastro, etc.)
   const rotasAuth = ["/login", "/cadastro", "/esqueci-senha", "/auth/callback"]
   const ehRotaAuth = rotasAuth.some((rota) => pathname.startsWith(rota))
+
+  // Usuário autenticado acessando a landing page → redirecionar para o painel
+  if (user && pathname === "/") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/painel"
+    return NextResponse.redirect(url)
+  }
 
   // Site público e outras rotas: não é dashboard nem auth → passar sem checar
   if (!ehRotaProtegida && !ehRotaAuth) {
@@ -68,10 +75,10 @@ export async function atualizarSessao(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Se está autenticado e tenta acessar rota de auth → redireciona para dashboard
+  // Se está autenticado e tenta acessar rota de auth → redireciona para painel
   if (user && ehRotaAuth) {
     const url = request.nextUrl.clone()
-    url.pathname = "/"
+    url.pathname = "/painel"
     return NextResponse.redirect(url)
   }
 

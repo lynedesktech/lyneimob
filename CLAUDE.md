@@ -57,9 +57,10 @@ npm run lint         # Roda ESLint para verificar erros de codigo
 src/
 ├── app/
 │   ├── (auth)/                # Paginas de autenticacao (login, cadastro, esqueci-senha, convite)
+│   ├── page.tsx               # Landing page de vendas (publica, rota /)
 │   ├── (dashboard)/           # Paginas do CRM protegidas (layout com sidebar + header)
 │   │   ├── layout.tsx         # Layout principal: sidebar + header + providers + onboarding
-│   │   ├── page.tsx           # Dashboard com resumo semanal IA + checklist de onboarding
+│   │   ├── painel/page.tsx    # Dashboard com resumo semanal IA + checklist de onboarding (rota /painel)
 │   │   ├── providers.tsx      # QueryClientProvider (TanStack Query)
 │   │   ├── imoveis/           # Modulo de imoveis
 │   │   │   ├── page.tsx       # Listagem com filtros e paginacao + botao importar
@@ -137,6 +138,7 @@ src/
 │   ├── dashboard/             # Componentes do dashboard (card-resumo-semanal)
 │   ├── onboarding/            # Componentes de onboarding (provedor-onboarding, card-onboarding, checklist-onboarding)
 │   ├── configuracoes/         # Componentes de configuracoes (formulario-configuracoes-integracoes)
+│   ├── landing/               # Componentes da pagina de vendas (header-landing, secao-hero, secao-funcionalidades, secao-video, secao-precos, secao-faq, secao-cta-final, footer-landing)
 │   └── usuarios/              # Componentes de gestao de equipe (pagina-usuarios, formulario-convite)
 ├── lib/
 │   ├── supabase/              # Clientes Supabase (client.ts, server.ts, admin.ts, middleware.ts)

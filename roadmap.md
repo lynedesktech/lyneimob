@@ -39,12 +39,7 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
-- [ ] Redesign da sidebar — auditoria completa e reorganização
-      O que foi feito: header redesenhado (ícone Building2 + nome org + "CRM Imobiliário", sem link), menus organizados em 4 grupos (Principal, CRM, Canais, Administração) com separadores visuais, labels uppercase com tracking.
-      Testar: abrir sidebar no browser, verificar grupos e separadores, testar sidebar colapsada (Ctrl+B), verificar que corretor só vê Dashboard + CRM.
-- [ ] Página de vendas do LyneImob
-      O que foi feito: landing page completa em `/` com 8 seções (header, hero, funcionalidades, vídeo, preços, FAQ, CTA, footer). Dashboard movido de `/` para `/painel`. Middleware atualizado. Toggle mensal/trimestral/anual nos preços com desconto 10% e 20%.
-      Testar: acessar `/` sem login (deve ver landing), acessar `/` logado (deve redirecionar pra `/painel`), clicar nos links âncora, testar toggle de preços, verificar responsividade mobile.
+(nenhuma tarefa aguardando validação)
 
 ---
 
@@ -60,6 +55,8 @@
 
 > Histórico de entregas em ordem cronológica de desenvolvimento.
 
+- [x] Página de vendas do LyneImob — landing page em `/` com 8 seções (header, hero, funcionalidades, vídeo, preços com toggle mensal/trimestral/anual, FAQ, CTA, footer). Dashboard movido pra `/painel`. Middleware atualizado. ✓ validado (2026-03-16)
+- [x] Redesign da sidebar — 4 grupos (Principal, CRM, Canais, Administração), separadores visuais, ícone Building2 no header ✓ validado (2026-03-16)
 - [x] Exportação de dados (relatórios PDF, planilhas Excel) — botão "Exportar" em 4 listagens, dropdown Excel/PDF, respeita filtros, geração client-side (xlsx + jspdf-autotable), Server Actions filtradas, PDF azul-marinho + paginação, limite 5000 ✓ validado por auditoria (2026-03-16)
 - [x] Ajustes de billing + seed de dados de teste — página /planos com números reais de uso (corretores, imóveis, conversas IA) + seed.sql com 20 imóveis, 15 clientes, 10 negócios, 15 atividades ✓ validado por auditoria (2026-03-16)
 - [x] Integrar logos Lynedesk + paleta #023373 + tipografia Geist Sans — branding completo em todo o projeto ✓ validado por auditoria (2026-03-16)
