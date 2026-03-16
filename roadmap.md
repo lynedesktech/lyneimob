@@ -18,18 +18,36 @@
 
 > Tarefas prontas para execução, em ordem de prioridade.
 
+- [ ] Adicionar logos SVG da Lynedesk ao projeto
+      Contexto: receber os SVGs do usuário e salvar em public/ (logo colorido, logo branco, ícone "L"). Substituir o ícone Building2 pelo logo real nos 5 pontos: sidebar, auth desktop, auth mobile, header e footer do site público. Manter Building2 como fallback para orgs sem logo próprio.
+      Bloqueio: aguardando os arquivos SVG do usuário
+- [ ] Atualizar paleta de cores para #023373 (azul marinho Lynedesk)
+      Contexto: converter #023373 para OKLCH e usar como --primary no globals.css. Ajustar sidebar, accent e tokens derivados. Atualizar dark mode (azul claro da marca, não cinza). Atualizar cores padrão em configuracoes-site.ts e referência no CLAUDE.md.
+- [ ] Adicionar favicon e meta tags da marca Lynedesk
+      Contexto: criar favicon.ico e apple-touch-icon com o ícone "L" da Lynedesk. Atualizar app/layout.tsx com metadata da marca.
+      Bloqueio: aguardando ícone "L" em SVG do usuário
+- [ ] Polimento visual pós-rebranding (frontend-design)
+      Contexto: usar skill frontend-design para revisar todas as telas após as mudanças de cor e logo. Garantir contraste e legibilidade em ambos os temas (claro/escuro).
+      Depende de: tarefas de logo e paleta concluídas
+- [ ] Configurar Stripe Sandbox
+      Contexto: código de billing já está 95% pronto. Falta o usuário fornecer as chaves (pk_test_, sk_test_) e criar 2 produtos no Stripe Dashboard (CRM+IA R$199/mês, CRM+IA+SDR R$399/mês). Depois configurar os Price IDs no .env.local.
+      Bloqueio: aguardando chaves do usuário
 - [ ] Criar 3 contas de teste (admin, gerente, corretor) com senha 123456
-      Contexto: emails aleatórios, testar cada perfil de acesso
-- [ ] Popular sistema com dados genéricos (seed.sql)
-      Contexto: ~20 imóveis, ~15 clientes, ~10 negócios, ~15 atividades distribuídos entre perfis
+      Contexto: emails aleatórios, testar cada perfil de acesso. Admin via signup, gerente e corretor via convite.
+      Depende de: app rodando localmente ou na Vercel
+- [ ] Rodar seed.sql para popular o sistema
+      Contexto: supabase/seed.sql já criado com 20 imóveis, 15 clientes, 10 negócios, 15 atividades. Rodar no Supabase SQL Editor após criar as contas.
+      Depende de: contas criadas
 - [ ] Validar permissões por perfil
       Contexto: admin vê tudo, gerente vê registros mas não config, corretor vê só os dele
+      Depende de: seed rodado
 - [ ] Validar fluxo Stripe end-to-end
-      Contexto: checkout, webhook, portal, upgrade, cancelamento — tudo com cartão de teste
+      Contexto: checkout, webhook, portal, upgrade, cancelamento — cartão de teste 4242 4242 4242 4242
+      Depende de: Stripe configurado
 - [ ] Deploy na Vercel
-      Contexto: conectar GitHub, env vars, build de produção, webhook Stripe
+      Contexto: conectar GitHub, env vars, build de produção, webhook Stripe para URL final
 - [ ] Site institucional do LyneImob (mesmo projeto)
-      Contexto: landing page, funcionalidades, preços, contato — design profissional focado em conversão
+      Contexto: landing page, funcionalidades, preços, contato — rotas públicas no mesmo Next.js, design profissional focado em conversão
 
 ---
 
@@ -37,10 +55,7 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
-- [ ] Ajustes de billing + seed de dados de teste
-      O que foi feito: (1) Página de planos agora mostra números reais de uso (corretores, imóveis, conversas IA) em vez de "—". (2) Criado supabase/seed.sql com 20 imóveis, 15 clientes, 7 interesses, 12 interações, 10 negócios e 15 atividades distribuídos entre 3 perfis (admin, gerente, corretor).
-      Para testar: verificar se a página /planos mostra as contagens corretas. Para o seed, rodar o SQL no Supabase após criar as contas.
-      Nota: middleware de trial expirado e registro de uso IA já estavam implementados — não precisaram de ajuste.
+(nada aguardando validação)
 
 ---
 
@@ -72,3 +87,4 @@
 - [x] Resumo semanal gerado por IA — migration 016, Server Action com coleta de métricas + OpenAI, componente CardResumoSemanal no dashboard, cache no banco (1x por semana), botão regenerar ✓ validado por auditoria (2026-03-16)
 - [x] Importação em massa de imóveis (CSV/Excel) — wizard 3 etapas (upload → preview → resultado), papaparse + xlsx, mapeamento de colunas com aliases PT-BR, Zod, batch insert 50, limite plano, relatório erros, modelo dinâmico ✓ validado por auditoria (2026-03-16)
 - [x] Exportação de dados (relatórios PDF, planilhas Excel) — botão "Exportar" em 4 listagens, dropdown Excel/PDF, respeita filtros, geração client-side (xlsx + jspdf-autotable), Server Actions filtradas, PDF azul-marinho + paginação, limite 5000 ✓ validado por auditoria (2026-03-16)
+- [x] Ajustes de billing + seed de dados de teste — página /planos com números reais de uso (corretores, imóveis, conversas IA) + seed.sql com 20 imóveis, 15 clientes, 10 negócios, 15 atividades ✓ validado por auditoria (2026-03-16)
