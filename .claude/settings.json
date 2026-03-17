@@ -373,7 +373,15 @@
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/clientes -type f -name *.tsx -o -name *.ts)",
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/layout -type f -name *.tsx -o -name *.ts)",
       "Bash(grep -r \"pagina-planos\\\\|PaginaPlanos\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src --include=*.tsx --include=*.ts -n)",
-      "Bash(cat \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/financeiro/page.tsx\")"
+      "Bash(cat \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/financeiro/page.tsx\")",
+      "WebFetch(domain:uazapi.dev)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(ls -lah \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\src\\\\app\\\\\\(dashboard\\)\\\\conversas\"\" 2>/dev/null || find \"c:UsersLynedeskDesktopTechLyneImob\" -type d -name \"conversas \")",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/lib -name *memoria* -o -name *memory*)",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/)",
+      "Bash(find \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\src\\\\app\\\\\\(dashboard\\)\\\\configuracoes\" -type f -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(find c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/admin -type f -name *.tsx -o -name *.ts)",
+      "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/admin/configuracoes/\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

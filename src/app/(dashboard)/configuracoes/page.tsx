@@ -18,7 +18,6 @@ import {
   BrainCircuit,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { CardLimparMemoria } from "@/components/configuracoes/card-limpar-memoria"
 
 const cardsConfiguracoes = [
   {
@@ -95,6 +94,12 @@ const cardsPlataforma = [
     descricao: "Cache e memória de conversa do agente",
     href: "/admin/configuracoes/redis",
     icone: Database,
+  },
+  {
+    titulo: "Memória do Agente",
+    descricao: "Reseta o contexto de conversa de todos os atendimentos",
+    href: "/admin/configuracoes/memoria",
+    icone: BrainCircuit,
   },
 ]
 
@@ -190,8 +195,6 @@ export default async function ConfiguracoesPage() {
               </Link>
             ))}
 
-            {/* Card de ação: limpar memória */}
-            <CardLimparMemoria />
           </div>
         </div>
       )}
