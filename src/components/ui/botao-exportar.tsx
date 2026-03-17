@@ -3,6 +3,12 @@
 import { useState, useCallback } from "react"
 import { Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { gerarExcel } from "@/lib/exportacao/gerar-excel"
 import { gerarPdf } from "@/lib/exportacao/gerar-pdf"
@@ -53,11 +59,9 @@ const buscadores: Record<
 
 export function BotaoExportar({ modulo, filtros, total }: Props) {
   const [exportando, setExportando] = useState(false)
-  const [menuAberto, setMenuAberto] = useState(false)
 
   const exportar = useCallback(
     async (formato: FormatoExportacao) => {
-      setMenuAberto(false)
       setExportando(true)
 
       try {
@@ -105,11 +109,9 @@ export function BotaoExportar({ modulo, filtros, total }: Props) {
   )
 
   return (
-    <div className="relative">
-      <Button
-        variant="outline"
-        disabled={total === 0 || exportando}
-        onClick={() => setMenuAberto(!menuAberto)}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="outline" disabled={total === 0 || exportando} />}
       >
         {exportando ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -117,35 +119,17 @@ export function BotaoExportar({ modulo, filtros, total }: Props) {
           <Download className="mr-2 h-4 w-4" />
         )}
         {exportando ? "Exportando..." : "Exportar"}
-      </Button>
-
-      {menuAberto && !exportando && (
-        <>
-          {/* Overlay para fechar o menu */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setMenuAberto(false)}
-          />
-
-          {/* Menu dropdown */}
-          <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-md border bg-popover p-1 shadow-md">
-            <button
-              className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-              onClick={() => exportar("excel")}
-            >
-              <FileSpreadsheet className="h-4 w-4 text-green-600" />
-              Planilha Excel (.xlsx)
-            </button>
-            <button
-              className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-              onClick={() => exportar("pdf")}
-            >
-              <FileText className="h-4 w-4 text-red-600" />
-              Relatório PDF (.pdf)
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onSelect={() => exportar("excel")}>
+          <FileSpreadsheet className="h-4 w-4 text-green-600" />
+          Planilha Excel (.xlsx)
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => exportar("pdf")}>
+          <FileText className="h-4 w-4 text-red-600" />
+          Relatório PDF (.pdf)
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
