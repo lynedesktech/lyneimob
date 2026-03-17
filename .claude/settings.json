@@ -369,7 +369,11 @@
       "Bash(wc -l /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/painel/page.tsx)",
       "Bash(grep -r \"text-green-600\\\\|text-red-600\\\\|#25D366\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components --include=*.tsx --include=*.ts)",
       "Bash(grep -r \"bg-\\\\[#\\\\|text-\\\\[#\\\\|border-\\\\[#\\\\|from-\\\\|to-\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components --include=*.tsx)",
-      "Bash(find \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\src\\\\app\\\\\\(dashboard\\)\\\\admin\" -type f -name \"*.tsx\")"
+      "Bash(find \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\src\\\\app\\\\\\(dashboard\\)\\\\admin\" -type f -name \"*.tsx\")",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/clientes -type f -name *.tsx -o -name *.ts)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/layout -type f -name *.tsx -o -name *.ts)",
+      "Bash(grep -r \"pagina-planos\\\\|PaginaPlanos\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src --include=*.tsx --include=*.ts -n)",
+      "Bash(cat \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/financeiro/page.tsx\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

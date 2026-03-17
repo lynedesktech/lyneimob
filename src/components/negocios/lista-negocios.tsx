@@ -290,22 +290,16 @@ export function ListaNegocios() {
 
   return (
     <div className="space-y-4">
-      <FiltrosListaNegocios
-        filtros={filtros}
-        onChange={(novosFiltros) => {
-          setFiltros(novosFiltros)
-          setPagina(1)
-        }}
-      />
-
-      <div className="flex items-center justify-between">
-        {!carregando && total > 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {total} negócio{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
-          </p>
-        ) : (
-          <span />
-        )}
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <FiltrosListaNegocios
+            filtros={filtros}
+            onChange={(novosFiltros) => {
+              setFiltros(novosFiltros)
+              setPagina(1)
+            }}
+          />
+        </div>
 
         {/* Seletor de colunas */}
         <DropdownMenu>
@@ -463,11 +457,18 @@ export function ListaNegocios() {
         </div>
       )}
 
-      <PaginacaoListagem
-        pagina={pagina}
-        totalPaginas={totalPaginas}
-        onMudarPagina={setPagina}
-      />
+      {!carregando && negocios.length > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {total} negócio{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
+          </p>
+          <PaginacaoListagem
+            pagina={pagina}
+            totalPaginas={totalPaginas}
+            onMudarPagina={setPagina}
+          />
+        </div>
+      )}
 
       <BarraAcoesMassa
         selecionados={Array.from(selecionados)}
