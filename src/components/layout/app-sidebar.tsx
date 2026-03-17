@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   Settings,
   Building,
+  MessageCircle,
 } from "lucide-react"
 import {
   Sidebar,
@@ -38,28 +39,22 @@ type ItemNavegacao = {
 }
 
 type GrupoNavegacao = {
-  titulo: string
+  titulo?: string
   itens: ItemNavegacao[]
 }
 
 const gruposNavegacao: GrupoNavegacao[] = [
   {
-    titulo: "Principal",
     itens: [
       { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
-    ],
-  },
-  {
-    titulo: "Gestão",
-    itens: [
       { titulo: "Negócios", href: "/negocios", icone: Handshake },
       { titulo: "Clientes", href: "/clientes", icone: Users },
       { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
       { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
+      { titulo: "Conversas", href: "/conversas", icone: MessageCircle },
     ],
   },
   {
-    titulo: "Administração",
     itens: [
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
     ],
@@ -127,11 +122,13 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
           if (itensVisiveis.length === 0) return null
 
           return (
-            <React.Fragment key={grupo.titulo}>
+            <React.Fragment key={indice}>
               <SidebarGroup>
-                <SidebarGroupLabel className="text-sidebar-foreground/60 text-[11px] uppercase tracking-wider">
-                  {grupo.titulo}
-                </SidebarGroupLabel>
+                {grupo.titulo && (
+                  <SidebarGroupLabel className="text-sidebar-foreground/60 text-[11px] uppercase tracking-wider">
+                    {grupo.titulo}
+                  </SidebarGroupLabel>
+                )}
                 <SidebarGroupContent>
                   <SidebarMenu {...(indice === 0 ? { id: "onborda-sidebar-nav" } : {})}>
                     {itensVisiveis.map((item) => {

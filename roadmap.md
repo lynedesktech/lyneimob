@@ -25,6 +25,12 @@
       Contexto: criar favicon.ico e apple-touch-icon com o ícone "L" da Lynedesk. Atualizar app/layout.tsx com metadata da marca.
       Bloqueio: aguardando ícone "L" em SVG do usuário
 
+- [ ] Página de Organizações — lista + detalhe
+      Contexto: /admin/organizacoes precisa de uma tabela no padrão da lista de clientes e uma página de detalhe por organização mostrando dados da empresa, usuários cadastrados e informações financeiras
+
+- [ ] Central de Suporte
+      Contexto: área com FAQ e tutoriais passo a passo para os usuários do CRM — ajuda contextual dentro da plataforma
+
 ---
 
 ## 🔄 Fazendo
