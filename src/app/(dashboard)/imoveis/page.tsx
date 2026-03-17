@@ -114,12 +114,8 @@ export default async function ImoveisPage({
             pagina={pagina}
             totalPaginas={totalPaginas}
             porPagina={porPagina}
-            construtorHref={(p) =>
-              `/imoveis?${new URLSearchParams({ ...params, pagina: String(p) }).toString()}`
-            }
-            construtorHrefPorPagina={(n) =>
-              `/imoveis?${new URLSearchParams({ ...params, pagina: "1", porPagina: String(n) }).toString()}`
-            }
+            baseUrl="/imoveis"
+            paramsBase={Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>}
           />
         </>
       ) : (

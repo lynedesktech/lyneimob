@@ -20,16 +20,17 @@ interface PaginacaoBaseProps {
   pagina: number
   totalPaginas: number
   porPagina?: number
-  construtorHrefPorPagina?: (porPagina: number) => string
 }
 
 interface PaginacaoClientProps extends PaginacaoBaseProps {
   onMudarPagina: (novaPagina: number) => void
-  construtorHref?: never
+  baseUrl?: never
+  paramsBase?: never
 }
 
 interface PaginacaoServerProps extends PaginacaoBaseProps {
-  construtorHref: (pagina: number) => string
+  baseUrl: string
+  paramsBase?: Record<string, string>
   onMudarPagina?: never
 }
 
@@ -41,11 +42,19 @@ export function PaginacaoListagem({
   pagina,
   totalPaginas,
   onMudarPagina,
-  construtorHref,
+  baseUrl,
+  paramsBase,
   porPagina,
-  construtorHrefPorPagina,
 }: PaginacaoListagemProps) {
   if (totalPaginas <= 1 && !porPagina) return null
+
+  function montarUrl(p: number) {
+    return `${baseUrl}?${new URLSearchParams({ ...paramsBase, pagina: String(p) })}`
+  }
+
+  function montarUrlPorPagina(n: number) {
+    return `${baseUrl}?${new URLSearchParams({ ...paramsBase, pagina: "1", porPagina: String(n) })}`
+  }
 
   function renderBotao(
     targetPagina: number,
@@ -53,14 +62,14 @@ export function PaginacaoListagem({
     label: string,
     disabled: boolean
   ) {
-    if (construtorHref) {
+    if (baseUrl) {
       return (
         <Button
           variant="outline"
           size="icon"
           className="h-8 w-8"
           disabled={disabled}
-          render={!disabled ? <Link href={construtorHref(targetPagina)} /> : undefined}
+          render={!disabled ? <Link href={montarUrl(targetPagina)} /> : undefined}
           aria-label={label}
         >
           {icon}
@@ -83,14 +92,14 @@ export function PaginacaoListagem({
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
-      {/* Rows per page */}
-      {porPagina && construtorHrefPorPagina && (
+      {/* Linhas por página — só no modo servidor */}
+      {porPagina && baseUrl && (
         <div className="flex items-center gap-2">
           <span className="whitespace-nowrap">Linhas por página</span>
           <Select
             value={String(porPagina)}
             onValueChange={(valor) => {
-              window.location.href = construtorHrefPorPagina(Number(valor))
+              window.location.href = montarUrlPorPagina(Number(valor))
             }}
           >
             <SelectTrigger className="h-8 w-16">
@@ -107,14 +116,13 @@ export function PaginacaoListagem({
         </div>
       )}
 
-      {/* Page info */}
+      {/* Info de página + botões de navegação */}
       {totalPaginas > 1 && (
         <>
           <span className="whitespace-nowrap">
             Página {pagina} de {totalPaginas}
           </span>
 
-          {/* Navigation buttons */}
           <div className="flex items-center gap-1">
             {renderBotao(1, <ChevronFirst className="h-4 w-4" />, "Primeira página", pagina <= 1)}
             {renderBotao(pagina - 1, <ChevronLeft className="h-4 w-4" />, "Página anterior", pagina <= 1)}

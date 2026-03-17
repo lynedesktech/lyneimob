@@ -100,12 +100,8 @@ export default async function ClientesPage({
             pagina={pagina}
             totalPaginas={totalPaginas}
             porPagina={porPagina}
-            construtorHref={(p) =>
-              `/clientes?${new URLSearchParams({ ...params, pagina: String(p) }).toString()}`
-            }
-            construtorHrefPorPagina={(n) =>
-              `/clientes?${new URLSearchParams({ ...params, pagina: "1", porPagina: String(n) }).toString()}`
-            }
+            baseUrl="/clientes"
+            paramsBase={Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>}
           />
         </>
       ) : (
