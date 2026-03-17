@@ -317,6 +317,8 @@ function LinhaEtapa({
   onAtualizar: () => void
 }) {
   const ehEspecial = etapa.tipo === "ganho" || etapa.tipo === "perdido"
+  const ehPreAtendimento = etapa.tipo === "pre_atendimento_ia"
+  const ehBloqueada = ehEspecial || ehPreAtendimento
 
   return (
     <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
@@ -335,6 +337,11 @@ function LinhaEtapa({
       </div>
 
       {/* Badge de tipo especial */}
+      {ehPreAtendimento && (
+        <Badge variant="outline" className="shrink-0 text-xs">
+          IA
+        </Badge>
+      )}
       {ehEspecial && (
         <Badge variant="outline" className="shrink-0 text-xs">
           {etapa.tipo === "ganho" ? "Ganho" : "Perdido"}
@@ -347,7 +354,7 @@ function LinhaEtapa({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          disabled={indice === 0}
+          disabled={indice === 0 || ehBloqueada}
           onClick={onMoverCima}
           title="Mover para cima"
         >
@@ -357,7 +364,7 @@ function LinhaEtapa({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          disabled={indice === total - 1}
+          disabled={indice === total - 1 || ehBloqueada}
           onClick={onMoverBaixo}
           title="Mover para baixo"
         >
@@ -452,9 +459,8 @@ export function ConteudoPipelineConfig() {
       <Card className="border-muted bg-muted/30">
         <CardContent className="pt-4 pb-4">
           <p className="text-xs text-muted-foreground">
-            <strong>Dica:</strong> As etapas <em>Ganho</em> e <em>Perdido</em> são especiais e
-            não podem ser excluídas — elas registram o resultado final dos negócios.
-            Você pode renomeá-las e mudar a cor, mas não removê-las.
+            <strong>Dica:</strong> As etapas <em>Pré-atendimento IA</em>, <em>Ganho</em> e <em>Perdido</em> são
+            obrigatórias e não podem ser excluídas. Você pode renomeá-las e mudar a cor, mas não removê-las.
           </p>
         </CardContent>
       </Card>

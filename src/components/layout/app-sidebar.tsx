@@ -63,7 +63,6 @@ const gruposNavegacao: GrupoNavegacao[] = [
 
 const gruposPlataforma: GrupoNavegacao[] = [
   {
-    titulo: "Plataforma",
     itens: [
       { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
     ],

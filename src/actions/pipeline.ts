@@ -171,6 +171,10 @@ export async function excluirEtapaPipeline(id: string): Promise<EstadoFormulario
     return { erro: `A etapa "${etapa.nome}" não pode ser excluída — ela registra negócios ${etapa.tipo === "ganho" ? "ganhos" : "perdidos"}` }
   }
 
+  if (etapa.tipo === "pre_atendimento_ia") {
+    return { erro: `A etapa "${etapa.nome}" não pode ser excluída — ela é obrigatória para o atendimento automático via WhatsApp` }
+  }
+
   // Verificar se tem negócios ativos nessa etapa
   const { count } = await supabase
     .from("negocios")

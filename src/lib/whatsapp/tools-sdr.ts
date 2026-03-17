@@ -11,6 +11,8 @@ type ContextoTool = {
   conversaId: string
   organizacaoId: string
   numeroCliente: string
+  clienteId: string | null
+  negocioId: string | null
 }
 
 /**
@@ -102,7 +104,7 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
     function: {
       name: "criar_cliente",
       description:
-        "Criar um novo cliente na plataforma com os dados coletados na conversa. Use quando souber pelo menos o nome do cliente.",
+        "Registrar ou atualizar o cliente na plataforma. Se o cliente já existe (pré-criado automaticamente), atualiza os dados. Use assim que souber o nome do cliente.",
       parameters: {
         type: "object",
         properties: {
@@ -133,7 +135,7 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
     function: {
       name: "criar_negocio",
       description:
-        "Criar um negócio no pipeline de vendas para acompanhar a oportunidade. Use após criar o cliente e quando houver interesse real em um imóvel.",
+        "Registrar ou atualizar o negócio no pipeline. Se o negócio já existe (pré-criado automaticamente), atualiza os dados como título, tipo e valor. Use quando o cliente demonstrar interesse concreto.",
       parameters: {
         type: "object",
         properties: {
@@ -360,7 +362,23 @@ async function executarCriarCliente(
   const { criarClienteAdmin } = await import("@/lib/supabase/admin")
   const supabase = criarClienteAdmin()
 
-  // Obter corretor via distribuição (roleta/balanceamento/manual) com fallback
+  // Se já existe um cliente pré-criado → atualizar em vez de inserir
+  if (contexto.clienteId) {
+    const { error } = await supabase
+      .from("clientes")
+      .update({
+        nome: args.nome as string,
+        ...(args.email && { email: args.email as string }),
+        ...(args.tipo && { tipo: args.tipo as string }),
+        ...(args.observacoes && { observacoes: args.observacoes as string }),
+      })
+      .eq("id", contexto.clienteId)
+
+    if (error) return `Erro ao atualizar cliente: ${error.message}`
+    return `Cliente atualizado com sucesso. ID: ${contexto.clienteId}`
+  }
+
+  // Caso raro onde não houve pré-criação → inserir normalmente
   const corretorId = await obterCorretorParaAtribuicao(contexto.organizacaoId)
   if (!corretorId) return "Erro: nenhum corretor encontrado na organização."
 
@@ -398,7 +416,24 @@ async function executarCriarNegocio(
   const { criarClienteAdmin } = await import("@/lib/supabase/admin")
   const supabase = criarClienteAdmin()
 
-  // Buscar primeira etapa do pipeline (Novo Lead)
+  // Se já existe um negócio pré-criado → atualizar em vez de inserir
+  if (contexto.negocioId) {
+    const { error } = await supabase
+      .from("negocios")
+      .update({
+        ...(args.titulo && { titulo: args.titulo as string }),
+        ...(args.tipo && { tipo: args.tipo as string }),
+        ...(args.valor && { valor: args.valor as number }),
+        ...(args.imovel_id && { imovel_id: args.imovel_id as string }),
+      })
+      .eq("id", contexto.negocioId)
+
+    if (error) return `Erro ao atualizar negócio: ${error.message}`
+    return `Negócio atualizado com sucesso. ID: ${contexto.negocioId}`
+  }
+
+  // Caso raro onde não houve pré-criação → inserir normalmente
+  // Buscar primeira etapa normal do pipeline
   const { data: etapa } = await supabase
     .from("pipeline_etapas")
     .select("id")

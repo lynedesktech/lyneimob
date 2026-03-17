@@ -111,12 +111,17 @@ export async function POST(request: Request) {
     const { tipo, conteudo } = detectarConteudo(messageData)
 
     // Buscar ou criar conversa
-    const conversaId = await buscarOuCriarConversa(
+    const { id: conversaId, isNova } = await buscarOuCriarConversa(
       supabase,
       organizacaoId,
       numeroCliente,
       pushName
     )
+
+    // Se conversa nova e agente está ativo → criar cliente + negócio automaticamente
+    if (isNova && config.ativo) {
+      await criarClienteENegocioInicial(supabase, organizacaoId, numeroCliente, conversaId, config)
+    }
 
     // Salvar mensagem no banco (com dedup pelo message_id_whatsapp)
     const { data: mensagem, error: erroMensagem } = await supabase
@@ -215,14 +220,15 @@ function detectarConteudo(msg: {
 }
 
 /**
- * Busca conversa existente ou cria uma nova
+ * Busca conversa existente ou cria uma nova.
+ * Retorna o ID e se a conversa foi criada agora (isNova).
  */
 async function buscarOuCriarConversa(
   supabase: ReturnType<typeof criarClienteAdmin>,
   organizacaoId: string,
   numeroCliente: string,
   nomeCliente: string | null
-): Promise<string> {
+): Promise<{ id: string; isNova: boolean }> {
   // Buscar conversa ativa (não arquivada/finalizada) com esse número
   const { data: conversaExistente } = await supabase
     .from("conversas_whatsapp")
@@ -235,7 +241,7 @@ async function buscarOuCriarConversa(
     .single()
 
   if (conversaExistente) {
-    return conversaExistente.id
+    return { id: conversaExistente.id, isNova: false }
   }
 
   // Criar nova conversa
@@ -255,5 +261,115 @@ async function buscarOuCriarConversa(
     throw new Error(`Erro ao criar conversa: ${erroConversa?.message}`)
   }
 
-  return novaConversa.id
+  return { id: novaConversa.id, isNova: true }
+}
+
+/**
+ * Cria cliente e negócio automaticamente no primeiro contato.
+ * O cliente é criado sem nome (será preenchido pela IA quando souber).
+ * O negócio é criado na etapa "Pré-atendimento IA".
+ */
+async function criarClienteENegocioInicial(
+  supabase: ReturnType<typeof criarClienteAdmin>,
+  organizacaoId: string,
+  numeroCliente: string,
+  conversaId: string,
+  config: Record<string, unknown>
+): Promise<void> {
+  try {
+    // Buscar etapa "Pré-atendimento IA"
+    const { data: etapa } = await supabase
+      .from("pipeline_etapas")
+      .select("id")
+      .eq("organizacao_id", organizacaoId)
+      .eq("tipo", "pre_atendimento_ia")
+      .single()
+
+    if (!etapa) {
+      console.error("[Webhook] Etapa pré-atendimento IA não encontrada para org:", organizacaoId)
+      return
+    }
+
+    // Obter corretor: corretor padrão da config ou admin da org
+    let corretorId = (config.corretor_padrao_id as string) || null
+    if (!corretorId) {
+      const { data: admin } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("organizacao_id", organizacaoId)
+        .eq("cargo", "admin")
+        .limit(1)
+        .single()
+      corretorId = admin?.id || null
+    }
+
+    if (!corretorId) {
+      console.error("[Webhook] Nenhum corretor encontrado para org:", organizacaoId)
+      return
+    }
+
+    // Criar cliente sem nome (será atualizado pela IA)
+    const { data: cliente, error: erroCliente } = await supabase
+      .from("clientes")
+      .insert({
+        organizacao_id: organizacaoId,
+        corretor_id: corretorId,
+        nome: "Contato WhatsApp",
+        telefone: numeroCliente,
+        whatsapp: numeroCliente,
+        tipo: "comprador",
+        origem: "whatsapp",
+      })
+      .select("id")
+      .single()
+
+    if (erroCliente || !cliente) {
+      console.error("[Webhook] Erro ao criar cliente inicial:", erroCliente?.message)
+      return
+    }
+
+    // Calcular próxima posição na etapa
+    const { data: ultimoNegocio } = await supabase
+      .from("negocios")
+      .select("posicao")
+      .eq("etapa_id", etapa.id)
+      .order("posicao", { ascending: false })
+      .limit(1)
+      .single()
+
+    const posicao = (ultimoNegocio?.posicao ?? -1) + 1
+
+    // Criar negócio na etapa pré-atendimento
+    const { data: negocio, error: erroNegocio } = await supabase
+      .from("negocios")
+      .insert({
+        organizacao_id: organizacaoId,
+        corretor_id: corretorId,
+        cliente_id: cliente.id,
+        etapa_id: etapa.id,
+        titulo: "Atendimento WhatsApp",
+        tipo: "venda",
+        posicao,
+      })
+      .select("id")
+      .single()
+
+    if (erroNegocio || !negocio) {
+      console.error("[Webhook] Erro ao criar negócio inicial:", erroNegocio?.message)
+      return
+    }
+
+    // Vincular cliente e negócio à conversa
+    await supabase
+      .from("conversas_whatsapp")
+      .update({
+        cliente_id: cliente.id,
+        negocio_id: negocio.id,
+      })
+      .eq("id", conversaId)
+
+    console.log(`[Webhook] Cliente ${cliente.id} e negócio ${negocio.id} criados para conversa ${conversaId}`)
+  } catch (erro) {
+    console.error("[Webhook] Erro ao criar cliente/negócio inicial:", erro instanceof Error ? erro.message : erro)
+  }
 }

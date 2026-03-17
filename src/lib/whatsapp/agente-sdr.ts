@@ -196,6 +196,8 @@ export async function processarComAgente(
       conversaId,
       organizacaoId,
       numeroCliente: conversa.numero_cliente,
+      clienteId: conversa.cliente_id ?? null,
+      negocioId: conversa.negocio_id ?? null,
     }
 
     let respostaFinal: string | null = null
