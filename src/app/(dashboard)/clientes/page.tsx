@@ -2,7 +2,9 @@ import Link from "next/link"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { CardCliente } from "@/components/clientes/card-cliente"
+import { TabelaClientes } from "@/components/clientes/tabela-clientes"
 import { FiltrosClientes } from "@/components/clientes/filtros-clientes"
+import { ToggleVisualizacao } from "@/components/clientes/toggle-visualizacao"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Users } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
@@ -14,6 +16,7 @@ type SearchParams = Promise<{
   origem?: string
   status?: string
   pagina?: string
+  view?: string
 }>
 
 export default async function ClientesPage({
@@ -23,6 +26,7 @@ export default async function ClientesPage({
 }) {
   const params = await searchParams
   const supabase = await criarClienteServer()
+  const modoVisualizacao = params.view === "lista" ? "lista" : "cards"
   const pagina = Number(params.pagina) || 1
   const porPagina = 12
   const inicio = (pagina - 1) * porPagina
@@ -58,6 +62,7 @@ export default async function ClientesPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ToggleVisualizacao />
           <BotaoExportar
             modulo="clientes"
             filtros={{
@@ -79,11 +84,15 @@ export default async function ClientesPage({
 
       {clientes && clientes.length > 0 ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {clientes.map((cliente) => (
-              <CardCliente key={cliente.id} cliente={cliente} />
-            ))}
-          </div>
+          {modoVisualizacao === "lista" ? (
+            <TabelaClientes clientes={clientes} />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {clientes.map((cliente) => (
+                <CardCliente key={cliente.id} cliente={cliente} />
+              ))}
+            </div>
+          )}
 
           {/* Paginação */}
           <PaginacaoListagem

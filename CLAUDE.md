@@ -56,130 +56,41 @@ npm run lint         # Roda ESLint para verificar erros de codigo
 ```
 src/
 ├── app/
-│   ├── (auth)/                # Paginas de autenticacao (login, cadastro, esqueci-senha, convite)
-│   ├── page.tsx               # Landing page de vendas (publica, rota /)
-│   ├── (dashboard)/           # Paginas do CRM protegidas (layout com sidebar + header)
-│   │   ├── layout.tsx         # Layout principal: sidebar + header + providers + onboarding
-│   │   ├── painel/page.tsx    # Dashboard com resumo semanal IA + checklist de onboarding (rota /painel)
-│   │   ├── providers.tsx      # QueryClientProvider (TanStack Query)
-│   │   ├── imoveis/           # Modulo de imoveis
-│   │   │   ├── page.tsx       # Listagem com filtros e paginacao + botao importar
-│   │   │   ├── novo/page.tsx  # Formulario de criacao
-│   │   │   ├── importar/page.tsx  # Importacao em massa (CSV/Excel) — wizard 3 etapas
-│   │   │   └── [id]/          # Detalhe e edicao
-│   │   │       ├── page.tsx   # Detalhe com tabs (info, fotos, IA)
-│   │   │       └── editar/page.tsx  # Formulario de edicao
-│   │   ├── clientes/          # Modulo de clientes
-│   │   │   ├── page.tsx       # Listagem com filtros e paginacao
-│   │   │   ├── novo/page.tsx  # Formulario de criacao
-│   │   │   └── [id]/          # Detalhe e edicao
-│   │   │       ├── page.tsx   # Detalhe com 5 tabs (info, interesses, timeline, match, IA)
-│   │   │       └── editar/page.tsx  # Formulario de edicao
-│   │   ├── negocios/          # Modulo de negocios/pipeline
-│   │   │   ├── page.tsx       # Pipeline Kanban com drag-and-drop e filtros
-│   │   │   ├── novo/page.tsx  # Formulario de criacao de negocio
-│   │   │   └── [id]/          # Detalhe e edicao
-│   │   │       ├── page.tsx   # Detalhe com tabs (info, IA) + acoes (ganhar, perder, reabrir) + card sugestao acao IA
-│   │   │       └── editar/page.tsx  # Formulario de edicao
-│   │   ├── atividades/        # Modulo de atividades/agenda
-│   │   │   ├── page.tsx       # Listagem com filtros, paginacao e toggle lista/calendario
-│   │   │   ├── novo/page.tsx  # Formulario de criacao de atividade (aceita searchParams: titulo, tipo, negocio_id)
-│   │   │   └── [id]/          # Detalhe e edicao
-│   │   │       ├── page.tsx   # Detalhe com tabs (info, IA) + acoes (concluir, reagendar, cancelar)
-│   │   │       └── editar/page.tsx  # Formulario de edicao
-│   │   ├── usuarios/           # Redirect → /configuracoes/equipe
-│   │   │   └── page.tsx
-│   │   ├── planos/             # Pagina de planos e billing
-│   │   │   └── page.tsx       # Listagem dos 3 planos (Trial, CRM+IA, CRM+IA+SDR)
-│   │   ├── conversas/          # Painel de conversas WhatsApp
-│   │   │   ├── page.tsx       # Listagem com filtros (status, busca) e paginacao
-│   │   │   └── [id]/
-│   │   │       └── page.tsx   # Detalhe com historico de chat + qualificacao do lead
-│   │   ├── integracoes/       # Redirect → /configuracoes/portais
-│   │   │   └── page.tsx
-│   │   ├── meu-site/          # Redirect → /configuracoes/meu-site
-│   │   │   └── page.tsx
-│   │   └── configuracoes/     # Hub central de configuracoes (6 cards)
-│   │       ├── page.tsx       # Hub com cards: empresa, whatsapp, equipe, distribuicao, portais, meu-site
-│   │       ├── empresa/page.tsx      # Dados da empresa (nome, telefone, CRECI, endereco)
-│   │       ├── whatsapp/page.tsx     # Conexao e configuracao do agente WhatsApp
-│   │       ├── equipe/page.tsx       # Gestao de equipe (membros, convites, cargos)
-│   │       ├── distribuicao/page.tsx # Distribuicao de leads entre corretores
-│   │       ├── portais/page.tsx      # Feed XML, webhook, leads dos portais
-│   │       └── meu-site/page.tsx     # Customizacao do site publico (cores, hero, dominio)
-│   ├── [slug]/                # Site publico da imobiliaria (por slug)
-│   │   ├── layout.tsx         # Layout publico (header + footer + validacao slug)
-│   │   ├── page.tsx           # Home do site (hero + imoveis destaque + sobre)
-│   │   ├── not-found.tsx      # Pagina 404 personalizada
-│   │   ├── imoveis/
-│   │   │   ├── page.tsx       # Listagem publica com filtros e paginacao
-│   │   │   └── [id]/
-│   │   │       └── page.tsx   # Detalhe do imovel (galeria + info + contato)
-│   │   ├── contato/
-│   │   │   └── page.tsx       # Formulario de contato (cria lead automaticamente)
-│   │   └── sobre/
-│   │       └── page.tsx       # Pagina Sobre Nos (historia, missao, visao, valores)
-│   ├── auth/callback/         # Route handler para callback do Supabase Auth
-│   ├── api/                   # API Routes
-│   │   ├── xml/[slug]/route.ts      # Feed XML VRSync (GET — publico, retorna XML dos imoveis)
-│   │   └── webhooks/
-│   │       ├── portais/route.ts     # Webhook receptor de leads dos portais (POST)
-│   │       ├── stripe/route.ts      # Webhook Stripe — eventos de pagamento e assinatura (POST)
-│   │       └── whatsapp/route.ts    # Webhook receptor de mensagens WhatsApp via Uazapi (POST)
-│   ├── layout.tsx             # Root layout (fontes, Toaster)
-│   └── globals.css            # Estilos globais + variaveis de cor shadcn
+│   ├── (auth)/            # Paginas de autenticacao (login, cadastro, esqueci-senha, convite)
+│   ├── (dashboard)/       # Paginas do CRM protegidas (layout com sidebar + header)
+│   │   ├── painel/        # Dashboard com resumo semanal IA + checklist de onboarding
+│   │   ├── imoveis/       # CRUD de imoveis + importacao em massa
+│   │   ├── clientes/      # CRUD de clientes + interesses + match IA
+│   │   ├── negocios/      # Pipeline Kanban + sugestao acao IA
+│   │   ├── atividades/    # Agenda + calendario (mensal, semanal, diario)
+│   │   ├── conversas/     # Painel de conversas WhatsApp
+│   │   ├── planos/        # Pagina de planos e billing
+│   │   ├── configuracoes/ # Hub: empresa, whatsapp, equipe, distribuicao, portais, meu-site
+│   │   ├── meu-perfil/    # Pagina de perfil do usuario logado
+│   │   ├── admin/         # Area de super admin (gestao global)
+│   │   └── financeiro/    # Modulo financeiro
+│   ├── [slug]/            # Site publico da imobiliaria (por slug)
+│   ├── api/               # API Routes (XML feed, webhooks: portais, stripe, whatsapp; cron: resumo-semanal)
+│   ├── page.tsx           # Landing page de vendas (publica, rota /)
+│   └── globals.css        # Estilos globais + variaveis de cor shadcn
 ├── components/
-│   ├── ui/                    # Componentes shadcn/ui (Button, Input, Card, Select, Tabs, Badge, Dialog, Table, Switch, etc.) + customizados (StatusBadge, ConfirmacaoExclusao, PaginacaoListagem, EstadoVazio, BotaoExportar)
-│   ├── layout/                # Componentes do layout (AppSidebar, Header, UsuarioMenu, BuscaGlobal — provider + dialog + trigger)
-│   ├── imoveis/               # Componentes do modulo de imoveis (formulario, card, filtros, galeria, IA, importador-imoveis)
-│   ├── clientes/              # Componentes do modulo de clientes (formulario, card, filtros, interesses, timeline, match, IA)
-│   ├── negocios/              # Componentes do modulo de negocios (kanban-board, kanban-coluna, kanban-card, formulario, filtros, acoes, IA, card-sugestao-acao)
-│   ├── atividades/            # Componentes do modulo de atividades (formulario, card, filtros, acoes, excluir, ia-atividade)
-│   │   └── calendario/        # Componentes do calendario (calendario-atividades, visao-mensal, visao-semanal, visao-diaria)
-│   ├── conversas-whatsapp/    # Componentes do painel de conversas (conexao-whatsapp, card-conversa, conversas-conteudo, filtros-conversas, historico-conversa, info-qualificacao)
-│   ├── integracoes/           # Componentes de integracoes (feed-xml-info, webhook-info, integracoes-conteudo, card-lead, acoes-lead, filtros-leads, config-distribuicao, carga-corretores)
-│   ├── site/                  # Componentes do site publico (header-site, footer-site, card-imovel-publico, filtros-imoveis-publico, galeria-imovel, formulario-contato, secao-hero, paginacao-site)
-│   ├── planos/                # Componentes do modulo de billing (card-plano, pagina-planos, banner-trial, banner-trial-layout)
-│   ├── meu-site/              # Componentes do painel de customizacao (formulario-configuracoes-site, upload-imagem-site, preview-cores, configuracao-dominio)
-│   ├── dashboard/             # Componentes do dashboard (card-resumo-semanal)
-│   ├── onboarding/            # Componentes de onboarding (provedor-onboarding, card-onboarding, checklist-onboarding)
-│   ├── configuracoes/         # Componentes de configuracoes (formulario-configuracoes-organizacao, formulario-configuracoes-integracoes, conteudo-whatsapp-config, conteudo-distribuicao, conteudo-portais)
-│   ├── landing/               # Componentes da pagina de vendas (header-landing, secao-hero, secao-funcionalidades, secao-video, secao-precos, secao-faq, secao-cta-final, footer-landing)
-│   └── usuarios/              # Componentes de gestao de equipe (pagina-usuarios, formulario-convite)
+│   ├── ui/                # Componentes shadcn/ui + customizados (StatusBadge, PaginacaoListagem, etc.)
+│   ├── layout/            # AppSidebar, Header, UsuarioMenu, BuscaGlobal
+│   └── [modulo]/          # Componentes por modulo (imoveis, clientes, negocios, etc.)
 ├── lib/
-│   ├── supabase/              # Clientes Supabase (client.ts, server.ts, admin.ts, middleware.ts)
-│   ├── site/                  # Funcoes de busca de dados publicos (buscar-dados-site.ts — buscarOrganizacaoPorSlug, buscarOrganizacaoPorDominio, buscarDominioOrganizacao)
-│   ├── xml/                   # Gerador XML VRSync (vrsync.ts — feed para portais imobiliarios)
-│   ├── leads/                 # Normalizador de leads dos portais (normalizador.ts)
-│   ├── whatsapp/              # Agente SDR WhatsApp
-│   │   ├── uazapi.ts          # Wrapper da API Uazapi (enviar texto, imagem, simular digitando, gestao de instancia — criar, conectar, status, desconectar, webhook)
-│   │   ├── humanizar.ts       # Envio humanizado (quebrar mensagem, delay, digitacao)
-│   │   ├── processar-midia.ts # Processamento de midia (Whisper audio, Vision imagem, PDF)
-│   │   ├── debounce.ts        # Debounce com Redis (agrupa mensagens em janela de 20s)
-│   │   ├── agente-sdr.ts      # Orquestrador do agente IA (contexto, OpenAI, tools, resposta)
-│   │   ├── prompt-sdr.ts      # Prompt do agente SDR (persona, qualificacao, regras)
-│   │   ├── tools-sdr.ts       # Tools function calling (buscar imoveis, criar cliente/negocio/atividade)
-│   │   └── memoria.ts         # Memoria de conversa com Redis (20 mensagens, TTL 24h)
-│   ├── stripe.ts              # Cliente Stripe singleton (billing)
-│   ├── permissoes.ts          # Mapa de permissoes centralizado (temPermissao, verificarPermissao, obterPermissoes)
-│   ├── verificar-limites.ts   # Verificacao de limites por plano (imoveis, corretores, IA, modulos)
-│   ├── distribuicao-leads.ts  # Distribuicao de leads entre corretores (obterProximoCorretor — manual/roleta/balanceamento)
-│   ├── redis.ts               # Cliente Upstash Redis (debounce + memoria de conversa)
-│   ├── openai.ts              # Cliente OpenAI (GPT-4o-mini para IA em imoveis)
-│   ├── exportacao/             # Geradores de exportacao (gerar-excel.ts, gerar-pdf.ts, colunas.ts — definicao de colunas por modulo)
-│   ├── formatadores.ts        # Funcoes utilitarias de formatacao (formatarPreco, formatarData, formatarDataHora, formatarDataCurta, formatarDataHoraCurta)
-│   └── utils.ts               # Funcao cn() do shadcn
-├── hooks/                     # Custom hooks (use-organizacao, use-usuario, use-mobile, use-plano, use-lista-imoveis, use-imovel, use-lista-clientes, use-cliente, use-pipeline, use-negocio, use-lista-atividades, use-atividade, use-atividades-calendario, use-lista-leads, use-lista-conversas, use-conversa-whatsapp, use-lista-usuarios, use-config-distribuicao, use-config-whatsapp, use-instancia-whatsapp, use-busca-global, use-onboarding)
-├── types/                     # Tipos TypeScript (database.ts, auth.ts, imoveis.ts, clientes.ts, negocios.ts, atividades.ts, leads-portais.ts, formulario.ts, billing.ts, configuracoes-site.ts, configuracoes-integracoes.ts, whatsapp.ts, distribuicao-leads.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao.ts, exportacao.ts)
-├── actions/                   # Server Actions (auth.ts, imoveis.ts, ia-imoveis.ts, clientes.ts, ia-clientes.ts, negocios.ts, ia-negocios.ts, atividades.ts, ia-atividades.ts, billing.ts, leads-portais.ts, site-contato.ts, configuracoes-site.ts, configuracoes-integracoes.ts, usuarios.ts, convites.ts, distribuicao-leads.ts, whatsapp.ts, instancia-whatsapp.ts, dominios.ts, busca-global.ts, onboarding.ts, resumo-semanal.ts, importacao-imoveis.ts, exportacao.ts)
-└── middleware.ts               # Middleware de auth (protecao de rotas)
+│   ├── resumo-semanal/    # Logica de geracao do resumo semanal (gerar-resumo.ts — usado pelo cron e pelo botao regenerar)
+│   └── ...                # Supabase clients, openai, stripe, whatsapp, permissoes, constantes, formatadores
+├── hooks/                 # Custom hooks (use-organizacao, use-usuario, use-plano, etc.)
+├── types/                 # Tipos TypeScript (database, auth, imoveis, clientes, etc.)
+├── actions/               # Server Actions (auth, imoveis, clientes, negocios, etc.)
+└── middleware.ts          # Middleware de auth (protecao de rotas)
 
 supabase/
-└── migrations/                # Migrations SQL do banco (001_organizacoes_usuarios.sql, 002_imoveis.sql, 003_clientes.sql, 004_negocios.sql, 005_atividades.sql, 006_leads_portais.sql, 007_site_assets_bucket.sql, 008_whatsapp.sql, 009_configuracoes_integracoes.sql, 010_billing.sql, 011_convites_usuarios.sql, 012_distribuicao_leads.sql, 013_dominios_customizados.sql, 014_canais_publicacao.sql, 015_onboarding.sql, 016_resumos_semanais.sql, 017_whatsapp_instance_id.sql, 018_sugestao_ia_resumo.sql)
+└── migrations/            # Migrations SQL do banco (001 a 020)
 
 planejamento/
-├── pesquisas/                 # Pesquisas geradas pela skill /pesquisa
-└── requisitos/                # Requisitos gerados pela skill /requisitos
+├── pesquisas/             # Pesquisas geradas pela skill /pesquisa
+└── requisitos/            # Requisitos gerados pela skill /requisitos
 ```
 
 ## Arquitetura
@@ -218,17 +129,16 @@ UPSTASH_REDIS_REST_URL=url-do-redis-upstash
 UPSTASH_REDIS_REST_TOKEN=token-do-redis-upstash
 ```
 
-## Arquivos Sensiveis / Nao Modificar
+## Arquivos Sensiveis
 
-- `.env.local` — contem segredos do Supabase
-- `supabase/migrations/` — migrations ja executadas no banco (nao alterar, criar novas)
-- `src/components/ui/` — componentes gerados pelo shadcn/ui (alterar com cuidado)
+- `.env.local` — contem segredos, nunca commitar
+- `supabase/migrations/` — migrations ja executadas no banco. Nunca alterar as existentes, sempre criar novas
+- `src/components/ui/` — componentes shadcn/ui. Podem ser ajustados quando necessario, mas sempre avaliar o impacto global antes (sao reutilizados em todo o sistema)
 
 ## Divida Tecnica Conhecida
 
 - Tipos do banco em `types/database.ts` sao manuais — trocar por `supabase gen types` quando o CLI estiver configurado
 - Middleware do Next.js 16 usa convencao deprecated (`middleware.ts`) — migrar para `proxy` quando a nova API estabilizar
-- Paginas de auth e dashboard precisam de polimento visual com a skill `frontend-design`
 
 ---
 
@@ -237,6 +147,7 @@ UPSTASH_REDIS_REST_TOKEN=token-do-redis-upstash
 Regras que valem sempre, em qualquer tarefa:
 
 - **Nunca duplicar codigo** — antes de criar algo novo, buscar se ja existe no projeto (funcoes, hooks, componentes). Se existe: usar, adaptar ou estender.
+- **Corrigir no componente, nao no consumidor** — se o problema esta num componente reutilizavel (Card, Button, Input, etc.), a correcao vai no componente base. Nunca repetir a mesma correcao em cada pagina que usa ele.
 - **Simplicidade primeiro** — a solucao mais simples que funciona e a correta. Se envolve criar abstracoes novas, questionar se sao necessarias.
 - **Pesquisar antes de codar** — para features grandes ou mudancas com 3+ arquivos, usar `/pesquisa` e `/requisitos` antes de implementar. Para ajustes pontuais, ir direto.
 - **Documentacao atualizada** — nao confiar so no conhecimento interno. Verificar APIs e libs via Context7 antes de usar sintaxes que podem ter mudado.
@@ -247,13 +158,13 @@ Regras que valem sempre, em qualquer tarefa:
 
 ## MCPs Configurados
 
-MCPs são integrações externas instaladas por projeto via `.mcp.json`.
+MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados via `.mcp.json` e settings do Claude Code.
 
-### Fixos neste template
-- **Context7** — busca documentação atualizada de bibliotecas e frameworks
-
-### Específicos do projeto
-(nenhum adicional por enquanto)
+- **Context7** — busca documentacao atualizada de bibliotecas e frameworks
+- **Gamma** — gera apresentacoes profissionais (slides)
+- **shadcn** — gerencia componentes shadcn/ui (adicionar, atualizar)
+- **Supabase** — acesso direto ao banco (executar SQL, listar tabelas, criar migrations, gerar tipos)
+- **Playwright** — automacao de browser (testes visuais, navegacao, screenshots)
 
 ## Ferramentas Disponiveis (Skills)
 
@@ -265,227 +176,48 @@ MCPs são integrações externas instaladas por projeto via `.mcp.json`.
 
 ---
 
-## Arquivos de planejamento
+## Planejamento
 
-Pesquisas e requisitos gerados pelas skills ficam em `planejamento/`:
-- `planejamento/pesquisas/` — arquivos gerados pela skill `pesquisa`
-- `planejamento/requisitos/` — arquivos gerados pela skill `requisitos`
+Pesquisas e requisitos ficam em `planejamento/` e sao temporarios — existem para apoiar um ciclo de desenvolvimento.
 
-Nunca salvar pesquisas ou requisitos fora dessa pasta.
-Ao criar um novo arquivo de planejamento, seguir a convencao:
 - Pesquisa: `planejamento/pesquisas/pesquisa-[tema].md`
 - Requisito: `planejamento/requisitos/requisito-[tema].md`
 
----
-
-## Ciclo de vida dos arquivos de planejamento
-
-Pesquisas e requisitos são arquivos temporários — existem para apoiar um ciclo de desenvolvimento e devem ser removidos quando esse ciclo fecha.
-
-### Regra de limpeza
-
-Quando o Claude mover uma tarefa para a seção **Concluído** no `roadmap.md`, deve verificar se existe algum arquivo de planejamento associado a ela e, se existir, **apagar**.
-
-**Arquivos a apagar:**
-- `planejamento/pesquisas/pesquisa-[tema].md` relacionada à tarefa
-- `planejamento/requisitos/requisito-[tema].md` relacionado à tarefa
-
-### Como identificar o arquivo associado
-
-O tema do arquivo de planejamento geralmente bate com o tema da tarefa no roadmap. Exemplos:
-
-- Tarefa concluída: "Implementar autenticação"
-  → Apagar: `pesquisa-autenticacao.md` e/ou `requisito-autenticacao.md`
-
-- Tarefa concluída: "Listagem de contatos"
-  → Apagar: `pesquisa-listagem-contatos.md` e/ou `requisito-listagem-contatos.md`
-
-Se não houver arquivo de planejamento associado, não fazer nada.
-
-### Regra de confirmação
-
-Antes de apagar, informar em uma linha o que será removido:
-> "Vou apagar `planejamento/requisitos/requisito-autenticacao.md` pois a tarefa foi concluída."
-
-Se o usuário não quiser apagar, basta dizer e o arquivo é mantido.
-
-### O que nunca apagar
-
-- Arquivos em `planejamento/pesquisas/` ou `planejamento/requisitos/` que **não tenham** uma tarefa correspondente marcada como concluída
-- Os arquivos `CLAUDE.md` dentro dessas pastas — esses são permanentes
+**Limpeza automatica:** quando uma tarefa for movida para **Concluido** no roadmap, verificar se existe pesquisa ou requisito associado. Se sim, informar o usuario e apagar. Se o usuario quiser manter, respeitar.
 
 ---
 
-## Gestão de Tarefas — roadmap.md
+## Gestao de Tarefas — roadmap.md
 
-O `roadmap.md` é o centro de controle do projeto. O Claude atua como gestor de projeto — registra, move e atualiza as tarefas automaticamente, sem precisar ser lembrado. Nenhuma demanda é perdida.
+O `roadmap.md` e a fonte de verdade do projeto. O Claude atua como gestor — registra, move e atualiza tarefas automaticamente. Nenhuma demanda e perdida.
 
-### As 7 seções
+### As 5 secoes
 
-- **📋 A Fazer** — fila priorizada aguardando execução
-- **🔄 Fazendo** — tarefa em execução agora (máximo 1)
-- **✅ Pronto** — implementação concluída, aguardando auditoria automática
-- **🔧 A Corrigir** — auditoria automática encontrou problemas (tem prioridade sobre A Fazer)
-- **✔️ Concluído** — passou na auditoria automática (manter as 10 mais recentes)
-- **💬 Sugestões** — melhorias identificadas automaticamente pela análise do sistema (máximo 5 itens)
-- **💡 Orientações Futuras** — ideias e implementações sem prazo definido
+- **📋 A Fazer** — fila priorizada aguardando execucao
+- **🔄 Fazendo** — tarefa em andamento agora
+- **✅ Pronto** — implementacao concluida, aguardando validacao do usuario
+- **✔️ Concluido** — validado e aprovado pelo usuario
+- **💬 Sugestoes** — melhorias identificadas pelo Claude durante o trabalho
 
----
+### Comportamento automatico
 
-### Auditoria automática (cron a cada 1 hora)
+O Claude atualiza o roadmap **por conta propria**, sem precisar ser solicitado:
 
-Um processo automático roda a cada 1 hora enquanto a sessão do Claude Code estiver aberta. Ele faz o seguinte:
+1. **Pedido novo** → registrar no roadmap antes de executar. Se e pra agora, vai direto pra Fazendo. Se e pra depois, vai pra A Fazer.
+2. **Iniciar tarefa** → ler roadmap, mover de A Fazer → Fazendo. Se ja tem algo em Fazendo, perguntar ao usuario.
+3. **Tarefa descoberta durante execucao** → registrar em A Fazer e informar o usuario. Se for sugestao de melhoria, registrar em Sugestoes.
+4. **Concluir tarefa** → mover de Fazendo → Pronto. Adicionar nota do que foi feito e o que testar.
+5. **Tarefa interrompida** → deixar em Fazendo com nota do ponto de parada. Retomar na proxima sessao.
+6. **Usuario valida** → mover de Pronto → Concluido com data. Apagar arquivos de planejamento associados. Perguntar se comeca a proxima da fila.
+7. **Validacao falhou** → mover de Pronto → Fazendo com nota do problema. Corrigir e devolver pra Pronto.
+8. **Pedido de status** → responder em formato curto: Fazendo, Pronto, Proximo da fila, Sugestoes.
 
-1. Lê o `roadmap.md` e identifica tarefas em **Pronto**
-2. Para cada tarefa, faz auditoria real:
-   - Roda `npm run build` pra garantir que compila
-   - Lê os arquivos modificados pela tarefa
-   - Verifica lógica, padrões do projeto, tipagem, segurança
-   - Checa se o que foi descrito como "feito" realmente está no código
-3. Se tudo OK → move pra **Concluído** com data e nota de auditoria
-4. Se encontrar problema → move pra **A Corrigir** com descrição clara do problema (sem corrigir, só anotar)
-
-**Limitação técnica:** os crons só vivem enquanto a sessão estiver aberta e expiram após 3 dias. Ao iniciar uma sessão nova, o Claude deve oferecer ao usuário recriar os crons (auditoria + sugestões).
-
----
-
-### Sugestões automáticas (cron a cada 1 hora)
-
-Um segundo processo automático roda a cada 1 hora (no minuto :47, separado da auditoria no :17). Ele analisa o sistema inteiro e sugere melhorias:
-
-1. Lê o `roadmap.md` — seções Sugestões, A Fazer, Fazendo, Orientações Futuras
-2. Se a seção **Sugestões** já tem 5+ itens → não adiciona nada (lista cheia)
-3. Analisa a codebase: estrutura, padrões, componentes, actions, hooks, types
-4. Verifica: código duplicado, padrões inconsistentes, oportunidades de otimização, features úteis que faltam
-5. Compara com o que já está em Sugestões, A Fazer e Futuras → evita duplicatas
-6. Se encontrar algo novo e relevante → adiciona em **Sugestões** com descrição curta
-7. Se não encontrar nada novo → não faz nada
-
-**Regras de contenção:**
-- Máximo 5 sugestões ativas — se já tem 5, parar de sugerir
-- Nunca duplicar algo que já existe no roadmap
-- Sugestões devem ser acionáveis e específicas, não genéricas
-- Se não tem nada genuinamente útil, simplesmente não adicionar
-
-**Formato de uma sugestão:**
-```markdown
-- [ ] 💡 [Título curto]
-      Tipo: [otimização | limpeza | melhoria | feature]
-      Detectado em: [arquivo ou área]
-      Descrição: [1-2 frases]
-```
-
-**O que o usuário pode fazer com sugestões:**
-- Promover pra **A Fazer** → vira tarefa normal
-- Descartar → remover da lista (abre espaço pra novas sugestões)
-- Ignorar → fica na lista até ser descartada ou promovida
-
-**Formato da nota de auditoria aprovada:**
-```markdown
-- [x] Título da tarefa ✓ auditoria automática (YYYY-MM-DD)
-      Build OK | Código revisado | Sem problemas encontrados
-```
-
-**Formato da nota de auditoria reprovada:**
-```markdown
-- [ ] Título da tarefa
-      ⚠️ Auditoria (YYYY-MM-DD): [descrição do problema encontrado]
-```
-
----
-
-### Comportamento automático obrigatório
-
-O Claude atualiza o `roadmap.md` **por conta própria**, sem precisar ser solicitado, em todas as situações abaixo.
-
----
-
-#### 1. Quando o usuário pede algo novo
-
-Qualquer pedido — seja uma feature, uma correção, uma pesquisa ou uma melhoria — vira uma tarefa no roadmap **antes** de qualquer execução.
-
-- Se for para fazer agora → entra direto em **Fazendo**
-- Se for para depois → entra em **A Fazer**
-- Se for uma ideia sem prazo → entra em **Orientações Futuras**
-
-> O Claude nunca começa a trabalhar em algo que não está registrado no roadmap.
-
----
-
-#### 2. Ao iniciar qualquer tarefa
-
-1. Ler o `roadmap.md`
-2. Verificar se há tarefas em **A Corrigir** — essas têm prioridade sobre **A Fazer**
-3. Mover a tarefa de **A Corrigir** ou **A Fazer** → **Fazendo**
-4. Se já houver algo em **Fazendo**: perguntar ao usuário se pausa ou continua
-5. Só então começar a execução
-
----
-
-#### 3. Durante a execução — tarefas descobertas
-
-Se durante o trabalho o Claude identificar algo que precisa ser feito mas não estava previsto:
-- Registrar imediatamente em **A Fazer** (se for necessário para a tarefa atual)
-- Ou em **Orientações Futuras** (se for melhoria ou dívida técnica)
-- Informar o usuário em uma linha: *"Anotei no roadmap: [nome da tarefa]"*
-
----
-
-#### 4. Ao concluir uma tarefa
-
-1. Mover de **Fazendo** → **Pronto**
-2. Adicionar nota do que foi feito e critérios de auditoria (o que o cron deve verificar)
-3. Verificar se existe arquivo de planejamento associado (pesquisa ou requisito) — se sim, informar que será apagado quando a auditoria aprovar
-4. A auditoria automática (cron) cuidará de mover pra **Concluído** ou **A Corrigir**
-
----
-
-#### 5. Se a tarefa for interrompida
-
-- Deixar em **Fazendo** com nota do ponto exato de parada
-- Exemplo: `- [ ] Implementar worker ← parou na integração com 2Captcha`
-- Na próxima sessão, ao ler o roadmap, retomar desse ponto
-
----
-
-#### 6. Ao receber pedido de status
-
-Quando o usuário disser "o que está pendente?", "próximo passo?", "me atualize", "leia o roadmap" ou similar:
-
-Ler o `roadmap.md` e responder em formato curto:
-
-```
-Fazendo: [tarefa ou "nada em andamento"]
-Pronto (aguardando auditoria): [quantidade ou "nenhuma"]
-A Corrigir: [lista ou "nenhuma"]
-Próximo da fila: [primeira tarefa de A Fazer ou "fila vazia"]
-Futuras: [quantidade de itens]
-```
-
----
-
-### Formato de uma tarefa no roadmap
+### Formato de tarefa
 
 ```markdown
-- [ ] Título claro e objetivo da tarefa
-      Contexto: por que isso precisa ser feito (opcional, só quando não for óbvio)
-      ← nota de parada ou problema (só quando interrompida ou devolvida)
+- [ ] Titulo claro e objetivo
+      Contexto: por que isso precisa ser feito (opcional)
+      ← nota de parada ou problema (so quando interrompida ou devolvida)
 ```
 
-Exemplos:
-
-```markdown
-- [ ] Implementar listagem de contatos
-      Contexto: feature necessária antes do lançamento do módulo de CRM
-
-- [ ] Corrigir filtro de busca na listagem
-      ⚠️ Auditoria (2026-03-17): query não filtra por nome parcial, só por nome exato
-```
-
----
-
-### Princípio central
-
-> O roadmap é a fonte de verdade do projeto.
-> Se não está no roadmap, não existe.
-> O Claude nunca perde uma demanda e nunca trabalha no escuro.
+> Se nao esta no roadmap, nao existe. O Claude nunca perde uma demanda e nunca trabalha no escuro.

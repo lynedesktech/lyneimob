@@ -45,7 +45,7 @@ export async function atualizarSessao(request: NextRequest) {
     "/integracoes",
     "/conversas",
     "/meu-site",
-    "/planos",
+    "/financeiro",
     "/configuracoes",
     "/usuarios",
   ]
@@ -84,7 +84,7 @@ export async function atualizarSessao(request: NextRequest) {
 
   // Verificar trial expirado para usuários autenticados
   // Rotas permitidas mesmo com trial expirado
-  const rotasLivresTrial = ["/planos", "/configuracoes"]
+  const rotasLivresTrial = ["/financeiro", "/configuracoes"]
   const ehRotaLivreTrial = rotasLivresTrial.some((rota) =>
     pathname.startsWith(rota)
   )
@@ -100,7 +100,7 @@ export async function atualizarSessao(request: NextRequest) {
       const trialFim = new Date(org.trial_fim_em)
       if (trialFim < new Date()) {
         const url = request.nextUrl.clone()
-        url.pathname = "/planos"
+        url.pathname = "/financeiro"
         url.searchParams.set("trial_expirado", "true")
         return NextResponse.redirect(url)
       }

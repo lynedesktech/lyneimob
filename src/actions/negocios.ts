@@ -316,6 +316,130 @@ export async function perderNegocio(
 // Reabrir negócio (perdido → aberto)
 // ============================================================
 
+// ============================================================
+// Ações em Massa
+// ============================================================
+
+export async function excluirNegociosEmMassa(ids: string[]): Promise<EstadoFormulario> {
+  if (!ids.length) return { erro: "Nenhum negócio selecionado" }
+
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  const permissao = verificarPermissao(
+    usuario.cargo as "admin" | "corretor" | "gerente",
+    "excluir_registros"
+  )
+  if (permissao.erro) return permissao
+
+  const supabase = await criarClienteServer()
+  const { error } = await supabase.from("negocios").delete().in("id", ids)
+
+  if (error) return { erro: "Erro ao excluir negócios. Tente novamente." }
+
+  revalidatePath("/negocios")
+  const n = ids.length
+  return { sucesso: `${n} negócio${n !== 1 ? "s" : ""} excluído${n !== 1 ? "s" : ""}` }
+}
+
+export async function moverNegociosParaEtapa(
+  ids: string[],
+  etapaId: string
+): Promise<EstadoFormulario> {
+  if (!ids.length) return { erro: "Nenhum negócio selecionado" }
+
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  const supabase = await criarClienteServer()
+  const { error } = await supabase
+    .from("negocios")
+    .update({ etapa_id: etapaId })
+    .in("id", ids)
+
+  if (error) return { erro: "Erro ao mover negócios. Tente novamente." }
+
+  revalidatePath("/negocios")
+  const n = ids.length
+  return { sucesso: `${n} negócio${n !== 1 ? "s" : ""} movido${n !== 1 ? "s" : ""}` }
+}
+
+export async function ganharNegociosEmMassa(ids: string[]): Promise<EstadoFormulario> {
+  if (!ids.length) return { erro: "Nenhum negócio selecionado" }
+
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  const supabase = await criarClienteServer()
+
+  const { data: etapaGanho } = await supabase
+    .from("pipeline_etapas")
+    .select("id")
+    .eq("organizacao_id", usuario.organizacao_id)
+    .eq("tipo", "ganho")
+    .single()
+
+  if (!etapaGanho) return { erro: "Etapa 'Ganho' não encontrada no pipeline" }
+
+  const { error } = await supabase
+    .from("negocios")
+    .update({
+      status: "ganho",
+      etapa_id: etapaGanho.id,
+      data_ganho: new Date().toISOString(),
+    })
+    .in("id", ids)
+
+  if (error) return { erro: "Erro ao marcar negócios como ganhos. Tente novamente." }
+
+  revalidatePath("/negocios")
+  const n = ids.length
+  return { sucesso: `${n} negócio${n !== 1 ? "s" : ""} marcado${n !== 1 ? "s" : ""} como ganho` }
+}
+
+export async function perderNegociosEmMassa(
+  ids: string[],
+  motivo: string
+): Promise<EstadoFormulario> {
+  if (!ids.length) return { erro: "Nenhum negócio selecionado" }
+
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  const supabase = await criarClienteServer()
+
+  const { data: etapaPerdido } = await supabase
+    .from("pipeline_etapas")
+    .select("id")
+    .eq("organizacao_id", usuario.organizacao_id)
+    .eq("tipo", "perdido")
+    .single()
+
+  if (!etapaPerdido) return { erro: "Etapa 'Perdido' não encontrada no pipeline" }
+
+  const { error } = await supabase
+    .from("negocios")
+    .update({
+      status: "perdido",
+      etapa_id: etapaPerdido.id,
+      motivo_perda: motivo,
+      data_perda: new Date().toISOString(),
+    })
+    .in("id", ids)
+
+  if (error) return { erro: "Erro ao marcar negócios como perdidos. Tente novamente." }
+
+  revalidatePath("/negocios")
+  const n = ids.length
+  return {
+    sucesso: `${n} negócio${n !== 1 ? "s" : ""} marcado${n !== 1 ? "s" : ""} como perdido`,
+  }
+}
+
+// ============================================================
+// Reabrir negócio (perdido → aberto)
+// ============================================================
+
 export async function reabrirNegocio(id: string): Promise<EstadoFormulario> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) {

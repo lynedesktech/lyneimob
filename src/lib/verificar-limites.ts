@@ -1,5 +1,6 @@
 import { criarClienteServer } from "@/lib/supabase/server"
 import { planoPermiteModulo } from "@/types/billing"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { TipoPlano, LimitesPlano, ResultadoLimite } from "@/types/billing"
 
 // ============================================================
@@ -7,8 +8,8 @@ import type { TipoPlano, LimitesPlano, ResultadoLimite } from "@/types/billing"
 // Usadas nas Server Actions antes de criar recursos
 // ============================================================
 
-async function buscarOrganizacao(organizacaoId: string) {
-  const supabase = await criarClienteServer()
+async function buscarOrganizacao(organizacaoId: string, clienteExterno?: SupabaseClient) {
+  const supabase = clienteExterno ?? await criarClienteServer()
 
   const { data } = await supabase
     .from("organizacoes")
@@ -29,9 +30,10 @@ async function buscarOrganizacao(organizacaoId: string) {
 // ============================================================
 
 export async function verificarTrialAtivo(
-  organizacaoId: string
+  organizacaoId: string,
+  clienteExterno?: SupabaseClient
 ): Promise<ResultadoLimite> {
-  const org = await buscarOrganizacao(organizacaoId)
+  const org = await buscarOrganizacao(organizacaoId, clienteExterno)
   if (!org) {
     return { permitido: false, mensagem: "Organização não encontrada." }
   }
@@ -148,17 +150,18 @@ export async function verificarLimiteCorretores(
 // ============================================================
 
 export async function verificarLimiteConversasIA(
-  organizacaoId: string
+  organizacaoId: string,
+  clienteExterno?: SupabaseClient
 ): Promise<ResultadoLimite> {
-  const trial = await verificarTrialAtivo(organizacaoId)
+  const trial = await verificarTrialAtivo(organizacaoId, clienteExterno)
   if (!trial.permitido) return trial
 
-  const org = await buscarOrganizacao(organizacaoId)
+  const org = await buscarOrganizacao(organizacaoId, clienteExterno)
   if (!org) {
     return { permitido: false, mensagem: "Organização não encontrada." }
   }
 
-  const supabase = await criarClienteServer()
+  const supabase = clienteExterno ?? await criarClienteServer()
 
   // Contar eventos de billing do tipo "conversa_ia" no mês atual
   const inicioMes = new Date()
@@ -192,9 +195,10 @@ export async function verificarLimiteConversasIA(
 // ============================================================
 
 export async function registrarUsoConversaIA(
-  organizacaoId: string
+  organizacaoId: string,
+  clienteExterno?: SupabaseClient
 ): Promise<void> {
-  const supabase = await criarClienteServer()
+  const supabase = clienteExterno ?? await criarClienteServer()
 
   await supabase.from("eventos_billing").insert({
     organizacao_id: organizacaoId,

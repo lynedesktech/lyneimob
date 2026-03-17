@@ -11,11 +11,13 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, RefreshCw, AlertCircle } from "lucide-react"
-import { buscarOuGerarResumoSemanal, regenerarResumoSemanal } from "@/actions/resumo-semanal"
+import { Sparkles, RefreshCw, AlertCircle, CalendarClock } from "lucide-react"
+import { buscarResumoSemanal, regenerarResumoSemanal } from "@/actions/resumo-semanal"
 import { formatarDataCurta } from "@/lib/formatadores"
 import { toast } from "sonner"
 import type { ResumoSemanal } from "@/types/resumo-semanal"
+
+const SETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000
 
 export function CardResumoSemanal() {
   const queryClient = useQueryClient()
@@ -24,16 +26,16 @@ export function CardResumoSemanal() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["resumo-semanal"],
     queryFn: async () => {
-      const resultado = await buscarOuGerarResumoSemanal()
+      const resultado = await buscarResumoSemanal()
       if (resultado.erro) throw new Error(resultado.erro)
-      return resultado.resumo!
+      return resultado
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
     retry: false,
   })
 
   useEffect(() => {
-    if (data) setResumo(data)
+    if (data?.resumo) setResumo(data.resumo)
   }, [data])
 
   const { mutate: regenerar, isPending: regenerando } = useMutation({
@@ -62,7 +64,7 @@ export function CardResumoSemanal() {
           </div>
           <div className="space-y-1">
             <CardTitle className="text-base">Resumo da Semana</CardTitle>
-            <CardDescription>Gerando análise com IA...</CardDescription>
+            <CardDescription>Carregando resumo...</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -96,10 +98,47 @@ export function CardResumoSemanal() {
     )
   }
 
-  const dadosResumo = resumo || data
+  // Sem resumo: conta nova ou ainda nao gerado
+  if (data?.status === "sem_resumo") {
+    const contaNova = data.orgCriadaEm
+      ? Date.now() - new Date(data.orgCriadaEm).getTime() < SETE_DIAS_MS
+      : false
+
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between space-y-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <CalendarClock className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <CardTitle className="text-base">Resumo da Semana</CardTitle>
+              <CardDescription>
+                {contaNova
+                  ? "Ainda não há dados suficientes para gerar seu primeiro resumo"
+                  : "O resumo é gerado automaticamente toda segunda-feira às 9h"}
+              </CardDescription>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => regenerar()}
+            disabled={regenerando}
+            title="Gerar resumo agora"
+          >
+            <RefreshCw className={`h-4 w-4 ${regenerando ? "animate-spin" : ""}`} />
+          </Button>
+        </CardHeader>
+      </Card>
+    )
+  }
+
+  const dadosResumo = resumo || data?.resumo
   if (!dadosResumo) return null
 
-  // Semana sem movimentações
+  // Semana sem movimentacoes
   const semMovimentacao = !dadosResumo.conteudo
 
   const periodoLabel = dadosResumo.semana_inicio && dadosResumo.semana_fim
@@ -130,18 +169,16 @@ export function CardResumoSemanal() {
           </div>
         </div>
 
-        {!semMovimentacao && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => regenerar()}
-            disabled={regenerando}
-            title="Gerar novo resumo"
-          >
-            <RefreshCw className={`h-4 w-4 ${regenerando ? "animate-spin" : ""}`} />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => regenerar()}
+          disabled={regenerando}
+          title="Gerar novo resumo"
+        >
+          <RefreshCw className={`h-4 w-4 ${regenerando ? "animate-spin" : ""}`} />
+        </Button>
       </CardHeader>
 
       {!semMovimentacao && (

@@ -33,7 +33,7 @@ export default function AuthLayout({
         <div className="absolute bottom-12 left-8 right-8 z-10 max-w-lg">
           <h1 className="text-3xl font-bold leading-tight text-white text-shadow-lg">
             Gerencie imóveis, clientes e negócios{" "}
-            <span className="text-accent-blue">em um só lugar</span>
+            <span className="font-extrabold text-white">em um só lugar</span>
           </h1>
           <p className="mt-3 text-white/70 text-sm text-shadow-sm">
             Monitore sua carteira, analise tendências e tome decisões estratégicas com dados e IA ao seu lado.

@@ -30,11 +30,11 @@ export function PaginaPlanos({ info, ehAdmin }: PaginaPlanosProps) {
   useEffect(() => {
     if (sucesso) {
       toast.success("Assinatura realizada com sucesso! Bem-vindo ao LyneImob.")
-      router.replace("/planos")
+      router.replace("/financeiro")
     }
     if (cancelado) {
       toast.info("Checkout cancelado. Você pode tentar novamente quando quiser.")
-      router.replace("/planos")
+      router.replace("/financeiro")
     }
   }, [sucesso, cancelado, router])
 
@@ -100,9 +100,9 @@ export function PaginaPlanos({ info, ehAdmin }: PaginaPlanosProps) {
       {/* Cabeçalho */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Planos</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Financeiro</h1>
           <p className="text-muted-foreground mt-1">
-            Escolha o plano ideal para sua imobiliária
+            Gerencie seu plano e acompanhe sua assinatura
           </p>
         </div>
 

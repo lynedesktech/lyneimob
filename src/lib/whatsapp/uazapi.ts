@@ -203,6 +203,22 @@ export async function marcarComoLida(
 // ============================================================
 
 /**
+ * Testa se as credenciais admin da Uazapi são válidas.
+ * Faz um GET em /instance/list para verificar conectividade e autenticação.
+ */
+export async function testarConexaoUazapi(url: string, adminToken: string): Promise<boolean> {
+  try {
+    const resposta = await fetch(montarUrlBase(url, "/instance/list"), {
+      method: "GET",
+      headers: { "Content-Type": "application/json", admintoken: adminToken },
+    })
+    return resposta.ok
+  } catch {
+    return false
+  }
+}
+
+/**
  * Extrai o número limpo do remoteJid da Uazapi
  * Ex: "5511999999999@s.whatsapp.net" → "5511999999999"
  */

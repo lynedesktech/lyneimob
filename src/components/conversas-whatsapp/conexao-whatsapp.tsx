@@ -1,24 +1,14 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
-import Link from "next/link"
+import { useState, useEffect, type ReactNode } from "react"
 import {
   MessageCircle,
   Wifi,
   WifiOff,
   RefreshCw,
   Smartphone,
-  CheckCircle2,
-  Settings,
   Loader2,
 } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -32,6 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useInstanciaWhatsapp } from "@/hooks/use-instancia-whatsapp"
+import { WizardConexaoWhatsapp } from "@/components/conversas-whatsapp/wizard-conexao-whatsapp"
 
 interface ConexaoWhatsappProps {
   children: ReactNode
@@ -51,7 +42,15 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
     desconectando,
   } = useInstanciaWhatsapp()
 
+  const [modoWizard, setModoWizard] = useState(false)
   const [dialogAberto, setDialogAberto] = useState(false)
+
+  // Ativa o wizard quando não há credenciais configuradas
+  useEffect(() => {
+    if (!carregando && !configurado) {
+      setModoWizard(true)
+    }
+  }, [carregando, configurado])
 
   // Loading
   if (carregando) {
@@ -61,46 +60,22 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
           <Skeleton className="h-8 w-64" />
           <Skeleton className="mt-2 h-4 w-48" />
         </div>
-        <Card>
-          <CardContent className="flex flex-col items-center py-16">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <Skeleton className="mt-4 h-5 w-48" />
-            <Skeleton className="mt-2 h-4 w-64" />
-          </CardContent>
-        </Card>
+        <Skeleton className="h-64 w-full" />
       </div>
     )
   }
 
-  // Sem credenciais configuradas
-  if (!configurado) {
+  // Wizard de onboarding (primeira configuração)
+  if (modoWizard) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Conversas WhatsApp</h1>
+          <h1 className="text-2xl font-bold tracking-tight">WhatsApp</h1>
           <p className="text-sm text-muted-foreground">
             Configure a integração para começar
           </p>
         </div>
-
-        <Card>
-          <CardContent className="flex flex-col items-center py-16">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <Settings className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="mt-5 text-lg font-semibold">
-              Configuração necessária
-            </h3>
-            <p className="mt-2 max-w-sm text-center text-sm text-muted-foreground">
-              Para usar o agente WhatsApp, primeiro configure a URL e o token da sua conta
-              Uazapi na página de configurações.
-            </p>
-            <Button className="mt-6" render={<Link href="/configuracoes/whatsapp" />}>
-              <Settings className="mr-2 h-4 w-4" />
-              Ir para Configurações
-            </Button>
-          </CardContent>
-        </Card>
+        <WizardConexaoWhatsapp onConcluir={() => setModoWizard(false)} />
       </div>
     )
   }
@@ -164,68 +139,53 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
           </div>
         </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">Escaneie o QR Code</CardTitle>
-            <CardDescription>
+        <div className="mx-auto max-w-md rounded-xl border bg-card p-8 text-center space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold">Escaneie o QR Code</h2>
+            <p className="text-sm text-muted-foreground">
               Abra o WhatsApp no celular e escaneie o código abaixo
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center pb-10">
-            {/* QR Code — bg-white intencional: QR precisa de fundo claro pra ser escaneável */}
-            <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-white p-4 dark:border-muted-foreground/10">
+            </p>
+          </div>
+
+          {/* QR Code — bg-white intencional: QR precisa de fundo claro pra ser escaneável */}
+          <div className="flex justify-center">
+            <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-white p-4">
               {qrCode ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={qrCode}
-                  alt="QR Code WhatsApp"
-                  className="h-64 w-64"
-                />
+                <img src={qrCode} alt="QR Code WhatsApp" className="h-56 w-56" />
               ) : (
-                <div className="flex h-64 w-64 items-center justify-center">
+                <div className="flex h-56 w-56 items-center justify-center">
                   <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Instruções */}
-            <div className="mt-8 space-y-3">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          {/* Instruções */}
+          <div className="space-y-3 text-left">
+            {[
+              "Abra o WhatsApp no seu celular",
+              "Toque em Dispositivos conectados",
+              "Toque em Conectar dispositivo e escaneie o código",
+            ].map((instrucao, i) => (
+              <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                  1
+                  {i + 1}
                 </div>
-                <span>Abra o <strong>WhatsApp</strong> no seu celular</span>
+                <span>{instrucao}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                  2
-                </div>
-                <span>
-                  Toque em <strong>Dispositivos conectados</strong>
-                </span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                  3
-                </div>
-                <span>
-                  Toque em <strong>Conectar dispositivo</strong> e escaneie o código
-                </span>
-              </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Botão para gerar novo QR */}
-            <Button
-              variant="outline"
-              className="mt-6"
-              onClick={() => conectar()}
-              disabled={conectando}
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${conectando ? "animate-spin" : ""}`} />
-              Gerar novo QR Code
-            </Button>
-          </CardContent>
-        </Card>
+          <Button
+            variant="outline"
+            onClick={() => conectar()}
+            disabled={conectando}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${conectando ? "animate-spin" : ""}`} />
+            Gerar novo QR Code
+          </Button>
+        </div>
       </div>
     )
   }
@@ -249,9 +209,7 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
               </span>
             )}
             {perfilNome && (
-              <span className="text-sm text-muted-foreground">
-                — {perfilNome}
-              </span>
+              <span className="text-sm text-muted-foreground">— {perfilNome}</span>
             )}
           </div>
         </div>

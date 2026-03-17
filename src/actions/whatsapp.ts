@@ -216,6 +216,72 @@ export async function salvarConfigWhatsapp(
 }
 
 // ============================================================
+// Salvar apenas configurações do agente (sem sobrescrever campos técnicos)
+// ============================================================
+
+export async function salvarConfigAgenteWhatsapp(
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode alterar configurações do WhatsApp." }
+  }
+
+  const supabase = await criarClienteServer()
+
+  // Parsear horário de atendimento (JSON serializado pelo seletor visual)
+  let horarioAtendimento = null
+  const horarioStr = formData.get("horario_atendimento") as string | null
+  if (horarioStr) {
+    try {
+      horarioAtendimento = JSON.parse(horarioStr)
+    } catch {
+      horarioAtendimento = null
+    }
+  }
+
+  const camposAgente = {
+    ativo: formData.get("ativo") === "true",
+    prompt_personalizado: (formData.get("prompt_personalizado") as string) || null,
+    horario_atendimento: horarioAtendimento,
+    mensagem_fora_horario: (formData.get("mensagem_fora_horario") as string) || null,
+    corretor_padrao_id: (formData.get("corretor_padrao_id") as string) || null,
+  }
+
+  // Verificar se já existe config
+  const { data: existente } = await supabase
+    .from("config_whatsapp")
+    .select("id")
+    .eq("organizacao_id", usuario.organizacao_id)
+    .single()
+
+  if (existente) {
+    const { error } = await supabase
+      .from("config_whatsapp")
+      .update(camposAgente)
+      .eq("id", existente.id)
+
+    if (error) return { erro: "Erro ao salvar configurações. Tente novamente." }
+  } else {
+    // Inserir mesmo sem credenciais técnicas (serão preenchidas ao conectar)
+    const { error } = await supabase.from("config_whatsapp").insert({
+      ...camposAgente,
+      organizacao_id: usuario.organizacao_id,
+      uazapi_url: "",
+      uazapi_token: "",
+    })
+
+    if (error) return { erro: "Erro ao salvar configurações. Tente novamente." }
+  }
+
+  revalidatePath("/conversas")
+  revalidatePath("/configuracoes/whatsapp")
+  return { sucesso: "Configurações do agente salvas com sucesso!" }
+}
+
+// ============================================================
 // Buscar conversa WhatsApp vinculada a um negócio
 // ============================================================
 

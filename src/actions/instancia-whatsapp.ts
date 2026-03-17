@@ -9,6 +9,7 @@ import {
   desconectarInstanciaUazapi,
   configurarWebhookUazapi,
   extrairNumero,
+  testarConexaoUazapi,
 } from "@/lib/whatsapp/uazapi"
 import type { StatusInstancia } from "@/types/whatsapp"
 import type { EstadoFormulario } from "@/types/formulario"
@@ -49,6 +50,56 @@ async function buscarCredenciaisAdmin(organizacaoId: string) {
 
   if (!url || !adminToken) return null
   return { url, adminToken }
+}
+
+// ============================================================
+// Configurar credenciais admin da Uazapi
+// ============================================================
+
+export async function configurarCredenciaisUazapi(
+  url: string,
+  token: string
+): Promise<EstadoFormulario> {
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode configurar integrações." }
+  }
+
+  const urlLimpa = url.trim()
+  const tokenLimpo = token.trim()
+
+  if (!urlLimpa || !tokenLimpo) {
+    return { erro: "Preencha a URL e o token da Uazapi." }
+  }
+
+  // Validar credenciais antes de salvar
+  const valido = await testarConexaoUazapi(urlLimpa, tokenLimpo)
+  if (!valido) {
+    return { erro: "Não foi possível conectar à Uazapi. Verifique a URL e o token e tente novamente." }
+  }
+
+  const supabase = await criarClienteServer()
+
+  const { data: org } = await supabase
+    .from("organizacoes")
+    .select("configuracoes_integracoes")
+    .eq("id", usuario.organizacao_id)
+    .single()
+
+  const configAtual = (org?.configuracoes_integracoes ?? {}) as Record<string, string>
+
+  const { error } = await supabase
+    .from("organizacoes")
+    .update({
+      configuracoes_integracoes: { ...configAtual, uazapi_url: urlLimpa, uazapi_token: tokenLimpo },
+    })
+    .eq("id", usuario.organizacao_id)
+
+  if (error) return { erro: "Erro ao salvar credenciais. Tente novamente." }
+
+  return { sucesso: "Credenciais configuradas com sucesso!" }
 }
 
 // ============================================================

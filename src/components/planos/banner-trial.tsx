@@ -22,7 +22,7 @@ export function BannerTrial({ diasRestantes, expirado }: BannerTrialProps) {
             usando o LyneImob.
           </p>
         </div>
-        <Button size="sm" variant="destructive" render={<Link href="/planos" />}>
+        <Button size="sm" variant="destructive" render={<Link href="/financeiro" />}>
           Ver planos
           <ArrowRight className="ml-1 h-3 w-3" />
         </Button>
@@ -43,7 +43,7 @@ export function BannerTrial({ diasRestantes, expirado }: BannerTrialProps) {
             . Assine um plano para não perder acesso.
           </p>
         </div>
-        <Button size="sm" variant="outline" render={<Link href="/planos" />}>
+        <Button size="sm" variant="outline" render={<Link href="/financeiro" />}>
           Ver planos
           <ArrowRight className="ml-1 h-3 w-3" />
         </Button>

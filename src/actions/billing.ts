@@ -88,8 +88,8 @@ export async function criarSessaoCheckout(plano: TipoPlano) {
         organizacao_id: org.id,
         plano: plano,
       },
-      success_url: `${appUrl}/planos?sucesso=true`,
-      cancel_url: `${appUrl}/planos?cancelado=true`,
+      success_url: `${appUrl}/financeiro?sucesso=true`,
+      cancel_url: `${appUrl}/financeiro?cancelado=true`,
       // Se já tem customer no Stripe, reutilizar
       ...(org.stripe_customer_id
         ? { customer: org.stripe_customer_id }
@@ -147,7 +147,7 @@ export async function criarSessaoPortal() {
   try {
     const sessao = await stripe.billingPortal.sessions.create({
       customer: org.stripe_customer_id,
-      return_url: `${appUrl}/planos`,
+      return_url: `${appUrl}/financeiro`,
     })
 
     if (sessao.url) {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { LogOut, User, ChevronsUpDown } from "lucide-react"
+import { LogOut, User, ChevronsUpDown, CreditCard } from "lucide-react"
 import { sair } from "@/actions/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -74,7 +74,7 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
 
           <DropdownMenuContent
             className="min-w-56 rounded-lg"
-            side="bottom"
+            side="right"
             align="end"
             sideOffset={4}
           >
@@ -106,6 +106,10 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
               <DropdownMenuItem onClick={() => router.push("/meu-perfil")}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Meu perfil</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/financeiro")}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Financeiro</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
 

@@ -66,7 +66,7 @@ const gruposNavegacao: GrupoNavegacao[] = [
   {
     titulo: "Administração",
     itens: [
-      { titulo: "Planos", href: "/planos", icone: CreditCard, permissao: "gerenciar_plano" },
+      { titulo: "Financeiro", href: "/financeiro", icone: CreditCard, permissao: "gerenciar_plano" },
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
     ],
   },
@@ -137,7 +137,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
           return (
             <React.Fragment key={grupo.titulo}>
               <SidebarGroup>
-                <SidebarGroupLabel className="text-sidebar-foreground/50 text-[11px] uppercase tracking-wider">
+                <SidebarGroupLabel className="text-sidebar-foreground/60 text-[11px] uppercase tracking-wider">
                   {grupo.titulo}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -154,6 +154,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
                             render={<Link href={item.href} />}
                             isActive={ativo}
                             tooltip={item.titulo}
+                            className={ativo ? "font-semibold text-sidebar-primary" : ""}
                           >
                             <item.icone />
                             <span>{item.titulo}</span>
