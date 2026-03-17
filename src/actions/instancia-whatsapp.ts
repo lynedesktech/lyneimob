@@ -1,6 +1,7 @@
 "use server"
 
 import { criarClienteServer } from "@/lib/supabase/server"
+import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { ehSuperAdmin } from "@/lib/permissoes"
 import {
   criarInstanciaUazapi,
@@ -35,14 +36,26 @@ async function buscarUsuarioLogado() {
   return usuario
 }
 
-/** Busca URL e admintoken da Uazapi nas configurações de integrações */
-async function buscarCredenciaisAdmin(organizacaoId: string) {
-  const supabase = await criarClienteServer()
+/** Busca URL e admintoken da Uazapi nas configurações de integrações.
+ *  As credenciais são da plataforma inteira — ficam na org do super_admin.
+ *  Usamos o cliente admin para bypasaar o RLS e ler entre organizações. */
+async function buscarCredenciaisAdmin(_organizacaoId: string) {
+  const supabaseAdmin = criarClienteAdmin()
 
-  const { data: org } = await supabase
+  // Localizar a organização do super_admin (onde as credenciais são gravadas)
+  const { data: superAdmin } = await supabaseAdmin
+    .from("usuarios")
+    .select("organizacao_id")
+    .eq("super_admin", true)
+    .limit(1)
+    .single()
+
+  if (!superAdmin) return null
+
+  const { data: org } = await supabaseAdmin
     .from("organizacoes")
     .select("configuracoes_integracoes")
-    .eq("id", organizacaoId)
+    .eq("id", superAdmin.organizacao_id)
     .single()
 
   const config = (org?.configuracoes_integracoes ?? {}) as Record<string, string>
