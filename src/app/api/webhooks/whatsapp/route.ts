@@ -387,6 +387,31 @@ async function criarClienteENegocioInicial(
       .eq("id", conversaId)
 
     console.log(`[Webhook] Cliente ${clienteId} e negócio ${negocio.id} vinculados à conversa ${conversaId}`)
+
+    // Detectar se este número tem lead de portal recente (últimos 30 dias)
+    // Isso permite à IA saber o canal e adaptar o atendimento
+    const { data: leadPortal } = await supabase
+      .from("leads_portais")
+      .select("portal, imovel_id")
+      .eq("organizacao_id", organizacaoId)
+      .eq("telefone", numeroCliente)
+      .in("status", ["novo", "processado"])
+      .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single()
+
+    if (leadPortal) {
+      const origemLead = leadPortal.portal === "site" ? "site" : "portal"
+      await supabase
+        .from("conversas_whatsapp")
+        .update({
+          origem_lead: origemLead,
+          ...(leadPortal.imovel_id ? { imovel_interesse_id: leadPortal.imovel_id } : {}),
+        })
+        .eq("id", conversaId)
+      console.log(`[Webhook] Origem detectada: ${origemLead} | Imóvel: ${leadPortal.imovel_id ?? "nenhum"}`)
+    }
   } catch (erro) {
     console.error("[Webhook] Erro ao criar cliente/negócio inicial:", erro instanceof Error ? erro.message : erro)
   }

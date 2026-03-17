@@ -36,10 +36,10 @@ export async function processarComAgente(
 
     const configTyped = config as unknown as ConfigWhatsapp
 
-    // 2. Buscar dados da conversa
+    // 2. Buscar dados da conversa (incluindo canal de origem)
     const { data: conversa } = await supabase
       .from("conversas_whatsapp")
-      .select("*")
+      .select("*, origem_lead, imovel_interesse_id")
       .eq("id", conversaId)
       .single()
 
@@ -166,6 +166,28 @@ export async function processarComAgente(
     }
     if (conversa.negocio_id) {
       contextoExtra += "\nOBS: Negócio já foi criado no pipeline."
+    }
+
+    // Canal de origem do lead
+    const origemLead = (conversa.origem_lead as string | null) || "whatsapp"
+    contextoExtra += `\n- Canal de origem: ${origemLead.toUpperCase()}`
+
+    // Se há imóvel de interesse (lead de portal com imóvel específico), buscar dados
+    if (conversa.imovel_interesse_id) {
+      const { data: imovelInteresse } = await supabase
+        .from("imoveis")
+        .select("titulo, tipo, bairro, preco_venda, preco_aluguel")
+        .eq("id", conversa.imovel_interesse_id as string)
+        .single()
+
+      if (imovelInteresse) {
+        const preco = imovelInteresse.preco_venda
+          ? `R$ ${Number(imovelInteresse.preco_venda).toLocaleString("pt-BR")}`
+          : imovelInteresse.preco_aluguel
+            ? `R$ ${Number(imovelInteresse.preco_aluguel).toLocaleString("pt-BR")}/mês`
+            : "preço sob consulta"
+        contextoExtra += `\n- Imóvel de interesse: ${imovelInteresse.titulo} | ${imovelInteresse.tipo} | ${imovelInteresse.bairro} | ${preco}`
+      }
     }
 
     // 8. Montar messages array
