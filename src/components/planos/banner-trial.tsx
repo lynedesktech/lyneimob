@@ -36,7 +36,7 @@ export function BannerTrial({ diasRestantes, expirado }: BannerTrialProps) {
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-warning" />
           <p className="text-sm font-medium text-warning">
-            Seu trial expira em{" "}
+            Seu período de teste expira em{" "}
             <strong>
               {diasRestantes} {diasRestantes === 1 ? "dia" : "dias"}
             </strong>

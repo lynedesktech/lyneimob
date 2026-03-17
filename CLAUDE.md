@@ -40,7 +40,7 @@ Todo plano deve ser escrito como conversa, nao como documentacao tecnica. Usar l
 - **Cache/Fila**: Upstash Redis (`@upstash/redis`) — debounce e memoria de conversa do agente WhatsApp
 - **Icones**: Lucide React
 - **Alias de caminho**: `@/` aponta para `./src/`
-- **Paleta principal**: azul-marinho `#023373`
+- **Paleta principal**: gradiente azul vibrante → azul profundo (`#0A5DC2` → `#063A8C` → `#011A42`), destaque `#2B8AFF`
 
 ## Comandos
 

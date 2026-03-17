@@ -17,7 +17,7 @@ const stepsTour = [
         title: "Bem-vindo ao LyneImob!",
         content: (
           <>
-            Este é o menu principal do seu CRM. Aqui você encontra todos os
+            Este é o menu principal da sua plataforma. Aqui você encontra todos os
             módulos — imóveis, clientes, negócios, atividades e muito mais.
           </>
         ),

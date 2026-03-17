@@ -57,7 +57,7 @@ const gruposNavegacao: GrupoNavegacao[] = [
     ],
   },
   {
-    titulo: "CRM",
+    titulo: "Gestão",
     itens: [
       { titulo: "Negócios", href: "/negocios", icone: Handshake },
       { titulo: "Clientes", href: "/clientes", icone: Users },
@@ -83,12 +83,24 @@ const gruposNavegacao: GrupoNavegacao[] = [
   },
 ]
 
+const gruposPlataforma: GrupoNavegacao[] = [
+  {
+    titulo: "Plataforma",
+    itens: [
+      { titulo: "Painel Plataforma", href: "/admin/painel", icone: BarChart3 },
+      { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
+      { titulo: "Config Plataforma", href: "/admin/configuracoes", icone: Shield },
+    ],
+  },
+]
+
 interface AppSidebarProps {
   usuario: {
     nome: string
     email: string
     avatar_url?: string | null
     cargo?: string | null
+    super_admin?: boolean | null
   }
   organizacao: {
     nome: string
@@ -98,6 +110,12 @@ interface AppSidebarProps {
 export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
   const pathname = usePathname()
   const cargo = (usuario.cargo as Cargo) || "corretor"
+  const superAdmin = usuario.super_admin === true
+
+  // Combinar grupos normais + plataforma (se super_admin)
+  const todosGrupos = superAdmin
+    ? [...gruposNavegacao, ...gruposPlataforma]
+    : gruposNavegacao
 
   return (
     <Sidebar className="border-r-0">
@@ -112,7 +130,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
               {organizacao.nome}
             </span>
             <span className="text-xs text-sidebar-foreground/60">
-              CRM Imobiliário
+              {superAdmin ? "Super Admin" : "Gestão Imobiliária"}
             </span>
           </div>
         </div>
@@ -120,9 +138,9 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
 
       {/* Navegação agrupada */}
       <SidebarContent>
-        {gruposNavegacao.map((grupo, indice) => {
+        {todosGrupos.map((grupo, indice) => {
           const itensVisiveis = grupo.itens.filter(
-            (item) => !item.permissao || temPermissao(cargo, item.permissao)
+            (item) => !item.permissao || temPermissao(cargo, item.permissao, superAdmin)
           )
 
           if (itensVisiveis.length === 0) return null

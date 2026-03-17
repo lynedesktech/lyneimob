@@ -27,7 +27,7 @@ export function HeaderLanding() {
     <header
       className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
         scrollou
-          ? "bg-[#023373]/95 shadow-lg shadow-black/10 backdrop-blur-md"
+          ? "bg-grad-end/95 shadow-lg shadow-black/10 backdrop-blur-md"
           : "bg-transparent"
       }`}
     >
@@ -68,7 +68,7 @@ export function HeaderLanding() {
             </Button>
           </Link>
           <Link href="/cadastro">
-            <Button className="bg-white font-semibold text-[#023373] hover:bg-white/90">
+            <Button className="bg-white font-semibold text-grad-mid hover:bg-white/90">
               Comece grátis
             </Button>
           </Link>
@@ -86,7 +86,7 @@ export function HeaderLanding() {
 
       {/* Menu mobile expandido */}
       {menuAberto && (
-        <div className="border-t border-white/10 bg-[#023373]/98 backdrop-blur-md md:hidden">
+        <div className="border-t border-white/10 bg-grad-end/98 backdrop-blur-md md:hidden">
           <div className="space-y-1 px-4 py-4">
             {linksNavegacao.map((link) => (
               <a
@@ -108,7 +108,7 @@ export function HeaderLanding() {
                 </Button>
               </Link>
               <Link href="/cadastro" onClick={() => setMenuAberto(false)}>
-                <Button className="w-full bg-white font-semibold text-[#023373] hover:bg-white/90">
+                <Button className="w-full bg-white font-semibold text-grad-mid hover:bg-white/90">
                   Comece grátis
                 </Button>
               </Link>

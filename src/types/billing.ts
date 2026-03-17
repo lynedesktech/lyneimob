@@ -31,7 +31,7 @@ export type PlanoConfig = {
 export const PLANOS: Record<TipoPlano, PlanoConfig> = {
   trial: {
     id: "trial",
-    nome: "Trial",
+    nome: "Essencial",
     descricao: "14 dias grátis para você testar tudo",
     preco_mensal: 0,
     limites: {
@@ -41,7 +41,7 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
     },
     stripe_price_id: null,
     funcionalidades: [
-      "CRM completo (imóveis, clientes, negócios, atividades)",
+      "Gestão completa (imóveis, clientes, negócios, atividades)",
       "IA em todos os módulos",
       "Site público personalizado",
       "Integração com portais",
@@ -52,8 +52,8 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
   },
   crm_ia: {
     id: "crm_ia",
-    nome: "CRM + IA",
-    descricao: "CRM completo com IA integrada em todos os módulos",
+    nome: "Profissional",
+    descricao: "Gestão completa com IA integrada em todos os módulos",
     preco_mensal: 19900, // R$ 199,00
     limites: {
       max_corretores: 5,
@@ -62,7 +62,7 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
     },
     stripe_price_id: process.env.STRIPE_PRICE_ID_CRM_IA || null,
     funcionalidades: [
-      "CRM completo (imóveis, clientes, negócios, atividades)",
+      "Gestão completa (imóveis, clientes, negócios, atividades)",
       "IA em todos os módulos",
       "Site público personalizado",
       "Integração com portais",
@@ -73,7 +73,7 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
   },
   crm_ia_sdr: {
     id: "crm_ia_sdr",
-    nome: "CRM + IA + SDR",
+    nome: "Completo",
     descricao: "Tudo incluído + Agente SDR WhatsApp com IA",
     preco_mensal: 39900, // R$ 399,00
     limites: {
@@ -83,7 +83,7 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
     },
     stripe_price_id: process.env.STRIPE_PRICE_ID_CRM_IA_SDR || null,
     funcionalidades: [
-      "Tudo do plano CRM + IA",
+      "Tudo do plano Profissional",
       "Agente SDR WhatsApp com IA",
       "Qualificação automática de leads",
       "Atendimento 24/7 por WhatsApp",

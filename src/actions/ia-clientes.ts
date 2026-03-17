@@ -185,7 +185,7 @@ export async function gerarResumoCliente(
         {
           role: "system",
           content:
-            "Você é um assistente de CRM imobiliário. " +
+            "Você é um assistente de gestão imobiliária. " +
             "Gere um resumo executivo de 2-3 frases sobre este cliente, destacando: " +
             "o que ele busca, nível de engajamento e recomendação de próxima ação para o corretor. " +
             "Use português brasileiro. Seja direto e prático.",

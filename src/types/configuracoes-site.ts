@@ -7,9 +7,9 @@ import { z } from "zod"
 const regexHex = /^#[0-9a-fA-F]{6}$/
 
 export const schemaCoresSite = z.object({
-  primaria: z.string().regex(regexHex, "Cor inválida (use formato #RRGGBB)").default("#023373"),
-  destaque: z.string().regex(regexHex, "Cor inválida (use formato #RRGGBB)").default("#3b82f6"),
-  hero_fundo: z.string().regex(regexHex, "Cor inválida (use formato #RRGGBB)").default("#023373"),
+  primaria: z.string().regex(regexHex, "Cor inválida (use formato #RRGGBB)").default("#063A8C"),
+  destaque: z.string().regex(regexHex, "Cor inválida (use formato #RRGGBB)").default("#2B8AFF"),
+  hero_fundo: z.string().regex(regexHex, "Cor inválida (use formato #RRGGBB)").default("#011A42"),
 })
 
 export const schemaHeroSite = z.object({
@@ -31,9 +31,9 @@ export const schemaSobreSite = z.object({
 })
 
 const coresPadrao = {
-  primaria: "#023373",
-  destaque: "#3b82f6",
-  hero_fundo: "#023373",
+  primaria: "#063A8C",
+  destaque: "#2B8AFF",
+  hero_fundo: "#011A42",
 }
 
 const heroPadrao = {

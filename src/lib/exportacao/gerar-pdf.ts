@@ -23,7 +23,7 @@ export function gerarPdf(
   // Cabeçalho
   doc.setFontSize(16)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(2, 51, 115) // #023373
+  doc.setTextColor(6, 58, 140) // #063A8C
   doc.text(config.titulo, 14, 18)
 
   // Subtítulo (filtros aplicados)
@@ -73,7 +73,7 @@ export function gerarPdf(
       valign: "middle",
     },
     headStyles: {
-      fillColor: [2, 51, 115], // #023373
+      fillColor: [6, 58, 140], // #063A8C
       textColor: [255, 255, 255],
       fontStyle: "bold",
       halign: "center",

@@ -38,7 +38,7 @@ export function WebhookInfo({ slug }: WebhookInfoProps) {
             <div>
               <h3 className="font-semibold text-lg">Webhook de Leads</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Configure esta URL nos portais para receber leads automaticamente no CRM.
+                Configure esta URL nos portais para receber leads automaticamente na plataforma.
               </p>
             </div>
 

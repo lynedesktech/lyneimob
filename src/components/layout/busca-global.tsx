@@ -153,6 +153,9 @@ export function DialogBuscaGlobal() {
   const [termoDebounced, setTermoDebounced] = React.useState("")
   const [indiceAtivo, setIndiceAtivo] = React.useState(0)
   const listaRef = React.useRef<HTMLDivElement>(null)
+  const scrollandoRef = React.useRef(false)
+  const timerScrollRef = React.useRef<ReturnType<typeof setTimeout>>(undefined)
+  const navegandoPorTecladoRef = React.useRef(false)
 
   // Debounce de 300ms
   React.useEffect(() => {
@@ -238,18 +241,21 @@ export function DialogBuscaGlobal() {
     return itens
   }, [termoDebounced, resultados])
 
-  // Reseta índice quando itens mudam
+  // Reseta índice e scroll quando o termo de busca muda
   React.useEffect(() => {
     setIndiceAtivo(0)
-  }, [itensFlat])
+    if (listaRef.current) listaRef.current.scrollTop = 0
+  }, [termoDebounced])
 
   // Navegação por teclado
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       e.preventDefault()
+      navegandoPorTecladoRef.current = true
       setIndiceAtivo((prev) => (prev + 1) % itensFlat.length)
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
+      navegandoPorTecladoRef.current = true
       setIndiceAtivo((prev) => (prev - 1 + itensFlat.length) % itensFlat.length)
     } else if (e.key === "Enter" && itensFlat.length > 0) {
       e.preventDefault()
@@ -261,8 +267,10 @@ export function DialogBuscaGlobal() {
     }
   }
 
-  // Scroll para item ativo
+  // Scroll para item ativo (apenas via teclado)
   React.useEffect(() => {
+    if (!navegandoPorTecladoRef.current) return
+    navegandoPorTecladoRef.current = false
     const container = listaRef.current
     if (!container) return
     const el = container.querySelector(`[data-indice="${indiceAtivo}"]`)
@@ -332,6 +340,13 @@ export function DialogBuscaGlobal() {
         <div
           ref={listaRef}
           className="max-h-80 overflow-y-auto py-2"
+          onScroll={() => {
+            scrollandoRef.current = true
+            clearTimeout(timerScrollRef.current)
+            timerScrollRef.current = setTimeout(() => {
+              scrollandoRef.current = false
+            }, 150)
+          }}
         >
           {/* Estado: buscando e sem resultados */}
           {buscaAtiva && !carregando && itensFlat.length === 0 && (
@@ -362,7 +377,7 @@ export function DialogBuscaGlobal() {
                           router.push(item.href)
                           fechar()
                         }}
-                        onMouseEnter={() => setIndiceAtivo(indiceGlobal)}
+                        onMouseEnter={() => { if (!scrollandoRef.current) setIndiceAtivo(indiceGlobal) }}
                       />
                     )
                   })}
@@ -396,7 +411,7 @@ export function DialogBuscaGlobal() {
                       router.push(acao.href)
                       fechar()
                     }}
-                    onMouseEnter={() => setIndiceAtivo(indice)}
+                    onMouseEnter={() => { if (!scrollandoRef.current) setIndiceAtivo(indice) }}
                   />
                 )
               })}
@@ -423,7 +438,7 @@ export function DialogBuscaGlobal() {
                       router.push(acao.href)
                       fechar()
                     }}
-                    onMouseEnter={() => setIndiceAtivo(indice)}
+                    onMouseEnter={() => { if (!scrollandoRef.current) setIndiceAtivo(indice) }}
                   />
                 )
               })}

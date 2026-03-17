@@ -271,7 +271,16 @@
       "Bash(grep -E \"\\\\.\\(png|svg|tsx|ts\\)$\")",
       "mcp__supabase__get_project_url",
       "mcp__supabase__get_publishable_keys",
-      "Bash(curl -s -X POST \"https://ftflgjrpwzscphvcivdb.supabase.co/auth/v1/admin/users\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZmxnanJwd3pzY3BodmNpdmRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjkzODMsImV4cCI6MjA4OTEwNTM4M30.SpStvkv8oG4uXyOvWROYK3YH5RJnRL9sVtKlRZy8KAA\" -H \"Authorization: Bearer sb_secret_fJ1vMmIMTdGkDGFWvtsaXw_6p_HiMRo\" -H \"Content-Type: application/json\" -d '{:*)"
+      "Bash(curl -s -X POST \"https://ftflgjrpwzscphvcivdb.supabase.co/auth/v1/admin/users\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0ZmxnanJwd3pzY3BodmNpdmRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjkzODMsImV4cCI6MjA4OTEwNTM4M30.SpStvkv8oG4uXyOvWROYK3YH5RJnRL9sVtKlRZy8KAA\" -H \"Authorization: Bearer sb_secret_fJ1vMmIMTdGkDGFWvtsaXw_6p_HiMRo\" -H \"Content-Type: application/json\" -d '{:*)",
+      "Bash(find c:UsersLynedeskDesktopTechLyneImob -name *configuracoes* -type f)",
+      "Bash(ls -la \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/meu-perfil/\")",
+      "Bash(grep -n \"toLocaleDateString\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/clientes/[id]/page.tsx)",
+      "Bash(grep -rn \"toLocaleDateString\\\\|toLocaleString\\\\|new Date\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/clientes/[id]/page.tsx)",
+      "Bash(grep -rn \"toLocaleDateString\\\\|toLocaleString\\\\|new Date\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/negocios/[id]/page.tsx)",
+      "Bash(grep -r \"from-\\\\|to-\\\\|via-\" c:UsersLynedeskDesktopTechLyneImobsrc --include=*.tsx --include=*.ts --include=*.jsx --include=*.js)",
+      "Bash(grep -r \"023373\\\\|3b82f6\\\\|01245a\\\\|011a42\" c:UsersLynedeskDesktopTechLyneImob --include=*.tsx --include=*.ts --include=*.json --include=*.html)",
+      "mcp__supabase__get_logs",
+      "Bash(find c:UsersLynedeskDesktopTechLyneImobsrccomponents -name *alternador* -o -name *theme*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

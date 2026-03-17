@@ -4,12 +4,12 @@ import { ArrowRight, Play } from "lucide-react"
 
 export function SecaoHero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#023373] via-[#01245a] to-[#011a42] pt-16">
+    <section className="relative overflow-hidden bg-gradient-to-br from-grad-start via-grad-mid to-grad-end pt-16">
       {/* Padrão decorativo de fundo */}
       <div className="absolute inset-0 opacity-[0.07]">
         <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-white blur-3xl" />
-        <div className="absolute right-20 bottom-20 h-96 w-96 rounded-full bg-blue-400 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-300 blur-3xl" />
+        <div className="absolute right-20 bottom-20 h-96 w-96 rounded-full bg-accent-blue blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-blue/70 blur-3xl" />
       </div>
 
       {/* Grid sutil */}
@@ -30,20 +30,20 @@ export function SecaoHero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
-            CRM imobiliário com IA integrada
+            Plataforma de gestão imobiliária com IA
           </div>
 
           {/* Headline */}
           <h1 className="text-4xl leading-tight font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
             Venda mais imóveis com{" "}
-            <span className="bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent-blue to-cyan-300 bg-clip-text text-transparent">
               IA que trabalha por você
             </span>
           </h1>
 
           {/* Subtítulo */}
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70 sm:text-xl">
-            O CRM que analisa, sugere e automatiza — do cadastro do imóvel ao
+            A plataforma que analisa, sugere e automatiza — do cadastro do imóvel ao
             fechamento do negócio. Tudo com inteligência artificial.
           </p>
 
@@ -52,7 +52,7 @@ export function SecaoHero() {
             <Link href="/cadastro">
               <Button
                 size="lg"
-                className="h-12 gap-2 rounded-xl bg-white px-8 text-base font-semibold text-[#023373] shadow-lg shadow-black/20 transition-all hover:bg-white/90 hover:shadow-xl"
+                className="h-12 gap-2 rounded-xl bg-white px-8 text-base font-semibold text-grad-mid shadow-lg shadow-black/20 transition-all hover:bg-white/90 hover:shadow-xl"
               >
                 Comece grátis por 14 dias
                 <ArrowRight className="h-4 w-4" />

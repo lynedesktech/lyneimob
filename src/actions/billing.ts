@@ -59,7 +59,7 @@ export async function criarSessaoCheckout(plano: TipoPlano) {
   }
 
   if (plano === "trial") {
-    return { erro: "O plano trial não pode ser assinado." }
+    return { erro: "O plano Essencial não pode ser assinado." }
   }
 
   const configPlano = PLANOS[plano]

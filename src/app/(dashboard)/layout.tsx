@@ -28,7 +28,7 @@ export default async function DashboardLayout({
   // Buscar dados do usuário na tabela usuarios
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("nome, email, avatar_url, cargo")
+    .select("nome, email, avatar_url, cargo, super_admin")
     .eq("id", user.id)
     .single()
 

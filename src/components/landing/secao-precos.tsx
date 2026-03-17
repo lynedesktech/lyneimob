@@ -23,12 +23,12 @@ const descontos: Record<CicloCobranca, number> = {
 const planos = [
   {
     id: "crm_ia" as const,
-    nome: "CRM + IA",
-    descricao: "CRM completo com IA integrada em todos os módulos",
+    nome: "Profissional",
+    descricao: "Gestão completa com IA integrada em todos os módulos",
     precoMensal: 199,
     destaque: false,
     funcionalidades: [
-      "CRM completo (imóveis, clientes, negócios, atividades)",
+      "Gestão completa (imóveis, clientes, negócios, atividades)",
       "IA em todos os módulos",
       "Site público personalizado",
       "Integração com portais",
@@ -39,12 +39,12 @@ const planos = [
   },
   {
     id: "crm_ia_sdr" as const,
-    nome: "CRM + IA + SDR",
+    nome: "Completo",
     descricao: "Tudo incluído + Agente SDR WhatsApp com IA",
     precoMensal: 399,
     destaque: true,
     funcionalidades: [
-      "Tudo do plano CRM + IA",
+      "Tudo do plano Profissional",
       "Agente SDR WhatsApp com IA",
       "Qualificação automática de leads",
       "Atendimento 24/7 por WhatsApp",
@@ -73,7 +73,7 @@ export function SecaoPrecos() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header da seção */}
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold tracking-widest text-[#3b82f6] uppercase">
+          <p className="text-sm font-semibold tracking-widest text-accent-blue uppercase">
             Preços
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -119,14 +119,14 @@ export function SecaoPrecos() {
                 key={plano.id}
                 className={`relative flex flex-col rounded-2xl border p-8 transition-all duration-300 ${
                   plano.destaque
-                    ? "border-[#3b82f6]/50 bg-card shadow-xl shadow-[#3b82f6]/10"
-                    : "border-border bg-card hover:border-[#3b82f6]/30 hover:shadow-lg"
+                    ? "border-accent-blue/50 bg-card shadow-xl shadow-accent-blue/10"
+                    : "border-border bg-card hover:border-accent-blue/30 hover:shadow-lg"
                 }`}
               >
                 {/* Badge mais popular */}
                 {plano.destaque && (
                   <div className="absolute -top-3 right-6">
-                    <Badge className="bg-[#3b82f6] px-3 py-1 text-xs font-semibold text-white">
+                    <Badge className="bg-accent-blue px-3 py-1 text-xs font-semibold text-white">
                       Mais popular
                     </Badge>
                   </div>
@@ -168,7 +168,7 @@ export function SecaoPrecos() {
                     size="lg"
                     className={`h-12 w-full gap-2 rounded-xl text-base font-semibold ${
                       plano.destaque
-                        ? "bg-[#023373] text-white shadow-lg hover:bg-[#023373]/90 dark:bg-white dark:text-[#023373] dark:hover:bg-white/90"
+                        ? "bg-gradient-to-r from-grad-start to-grad-mid text-white shadow-lg hover:opacity-90 dark:from-white dark:to-white dark:text-grad-mid dark:hover:opacity-90"
                         : ""
                     }`}
                     variant={plano.destaque ? "default" : "outline"}

@@ -222,7 +222,7 @@ export async function verificarAcessoModulo(
   if (!planoPermiteModulo(org.plano, modulo)) {
     return {
       permitido: false,
-      mensagem: `O módulo "${modulo}" não está disponível no seu plano. Faça upgrade para o plano CRM + IA + SDR.`,
+      mensagem: `O módulo "${modulo}" não está disponível no seu plano. Faça upgrade para o plano Completo.`,
     }
   }
 

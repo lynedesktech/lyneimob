@@ -102,7 +102,7 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
     function: {
       name: "criar_cliente",
       description:
-        "Criar um novo cliente no CRM com os dados coletados na conversa. Use quando souber pelo menos o nome do cliente.",
+        "Criar um novo cliente na plataforma com os dados coletados na conversa. Use quando souber pelo menos o nome do cliente.",
       parameters: {
         type: "object",
         properties: {

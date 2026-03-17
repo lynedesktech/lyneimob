@@ -10,7 +10,7 @@ import {
 const funcionalidades = [
   {
     icone: Building2,
-    titulo: "CRM completo",
+    titulo: "Gestão completa",
     descricao:
       "Gerencie imóveis, clientes, negócios e atividades em um só lugar. Tudo organizado pra você focar no que importa: vender.",
     cor: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400",
@@ -47,7 +47,7 @@ const funcionalidades = [
     icone: Link2,
     titulo: "Integração com portais",
     descricao:
-      "Feed XML automático para portais como ZAP, OLX e VivaReal. Receba leads diretamente no CRM por webhook.",
+      "Feed XML automático para portais como ZAP, OLX e VivaReal. Receba leads diretamente na plataforma por webhook.",
     cor: "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400",
   },
 ]
@@ -58,7 +58,7 @@ export function SecaoFuncionalidades() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header da seção */}
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold tracking-widest text-[#3b82f6] uppercase">
+          <p className="text-sm font-semibold tracking-widest text-accent-blue uppercase">
             Funcionalidades
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -75,7 +75,7 @@ export function SecaoFuncionalidades() {
           {funcionalidades.map((feat) => (
             <div
               key={feat.titulo}
-              className="group relative rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-[#3b82f6]/30 hover:shadow-lg hover:shadow-[#3b82f6]/5"
+              className="group relative rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-accent-blue/30 hover:shadow-lg hover:shadow-accent-blue/5"
             >
               <div
                 className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${feat.cor} transition-transform duration-300 group-hover:scale-110`}

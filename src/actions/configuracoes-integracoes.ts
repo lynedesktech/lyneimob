@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { verificarPermissao } from "@/lib/permissoes"
+import { ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfiguracoesIntegracoes } from "@/types/configuracoes-integracoes"
 import type { EstadoFormulario } from "@/types/formulario"
 
@@ -21,7 +21,7 @@ async function buscarUsuarioLogado() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, organizacao_id, cargo")
+    .select("id, organizacao_id, cargo, super_admin")
     .eq("id", user.id)
     .single()
 
@@ -29,7 +29,7 @@ async function buscarUsuarioLogado() {
 }
 
 // ============================================================
-// Salvar configurações de integrações
+// Salvar configurações de integrações (apenas super_admin)
 // ============================================================
 
 export async function salvarConfiguracoesIntegracoes(
@@ -41,9 +41,8 @@ export async function salvarConfiguracoesIntegracoes(
     return { erro: "Você precisa estar logado para alterar as configurações." }
   }
 
-  const permissao = verificarPermissao(usuario.cargo as "admin" | "corretor" | "gerente", "gerenciar_integracoes")
-  if (permissao.erro) {
-    return permissao
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode alterar integrações." }
   }
 
   // Extrair dados do FormData
@@ -99,13 +98,13 @@ export async function salvarConfiguracoesIntegracoes(
     return { erro: "Erro ao salvar configurações. Tente novamente." }
   }
 
-  revalidatePath("/configuracoes")
+  revalidatePath("/admin/configuracoes")
 
   return { sucesso: "Configurações de integrações salvas com sucesso!" }
 }
 
 // ============================================================
-// Remover chave de uma integração específica
+// Remover chave de uma integração específica (apenas super_admin)
 // ============================================================
 
 export async function removerChaveIntegracao(
@@ -117,9 +116,8 @@ export async function removerChaveIntegracao(
     return { erro: "Você precisa estar logado." }
   }
 
-  const permissao2 = verificarPermissao(usuario.cargo as "admin" | "corretor" | "gerente", "gerenciar_integracoes")
-  if (permissao2.erro) {
-    return permissao2
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode alterar integrações." }
   }
 
   const campo = formData.get("campo") as string
@@ -159,7 +157,7 @@ export async function removerChaveIntegracao(
     return { erro: "Erro ao remover chave. Tente novamente." }
   }
 
-  revalidatePath("/configuracoes")
+  revalidatePath("/admin/configuracoes")
 
   return { sucesso: "Chave removida com sucesso!" }
 }

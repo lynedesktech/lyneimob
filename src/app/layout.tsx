@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "LyneImob — CRM Imobiliário Inteligente",
+  title: "LyneImob — Gestão Imobiliária Inteligente",
   description:
-    "CRM imobiliário com IA integrada para corretores e imobiliárias",
+    "Plataforma de gestão imobiliária com IA integrada para corretores e imobiliárias",
 }
 
 export default function RootLayout({

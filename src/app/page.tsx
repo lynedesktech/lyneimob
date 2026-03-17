@@ -9,9 +9,9 @@ import { SecaoCtaFinal } from "@/components/landing/secao-cta-final"
 import { FooterLanding } from "@/components/landing/footer-landing"
 
 export const metadata: Metadata = {
-  title: "LyneImob — CRM Imobiliário com IA para Corretores e Imobiliárias",
+  title: "LyneImob — Plataforma de Gestão Imobiliária com IA para Corretores e Imobiliárias",
   description:
-    "Venda mais imóveis com IA que trabalha por você. CRM completo com inteligência artificial, pipeline visual, agente SDR por WhatsApp e site público personalizado.",
+    "Venda mais imóveis com IA que trabalha por você. Gestão completa com inteligência artificial, pipeline visual, agente SDR por WhatsApp e site público personalizado.",
 }
 
 export default function PaginaInicial() {

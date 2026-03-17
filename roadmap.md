@@ -10,8 +10,7 @@
 
 > Tarefas em andamento agora. Só uma por vez sempre que possível.
 
-- [ ] Implementar cargo Super Admin (dono do SaaS)
-      Contexto: separar dono da plataforma (super_admin) do admin da imobiliária (cliente). Criar dashboard plataforma, listagem de orgs, mover chaves de API para área exclusiva do super_admin. Admin da org passa a ver configurações da própria imobiliária.
+(nenhuma tarefa em andamento)
 
 ---
 
@@ -36,6 +35,10 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
+- [ ] Implementar cargo Super Admin (dono do SaaS)
+      O que foi feito: migration 020 aplicada (campo super_admin boolean), 3 páginas /admin/* criadas (painel, organizações, configurações), sidebar com grupo "Plataforma" condicional, /configuracoes separada (super_admin → chaves API, admin org → dados da imobiliária), server actions protegidas com guard super_admin
+      O que testar: (1) marcar seu usuário como super_admin no banco, (2) logar → sidebar mostra grupo "Plataforma", (3) /admin/painel → métricas globais, (4) /admin/organizacoes → tabela com todas as orgs, (5) /admin/configuracoes → chaves de API, (6) logar com admin normal → NÃO vê grupo Plataforma, (7) admin normal em /configuracoes → vê dados da imobiliária (nome, telefone, CRECI, etc)
+      Pendente: criar conta superadmin@lyneimob.com ou marcar admin@lyneimob.com como super_admin (UPDATE usuarios SET super_admin = true WHERE email = 'admin@lyneimob.com')
 - [ ] Remover separadores da sidebar + criar página Meu Perfil + corrigir erro menu usuário
       O que testar: (1) sidebar light e dark — sem linhas separadoras entre grupos, (2) clicar no usuário no rodapé da sidebar → menu abre, (3) clicar "Meu perfil" → abre /meu-perfil com seus dados, (4) editar nome/telefone/creci → salvar → toast de sucesso
       Nota sobre erro produção: o build compila limpo — o erro client-side em produção provavelmente é do deploy anterior. Deploy atualizado deve resolver.
@@ -56,11 +59,6 @@
 
 > Histórico de entregas em ordem cronológica de desenvolvimento.
 
-- [x] Página de vendas do LyneImob — landing page em `/` com 8 seções (header, hero, funcionalidades, vídeo, preços com toggle mensal/trimestral/anual, FAQ, CTA, footer). Dashboard movido pra `/painel`. Middleware atualizado. ✓ validado (2026-03-16)
-- [x] Redesign da sidebar — 4 grupos (Principal, CRM, Canais, Administração), separadores visuais, ícone Building2 no header ✓ validado (2026-03-16)
-- [x] Exportação de dados (relatórios PDF, planilhas Excel) — botão "Exportar" em 4 listagens, dropdown Excel/PDF, respeita filtros, geração client-side (xlsx + jspdf-autotable), Server Actions filtradas, PDF azul-marinho + paginação, limite 5000 ✓ validado por auditoria (2026-03-16)
-- [x] Ajustes de billing + seed de dados de teste — página /planos com números reais de uso (corretores, imóveis, conversas IA) + seed.sql com 20 imóveis, 15 clientes, 10 negócios, 15 atividades ✓ validado por auditoria (2026-03-16)
-- [x] Integrar logos Lynedesk + paleta #023373 + tipografia Geist Sans — branding completo em todo o projeto ✓ validado por auditoria (2026-03-16)
 - [x] Polimento visual pós-rebranding — auditoria completa por 3 agentes UI/UX em todas as telas, design system consistente, dark mode OK ✓ validado por auditoria (2026-03-16)
 - [x] Criar 3 contas de teste (admin, gerente, corretor) — contas criadas no Supabase na mesma org "Imobiliária Teste", fix do bug EstadoFormulario no Turbopack (import corrigido em 3 páginas auth) ✓ validado por auditoria (2026-03-16)
 - [x] Fix loop infinito de renderização no dashboard — causa raiz: recursão infinita no RLS do PostgreSQL. Migration 019 aplicada com função SECURITY DEFINER `organizacao_id_do_usuario()`, policies reescritas em 16+ tabelas, layout e page restaurados ✓ validado por auditoria (2026-03-16)
@@ -68,3 +66,5 @@
 - [x] Configurar Stripe Sandbox + auditoria de integração — 2 produtos criados, 5 env vars, webhook handler com 7 correções (dedup, metadata fallback, toast useEffect, verificação de erro, limpeza trial) ✓ validado por auditoria (2026-03-16)
 - [x] Limpar banco de dados para produção — TRUNCATE organizacoes CASCADE + DELETE auth.users, todas as tabelas zeradas, storage limpo, sistema pronto para uso real ✓ (2026-03-17)
 - [x] Criar 3 contas de produção (admin, gerente, corretor) — org "Imobiliária Lynedesk", emails padrão @lyneimob.com, contas limpas sem dados ✓ (2026-03-17)
+- [x] Trocar paleta de cores para gradiente azul vibrante — variáveis CSS grad-start/mid/end/accent-blue, 11 arquivos atualizados, zero hardcodes restantes ✓ (2026-03-17)
+- [x] Rebranding "CRM" → "Gestão Imobiliária" + novos nomes de planos (Essencial, Profissional, Completo) — 17 arquivos, landing page, sidebar, auth, planos, onboarding ✓ (2026-03-17)

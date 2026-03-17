@@ -122,7 +122,7 @@ export async function processarComAgente(
     }
 
     if (conversa.cliente_id) {
-      contextoExtra += "\n\nOBS: Cliente já foi criado no CRM."
+      contextoExtra += "\n\nOBS: Cliente já foi criado na plataforma."
     }
     if (conversa.negocio_id) {
       contextoExtra += "\nOBS: Negócio já foi criado no pipeline."

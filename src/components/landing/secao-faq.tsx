@@ -12,7 +12,7 @@ const perguntas = [
   {
     pergunta: "Quantos imóveis posso cadastrar?",
     resposta:
-      "Depende do seu plano. No CRM + IA, você pode cadastrar até 300 imóveis. No CRM + IA + SDR, o limite sobe para 1.000 imóveis. Durante o trial, o limite é de 50 imóveis.",
+      "Depende do seu plano. No Profissional, você pode cadastrar até 300 imóveis. No Completo, o limite sobe para 1.000 imóveis. Durante o período de teste, o limite é de 50 imóveis.",
   },
   {
     pergunta: "O que é o Agente SDR por WhatsApp?",
@@ -44,7 +44,7 @@ export function SecaoFaq() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header da seção */}
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold tracking-widest text-[#3b82f6] uppercase">
+          <p className="text-sm font-semibold tracking-widest text-accent-blue uppercase">
             FAQ
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

@@ -147,7 +147,7 @@ export function InfoQualificacao({ conversa }: InfoQualificacaoProps) {
       {/* Vinculações */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Vinculações no CRM</CardTitle>
+          <CardTitle className="text-sm font-medium">Vinculações na plataforma</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {conversa.clientes ? (
