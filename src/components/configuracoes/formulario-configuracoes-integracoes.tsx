@@ -32,6 +32,7 @@ import {
 import {
   gruposIntegracoes,
   nomesChaves,
+  ajudaChaves,
 } from "@/types/configuracoes-integracoes"
 import type {
   IntegracoesMascaradas,
@@ -78,6 +79,11 @@ export function FormularioConfiguracoesIntegracoes({
   // Estado mascarado local (atualiza ao remover chave)
   const [mascaradas, setMascaradas] =
     useState<IntegracoesMascaradas>(integracoesMascaradas)
+
+  // Sincronizar quando o servidor re-renderiza com dados atualizados (após salvar)
+  useEffect(() => {
+    setMascaradas(integracoesMascaradas)
+  }, [integracoesMascaradas])
 
   // Actions
   const [estadoSalvar, formActionSalvar, pendenteSalvar] = useActionState(
@@ -288,6 +294,11 @@ export function FormularioConfiguracoesIntegracoes({
                             <p className="text-xs text-muted-foreground">
                               Chave configurada. Deixe o campo vazio para manter
                               a chave atual.
+                            </p>
+                          )}
+                          {ajudaChaves[campo] && (
+                            <p className="text-xs text-muted-foreground/70">
+                              {ajudaChaves[campo]}
                             </p>
                           )}
                         </div>

@@ -39,6 +39,21 @@ export const nomesChaves: Record<keyof ConfiguracoesIntegracoes, string> = {
   upstash_redis_token: "Token do Redis",
 }
 
+/**
+ * Textos de ajuda exibidos abaixo de cada campo no formulário.
+ * Explica onde encontrar cada credencial.
+ */
+export const ajudaChaves: Partial<Record<keyof ConfiguracoesIntegracoes, string>> = {
+  openai_api_key: "Encontre em platform.openai.com → API keys. Começa com sk-...",
+  stripe_secret_key: "Encontre em dashboard.stripe.com → Developers → API keys. Começa com sk_live_ ou sk_test_.",
+  stripe_publishable_key: "Encontre em dashboard.stripe.com → Developers → API keys. Começa com pk_live_ ou pk_test_.",
+  stripe_webhook_secret: "Criado ao configurar um endpoint de webhook em dashboard.stripe.com → Developers → Webhooks. Começa com whsec_. Pode deixar em branco se ainda não configurou webhooks.",
+  uazapi_url: "URL da sua instância Uazapi, ex: https://api.uazapi.dev",
+  uazapi_token: "Token de acesso gerado no painel Uazapi.",
+  upstash_redis_url: "Encontre em console.upstash.com → seu banco Redis → REST API → UPSTASH_REDIS_REST_URL.",
+  upstash_redis_token: "Encontre em console.upstash.com → seu banco Redis → REST API → UPSTASH_REDIS_REST_TOKEN.",
+}
+
 // ============================================================
 // Agrupamento por integração (para tabs)
 // ============================================================

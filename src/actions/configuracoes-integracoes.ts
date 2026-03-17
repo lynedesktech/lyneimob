@@ -7,6 +7,70 @@ import { schemaConfiguracoesIntegracoes } from "@/types/configuracoes-integracoe
 import type { EstadoFormulario } from "@/types/formulario"
 
 // ============================================================
+// Validação real das chaves contra as APIs
+// ============================================================
+
+async function validarChavesNovas(
+  novasChaves: Record<string, string>
+): Promise<string | null> {
+  // OpenAI
+  if (novasChaves.openai_api_key) {
+    try {
+      const resp = await fetch("https://api.openai.com/v1/models", {
+        headers: { Authorization: `Bearer ${novasChaves.openai_api_key}` },
+      })
+      if (resp.status === 401) {
+        return "Chave OpenAI inválida. Verifique se copiou corretamente em platform.openai.com → API keys."
+      }
+      if (!resp.ok) {
+        return "Não foi possível validar a chave OpenAI. Tente novamente."
+      }
+    } catch {
+      return "Erro de conexão ao validar chave OpenAI."
+    }
+  }
+
+  // Stripe
+  if (novasChaves.stripe_secret_key) {
+    try {
+      const resp = await fetch("https://api.stripe.com/v1/balance", {
+        headers: {
+          Authorization: `Bearer ${novasChaves.stripe_secret_key}`,
+        },
+      })
+      if (resp.status === 401) {
+        return "Chave secreta Stripe inválida. Verifique em dashboard.stripe.com → Developers → API keys."
+      }
+      if (!resp.ok) {
+        return "Não foi possível validar a chave Stripe. Tente novamente."
+      }
+    } catch {
+      return "Erro de conexão ao validar chave Stripe."
+    }
+  }
+
+  // Upstash Redis
+  if (novasChaves.upstash_redis_url && novasChaves.upstash_redis_token) {
+    try {
+      const url = novasChaves.upstash_redis_url.replace(/\/$/, "")
+      const resp = await fetch(`${url}/ping`, {
+        headers: { Authorization: `Bearer ${novasChaves.upstash_redis_token}` },
+      })
+      if (resp.status === 401) {
+        return "Token do Redis inválido. Verifique em console.upstash.com → REST API."
+      }
+      if (!resp.ok) {
+        return "Não foi possível validar as credenciais Redis. Tente novamente."
+      }
+    } catch {
+      return "Erro de conexão ao validar credenciais Redis."
+    }
+  }
+
+  return null
+}
+
+// ============================================================
 // Helpers
 // ============================================================
 
@@ -86,6 +150,12 @@ export async function salvarConfiguracoesIntegracoes(
     return { erro: "Dados de configuração inválidos. Verifique os campos." }
   }
 
+  // Validar chaves novas contra as APIs reais
+  const erroValidacao = await validarChavesNovas(dadosParseados)
+  if (erroValidacao) {
+    return { erro: erroValidacao }
+  }
+
   // Salvar no banco
   const { error } = await supabase
     .from("organizacoes")
@@ -100,7 +170,7 @@ export async function salvarConfiguracoesIntegracoes(
 
   revalidatePath("/admin/configuracoes")
 
-  return { sucesso: "Configurações de integrações salvas com sucesso!" }
+  return { sucesso: "Configurações salvas e validadas com sucesso!" }
 }
 
 // ============================================================
