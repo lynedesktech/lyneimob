@@ -130,6 +130,8 @@ export async function excluirInstanciaUazapi(
   })
 
   if (!resposta.ok) {
+    // 404 = instância já não existe na Uazapi — objetivo atingido, não é erro
+    if (resposta.status === 404) return
     const erro = await resposta.text().catch(() => "Erro desconhecido")
     throw new Error(`Erro ao excluir instância: ${erro}`)
   }

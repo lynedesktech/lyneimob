@@ -319,8 +319,8 @@ export async function desconectarInstancia(): Promise<EstadoFormulario> {
     try {
       await excluirInstanciaUazapi(credenciais.url, credenciais.adminToken, config.instance_id)
     } catch (err) {
-      console.error("[Instância WhatsApp] Erro ao excluir instância:", err instanceof Error ? err.message : err)
-      return { erro: "Erro ao excluir instância. Tente novamente." }
+      console.error("[Instância WhatsApp] Erro ao excluir instância na Uazapi (prosseguindo com limpeza do banco):", err instanceof Error ? err.message : err)
+      // Não retorna — segue para limpar o banco de qualquer forma
     }
   }
 
