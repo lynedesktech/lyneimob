@@ -91,7 +91,7 @@ export function PaginacaoListagem({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-end gap-4 text-sm text-muted-foreground">
       {/* Linhas por página — só no modo servidor */}
       {porPagina && baseUrl && (
         <div className="flex items-center gap-2">
@@ -117,20 +117,16 @@ export function PaginacaoListagem({
       )}
 
       {/* Info de página + botões de navegação */}
-      {totalPaginas > 1 && (
-        <>
-          <span className="whitespace-nowrap">
-            Página {pagina} de {totalPaginas}
-          </span>
+      <span className="whitespace-nowrap">
+        Página {pagina} de {totalPaginas}
+      </span>
 
-          <div className="flex items-center gap-1">
-            {renderBotao(1, <ChevronFirst className="h-4 w-4" />, "Primeira página", pagina <= 1)}
-            {renderBotao(pagina - 1, <ChevronLeft className="h-4 w-4" />, "Página anterior", pagina <= 1)}
-            {renderBotao(pagina + 1, <ChevronRight className="h-4 w-4" />, "Próxima página", pagina >= totalPaginas)}
-            {renderBotao(totalPaginas, <ChevronLast className="h-4 w-4" />, "Última página", pagina >= totalPaginas)}
-          </div>
-        </>
-      )}
+      <div className="flex items-center gap-1">
+        {renderBotao(1, <ChevronFirst className="h-4 w-4" />, "Primeira página", pagina <= 1)}
+        {renderBotao(pagina - 1, <ChevronLeft className="h-4 w-4" />, "Página anterior", pagina <= 1)}
+        {renderBotao(pagina + 1, <ChevronRight className="h-4 w-4" />, "Próxima página", pagina >= totalPaginas)}
+        {renderBotao(totalPaginas, <ChevronLast className="h-4 w-4" />, "Última página", pagina >= totalPaginas)}
+      </div>
     </div>
   )
 }
