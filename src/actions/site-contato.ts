@@ -35,22 +35,24 @@ export async function enviarContatoSite(
     "desconhecido"
   const chaveRateLimit = `ratelimit:contato:${ip}`
 
-  try {
-    const contadorAtual = await redis.get<number>(chaveRateLimit)
+  if (redis) {
+    try {
+      const contadorAtual = await redis.get<number>(chaveRateLimit)
 
-    if (contadorAtual !== null && contadorAtual >= LIMITE_ENVIOS) {
-      return {
-        erro: "Aguarde alguns minutos antes de enviar outra mensagem. Já recebemos sua solicitação anterior.",
+      if (contadorAtual !== null && contadorAtual >= LIMITE_ENVIOS) {
+        return {
+          erro: "Aguarde alguns minutos antes de enviar outra mensagem. Já recebemos sua solicitação anterior.",
+        }
       }
-    }
 
-    if (contadorAtual === null) {
-      await redis.set(chaveRateLimit, 1, { ex: JANELA_SEGUNDOS })
-    } else {
-      await redis.incr(chaveRateLimit)
+      if (contadorAtual === null) {
+        await redis.set(chaveRateLimit, 1, { ex: JANELA_SEGUNDOS })
+      } else {
+        await redis.incr(chaveRateLimit)
+      }
+    } catch {
+      // Se Redis falhar, não bloquear o envio — só perde a proteção
     }
-  } catch {
-    // Se Redis falhar, não bloquear o envio — só perde a proteção
   }
 
   const supabase = criarClienteAdmin()

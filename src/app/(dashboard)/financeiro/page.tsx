@@ -62,7 +62,10 @@ export default async function PlanosPage() {
 
     if (org.stripe_subscription_id) {
       const sub = await stripe.subscriptions.retrieve(org.stripe_subscription_id)
-      proximaCobranca = new Date(sub.current_period_end * 1000).toISOString()
+      const periodoFim = sub.items.data[0]?.current_period_end
+      if (periodoFim) {
+        proximaCobranca = new Date(periodoFim * 1000).toISOString()
+      }
     }
 
     if (org.stripe_customer_id) {
