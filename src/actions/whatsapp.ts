@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { verificarPermissao, ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfigWhatsapp } from "@/types/whatsapp"
 import type { StatusConversa } from "@/types/whatsapp"
@@ -294,7 +295,7 @@ export async function limparMemoriasOrganizacao(): Promise<EstadoFormulario> {
     return { erro: "Apenas o administrador da plataforma pode limpar a memória do agente." }
   }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   const { data: conversas } = await supabase
     .from("conversas_whatsapp")

@@ -1,11 +1,11 @@
 // ============================================================
 // Memória de conversa com Redis
-// Mantém contexto entre mensagens — janela de 20 mensagens, TTL 24h
+// Mantém contexto entre mensagens — janela de 30 mensagens, TTL 7 dias
 // ============================================================
 
 const CHAVE_PREFIX = "memoria:whatsapp:"
-const MAX_MENSAGENS = 20
-const TTL_SEGUNDOS = 86400 // 24 horas
+const MAX_MENSAGENS = 30
+const TTL_SEGUNDOS = 604800 // 7 dias
 
 type MensagemMemoria = {
   papel: "usuario" | "assistente"
@@ -15,7 +15,7 @@ type MensagemMemoria = {
 
 /**
  * Salva uma mensagem na memória da conversa
- * Mantém apenas as últimas 20 mensagens (LTRIM)
+ * Mantém apenas as últimas 30 mensagens (LTRIM)
  * Renova TTL a cada nova mensagem
  */
 export async function salvarMensagemMemoria(

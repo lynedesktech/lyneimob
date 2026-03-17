@@ -102,11 +102,13 @@ export async function processarComAgente(
     const systemPrompt = montarPromptSdr(configTyped, nomeOrganizacao)
 
     // Montar contexto da conversa para a IA
+    // O nome só é incluído quando o cliente foi formalmente registrado no sistema
+    // (cliente_id existe), evitando usar o nome do perfil do WhatsApp que pode ser qualquer coisa
     const nomeCliente = conversa.nome_cliente || null
     const jaRespondeu = mensagensOrdenadas.some((m) => m.direcao === "enviada")
+    const nomeVerificado = conversa.cliente_id && nomeCliente ? `\n- Nome do cliente: ${nomeCliente}` : ""
 
-    let contextoExtra = `\n\nCONTEXTO DA CONVERSA:
-- Nome do cliente: ${nomeCliente ?? "não informado"}
+    let contextoExtra = `\n\nCONTEXTO DA CONVERSA:${nomeVerificado}
 - Número WhatsApp: ${conversa.numero_cliente}
 - Já respondemos antes nesta conversa: ${jaRespondeu ? "SIM — não se apresente de novo, continue de onde parou" : "NÃO — primeira resposta, pode se apresentar"}`
 
