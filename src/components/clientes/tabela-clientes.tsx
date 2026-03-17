@@ -43,7 +43,7 @@ const colunasPadrao: ColunasVisiveis = {
   cadastro: true,
 }
 
-export function TabelaClientes({ clientes, total = 0 }: { clientes: Cliente[]; total?: number }) {
+export function TabelaClientes({ clientes, total = 0, filtros, paginacao }: { clientes: Cliente[]; total?: number; filtros?: React.ReactNode; paginacao?: React.ReactNode }) {
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [colunas, setColunas] = useState<ColunasVisiveis>(colunasPadrao)
 
@@ -75,10 +75,14 @@ export function TabelaClientes({ clientes, total = 0 }: { clientes: Cliente[]; t
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {total} {total === 1 ? "cliente encontrado" : "clientes encontrados"}
-        </p>
+      <div className="flex items-center gap-3">
+        {filtros ? (
+          <div className="flex-1">{filtros}</div>
+        ) : (
+          <p className="flex-1 text-sm text-muted-foreground">
+            {total} {total === 1 ? "cliente encontrado" : "clientes encontrados"}
+          </p>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -242,6 +246,15 @@ export function TabelaClientes({ clientes, total = 0 }: { clientes: Cliente[]; t
           </TableBody>
         </Table>
       </div>
+
+      {filtros && paginacao && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {total} {total === 1 ? "cliente encontrado" : "clientes encontrados"}
+          </p>
+          {paginacao}
+        </div>
+      )}
     </div>
   )
 }

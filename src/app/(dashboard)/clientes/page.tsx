@@ -81,41 +81,58 @@ export default async function ClientesPage({
         </div>
       </div>
 
-      <FiltrosClientes />
+      {/* Filtros standalone — apenas no modo cards */}
+      {modoVisualizacao !== "lista" && <FiltrosClientes />}
 
       {clientes && clientes.length > 0 ? (
         <>
           {modoVisualizacao === "lista" ? (
-            <TabelaClientes clientes={clientes} total={total} />
+            <TabelaClientes
+              clientes={clientes}
+              total={total}
+              filtros={<FiltrosClientes />}
+              paginacao={
+                <PaginacaoListagem
+                  pagina={pagina}
+                  totalPaginas={totalPaginas}
+                  porPagina={porPagina}
+                  baseUrl="/clientes"
+                  paramsBase={Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>}
+                />
+              }
+            />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {clientes.map((cliente) => (
-                <CardCliente key={cliente.id} cliente={cliente} />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {clientes.map((cliente) => (
+                  <CardCliente key={cliente.id} cliente={cliente} />
+                ))}
+              </div>
+              <PaginacaoListagem
+                pagina={pagina}
+                totalPaginas={totalPaginas}
+                porPagina={porPagina}
+                baseUrl="/clientes"
+                paramsBase={Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>}
+              />
+            </>
           )}
-
-          {/* Paginação */}
-          <PaginacaoListagem
-            pagina={pagina}
-            totalPaginas={totalPaginas}
-            porPagina={porPagina}
-            baseUrl="/clientes"
-            paramsBase={Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>}
-          />
         </>
       ) : (
-        <EstadoVazio
-          icone={Users}
-          titulo="Nenhum cliente encontrado"
-          descricao="Comece cadastrando seu primeiro cliente"
-          acao={
-            <Button render={<Link href="/clientes/novo" />}>
-              <Plus className="mr-2 h-4 w-4" />
-              Cadastrar cliente
-            </Button>
-          }
-        />
+        <>
+          {modoVisualizacao === "lista" && <FiltrosClientes />}
+          <EstadoVazio
+            icone={Users}
+            titulo="Nenhum cliente encontrado"
+            descricao="Comece cadastrando seu primeiro cliente"
+            acao={
+              <Button render={<Link href="/clientes/novo" />}>
+                <Plus className="mr-2 h-4 w-4" />
+                Cadastrar cliente
+              </Button>
+            }
+          />
+        </>
       )}
     </div>
   )
