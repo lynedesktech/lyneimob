@@ -187,15 +187,16 @@ export async function criarEConectarInstancia(): Promise<
       })
     }
 
-    // Configurar webhook automaticamente
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    const webhookUrl = `${appUrl}/api/webhooks/whatsapp`
+  }
 
-    try {
-      await configurarWebhookUazapi(credenciais.url, instanceToken, webhookUrl)
-    } catch (err) {
-      console.error("[Instância WhatsApp] Erro ao configurar webhook:", err instanceof Error ? err.message : err)
-    }
+  // Configurar webhook — sempre, seja instância nova ou reutilizada
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const webhookUrl = `${appUrl}/api/webhooks/whatsapp`
+
+  try {
+    await configurarWebhookUazapi(credenciais.url, instanceToken, webhookUrl)
+  } catch (err) {
+    console.error("[Instância WhatsApp] Erro ao configurar webhook:", err instanceof Error ? err.message : err)
   }
 
   // Conectar (gerar QR code)

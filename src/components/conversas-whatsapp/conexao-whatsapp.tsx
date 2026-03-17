@@ -69,12 +69,6 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
   if (modoWizard) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">WhatsApp</h1>
-          <p className="text-sm text-muted-foreground">
-            Configure a integração para começar
-          </p>
-        </div>
         <WizardConexaoWhatsapp onConcluir={() => setModoWizard(false)} />
       </div>
     )
@@ -85,17 +79,14 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Conversas WhatsApp</h1>
-            <div className="mt-1 flex items-center gap-2">
-              <Badge variant="destructive">
-                <WifiOff className="mr-1 h-3 w-3" />
-                Desconectado
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                Conecte o WhatsApp para ativar o agente IA
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="destructive">
+              <WifiOff className="mr-1 h-3 w-3" />
+              Desconectado
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              Conecte o WhatsApp para ativar o agente IA
+            </span>
           </div>
           <Button
             className="bg-[#25D366] text-white hover:bg-[#1da851]"
@@ -126,17 +117,12 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
   if (status === "connecting") {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Conversas WhatsApp</h1>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">
-              Aguardando conexão
-            </p>
-            <Badge variant="warning">
-              <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
-              Verificando...
-            </Badge>
-          </div>
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-muted-foreground">Aguardando conexão</p>
+          <Badge variant="warning">
+            <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
+            Verificando...
+          </Badge>
         </div>
 
         <div className="mx-auto max-w-md rounded-xl border bg-card p-8 text-center space-y-6">
@@ -195,23 +181,20 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
     <div className="space-y-6">
       {/* Header com status */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Conversas WhatsApp</h1>
-          <div className="mt-1 flex items-center gap-2">
-            <Badge variant="success">
-              <Wifi className="mr-1 h-3 w-3" />
-              Conectado
-            </Badge>
-            {numero && (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Smartphone className="h-3.5 w-3.5" />
-                {numero}
-              </span>
-            )}
-            {perfilNome && (
-              <span className="text-sm text-muted-foreground">— {perfilNome}</span>
-            )}
-          </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="success">
+            <Wifi className="mr-1 h-3 w-3" />
+            Conectado
+          </Badge>
+          {numero && (
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Smartphone className="h-3.5 w-3.5" />
+              {numero}
+            </span>
+          )}
+          {perfilNome && (
+            <span className="text-sm text-muted-foreground">— {perfilNome}</span>
+          )}
         </div>
 
         {/* Botão desconectar */}
