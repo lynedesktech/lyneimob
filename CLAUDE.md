@@ -63,10 +63,11 @@ src/
 │   │   ├── clientes/      # CRUD de clientes + interesses + match IA
 │   │   ├── negocios/      # Pipeline Kanban + sugestao acao IA
 │   │   ├── atividades/    # Agenda + calendario (mensal, semanal, diario)
-│   │   ├── conversas/     # Painel de conversas WhatsApp
-│   │   ├── planos/        # Pagina de planos e billing
-│   │   ├── configuracoes/ # Hub: empresa, whatsapp, equipe, distribuicao, portais, meu-site
+│   │   ├── configuracoes/ # Hub: empresa, whatsapp, equipe, distribuicao, portais, meu-site, pipeline, tipos-atividade
 │   │   ├── meu-perfil/    # Pagina de perfil do usuario logado
+│   │   ├── meu-site/      # Customizacao do site publico
+│   │   ├── usuarios/      # Gestao de equipe
+│   │   ├── integracoes/   # Integracoes (WhatsApp, portais)
 │   │   ├── admin/         # Area de super admin (gestao global)
 │   │   └── financeiro/    # Modulo financeiro
 │   ├── [slug]/            # Site publico da imobiliaria (por slug)
@@ -86,7 +87,7 @@ src/
 └── middleware.ts          # Middleware de auth (protecao de rotas)
 
 supabase/
-└── migrations/            # Migrations SQL do banco (001 a 020)
+└── migrations/            # Migrations SQL do banco (001 a 025)
 
 planejamento/
 ├── pesquisas/             # Pesquisas geradas pela skill /pesquisa

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/page-header"
 import { CardImovel } from "@/components/imoveis/card-imovel"
 import { TabelaImoveis } from "@/components/imoveis/tabela-imoveis"
 import { FiltrosImoveis } from "@/components/imoveis/filtros-imoveis"
-import { ToggleVisualizacao } from "@/components/imoveis/toggle-visualizacao"
+import { ToggleVisualizacao } from "@/components/ui/toggle-visualizacao"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Building2, Upload } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
@@ -72,7 +72,7 @@ export default async function ImoveisPage({
         descricao="Gerencie o portfólio de imóveis da sua imobiliária"
         acoes={
           <>
-            <ToggleVisualizacao />
+            <ToggleVisualizacao rota="/imoveis" />
             <BotaoExportar
               modulo="imoveis"
               filtros={{

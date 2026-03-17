@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header"
 import { CardCliente } from "@/components/clientes/card-cliente"
 import { TabelaClientes } from "@/components/clientes/tabela-clientes"
 import { FiltrosClientes } from "@/components/clientes/filtros-clientes"
-import { ToggleVisualizacao } from "@/components/clientes/toggle-visualizacao"
+import { ToggleVisualizacao } from "@/components/ui/toggle-visualizacao"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Users } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
@@ -65,7 +65,7 @@ export default async function ClientesPage({
         descricao="Gerencie sua carteira de clientes e leads"
         acoes={
           <>
-            <ToggleVisualizacao />
+            <ToggleVisualizacao rota="/clientes" />
             <BotaoExportar
               modulo="clientes"
               filtros={{

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/ui/page-header"
 import { KanbanContainer } from "@/components/negocios/kanban-container"
 import { ListaNegocios } from "@/components/negocios/lista-negocios"
-import { ToggleVisualizacao } from "@/components/negocios/toggle-visualizacao"
+import { ToggleVisualizacao, opcoesKanbanLista } from "@/components/ui/toggle-visualizacao"
 
 type SearchParams = Promise<{ visao?: string }>
 
@@ -23,7 +23,7 @@ export default async function NegociosPage({
         descricao="Acompanhe seu pipeline e feche mais negócios"
         acoes={
           <>
-            <ToggleVisualizacao visaoAtual={visao} />
+            <ToggleVisualizacao rota="/negocios" paramNome="visao" padrao="kanban" opcoes={opcoesKanbanLista} />
             <Button render={<Link href="/negocios/novo" />}>
               <Plus className="mr-2 h-4 w-4" />
               Novo Negócio

@@ -53,6 +53,9 @@ _(nenhum item aguardando validação)_
 
 > Histórico completo de entregas auditadas e aprovadas.
 
+- [x] Agente WhatsApp v4 — Consciência de canal (multi-canal) — migration 024, webhook detecta portal/site por telefone, IA recebe canal e imóvel de interesse, PASSO -1 com modos LEAD_QUENTE/LEAD_MORNO/LEAD_FRIO (2026-03-17)
+- [x] Agente WhatsApp v3 — Prompt algorítmico + ferramentas renomeadas — prompt com árvore de decisão (PASSO 0–5), 3 cenários (PRIMEIRA_RESPOSTA / EM_ANDAMENTO / REATIVACAO), ferramentas `atualizar_cliente` e `atualizar_negocio` (2026-03-17)
+- [x] Agente WhatsApp v2 — Regras de negócio + comportamento da IA — gate de etapa (só atende em pré-atendimento IA), archive da conversa ao ganhar negócio, upsert de cliente por telefone ao retornar, remoção da página /conversas, sidebar corrigida (2026-03-17)
 - [x] Etapa 7 — Auditoria final shadcn — 49 páginas auditadas, 5 correções aplicadas (botao-exportar, secao-funcionalidades, secao-hero, estado-vazio), 90%+ do projeto seguia o design system corretamente (2026-03-17)
 - [x] Reorganização completa do roadmap — auditoria de código confirmou 100% dos itens implementados; roadmap limpo e atualizado (2026-03-17)
 - [x] Auditoria geral + implementação final — sidebar /financeiro, botao-exportar DropdownMenu, tab Preferências + Negócios do Cliente, redesign negócio 2 colunas, Calendar + Toggle Group instalados (2026-03-17)
