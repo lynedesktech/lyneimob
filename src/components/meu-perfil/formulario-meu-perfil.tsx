@@ -1,12 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
-import { useEffect } from "react"
-import { atualizarMeuPerfil } from "@/actions/meu-perfil"
+import { useActionState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { atualizarMeuPerfil, atualizarAvatarPerfil } from "@/actions/meu-perfil"
 import type { EstadoFormulario } from "@/types/formulario"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Card,
   CardContent,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Save } from "lucide-react"
+import { Save, Camera, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 type DadosPerfil = {
@@ -27,6 +28,7 @@ type DadosPerfil = {
   cargo: "admin" | "corretor" | "gerente"
   avatar_url: string | null
   creci: string | null
+  bio: string | null
   created_at: string
 }
 
@@ -46,40 +48,82 @@ function obterIniciais(nome: string): string {
 }
 
 export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
-  const [estado, formAction, pendente] = useActionState<
+  const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const avatarFormRef = useRef<HTMLFormElement>(null)
+
+  const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
+    atualizarMeuPerfil,
+    {}
+  )
+
+  const [estadoAvatar, formActionAvatar, pendenteAvatar] = useActionState<
     EstadoFormulario,
     FormData
-  >(atualizarMeuPerfil, {})
+  >(atualizarAvatarPerfil, {})
 
   useEffect(() => {
-    if (estado.sucesso) {
-      toast.success(estado.sucesso)
-    }
-    if (estado.erro) {
-      toast.error(estado.erro)
-    }
+    if (estado.sucesso) toast.success(estado.sucesso)
+    if (estado.erro) toast.error(estado.erro)
   }, [estado])
+
+  useEffect(() => {
+    if (estadoAvatar.sucesso) {
+      toast.success(estadoAvatar.sucesso)
+      router.refresh()
+    }
+    if (estadoAvatar.erro) toast.error(estadoAvatar.erro)
+  }, [estadoAvatar, router])
+
+  const isCorretor = perfil.cargo === "corretor"
 
   return (
     <div className="space-y-6">
       {/* Header com avatar e info */}
       <Card>
         <CardContent className="flex items-center gap-6 pt-6">
-          <Avatar className="h-20 w-20 rounded-xl">
-            <AvatarImage
-              src={perfil.avatar_url ?? undefined}
-              alt={perfil.nome}
-            />
-            <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-xl">
-              {obterIniciais(perfil.nome)}
-            </AvatarFallback>
-          </Avatar>
+          {/* Avatar com botão de upload */}
+          <div className="relative">
+            <div
+              className="relative group cursor-pointer"
+              onClick={() => !pendenteAvatar && fileInputRef.current?.click()}
+              title="Alterar foto de perfil"
+            >
+              <Avatar className="h-20 w-20 rounded-xl">
+                <AvatarImage src={perfil.avatar_url ?? undefined} alt={perfil.nome} />
+                <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-xl">
+                  {obterIniciais(perfil.nome)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                {pendenteAvatar ? (
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                ) : (
+                  <Camera className="h-5 w-5 text-white" />
+                )}
+              </div>
+            </div>
+            {/* Form oculto para upload */}
+            <form ref={avatarFormRef} action={formActionAvatar} className="hidden">
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="avatar"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={() => avatarFormRef.current?.requestSubmit()}
+              />
+            </form>
+          </div>
+
           <div className="space-y-1">
             <h2 className="text-xl font-semibold">{perfil.nome}</h2>
             <p className="text-sm text-muted-foreground">{perfil.email}</p>
             <Badge variant="secondary">
               {labelsCargo[perfil.cargo] || perfil.cargo}
             </Badge>
+            <p className="text-xs text-muted-foreground pt-0.5">
+              Clique na foto para alterar
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -131,16 +175,47 @@ export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
                 />
               </div>
 
-              {/* CRECI */}
+              {/* CRECI — label muda por cargo */}
               <div className="space-y-2">
-                <Label htmlFor="creci">CRECI</Label>
+                <Label htmlFor="creci">
+                  {isCorretor ? "CRECI" : "CRECI (opcional)"}
+                </Label>
                 <Input
                   id="creci"
                   name="creci"
                   defaultValue={perfil.creci ?? ""}
                   placeholder="Número do registro"
                 />
+                {isCorretor && (
+                  <p className="text-xs text-muted-foreground">
+                    Obrigatório para exercer a atividade de corretor
+                  </p>
+                )}
               </div>
+            </div>
+
+            {/* Bio — label e hint mudam por cargo */}
+            <div className="space-y-2">
+              <Label htmlFor="bio">
+                {isCorretor ? "Apresentação pública" : "Sobre você"}
+              </Label>
+              <Textarea
+                id="bio"
+                name="bio"
+                defaultValue={perfil.bio ?? ""}
+                placeholder={
+                  isCorretor
+                    ? "Fale sobre sua experiência, especialidades e diferenciais..."
+                    : "Uma breve apresentação sua..."
+                }
+                rows={3}
+                className="resize-none"
+              />
+              {isCorretor && (
+                <p className="text-xs text-muted-foreground">
+                  Aparece no seu perfil no site da imobiliária
+                </p>
+              )}
             </div>
 
             {/* Cargo (somente leitura) */}

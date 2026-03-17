@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 import { verificarLimiteConversasIA, registrarUsoConversaIA } from "@/lib/verificar-limites"
 import type { EstadoFormulario } from "@/types/formulario"
 import { labelsTipoImovel } from "@/lib/constantes"
@@ -61,7 +61,7 @@ export async function gerarDescricaoIA(
   if (!limite.permitido) return { erro: limite.mensagem! }
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -106,7 +106,7 @@ export async function melhorarTextoIA(
   if (!limite.permitido) return { erro: limite.mensagem! }
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -150,7 +150,7 @@ export async function gerarTituloIA(
   if (!limite.permitido) return { erro: limite.mensagem! }
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {

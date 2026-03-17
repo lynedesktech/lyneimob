@@ -1,13 +1,13 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { criarAtividade, atualizarAtividade } from "@/actions/atividades"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -17,8 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { ComboboxCampo } from "@/components/ui/combobox-campo"
 import { criarClienteBrowser } from "@/lib/supabase/client"
-import { labelsTipoAtividade } from "@/lib/constantes"
+import { useTiposAtividade } from "@/hooks/use-tipos-atividade"
 import { schemaCriarAtividade } from "@/types/atividades"
 import type { CriarAtividadeInput } from "@/types/atividades"
 import type { AtividadeComRelacoes } from "@/types/database"
@@ -47,6 +49,8 @@ function formatarParaInput(data: string | null) {
 export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAtividadeProps) {
   const editando = !!atividade
   const action = editando ? atualizarAtividade : criarAtividade
+  const router = useRouter()
+  const { tipos, carregando: carregandoTipos } = useTiposAtividade()
 
   const {
     register,
@@ -57,7 +61,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
     resolver: zodResolver(schemaCriarAtividade),
     defaultValues: {
       titulo: atividade?.titulo || valoresIniciais?.titulo || "",
-      tipo: (atividade?.tipo || valoresIniciais?.tipo || "") as CriarAtividadeInput["tipo"],
+      tipo: atividade?.tipo || valoresIniciais?.tipo || "",
       prioridade: (atividade?.prioridade || "media") as CriarAtividadeInput["prioridade"],
       data_inicio: formatarParaInput(atividade?.data_inicio ?? null),
       data_fim: formatarParaInput(atividade?.data_fim ?? null),
@@ -106,7 +110,11 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
 
   useEffect(() => {
     if (estado.erro) toast.error(estado.erro)
-  }, [estado])
+    if (estado.sucesso && estado.id) {
+      toast.success(estado.sucesso)
+      router.push(`/atividades/${estado.id}`)
+    }
+  }, [estado, router])
 
   function onSubmit(dados: CriarAtividadeInput) {
     const formData = new FormData()
@@ -133,46 +141,48 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="titulo">Título *</Label>
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="titulo">Título *</FieldLabel>
               <Input
                 id="titulo"
                 placeholder="Ex: Visita ao apto 3Q com João"
                 {...register("titulo")}
                 aria-invalid={!!errors.titulo}
               />
-              {errors.titulo && (
-                <p className="text-xs text-destructive">{errors.titulo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.titulo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo *</Label>
+            <Field>
+              <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Controller
                 name="tipo"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="tipo" aria-invalid={!!errors.tipo}>
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue placeholder={carregandoTipos ? "Carregando..." : "Selecione"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(labelsTipoAtividade).map(([valor, label]) => (
-                        <SelectItem key={valor} value={valor}>
-                          {label}
+                      {tipos.map((tipo) => (
+                        <SelectItem key={tipo.id} value={tipo.slug}>
+                          <span className="flex items-center gap-2">
+                            <span
+                              className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: tipo.cor }}
+                            />
+                            {tipo.nome}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.tipo && (
-                <p className="text-xs text-destructive">{errors.tipo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.tipo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="prioridade">Prioridade</Label>
+            <Field>
+              <FieldLabel htmlFor="prioridade">Prioridade</FieldLabel>
               <Controller
                 name="prioridade"
                 control={control}
@@ -189,41 +199,37 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
                   </Select>
                 )}
               />
-              {errors.prioridade && (
-                <p className="text-xs text-destructive">{errors.prioridade.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.prioridade]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="data_inicio">Data e Hora *</Label>
+            <Field>
+              <FieldLabel htmlFor="data_inicio">Data e Hora *</FieldLabel>
               <Input
                 id="data_inicio"
                 type="datetime-local"
                 {...register("data_inicio")}
                 aria-invalid={!!errors.data_inicio}
               />
-              {errors.data_inicio && (
-                <p className="text-xs text-destructive">{errors.data_inicio.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.data_inicio]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="data_fim">Término (opcional)</Label>
+            <Field>
+              <FieldLabel htmlFor="data_fim">Término (opcional)</FieldLabel>
               <Input
                 id="data_fim"
                 type="datetime-local"
                 {...register("data_fim")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="lembrete">Lembrete por email (opcional)</Label>
+            <Field>
+              <FieldLabel htmlFor="lembrete">Lembrete por email (opcional)</FieldLabel>
               <Input
                 id="lembrete"
                 type="datetime-local"
                 {...register("lembrete")}
               />
-            </div>
+            </Field>
           </div>
         </CardContent>
       </Card>
@@ -235,74 +241,62 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="cliente_id">Cliente</Label>
+            <Field>
+              <FieldLabel>Cliente</FieldLabel>
               <Controller
                 name="cliente_id"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="cliente_id">
-                      <SelectValue placeholder="Nenhum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
-                      {clientes.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ComboboxCampo
+                    opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Selecionar cliente..."
+                    placeholderBusca="Buscar por nome..."
+                    permitirVazio
+                    labelVazio="Nenhum"
+                  />
                 )}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="negocio_id">Negócio</Label>
+            <Field>
+              <FieldLabel>Negócio</FieldLabel>
               <Controller
                 name="negocio_id"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="negocio_id">
-                      <SelectValue placeholder="Nenhum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
-                      {negocios.map((n) => (
-                        <SelectItem key={n.id} value={n.id}>
-                          {n.titulo}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ComboboxCampo
+                    opcoes={negocios.map((n) => ({ value: n.id, label: n.titulo }))}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Selecionar negócio..."
+                    placeholderBusca="Buscar por título..."
+                    permitirVazio
+                    labelVazio="Nenhum"
+                  />
                 )}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="imovel_id">Imóvel</Label>
+            <Field>
+              <FieldLabel>Imóvel</FieldLabel>
               <Controller
                 name="imovel_id"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="imovel_id">
-                      <SelectValue placeholder="Nenhum" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
-                      {imoveis.map((i) => (
-                        <SelectItem key={i.id} value={i.id}>
-                          {i.codigo} — {i.titulo}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ComboboxCampo
+                    opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo} — ${i.titulo}` }))}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Selecionar imóvel..."
+                    placeholderBusca="Buscar por código ou título..."
+                    permitirVazio
+                    labelVazio="Nenhum"
+                  />
                 )}
               />
-            </div>
+            </Field>
           </div>
         </CardContent>
       </Card>

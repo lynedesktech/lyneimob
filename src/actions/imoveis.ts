@@ -101,7 +101,10 @@ export async function criarImovel(
     return { erro: "Erro ao cadastrar imóvel. Tente novamente." }
   }
 
-  redirect(`/imoveis/${imovel.id}`)
+  revalidatePath("/imoveis")
+  revalidatePath("/")
+  revalidatePath(`/imoveis/${imovel.id}`)
+  return { sucesso: "Imóvel cadastrado com sucesso!", id: imovel.id }
 }
 
 // ============================================================
@@ -167,7 +170,9 @@ export async function atualizarImovel(
     return { erro: "Erro ao atualizar imóvel. Tente novamente." }
   }
 
-  redirect(`/imoveis/${id}`)
+  revalidatePath("/imoveis")
+  revalidatePath(`/imoveis/${id}`)
+  return { sucesso: "Imóvel atualizado!", id }
 }
 
 // ============================================================

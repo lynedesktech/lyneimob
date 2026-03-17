@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -11,8 +12,9 @@ import type { CriarImovelInput } from "@/types/imoveis"
 import type { Imovel } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
@@ -47,6 +49,7 @@ type FormularioImovelProps = {
 export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const editando = !!imovel
   const action = editando ? atualizarImovel : criarImovel
+  const router = useRouter()
 
   const {
     register,
@@ -93,7 +96,11 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
 
   useEffect(() => {
     if (retorno.erro) toast.error(retorno.erro)
-  }, [retorno])
+    if (retorno.sucesso && retorno.id) {
+      toast.success(retorno.sucesso)
+      router.push(`/imoveis/${retorno.id}`)
+    }
+  }, [retorno, router])
 
   function onSubmit(dados: CriarImovelInput) {
     const formData = new FormData()
@@ -153,34 +160,30 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
             <CardTitle>Dados básicos</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="codigo">Código interno *</Label>
+            <Field>
+              <FieldLabel htmlFor="codigo">Código interno *</FieldLabel>
               <Input
                 id="codigo"
                 placeholder="Ex: APT-001"
                 {...register("codigo")}
                 aria-invalid={!!errors.codigo}
               />
-              {errors.codigo && (
-                <p className="text-xs text-destructive">{errors.codigo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.codigo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="titulo">Título do anúncio *</Label>
+            <Field>
+              <FieldLabel htmlFor="titulo">Título do anúncio *</FieldLabel>
               <Input
                 id="titulo"
                 placeholder="Ex: Apartamento 3 quartos no Centro"
                 {...register("titulo")}
                 aria-invalid={!!errors.titulo}
               />
-              {errors.titulo && (
-                <p className="text-xs text-destructive">{errors.titulo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.titulo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo *</Label>
+            <Field>
+              <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Controller
                 name="tipo"
                 control={control}
@@ -199,13 +202,11 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                   </Select>
                 )}
               />
-              {errors.tipo && (
-                <p className="text-xs text-destructive">{errors.tipo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.tipo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="finalidade">Finalidade *</Label>
+            <Field>
+              <FieldLabel htmlFor="finalidade">Finalidade *</FieldLabel>
               <Controller
                 name="finalidade"
                 control={control}
@@ -224,14 +225,12 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                   </Select>
                 )}
               />
-              {errors.finalidade && (
-                <p className="text-xs text-destructive">{errors.finalidade.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.finalidade]} />
+            </Field>
 
             {editando && (
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+              <Field>
+                <FieldLabel htmlFor="status">Status</FieldLabel>
                 <Select value={statusValue} onValueChange={(v) => v && setStatusValue(v)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o status" />
@@ -244,18 +243,18 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
             )}
 
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="descricao">Descrição</Label>
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="descricao">Descrição</FieldLabel>
               <Textarea
                 id="descricao"
                 placeholder="Descreva o imóvel em detalhes..."
                 rows={4}
                 {...register("descricao")}
               />
-            </div>
+            </Field>
           </CardContent>
         </Card>
 
@@ -265,66 +264,64 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
             <CardTitle>Endereço</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="cep">CEP</Label>
+            <Field>
+              <FieldLabel htmlFor="cep">CEP</FieldLabel>
               <Input
                 id="cep"
                 placeholder="00000-000"
                 {...register("cep")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="logradouro">Logradouro</Label>
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="logradouro">Logradouro</FieldLabel>
               <Input
                 id="logradouro"
                 placeholder="Rua, Avenida, etc."
                 {...register("logradouro")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="numero">Número</Label>
+            <Field>
+              <FieldLabel htmlFor="numero">Número</FieldLabel>
               <Input
                 id="numero"
                 placeholder="123"
                 {...register("numero")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="complemento">Complemento</Label>
+            <Field>
+              <FieldLabel htmlFor="complemento">Complemento</FieldLabel>
               <Input
                 id="complemento"
                 placeholder="Apto 101, Bloco A"
                 {...register("complemento")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="bairro">Bairro</Label>
+            <Field>
+              <FieldLabel htmlFor="bairro">Bairro</FieldLabel>
               <Input
                 id="bairro"
                 placeholder="Centro"
                 {...register("bairro")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="cidade">Cidade *</Label>
+            <Field>
+              <FieldLabel htmlFor="cidade">Cidade *</FieldLabel>
               <Input
                 id="cidade"
                 placeholder="São Paulo"
                 {...register("cidade")}
                 aria-invalid={!!errors.cidade}
               />
-              {errors.cidade && (
-                <p className="text-xs text-destructive">{errors.cidade.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.cidade]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="estado_uf">Estado *</Label>
+            <Field>
+              <FieldLabel htmlFor="estado_uf">Estado *</FieldLabel>
               <Controller
                 name="estado"
                 control={control}
@@ -343,10 +340,8 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                   </Select>
                 )}
               />
-              {errors.estado && (
-                <p className="text-xs text-destructive">{errors.estado.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.estado]} />
+            </Field>
           </CardContent>
         </Card>
 
@@ -356,69 +351,81 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
             <CardTitle>Valores</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="preco_venda">Preço de venda (R$)</Label>
-              <Input
-                id="preco_venda"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="500000"
-                {...register("preco_venda")}
-                aria-invalid={!!errors.preco_venda}
-              />
-              {errors.preco_venda && (
-                <p className="text-xs text-destructive">{errors.preco_venda.message}</p>
-              )}
-            </div>
+            <Field>
+              <FieldLabel htmlFor="preco_venda">Preço de venda</FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>R$</InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="preco_venda"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="500000"
+                  {...register("preco_venda")}
+                  aria-invalid={!!errors.preco_venda}
+                />
+              </InputGroup>
+              <FieldError errors={[errors.preco_venda]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="preco_aluguel">Aluguel (R$/mês)</Label>
-              <Input
-                id="preco_aluguel"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="2500"
-                {...register("preco_aluguel")}
-                aria-invalid={!!errors.preco_aluguel}
-              />
-              {errors.preco_aluguel && (
-                <p className="text-xs text-destructive">{errors.preco_aluguel.message}</p>
-              )}
-            </div>
+            <Field>
+              <FieldLabel htmlFor="preco_aluguel">Aluguel /mês</FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>R$</InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="preco_aluguel"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="2500"
+                  {...register("preco_aluguel")}
+                  aria-invalid={!!errors.preco_aluguel}
+                />
+              </InputGroup>
+              <FieldError errors={[errors.preco_aluguel]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="iptu">IPTU (R$/ano)</Label>
-              <Input
-                id="iptu"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="1200"
-                {...register("iptu")}
-                aria-invalid={!!errors.iptu}
-              />
-              {errors.iptu && (
-                <p className="text-xs text-destructive">{errors.iptu.message}</p>
-              )}
-            </div>
+            <Field>
+              <FieldLabel htmlFor="iptu">IPTU /ano</FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>R$</InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="iptu"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="1200"
+                  {...register("iptu")}
+                  aria-invalid={!!errors.iptu}
+                />
+              </InputGroup>
+              <FieldError errors={[errors.iptu]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="condominio">Condomínio (R$/mês)</Label>
-              <Input
-                id="condominio"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="800"
-                {...register("condominio")}
-                aria-invalid={!!errors.condominio}
-              />
-              {errors.condominio && (
-                <p className="text-xs text-destructive">{errors.condominio.message}</p>
-              )}
-            </div>
+            <Field>
+              <FieldLabel htmlFor="condominio">Condomínio /mês</FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>R$</InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="condominio"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="800"
+                  {...register("condominio")}
+                  aria-invalid={!!errors.condominio}
+                />
+              </InputGroup>
+              <FieldError errors={[errors.condominio]} />
+            </Field>
           </CardContent>
         </Card>
 
@@ -428,32 +435,42 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
             <CardTitle>Características</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label htmlFor="area_total">Área total (m²)</Label>
-              <Input
-                id="area_total"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="120"
-                {...register("area_total")}
-              />
-            </div>
+            <Field>
+              <FieldLabel htmlFor="area_total">Área total</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="area_total"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="120"
+                  {...register("area_total")}
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupText>m²</InputGroupText>
+                </InputGroupAddon>
+              </InputGroup>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="area_construida">Área construída (m²)</Label>
-              <Input
-                id="area_construida"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="90"
-                {...register("area_construida")}
-              />
-            </div>
+            <Field>
+              <FieldLabel htmlFor="area_construida">Área construída</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="area_construida"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="90"
+                  {...register("area_construida")}
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupText>m²</InputGroupText>
+                </InputGroupAddon>
+              </InputGroup>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="quartos">Quartos</Label>
+            <Field>
+              <FieldLabel htmlFor="quartos">Quartos</FieldLabel>
               <Input
                 id="quartos"
                 type="number"
@@ -461,10 +478,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 placeholder="3"
                 {...register("quartos")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="suites">Suítes</Label>
+            <Field>
+              <FieldLabel htmlFor="suites">Suítes</FieldLabel>
               <Input
                 id="suites"
                 type="number"
@@ -472,10 +489,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 placeholder="1"
                 {...register("suites")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="banheiros">Banheiros</Label>
+            <Field>
+              <FieldLabel htmlFor="banheiros">Banheiros</FieldLabel>
               <Input
                 id="banheiros"
                 type="number"
@@ -483,10 +500,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 placeholder="2"
                 {...register("banheiros")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="vagas_garagem">Vagas de garagem</Label>
+            <Field>
+              <FieldLabel htmlFor="vagas_garagem">Vagas de garagem</FieldLabel>
               <Input
                 id="vagas_garagem"
                 type="number"
@@ -494,10 +511,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 placeholder="2"
                 {...register("vagas_garagem")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="andares">Andares</Label>
+            <Field>
+              <FieldLabel htmlFor="andares">Andares</FieldLabel>
               <Input
                 id="andares"
                 type="number"
@@ -505,7 +522,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 placeholder="Apenas para comercial"
                 {...register("andares")}
               />
-            </div>
+            </Field>
           </CardContent>
         </Card>
 

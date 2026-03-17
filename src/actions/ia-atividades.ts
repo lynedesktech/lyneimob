@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 import { verificarLimiteConversasIA, registrarUsoConversaIA } from "@/lib/verificar-limites"
 import type { EstadoFormulario } from "@/types/formulario"
 import { labelsTipoAtividade } from "@/lib/constantes"
@@ -137,7 +137,7 @@ Responda em português brasileiro, de forma prática e direta:
 5. OBJEÇÕES PROVÁVEIS: possíveis objeções e como contorná-las`
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 600,
@@ -227,7 +227,7 @@ Responda em português brasileiro de forma direta e prática:
 5. DICA: uma dica prática para maximizar o resultado`
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 400,

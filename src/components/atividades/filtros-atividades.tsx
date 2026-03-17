@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { criarClienteBrowser } from "@/lib/supabase/client"
+import { useTiposAtividade } from "@/hooks/use-tipos-atividade"
 import type { FiltrosAtividadesInput } from "@/types/atividades"
 
 interface FiltrosAtividadesProps {
@@ -24,6 +25,7 @@ type UsuarioSimples = { id: string; nome: string }
 
 export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps) {
   const [usuarios, setUsuarios] = useState<UsuarioSimples[]>([])
+  const { tipos } = useTiposAtividade()
 
   useEffect(() => {
     const supabase = criarClienteBrowser()
@@ -50,18 +52,22 @@ export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps)
             onChange({ ...filtros, tipo: !v || v === "todos" ? undefined : v, pagina: 1 })
           }
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Todos" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="ligacao">Ligação</SelectItem>
-            <SelectItem value="email">E-mail</SelectItem>
-            <SelectItem value="visita">Visita</SelectItem>
-            <SelectItem value="reuniao">Reunião</SelectItem>
-            <SelectItem value="follow_up">Follow-up</SelectItem>
-            <SelectItem value="proposta">Proposta</SelectItem>
-            <SelectItem value="outro">Outro</SelectItem>
+            {tipos.map((tipo) => (
+              <SelectItem key={tipo.id} value={tipo.slug}>
+                <span className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: tipo.cor }}
+                  />
+                  {tipo.nome}
+                </span>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

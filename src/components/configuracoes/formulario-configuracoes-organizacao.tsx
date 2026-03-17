@@ -7,7 +7,7 @@ import { z } from "zod"
 import { Save, Building2, Phone, Mail, MapPin, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import {
   Card,
   CardContent,
@@ -121,41 +121,37 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome da imobiliária *</Label>
+            <Field>
+              <FieldLabel htmlFor="nome">Nome da imobiliária *</FieldLabel>
               <Input id="nome" {...register("nome")} />
-              {errors.nome && (
-                <p className="text-xs text-destructive">{errors.nome.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.nome]} />
+            </Field>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="telefone">
+              <Field>
+                <FieldLabel htmlFor="telefone">
                   <Phone className="mr-1.5 inline h-3.5 w-3.5" />
                   Telefone
-                </Label>
+                </FieldLabel>
                 <Input id="telefone" {...register("telefone")} placeholder="(11) 99999-9999" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="email">
                   <Mail className="mr-1.5 inline h-3.5 w-3.5" />
                   Email
-                </Label>
+                </FieldLabel>
                 <Input id="email" type="email" {...register("email")} placeholder="contato@imobiliaria.com" />
-                {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email.message}</p>
-                )}
-              </div>
+                <FieldError errors={[errors.email]} />
+              </Field>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="creci">
+            <Field>
+              <FieldLabel htmlFor="creci">
                 <FileText className="mr-1.5 inline h-3.5 w-3.5" />
                 CRECI
-              </Label>
+              </FieldLabel>
               <Input id="creci" {...register("creci")} placeholder="CRECI-SP 12345-J" />
-            </div>
+            </Field>
           </CardContent>
         </Card>
 
@@ -172,33 +168,33 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="logradouro">Logradouro</Label>
+              <Field className="sm:col-span-2">
+                <FieldLabel htmlFor="logradouro">Logradouro</FieldLabel>
                 <Input id="logradouro" {...register("logradouro")} placeholder="Rua, Avenida..." />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="numero">Número</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="numero">Número</FieldLabel>
                 <Input id="numero" {...register("numero")} placeholder="123" />
-              </div>
+              </Field>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="bairro">Bairro</Label>
+              <Field>
+                <FieldLabel htmlFor="bairro">Bairro</FieldLabel>
                 <Input id="bairro" {...register("bairro")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cidade">Cidade</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="cidade">Cidade</FieldLabel>
                 <Input id="cidade" {...register("cidade")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="estado">Estado</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="estado">Estado</FieldLabel>
                 <Input id="estado" {...register("estado")} placeholder="SP" />
-              </div>
+              </Field>
             </div>
-            <div className="space-y-2 sm:max-w-[200px]">
-              <Label htmlFor="cep">CEP</Label>
+            <Field className="sm:max-w-[200px]">
+              <FieldLabel htmlFor="cep">CEP</FieldLabel>
               <Input id="cep" {...register("cep")} placeholder="00000-000" />
-            </div>
+            </Field>
           </CardContent>
         </Card>
 
@@ -214,8 +210,8 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 sm:max-w-[300px]">
-              <Label htmlFor="whatsapp_numero">Número do WhatsApp</Label>
+            <Field className="sm:max-w-[300px]">
+              <FieldLabel htmlFor="whatsapp_numero">Número do WhatsApp</FieldLabel>
               <Input
                 id="whatsapp_numero"
                 {...register("whatsapp_numero")}
@@ -224,7 +220,7 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
               <p className="text-xs text-muted-foreground">
                 Formato: código do país + DDD + número (ex: 5511999999999)
               </p>
-            </div>
+            </Field>
           </CardContent>
         </Card>
 

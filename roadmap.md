@@ -6,6 +6,16 @@
 
 ---
 
+## ✅ Pronto
+
+> Implementação concluída. Aguardando validação do usuário.
+
+- [ ] Configurações de Funil de Vendas e Tipos de Atividade
+      O que foi feito: (1) migration 021 — tabela `tipos_atividade` com 7 tipos padrão (`sistema=true`), constraint CHECK removida de `atividades.tipo`, constraint UNIQUE de `ordem` removida de `pipeline_etapas` (facilita reordenamento), trigger para novas orgs, seed para orgs existentes. (2) `src/actions/pipeline.ts` — server actions criar, atualizar, excluir e reordenar etapas do pipeline. (3) `src/hooks/use-pipeline-config.ts` — hook para config. (4) `/configuracoes/pipeline` — nova página com componente `ConteudoPipelineConfig` (lista, criar, editar, reordenar, excluir etapas com proteção para Ganho/Perdido). (5) `src/actions/tipos-atividade.ts` — server actions para tipos. (6) `src/hooks/use-tipos-atividade.ts` — hook dinâmico com `labelDoTipo` e `corDoTipo`. (7) `/configuracoes/tipos-atividade` — nova página com componente `ConteudoTiposAtividadeConfig`. (8) `formulario-atividade.tsx` e `filtros-atividades.tsx` atualizados para usar tipos do banco. (9) `card-atividade.tsx` usa `labelDoTipo` do hook. (10) Dois novos cards (Funil de Vendas + Tipos de Atividade) na página `/configuracoes`.
+      O que testar: (1) /configuracoes mostra 8 cards incluindo "Funil de Vendas" e "Tipos de Atividade", (2) /configuracoes/pipeline lista as 7 etapas padrão, permite criar nova etapa (nome + cor), editar, reordenar com setas ↑↓, excluir — tentar excluir "Ganho" deve bloquear com mensagem, (3) /configuracoes/tipos-atividade lista os 7 tipos padrão com badge "Padrão", permite criar tipo personalizado, editar nome/cor dos tipos padrão, reordenar, excluir tipo personalizado (bloqueado se tiver atividades), (4) /atividades/novo — select de tipo carrega tipos do banco dinamicamente com pontinhos coloridos, (5) filtros em /atividades — filtro de tipo usa tipos do banco, (6) build compila sem erros (57 rotas)
+
+---
+
 ## 📋 A Fazer
 
 > Tarefas prontas para execução, em ordem de prioridade.
@@ -29,6 +39,18 @@
 
 > Implementação concluída. Aguardando validação do usuário.
 
+- [ ] Corrigir bugs de criação/edição em todos os módulos CRUD — toast de sucesso + crash ao voltar
+      O que foi feito: (1) removido `redirect()` das server actions de criar/editar em atividades, negócios, imóveis e clientes — agora retornam `{ sucesso, id }`, (2) formulários atualizado com `useRouter` para redirecionar no cliente após mostrar o toast, (3) espaçamento dos cards de atividade aumentado de `space-y-2` para `space-y-3`.
+      O que testar: (1) criar atividade → toast verde aparece → redireciona → clicar voltar não crasha, (2) criar negócio → mesmo comportamento, (3) criar imóvel → mesmo, (4) criar cliente → mesmo, (5) editar qualquer registro → toast "X atualizado!" aparece.
+
+- [ ] Negócios: visualização Kanban + Lista com seleção e ações em massa
+      O que foi feito: (1) hook `use-lista-negocios.ts` para lista plana com filtros e paginação, (2) `toggle-visualizacao.tsx` para alternar kanban/lista via URL `?visao=`, (3) `filtros-lista-negocios.tsx` com busca, status, etapa, corretor, tipo e valor, (4) `lista-negocios.tsx` com tabela, checkboxes, select all e seleção múltipla, (5) `barra-acoes-massa.tsx` fixa no rodapé com dialogs para excluir, mover etapa, ganhar e perder, (6) 4 novas server actions de massa em `negocios.ts`, (7) `page.tsx` atualizado com toggle no header.
+      O que testar: (1) /negocios abre em Kanban (padrão), (2) ícone de lista troca para tabela, (3) filtros da lista funcionam, (4) clicar linha seleciona e aparece barra no rodapé, (5) "selecionar todos" marca a página inteira, (6) Excluir em massa abre dialog de confirmação, (7) Mover etapa carrega etapas do pipeline, (8) Ganhar e Perder em massa funcionam.
+
+- [ ] Corrigir visual das páginas de auth — texto branco + espaçamento CardFooter
+      O que foi feito: (1) "em um só lugar" aparecia em azul no painel esquerdo do layout de auth — corrigido com text-white explícito no span. (2) Espaçamento entre último campo e botão estava apertado — corrigido no CardFooter (pt-2 → pt-4) propagando para todo o sistema.
+      O que testar: (1) acessar /login — texto do painel esquerdo está todo branco, (2) formulário de login tem espaçamento adequado entre campos e botão.
+
 - [ ] Wizard de conexão WhatsApp — onboarding passo a passo
       O que foi feito: criado `src/components/configuracoes/wizard-whatsapp.tsx` com 4 passos: (1) credenciais Uazapi com teste de conexão, (2) QR code com polling automático de status (avança sozinho ao conectar), (3) configurar agente IA com seletor visual de horário e corretor por nome, (4) tela de sucesso. `conteudo-whatsapp-config.tsx` atualizado para exibir wizard quando não configurado e UI normal quando já configurado.
       O que testar: (1) ir em /configuracoes/whatsapp sem ter Uazapi configurada — deve aparecer o wizard, (2) passo 1: preencher URL e token inválidos — deve mostrar erro; válidos — avança, (3) passo 2: QR code aparece, ao escanear avança automaticamente, (4) passo 3: seletor de dias funciona, corretor aparece por nome, "Pular" avança, (5) passo 4: tela de sucesso com botões de navegação, (6) voltar em /configuracoes/whatsapp após conectado — mostra UI normal (sem wizard)
@@ -38,13 +60,6 @@
 ## 🔄 Fazendo
 
 > Tarefa em andamento agora.
-
-- [ ] Negócios: visualização Kanban + Lista com seleção e ações em massa
-      O que foi feito: (1) hook `use-lista-negocios.ts` para lista plana com filtros e paginação, (2) `toggle-visualizacao.tsx` para alternar kanban/lista via URL `?visao=`, (3) `filtros-lista-negocios.tsx` com busca, status, etapa, corretor, tipo e valor, (4) `lista-negocios.tsx` com tabela, checkboxes, select all e seleção múltipla, (5) `barra-acoes-massa.tsx` fixa no rodapé com dialogs para excluir, mover etapa, ganhar e perder, (6) 4 novas server actions de massa em `negocios.ts`, (7) `page.tsx` atualizado com toggle no header.
-      O que testar: (1) /negocios abre em Kanban (padrão), (2) ícone de lista troca para tabela, (3) filtros da lista funcionam, (4) clicar linha seleciona e aparece barra no rodapé, (5) "selecionar todos" marca a página inteira, (6) Excluir em massa abre dialog de confirmação, (7) Mover etapa carrega etapas do pipeline, (8) Ganhar e Perder em massa funcionam.
-
-- [ ] Corrigir visual das páginas de auth — texto branco + espaçamento CardFooter
-      Contexto: (1) "em um só lugar" aparecia em azul no painel esquerdo do layout de auth — corrigido com text-white explícito no span. (2) Espaçamento entre último campo e botão estava apertado — corrigido no CardFooter (pt-2 → pt-4) propagando para todo o sistema.
 
 ### Adoção 100% shadcn/ui — redesign do dashboard
 
@@ -92,6 +107,14 @@ Pesquisa: `planejamento/pesquisas/pesquisa-shadcn-ui.md`
       Dark mode: landing e login verificados — cores corretas em ambos os temas.
       Mobile (390px): login e landing responsivos, header adapta para hamburguer.
       Páginas do dashboard (painel, imoveis, clientes, etc.) requerem login — verificar manualmente após logar.
+
+- [x] **Etapa 7A — Fase A: Field + InputGroup + Combobox em formulários** ✓
+      Componentes instalados: field, input-group, command. Criado: combobox-campo.tsx.
+      5 formulários migrados: cliente, configuracoes-org, atividade, negócio, imóvel.
+      InputGroup com R$ em 4 campos monetários + m² em 2 campos de área.
+      ComboboxCampo com busca em: cliente (atividade, negócio), imóvel (atividade, negócio), negócio (atividade).
+      Fix: openai lazy-init (getOpenAI()) para corrigir erro de build no cron de resumo semanal.
+      Build 100% limpo (todas as rotas, 0 erros).
 
 - [ ] **Etapa 7 — Auditoria final minuciosa**
       Auditoria completa pós-implementação com agentes especializados:

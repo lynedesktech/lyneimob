@@ -10,6 +10,8 @@ import {
   Globe,
   ShieldAlert,
   ChevronRight,
+  Kanban,
+  ListTodo,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -31,6 +33,18 @@ const cardsConfiguracoes = [
     descricao: "Membros, convites e cargos",
     href: "/configuracoes/equipe",
     icone: UsersRound,
+  },
+  {
+    titulo: "Funil de Vendas",
+    descricao: "Etapas do pipeline: nome, cor e ordem",
+    href: "/configuracoes/pipeline",
+    icone: Kanban,
+  },
+  {
+    titulo: "Tipos de Atividade",
+    descricao: "Categorias de tarefas: nome, cor e ordem",
+    href: "/configuracoes/tipos-atividade",
+    icone: ListTodo,
   },
   {
     titulo: "Distribuição de Leads",

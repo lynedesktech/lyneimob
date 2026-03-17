@@ -319,7 +319,21 @@
       "Bash(del fix_roadmap.py)",
       "mcp__shadcn__get_project_registries",
       "mcp__shadcn__list_items_in_registries",
-      "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/financeiro/\")"
+      "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/financeiro/\")",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -name *.tsx -exec grep -l \"form\\\\|Form\\\\|formulario\" {})",
+      "Bash(2)",
+      "mcp__shadcn__view_items_in_registries",
+      "mcp__shadcn__get_item_examples_from_registries",
+      "Bash(npx shadcn@latest add field input-group command --yes)",
+      "Bash(find \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/painel\" -type f -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(grep -r \"CardResumoSemanal\\\\|ChecklistOnboarding\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src --include=*.tsx --include=*.ts)",
+      "Bash(ls -la \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/\")",
+      "Bash(find \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/admin\" -type f)",
+      "Bash(find \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/financeiro\" -type f)",
+      "Bash(find c:UsersLynedeskDesktopTechLyneImob -iname *seed* -o -iname *init* -o -iname *setup*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|js\\)$\")",
+      "Bash(find c:UsersLynedeskDesktopTechLyneImobsrcapp -path *api* -name *callback* -o -path *api* -name *auth*)",
+      "Bash(grep -r \"auth/callback\\\\|confirmEmail\\\\|resetPassword\" c:UsersLynedeskDesktopTechLyneImobsrc --include=*.ts --include=*.tsx)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

@@ -166,7 +166,7 @@ export async function processarComAgente(
     }
 
     // 9. Chamar OpenAI com tools
-    const { openai } = await import("@/lib/openai")
+    const { getOpenAI } = await import("@/lib/openai")
     const { definicaoToolsSdr, executarTool } = await import("./tools-sdr")
 
     const contextoTool = {
@@ -178,7 +178,7 @@ export async function processarComAgente(
     let respostaFinal: string | null = null
 
     for (let iteracao = 0; iteracao < MAX_ITERACOES_TOOLS + 1; iteracao++) {
-      const resposta = await openai.chat.completions.create({
+      const resposta = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages,
         tools: definicaoToolsSdr,

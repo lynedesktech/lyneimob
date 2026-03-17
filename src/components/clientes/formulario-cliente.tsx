@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -11,8 +12,8 @@ import type { CriarClienteInput } from "@/types/clientes"
 import type { Cliente } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ type FormularioClienteProps = {
 export function FormularioCliente({ cliente }: FormularioClienteProps) {
   const editando = !!cliente
   const action = editando ? atualizarCliente : criarCliente
+  const router = useRouter()
 
   const {
     register,
@@ -67,7 +69,11 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
 
   useEffect(() => {
     if (estado.erro) toast.error(estado.erro)
-  }, [estado])
+    if (estado.sucesso && estado.id) {
+      toast.success(estado.sucesso)
+      router.push(`/clientes/${estado.id}`)
+    }
+  }, [estado, router])
 
   function onSubmit(dados: CriarClienteInput) {
     const formData = new FormData()
@@ -109,27 +115,25 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
             <CardTitle>Dados pessoais</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome completo *</Label>
+            <Field>
+              <FieldLabel htmlFor="nome">Nome completo *</FieldLabel>
               <Input
                 id="nome"
                 placeholder="Ex: João da Silva"
                 {...register("nome")}
                 aria-invalid={!!errors.nome}
               />
-              {errors.nome && (
-                <p className="text-xs text-destructive">{errors.nome.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.nome]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="cpf_cnpj">CPF / CNPJ</Label>
+            <Field>
+              <FieldLabel htmlFor="cpf_cnpj">CPF / CNPJ</FieldLabel>
               <Input
                 id="cpf_cnpj"
                 placeholder="000.000.000-00"
                 {...register("cpf_cnpj")}
               />
-            </div>
+            </Field>
           </CardContent>
         </Card>
 
@@ -139,8 +143,8 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
             <CardTitle>Contato</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <Field>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
                 type="email"
@@ -148,28 +152,26 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 {...register("email")}
                 aria-invalid={!!errors.email}
               />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.email]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone</Label>
+            <Field>
+              <FieldLabel htmlFor="telefone">Telefone</FieldLabel>
               <Input
                 id="telefone"
                 placeholder="(11) 99999-9999"
                 {...register("telefone")}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp</Label>
+            <Field>
+              <FieldLabel htmlFor="whatsapp">WhatsApp</FieldLabel>
               <Input
                 id="whatsapp"
                 placeholder="(11) 99999-9999"
                 {...register("whatsapp")}
               />
-            </div>
+            </Field>
           </CardContent>
         </Card>
 
@@ -179,8 +181,8 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
             <CardTitle>Classificação</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo *</Label>
+            <Field>
+              <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Controller
                 name="tipo"
                 control={control}
@@ -199,13 +201,11 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                   </Select>
                 )}
               />
-              {errors.tipo && (
-                <p className="text-xs text-destructive">{errors.tipo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.tipo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="origem">Origem</Label>
+            <Field>
+              <FieldLabel htmlFor="origem">Origem</FieldLabel>
               <Controller
                 name="origem"
                 control={control}
@@ -224,11 +224,11 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                   </Select>
                 )}
               />
-            </div>
+            </Field>
 
             {editando && (
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+              <Field>
+                <FieldLabel htmlFor="status">Status</FieldLabel>
                 <Select value={statusValue} onValueChange={(v) => v && setStatusValue(v)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o status" />
@@ -241,18 +241,18 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
             )}
 
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="observacoes">Observações</Label>
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="observacoes">Observações</FieldLabel>
               <Textarea
                 id="observacoes"
                 placeholder="Notas sobre o cliente..."
                 rows={3}
                 {...register("observacoes")}
               />
-            </div>
+            </Field>
           </CardContent>
         </Card>
 

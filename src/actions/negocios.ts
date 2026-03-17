@@ -95,7 +95,10 @@ export async function criarNegocio(
     sugerirAcao(negocio.id).catch(() => {})
   )
 
-  redirect(`/negocios/${negocio.id}`)
+  revalidatePath("/negocios")
+  revalidatePath("/")
+  revalidatePath(`/negocios/${negocio.id}`)
+  return { sucesso: "Negócio criado com sucesso!", id: negocio.id }
 }
 
 // ============================================================
@@ -143,7 +146,9 @@ export async function atualizarNegocio(
     return { erro: "Erro ao atualizar negócio. Tente novamente." }
   }
 
-  redirect(`/negocios/${id}`)
+  revalidatePath("/negocios")
+  revalidatePath(`/negocios/${id}`)
+  return { sucesso: "Negócio atualizado!", id }
 }
 
 // ============================================================

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 import { verificarLimiteConversasIA, registrarUsoConversaIA } from "@/lib/verificar-limites"
 import type { EstadoFormulario } from "@/types/formulario"
 
@@ -113,7 +113,7 @@ Responda em português brasileiro, em 3-4 parágrafos curtos:
 3. Probabilidade estimada de fechamento (alta/média/baixa) com justificativa`
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 500,
@@ -229,7 +229,7 @@ Regras:
 - script pode ser null se a ação não envolver comunicação direta`
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 400,
@@ -313,7 +313,7 @@ Responda em português brasileiro:
 4. RECUPERAÇÃO: se vale tentar reabrir este negócio e como`
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 500,

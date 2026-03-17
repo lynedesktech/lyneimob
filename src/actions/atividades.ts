@@ -93,7 +93,8 @@ export async function criarAtividade(
     return { erro: "Erro ao criar atividade. Tente novamente." }
   }
 
-  redirect(`/atividades/${atividade.id}`)
+  revalidarAtividades(atividade.id)
+  return { sucesso: "Atividade criada com sucesso!", id: atividade.id }
 }
 
 // ============================================================
@@ -146,7 +147,8 @@ export async function atualizarAtividade(
     return { erro: "Erro ao atualizar atividade. Tente novamente." }
   }
 
-  redirect(`/atividades/${id}`)
+  revalidarAtividades(id)
+  return { sucesso: "Atividade atualizada!", id }
 }
 
 // ============================================================

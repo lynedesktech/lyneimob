@@ -1,4 +1,4 @@
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 import { formatarPreco } from "@/lib/formatadores"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { MetricasSemanais, ResumoSemanal } from "@/types/resumo-semanal"
@@ -278,7 +278,7 @@ Responda em português brasileiro com exatamente 3 seções usando este formato:
 Seja direto, prático e específico. Use os números. Não use jargão técnico.`
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 600,

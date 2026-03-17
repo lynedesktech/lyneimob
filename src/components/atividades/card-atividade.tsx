@@ -8,7 +8,7 @@ import {
   Clock,
   User,
 } from "lucide-react"
-import { labelsTipoAtividade, iconesTipoAtividade } from "@/lib/constantes"
+import { useTiposAtividade } from "@/hooks/use-tipos-atividade"
 import { formatarDataHoraCurta } from "@/lib/formatadores"
 import { StatusBadge, configStatusAtividade, configPrioridade } from "@/components/ui/status-badge"
 import type { AtividadeComRelacoes } from "@/types/database"
@@ -17,10 +17,8 @@ interface CardAtividadeProps {
   atividade: AtividadeComRelacoes
 }
 
-const iconesTipo = iconesTipoAtividade
-
 export function CardAtividade({ atividade }: CardAtividadeProps) {
-  const Icone = iconesTipo[atividade.tipo] || MoreHorizontal
+  const { labelDoTipo } = useTiposAtividade()
 
   const estaAtrasada =
     atividade.status === "pendente" &&
@@ -40,7 +38,7 @@ export function CardAtividade({ atividade }: CardAtividadeProps) {
                   ? "bg-destructive/10 text-destructive"
                   : "bg-primary/10 text-primary"
           }`}>
-            <Icone className="h-5 w-5" />
+            <MoreHorizontal className="h-5 w-5" />
           </div>
 
           {/* Conteúdo */}
@@ -69,7 +67,7 @@ export function CardAtividade({ atividade }: CardAtividadeProps) {
           {/* Badges */}
           <div className="flex items-center gap-2 shrink-0">
             <Badge variant="outline" className="text-xs">
-              {labelsTipoAtividade[atividade.tipo]}
+              {labelDoTipo(atividade.tipo)}
             </Badge>
             <StatusBadge status={atividade.prioridade} config={configPrioridade} className="text-xs" />
             {atividade.status !== "pendente" && (

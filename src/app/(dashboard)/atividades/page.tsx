@@ -118,7 +118,7 @@ export default function AtividadesPage() {
               }
             />
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {atividades.map((atividade) => (
                 <CardAtividade key={atividade.id} atividade={atividade} />
               ))}

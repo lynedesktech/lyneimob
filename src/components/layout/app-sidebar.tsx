@@ -9,9 +9,8 @@ import {
   Users,
   Building2,
   CalendarCheck,
-  Settings,
   MessageCircle,
-  CreditCard,
+  Settings,
   BarChart3,
   Building,
   Shield,
@@ -66,7 +65,6 @@ const gruposNavegacao: GrupoNavegacao[] = [
   {
     titulo: "Administração",
     itens: [
-      { titulo: "Financeiro", href: "/financeiro", icone: CreditCard, permissao: "gerenciar_plano" },
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
     ],
   },

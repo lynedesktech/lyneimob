@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { openai } from "@/lib/openai"
+import { getOpenAI } from "@/lib/openai"
 import { verificarLimiteConversasIA, registrarUsoConversaIA } from "@/lib/verificar-limites"
 import type { EstadoFormulario } from "@/types/formulario"
 import { labelsTipoCliente as labelsTipo, labelsOrigem, labelsTipoImovel, labelsTipoInteracao } from "@/lib/constantes"
@@ -121,7 +121,7 @@ export async function gerarScoreLead(
   // Ajuste da IA (até 40 pontos)
   let ajusteIA = 0
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -179,7 +179,7 @@ export async function gerarResumoCliente(
   if (!limite.permitido) return { erro: limite.mensagem! }
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -258,7 +258,7 @@ export async function matchInteligente(
     .join("\n")
 
   try {
-    const resposta = await openai.chat.completions.create({
+    const resposta = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {

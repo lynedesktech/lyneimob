@@ -17,10 +17,10 @@ export async function transcreverAudio(
   const buffer = await baixarMidia(config, messageId)
 
   // Criar File a partir do buffer para a API do Whisper
-  const { openai } = await import("@/lib/openai")
+  const { getOpenAI } = await import("@/lib/openai")
   const arquivo = new File([new Uint8Array(buffer)], "audio.ogg", { type: "audio/ogg" })
 
-  const transcricao = await openai.audio.transcriptions.create({
+  const transcricao = await getOpenAI().audio.transcriptions.create({
     file: arquivo,
     model: "whisper-1",
     language: "pt",
@@ -43,8 +43,8 @@ export async function analisarImagem(
   const base64 = buffer.toString("base64")
   const dataUrl = `data:image/jpeg;base64,${base64}`
 
-  const { openai } = await import("@/lib/openai")
-  const resposta = await openai.chat.completions.create({
+  const { getOpenAI } = await import("@/lib/openai")
+  const resposta = await getOpenAI().chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       {

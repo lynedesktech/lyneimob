@@ -40,6 +40,7 @@ export type Usuario = {
   cargo: "admin" | "corretor" | "gerente"
   avatar_url: string | null
   creci: string | null
+  bio: string | null
   ativo: boolean
   super_admin: boolean
   created_at: string
@@ -246,7 +247,21 @@ export type EtapaComNegocios = PipelineEtapa & {
 // Atividades
 // ============================================================
 
-export type TipoAtividade = "ligacao" | "email" | "visita" | "reuniao" | "follow_up" | "proposta" | "outro"
+// Tipo dinâmico — os slugs vêm da tabela tipos_atividade (não mais hardcoded)
+export type TipoAtividade = string
+
+export type TipoAtividadeRegistro = {
+  id: string
+  organizacao_id: string
+  nome: string
+  slug: string
+  cor: string
+  icone: string
+  ordem: number
+  ativo: boolean
+  sistema: boolean
+  created_at: string
+}
 
 export type StatusAtividade = "pendente" | "concluida" | "cancelada"
 

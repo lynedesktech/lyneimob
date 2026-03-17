@@ -5,10 +5,7 @@ import { z } from "zod"
 // ============================================================
 export const schemaCriarAtividade = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
-  tipo: z.enum(
-    ["ligacao", "email", "visita", "reuniao", "follow_up", "proposta", "outro"],
-    { message: "Selecione o tipo de atividade" }
-  ),
+  tipo: z.string().min(1, "Selecione o tipo de atividade"),
   prioridade: z.enum(["baixa", "media", "alta"]),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().optional(),

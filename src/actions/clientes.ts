@@ -82,7 +82,10 @@ export async function criarCliente(
     return { erro: "Erro ao cadastrar cliente. Tente novamente." }
   }
 
-  redirect(`/clientes/${cliente.id}`)
+  revalidatePath("/clientes")
+  revalidatePath("/")
+  revalidatePath(`/clientes/${cliente.id}`)
+  return { sucesso: "Cliente cadastrado com sucesso!", id: cliente.id }
 }
 
 // ============================================================
@@ -130,7 +133,9 @@ export async function atualizarCliente(
     return { erro: "Erro ao atualizar cliente. Tente novamente." }
   }
 
-  redirect(`/clientes/${id}`)
+  revalidatePath("/clientes")
+  revalidatePath(`/clientes/${id}`)
+  return { sucesso: "Cliente atualizado!", id }
 }
 
 // ============================================================

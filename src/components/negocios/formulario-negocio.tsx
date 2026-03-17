@@ -1,13 +1,13 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { criarNegocio, atualizarNegocio } from "@/actions/negocios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -17,6 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/input-group"
+import { ComboboxCampo } from "@/components/ui/combobox-campo"
 import { labelsTipoNegocio } from "@/lib/constantes"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import { schemaCriarNegocio } from "@/types/negocios"
@@ -33,6 +36,7 @@ type ImovelSimples = { id: string; titulo: string; codigo: string }
 export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const editando = !!negocio
   const action = editando ? atualizarNegocio : criarNegocio
+  const router = useRouter()
 
   const {
     register,
@@ -92,7 +96,11 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
 
   useEffect(() => {
     if (estado.erro) toast.error(estado.erro)
-  }, [estado])
+    if (estado.sucesso && estado.id) {
+      toast.success(estado.sucesso)
+      router.push(`/negocios/${estado.id}`)
+    }
+  }, [estado, router])
 
   function onSubmit(dados: CriarNegocioInput) {
     const formData = new FormData()
@@ -117,26 +125,24 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="titulo">Título *</Label>
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="titulo">Título *</FieldLabel>
               <Input
                 id="titulo"
                 placeholder="Ex: Venda apto 3Q - João Silva"
                 {...register("titulo")}
                 aria-invalid={!!errors.titulo}
               />
-              {errors.titulo && (
-                <p className="text-xs text-destructive">{errors.titulo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.titulo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo *</Label>
+            <Field>
+              <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Controller
                 name="tipo"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <SelectTrigger id="tipo" aria-invalid={!!errors.tipo}>
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
@@ -150,33 +156,34 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                   </Select>
                 )}
               />
-              {errors.tipo && (
-                <p className="text-xs text-destructive">{errors.tipo.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.tipo]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="valor">Valor (R$)</Label>
-              <Input
-                id="valor"
-                type="number"
-                step="0.01"
-                placeholder="0,00"
-                {...register("valor")}
-                aria-invalid={!!errors.valor}
-              />
-              {errors.valor && (
-                <p className="text-xs text-destructive">{errors.valor.message}</p>
-              )}
-            </div>
+            <Field>
+              <FieldLabel htmlFor="valor">Valor</FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>R$</InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="valor"
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00"
+                  {...register("valor")}
+                  aria-invalid={!!errors.valor}
+                />
+              </InputGroup>
+              <FieldError errors={[errors.valor]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="etapa_id">Etapa do Pipeline *</Label>
+            <Field>
+              <FieldLabel htmlFor="etapa_id">Etapa do Pipeline *</FieldLabel>
               <Controller
                 name="etapa_id"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
                     <SelectTrigger id="etapa_id" aria-invalid={!!errors.etapa_id}>
                       <SelectValue placeholder="Selecione a etapa" />
                     </SelectTrigger>
@@ -190,19 +197,17 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                   </Select>
                 )}
               />
-              {errors.etapa_id && (
-                <p className="text-xs text-destructive">{errors.etapa_id.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.etapa_id]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="previsao_fechamento">Previsão de Fechamento</Label>
+            <Field>
+              <FieldLabel htmlFor="previsao_fechamento">Previsão de Fechamento</FieldLabel>
               <Input
                 id="previsao_fechamento"
                 type="date"
                 {...register("previsao_fechamento")}
               />
-            </div>
+            </Field>
           </div>
         </CardContent>
       </Card>
@@ -214,52 +219,42 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="cliente_id">Cliente *</Label>
+            <Field>
+              <FieldLabel>Cliente *</FieldLabel>
               <Controller
                 name="cliente_id"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="cliente_id" aria-invalid={!!errors.cliente_id}>
-                      <SelectValue placeholder="Selecione um cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clientes.map((cliente) => (
-                        <SelectItem key={cliente.id} value={cliente.id}>
-                          {cliente.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ComboboxCampo
+                    opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Selecionar cliente..."
+                    placeholderBusca="Buscar por nome..."
+                  />
                 )}
               />
-              {errors.cliente_id && (
-                <p className="text-xs text-destructive">{errors.cliente_id.message}</p>
-              )}
-            </div>
+              <FieldError errors={[errors.cliente_id]} />
+            </Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="imovel_id">Imóvel (opcional)</Label>
+            <Field>
+              <FieldLabel>Imóvel (opcional)</FieldLabel>
               <Controller
                 name="imovel_id"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="imovel_id">
-                      <SelectValue placeholder="Selecione um imóvel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {imoveis.map((imovel) => (
-                        <SelectItem key={imovel.id} value={imovel.id}>
-                          {imovel.codigo} — {imovel.titulo}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ComboboxCampo
+                    opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo} — ${i.titulo}` }))}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Selecionar imóvel..."
+                    placeholderBusca="Buscar por código ou título..."
+                    permitirVazio
+                    labelVazio="Nenhum"
+                  />
                 )}
               />
-            </div>
+            </Field>
           </div>
         </CardContent>
       </Card>
