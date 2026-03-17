@@ -7,6 +7,7 @@ import {
   conectarInstanciaUazapi,
   verificarStatusUazapi,
   desconectarInstanciaUazapi,
+  excluirInstanciaUazapi,
   configurarWebhookUazapi,
   extrairNumero,
   testarConexaoUazapi,
@@ -112,8 +113,8 @@ export async function criarEConectarInstancia(): Promise<
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
 
-  if (!ehSuperAdmin(usuario)) {
-    return { erro: "Apenas o administrador da plataforma pode gerenciar instâncias WhatsApp." }
+  if (usuario.cargo !== "admin" && !ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador pode gerenciar instâncias WhatsApp." }
   }
 
   const credenciais = await buscarCredenciaisAdmin(usuario.organizacao_id)
@@ -271,8 +272,8 @@ export async function desconectarInstancia(): Promise<EstadoFormulario> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
 
-  if (!ehSuperAdmin(usuario)) {
-    return { erro: "Apenas o administrador da plataforma pode gerenciar instâncias WhatsApp." }
+  if (usuario.cargo !== "admin" && !ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador pode gerenciar instâncias WhatsApp." }
   }
 
   const credenciais = await buscarCredenciaisAdmin(usuario.organizacao_id)
@@ -282,24 +283,35 @@ export async function desconectarInstancia(): Promise<EstadoFormulario> {
 
   const { data: config } = await supabase
     .from("config_whatsapp")
-    .select("id, uazapi_token")
+    .select("id, uazapi_token, instance_id")
     .eq("organizacao_id", usuario.organizacao_id)
     .single()
 
   if (!config?.uazapi_token) return { erro: "Nenhuma instância encontrada" }
 
+  // Desconectar sessão WhatsApp
   try {
     await desconectarInstanciaUazapi(credenciais.url, config.uazapi_token)
   } catch (err) {
     console.error("[Instância WhatsApp] Erro ao desconectar:", err instanceof Error ? err.message : err)
-    return { erro: "Erro ao desconectar. Tente novamente." }
+    // Segue para excluir mesmo se desconexão falhar
   }
 
-  // Atualizar config: desativar e limpar número
+  // Excluir instância na Uazapi para não gerar órfã
+  if (config.instance_id) {
+    try {
+      await excluirInstanciaUazapi(credenciais.url, credenciais.adminToken, config.instance_id)
+    } catch (err) {
+      console.error("[Instância WhatsApp] Erro ao excluir instância:", err instanceof Error ? err.message : err)
+      return { erro: "Erro ao excluir instância. Tente novamente." }
+    }
+  }
+
+  // Limpar config: desativar, remover número e dados da instância
   await supabase
     .from("config_whatsapp")
-    .update({ ativo: false, numero_whatsapp: null })
+    .update({ ativo: false, numero_whatsapp: null, instance_id: null, uazapi_token: null })
     .eq("id", config.id)
 
-  return { sucesso: "WhatsApp desconectado com sucesso" }
+  return { sucesso: "WhatsApp desconectado e instância excluída com sucesso" }
 }

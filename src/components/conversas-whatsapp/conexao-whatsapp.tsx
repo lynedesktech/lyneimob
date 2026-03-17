@@ -228,8 +228,8 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
             <DialogHeader>
               <DialogTitle>Desconectar WhatsApp?</DialogTitle>
               <DialogDescription>
-                O agente IA vai parar de atender automaticamente. Você precisará escanear
-                um novo QR code para reconectar.
+                Isso vai desconectar e excluir a instância do WhatsApp. Para usar novamente,
+                será necessário escanear um novo QR code.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

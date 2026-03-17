@@ -25,6 +25,7 @@ import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { excluirNegocio } from "@/actions/negocios"
 import { IANegocio } from "@/components/negocios/ia-negocio"
 import { CardSugestaoAcao } from "@/components/negocios/card-sugestao-acao"
+import { ConversaNegocio } from "@/components/negocios/conversa-negocio"
 import { buscarConversaPorNegocio } from "@/actions/whatsapp"
 import type { NegocioComRelacoes } from "@/types/database"
 
@@ -95,6 +96,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
       <Tabs defaultValue="informacoes">
         <TabsList>
           <TabsTrigger value="informacoes">Informações</TabsTrigger>
+          <TabsTrigger value="conversas">Conversas</TabsTrigger>
           <TabsTrigger value="ia">IA</TabsTrigger>
         </TabsList>
 
@@ -140,50 +142,8 @@ export default async function DetalheNegocioPage({ params }: Props) {
                 </Card>
               )}
 
-              {/* Conversa WhatsApp vinculada */}
-              {conversaWhatsapp && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <MessageCircle className="h-4 w-4 text-success" />
-                      Conversa WhatsApp
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Contato</span>
-                      <span>{conversaWhatsapp.nome_cliente || conversaWhatsapp.numero_cliente}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status</span>
-                      <Badge variant="outline">{conversaWhatsapp.status.replace("_", " ")}</Badge>
-                    </div>
-                    {conversaWhatsapp.resumo_ia && (
-                      <>
-                        <Separator />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Resumo da IA</p>
-                          <p className="mt-1 text-muted-foreground/80">{conversaWhatsapp.resumo_ia}</p>
-                        </div>
-                      </>
-                    )}
-                    <Separator />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      render={<Link href={`/conversas/${conversaWhatsapp.id}`} />}
-                    >
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Ver conversa completa
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Estado vazio quando não há observações nem WhatsApp */}
-              {!n.observacoes && !n.motivo_perda && !conversaWhatsapp && n.status !== "aberto" && (
+              {/* Estado vazio quando não há observações */}
+              {!n.observacoes && !n.motivo_perda && n.status !== "aberto" && (
                 <Card>
                   <CardContent className="py-8 text-center text-sm text-muted-foreground">
                     Nenhuma informação adicional registrada.
@@ -304,6 +264,17 @@ export default async function DetalheNegocioPage({ params }: Props) {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="conversas">
+          {conversaWhatsapp ? (
+            <ConversaNegocio conversaId={conversaWhatsapp.id} />
+          ) : (
+            <div className="mt-4 flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
+              <MessageCircle className="mb-2 h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Nenhuma conversa WhatsApp vinculada a este negócio.</p>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="ia">

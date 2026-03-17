@@ -9,7 +9,6 @@ import {
   Users,
   Building2,
   CalendarCheck,
-  MessageCircle,
   Settings,
   BarChart3,
   Building,
@@ -60,7 +59,6 @@ const gruposNavegacao: GrupoNavegacao[] = [
       { titulo: "Clientes", href: "/clientes", icone: Users },
       { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
       { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
-      { titulo: "Conversas", href: "/conversas", icone: MessageCircle, permissao: "ver_conversas_whatsapp" },
     ],
   },
   {

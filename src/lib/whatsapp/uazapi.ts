@@ -118,6 +118,23 @@ export async function desconectarInstanciaUazapi(
   }
 }
 
+/** Exclui permanentemente uma instância na Uazapi (usa admintoken) */
+export async function excluirInstanciaUazapi(
+  url: string,
+  adminToken: string,
+  instanceId: string
+): Promise<void> {
+  const resposta = await fetch(montarUrlBase(url, `/instance/${instanceId}`), {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", token: adminToken },
+  })
+
+  if (!resposta.ok) {
+    const erro = await resposta.text().catch(() => "Erro desconhecido")
+    throw new Error(`Erro ao excluir instância: ${erro}`)
+  }
+}
+
 /** Configura o webhook da instância para receber mensagens */
 export async function configurarWebhookUazapi(
   url: string,
