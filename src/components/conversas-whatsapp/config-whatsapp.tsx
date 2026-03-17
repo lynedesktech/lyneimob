@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Bot, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { Input } from "@/components/ui/input"
 import { useConfigWhatsapp } from "@/hooks/use-config-whatsapp"
 import { useListaUsuarios } from "@/hooks/use-lista-usuarios"
 import { salvarConfigAgenteWhatsapp } from "@/actions/whatsapp"
@@ -152,6 +153,20 @@ export function ConfigWhatsapp() {
               className="h-5 w-5 rounded border-input accent-primary"
             />
           </label>
+
+          {/* Nome do agente */}
+          <div className="space-y-2">
+            <Label htmlFor="nome_agente">Nome do agente</Label>
+            <Input
+              id="nome_agente"
+              name="nome_agente"
+              placeholder="Ex: Ana Paula, Sofia, Assistente Lynedesk..."
+              defaultValue={config?.nome_agente ?? ""}
+            />
+            <p className="text-xs text-muted-foreground">
+              Como o agente se apresenta nas conversas. Deixe em branco para usar "Assistente [Nome da Imobiliária]".
+            </p>
+          </div>
 
           {/* Instruções personalizadas */}
           <div className="space-y-2">

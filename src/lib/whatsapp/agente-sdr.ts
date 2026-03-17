@@ -101,8 +101,16 @@ export async function processarComAgente(
     const { montarPromptSdr } = await import("./prompt-sdr")
     const systemPrompt = montarPromptSdr(configTyped, nomeOrganizacao)
 
-    // Adicionar contexto da qualificação existente se houver
-    let contextoExtra = ""
+    // Montar contexto da conversa para a IA
+    const nomeCliente = conversa.nome_cliente || null
+    const jaRespondeu = mensagensOrdenadas.some((m) => m.direcao === "enviada")
+
+    let contextoExtra = `\n\nCONTEXTO DA CONVERSA:
+- Nome do cliente: ${nomeCliente ?? "não informado"}
+- Número WhatsApp: ${conversa.numero_cliente}
+- Já respondemos antes nesta conversa: ${jaRespondeu ? "SIM — não se apresente de novo, continue de onde parou" : "NÃO — primeira resposta, pode se apresentar"}`
+
+    // Adicionar qualificação existente se houver
     if (conversa.qualificacao) {
       const q = conversa.qualificacao as Record<string, unknown>
       const partes: string[] = []
@@ -117,7 +125,7 @@ export async function processarComAgente(
       }
       if (q.urgencia) partes.push(`Urgência: ${q.urgencia}`)
       if (partes.length > 0) {
-        contextoExtra = `\n\nDADOS DE QUALIFICAÇÃO JÁ COLETADOS:\n${partes.join("\n")}`
+        contextoExtra += `\n\nDADOS DE QUALIFICAÇÃO JÁ COLETADOS:\n${partes.join("\n")}`
       }
     }
 
@@ -150,9 +158,22 @@ export async function processarComAgente(
 
     for (const msg of mensagensNovas) {
       if (msg.direcao === "recebida") {
-        const conteudoFormatado = msg.tipo_conteudo !== "texto" && msg.conteudo
-          ? `[${msg.tipo_conteudo}] ${msg.conteudo}`
-          : msg.conteudo || "[mensagem sem conteúdo]"
+        let conteudoFormatado: string
+        if (msg.tipo_conteudo === "audio") {
+          conteudoFormatado = "[cliente enviou uma mensagem de voz — sem transcrição disponível]"
+        } else if (msg.tipo_conteudo === "imagem") {
+          conteudoFormatado = msg.conteudo
+            ? `[cliente enviou uma imagem com legenda: ${msg.conteudo}]`
+            : "[cliente enviou uma imagem]"
+        } else if (msg.tipo_conteudo === "video") {
+          conteudoFormatado = "[cliente enviou um vídeo]"
+        } else if (msg.tipo_conteudo === "documento") {
+          conteudoFormatado = "[cliente enviou um documento]"
+        } else if (msg.tipo_conteudo === "sticker") {
+          conteudoFormatado = "[cliente enviou um sticker]"
+        } else {
+          conteudoFormatado = msg.conteudo || "[mensagem sem conteúdo]"
+        }
         messages.push({ role: "user", content: conteudoFormatado })
       }
     }

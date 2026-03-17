@@ -43,6 +43,7 @@ export type ConfigWhatsapp = {
   instance_id: string | null
   numero_whatsapp: string | null
   ativo: boolean
+  nome_agente: string | null
   prompt_personalizado: string | null
   horario_atendimento: HorarioAtendimento | null
   mensagem_fora_horario: string | null

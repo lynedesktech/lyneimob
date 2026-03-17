@@ -244,6 +244,7 @@ export async function salvarConfigAgenteWhatsapp(
 
   const camposAgente = {
     ativo: formData.get("ativo") === "true",
+    nome_agente: (formData.get("nome_agente") as string) || null,
     prompt_personalizado: (formData.get("prompt_personalizado") as string) || null,
     horario_atendimento: horarioAtendimento,
     mensagem_fora_horario: (formData.get("mensagem_fora_horario") as string) || null,
