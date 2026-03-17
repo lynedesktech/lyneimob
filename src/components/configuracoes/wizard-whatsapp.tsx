@@ -594,9 +594,9 @@ function PassoSucesso() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Button className="w-full" render={<Link href="/conversas" />}>
+        <Button className="w-full" render={<Link href="/negocios" />}>
           <MessageCircle className="mr-2 h-4 w-4" />
-          Ver conversas
+          Ver negócios
         </Button>
         <Button variant="outline" className="w-full" render={<Link href="/configuracoes/whatsapp" />}>
           Ajustar configurações

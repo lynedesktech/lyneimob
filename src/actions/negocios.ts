@@ -256,6 +256,14 @@ export async function ganharNegocio(
     return { erro: "Erro ao marcar como ganho. Tente novamente." }
   }
 
+  // Arquivar conversa WhatsApp associada, se houver
+  // Quando o negócio é ganho, a IA para de atender e o lead é encerrado
+  await supabase
+    .from("conversas_whatsapp")
+    .update({ status: "arquivado" })
+    .eq("negocio_id", id)
+    .in("status", ["em_andamento", "qualificado", "encaminhado"])
+
   revalidatePath("/negocios")
   revalidatePath(`/negocios/${id}`)
   return { sucesso: "Negócio ganho! Parabéns! 🎉" }

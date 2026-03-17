@@ -119,7 +119,7 @@ export function PainelAdmin({
               : `${conversasAtivas} em andamento`
           }
           icone={MessageCircle}
-          href="/conversas"
+          href="/negocios"
           variante="warning"
         />
       </div>

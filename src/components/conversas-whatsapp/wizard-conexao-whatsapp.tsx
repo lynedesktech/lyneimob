@@ -528,10 +528,10 @@ function Etapa4Sucesso() {
 
       <Button
         className="w-full"
-        render={<Link href="/conversas" />}
+        render={<Link href="/negocios" />}
       >
         <ExternalLink className="mr-2 h-4 w-4" />
-        Ver conversas
+        Ver negócios
       </Button>
     </div>
   )

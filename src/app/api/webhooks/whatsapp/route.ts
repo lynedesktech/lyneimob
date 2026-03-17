@@ -308,24 +308,42 @@ async function criarClienteENegocioInicial(
       return
     }
 
-    // Criar cliente sem nome (será atualizado pela IA)
-    const { data: cliente, error: erroCliente } = await supabase
+    // Verificar se já existe cliente com este número (cliente retornando após negócio anterior)
+    const { data: clienteExistente } = await supabase
       .from("clientes")
-      .insert({
-        organizacao_id: organizacaoId,
-        corretor_id: corretorId,
-        nome: "Contato WhatsApp",
-        telefone: numeroCliente,
-        whatsapp: numeroCliente,
-        tipo: "comprador",
-        origem: "whatsapp",
-      })
       .select("id")
+      .eq("organizacao_id", organizacaoId)
+      .or(`telefone.eq.${numeroCliente},whatsapp.eq.${numeroCliente}`)
+      .limit(1)
       .single()
 
-    if (erroCliente || !cliente) {
-      console.error("[Webhook] Erro ao criar cliente inicial:", erroCliente?.message)
-      return
+    let clienteId: string
+
+    if (clienteExistente) {
+      // Reusar cliente existente — ele já está cadastrado na plataforma
+      clienteId = clienteExistente.id
+      console.log(`[Webhook] Cliente existente reutilizado: ${clienteId}`)
+    } else {
+      // Criar cliente sem nome (será atualizado pela IA durante o atendimento)
+      const { data: clienteNovo, error: erroCliente } = await supabase
+        .from("clientes")
+        .insert({
+          organizacao_id: organizacaoId,
+          corretor_id: corretorId,
+          nome: "Contato WhatsApp",
+          telefone: numeroCliente,
+          whatsapp: numeroCliente,
+          tipo: "comprador",
+          origem: "whatsapp",
+        })
+        .select("id")
+        .single()
+
+      if (erroCliente || !clienteNovo) {
+        console.error("[Webhook] Erro ao criar cliente inicial:", erroCliente?.message)
+        return
+      }
+      clienteId = clienteNovo.id
     }
 
     // Calcular próxima posição na etapa
@@ -345,7 +363,7 @@ async function criarClienteENegocioInicial(
       .insert({
         organizacao_id: organizacaoId,
         corretor_id: corretorId,
-        cliente_id: cliente.id,
+        cliente_id: clienteId,
         etapa_id: etapa.id,
         titulo: "Atendimento WhatsApp",
         tipo: "venda",
@@ -363,12 +381,12 @@ async function criarClienteENegocioInicial(
     await supabase
       .from("conversas_whatsapp")
       .update({
-        cliente_id: cliente.id,
+        cliente_id: clienteId,
         negocio_id: negocio.id,
       })
       .eq("id", conversaId)
 
-    console.log(`[Webhook] Cliente ${cliente.id} e negócio ${negocio.id} criados para conversa ${conversaId}`)
+    console.log(`[Webhook] Cliente ${clienteId} e negócio ${negocio.id} vinculados à conversa ${conversaId}`)
   } catch (erro) {
     console.error("[Webhook] Erro ao criar cliente/negócio inicial:", erro instanceof Error ? erro.message : erro)
   }

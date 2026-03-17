@@ -97,7 +97,7 @@ export function PainelCorretor({
               : `${conversasAtivas} em andamento`
           }
           icone={MessageCircle}
-          href="/conversas"
+          href="/negocios"
           variante="success"
         />
       </div>

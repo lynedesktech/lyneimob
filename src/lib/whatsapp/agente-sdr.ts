@@ -53,6 +53,22 @@ export async function processarComAgente(
       return
     }
 
+    // Verificar se o negócio está na etapa "Pré-atendimento IA"
+    // A IA só atende enquanto o card estiver nessa etapa
+    if (conversa.negocio_id) {
+      const { data: negocioEtapa } = await supabase
+        .from("negocios")
+        .select("pipeline_etapas(tipo)")
+        .eq("id", conversa.negocio_id)
+        .single()
+
+      const tipoEtapa = (negocioEtapa?.pipeline_etapas as { tipo?: string } | null)?.tipo
+      if (tipoEtapa && tipoEtapa !== "pre_atendimento_ia") {
+        console.log(`[Agente SDR] Conversa ${conversaId}: negócio fora do pré-atendimento IA (etapa: ${tipoEtapa}). IA desativada.`)
+        return
+      }
+    }
+
     // 3. Verificar horário de atendimento
     if (configTyped.horario_atendimento) {
       const foraDoHorario = verificarForaHorario(configTyped.horario_atendimento)
