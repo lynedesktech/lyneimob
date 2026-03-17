@@ -46,7 +46,7 @@ export default function LoginPage() {
                     href="/esqueci-senha"
                     className="ml-1 font-medium underline hover:text-destructive/80"
                   >
-                    Recuperar senha
+                    Esqueci minha senha
                   </Link>
                 )}
               </div>
@@ -62,6 +62,8 @@ export default function LoginPage() {
               placeholder="seu@email.com"
               required
               autoComplete="email"
+              defaultValue={estado.email ?? ""}
+              key={estado.email ?? ""}
             />
           </div>
 

@@ -2,31 +2,32 @@
 
 > Arquivo de gestão de tarefas do projeto.
 > Atualizado pelo Claude a cada início e fim de tarefa.
-> Para saber o que está pendente: "Claude, leia o roadmap.md e me diga o próximo passo."
+> Auditoria automática roda a cada 1 hora sobre tarefas em "Pronto".
 
 ---
 
 ## 🔄 Fazendo
 
-> Tarefas em andamento agora. Só uma por vez sempre que possível.
+> Tarefa em andamento agora. Só uma por vez.
 
 ### Adoção 100% shadcn/ui — redesign do dashboard
 
 Requisitos: `planejamento/requisitos/requisito-shadcn-ui.md`
 Pesquisa: `planejamento/pesquisas/pesquisa-shadcn-ui.md`
 
-- [ ] **Etapa 1 — Aplicar preset e reconstruir tema**
-      Rodar `npx shadcn@latest init --preset a1D23ulM --force` para atualizar components.json e globals.css.
-      Depois re-adicionar variáveis custom que o preset não conhece: grad-start, grad-mid, grad-end, accent-blue, success, warning, info.
-      Re-registrar no @theme inline as variáveis custom.
-      Arquivos: `components.json`, `src/app/globals.css`
-      Validação: `npm run dev` sem erros, sidebar cinza claro no light mode, dark mode OK, landing page com gradientes azuis
+- [x] **Etapa 1 — Aplicar preset e reconstruir tema** ✓
+      Preset a1D23ulM (Mira/Blue) aplicado via CLI. components.json atualizado (base-nova → base-mira).
+      16 componentes UI atualizados, globals.css regenerado com sidebar cinza claro.
+      Variáveis custom preservadas (grad-start/mid/end, accent-blue, success/warning/info).
+      Variantes success/warning/info re-adicionadas no Badge e Button. Fonte fallback restaurada.
+      Build 100% limpo (51 rotas, 0 erros).
 
-- [ ] **Etapa 2 — Instalar componentes novos**
-      Rodar `npx shadcn@latest add chart breadcrumb checkbox popover radio-group spinner kbd`
-      Verificar compatibilidade Base UI para cada componente. Se algum só existir para Radix, avaliar se instala ou pula.
-      Arquivos criados: `src/components/ui/chart.tsx`, `breadcrumb.tsx`, `checkbox.tsx`, `popover.tsx`, `radio-group.tsx`, `spinner.tsx`, `kbd.tsx`
-      Validação: `npm run build` compila sem erros
+- [x] **Etapa 2 — Instalar componentes novos** ✓
+      7 componentes instalados via CLI: chart, breadcrumb, checkbox, popover, radio-group, spinner, kbd.
+      Todos usam Base UI (não Radix) — checkbox, popover e radio-group importam de @base-ui/react.
+      Recharts v2.15.4 instalado como dependência (para chart).
+      Variáveis --chart-1 a --chart-5 já existiam no globals.css.
+      Build 100% limpo (51 rotas, 0 erros).
 
 - [ ] **Etapa 3 — Ajustar sidebar e header**
       Com o preset aplicado, verificar visualmente se a sidebar ficou elegante no light mode.
@@ -82,25 +83,64 @@ Pesquisa: `planejamento/pesquisas/pesquisa-shadcn-ui.md`
 
 ---
 
-## ✅ A Validar
+## ✅ Pronto
 
-> Tarefas concluídas pelo Claude que aguardam sua validação manual.
+> Implementação concluída, aguardando auditoria automática (roda a cada 1 hora).
 
+- [ ] Corrigir login: preservar email ao errar + mensagens consistentes + resetar senhas
+      O que foi feito: (1) formulário de login agora preserva o email digitado quando dá erro (só a senha limpa), (2) mensagem de senha incorreta agora diz "Esqueci minha senha" em vez de "recupere sua senha" — consistente com o link do formulário, (3) senhas dos 4 usuários padrão (admin, gerente, corretor, superadmin @lyneimob.com) resetadas para nova senha padrão.
+      O que auditar: (1) tipo EstadoFormulario tem campo email, (2) auth.ts retorna email em todos os cenários de erro, (3) login page usa defaultValue no input email, (4) texto do link inline diz "Esqueci minha senha", (5) build compila sem erros
+
+- [ ] Reorganizar sidebar + página de configurações como hub central
+      O que foi feito: /configuracoes transformada em hub com 6 cards (Empresa, WhatsApp, Equipe, Distribuição, Portais, Meu Site). Sidebar simplificada de 4→3 grupos (removido grupo Canais, Conversas movida pra Gestão). Rotas antigas (/usuarios, /meu-site, /integracoes) viram redirects. Links internos e revalidatePaths atualizados. Fix: variant "success" no Button + variant "info" no Badge que bloqueavam o build.
+      O que auditar: (1) sidebar com 3 grupos (Principal, Gestão, Administração), (2) /configuracoes mostra 6 cards, (3) cada card abre sub-página com botão Voltar, (4) rotas antigas redirecionam corretamente, (5) build compila sem erros
 - [ ] Melhorar mensagens de erro no login — diferenciar email inexistente de senha incorreta
       O que foi feito: server action `auth.ts` agora usa admin client pra verificar se email existe quando login falha. 3 mensagens específicas: "Nenhuma conta encontrada com este email" / "Senha incorreta" / "Email não confirmado". Página de login mostra link "Recuperar senha" quando o erro é de senha.
-      O que testar: (1) tentar login com email que não existe → mensagem de email não encontrado, (2) tentar login com email correto + senha errada → mensagem de senha incorreta com link "Recuperar senha", (3) login com credenciais corretas → redireciona pro painel
+      O que auditar: (1) server action auth.ts usa admin client corretamente, (2) 3 cenários de erro cobertos, (3) link "Recuperar senha" aparece só no erro de senha, (4) build compila sem erros
 - [ ] Corrigir formulários: perda de dados ao dar erro de validação + campo obrigatório sem borda vermelha
       O que foi feito: migrou os 4 formulários (atividade, negócio, cliente, imóvel) para React Hook Form + Zod. Agora os campos são controlados (nunca perdem dados ao re-renderizar), validação roda no client antes de enviar ao servidor, e campos com erro ficam com borda vermelha + mensagem explicativa.
-      O que testar: (1) abrir qualquer formulário de criação (negócio, cliente, imóvel, atividade), (2) preencher quase tudo mas deixar um campo obrigatório vazio, (3) clicar em Criar → campo com erro deve ficar com borda vermelha e mensagem abaixo, e os outros campos devem manter seus valores, (4) preencher o campo faltante e submeter → deve funcionar normalmente, (5) testar modo edição também
+      O que auditar: (1) 4 formulários usam React Hook Form + Zod, (2) campos controlados (sem perda de dados), (3) borda vermelha em campos com erro, (4) build compila sem erros
 - [ ] Implementar cargo Super Admin (dono do SaaS)
       O que foi feito: migration 020 aplicada (campo super_admin boolean), 3 páginas /admin/* criadas (painel, organizações, configurações), sidebar com grupo "Plataforma" condicional, /configuracoes separada (super_admin → chaves API, admin org → dados da imobiliária), server actions protegidas com guard super_admin. Conta superadmin@lyneimob.com criada (senha: Lyneimob@2026).
       Auditoria de segurança: actions WhatsApp (whatsapp.ts e instancia-whatsapp.ts) corrigidas — agora exigem ehSuperAdmin() em vez de gerenciar_integracoes. Nova permissão "gerenciar_organizacao" criada para separar config da org de config de integrações.
-      O que testar: (1) logar com superadmin@lyneimob.com → sidebar mostra grupo "Plataforma", (2) /admin/painel → métricas globais, (3) /admin/organizacoes → tabela com todas as orgs, (4) /admin/configuracoes → chaves de API, (5) logar com admin normal → NÃO vê grupo Plataforma, (6) admin normal em /configuracoes → vê dados da imobiliária (nome, telefone, CRECI, etc), (7) admin normal NÃO consegue salvar config WhatsApp nem criar instância
+      O que auditar: (1) migration 020 existe e está correta, (2) páginas /admin/* protegidas com guard super_admin, (3) sidebar condicional funciona, (4) actions WhatsApp exigem ehSuperAdmin(), (5) build compila sem erros
 - [ ] Remover separadores da sidebar + criar página Meu Perfil + corrigir erro menu usuário
-      O que testar: (1) sidebar light e dark — sem linhas separadoras entre grupos, (2) clicar no usuário no rodapé da sidebar → menu abre, (3) clicar "Meu perfil" → abre /meu-perfil com seus dados, (4) editar nome/telefone/creci → salvar → toast de sucesso
-      Nota sobre erro produção: o build compila limpo — o erro client-side em produção provavelmente é do deploy anterior. Deploy atualizado deve resolver.
+      O que auditar: (1) sidebar sem separadores entre grupos, (2) página /meu-perfil existe com formulário, (3) menu do usuário abre corretamente, (4) build compila sem erros
 - [ ] Corrigir erros de produção — fix crash /negocios/[id], login com imagem de imóvel, onboarding auto-detecção, deploy de landing page + dashboard /painel + middleware
-      O que testar: (1) acessar lyne-imob.vercel.app deslogado → landing page, (2) login → imagem bonita no lado esquerdo, (3) após login → /painel sem 404, (4) /negocios/[id] → sem erro, (5) checklist onboarding não aparece
+      O que auditar: (1) /negocios/[id] não crasha, (2) página de login tem imagem, (3) middleware configurado corretamente, (4) build compila sem erros
+
+---
+
+## 🔧 A Corrigir
+
+> Tarefas que a auditoria automática reprovou. Têm prioridade sobre "A Fazer".
+
+(nenhuma tarefa no momento)
+
+---
+
+## ✔️ Concluído
+
+> Histórico de entregas. Manter as 10 mais recentes.
+
+- [x] Polimento visual pós-rebranding — auditoria completa por 3 agentes UI/UX em todas as telas, design system consistente, dark mode OK ✓ auditoria (2026-03-16)
+- [x] Criar 3 contas de teste (admin, gerente, corretor) — contas criadas no Supabase na mesma org "Imobiliária Teste", fix do bug EstadoFormulario no Turbopack ✓ auditoria (2026-03-16)
+- [x] Fix loop infinito de renderização no dashboard — causa raiz: recursão infinita no RLS do PostgreSQL. Migration 019, policies reescritas em 16+ tabelas ✓ auditoria (2026-03-16)
+- [x] Garantir fontes sans-serif em todo o sistema — fallback chain no globals.css, font-sans no body ✓ auditoria (2026-03-16)
+- [x] Configurar Stripe Sandbox + auditoria de integração — 2 produtos criados, 5 env vars, webhook handler com 7 correções ✓ auditoria (2026-03-16)
+- [x] Limpar banco de dados para produção — TRUNCATE organizacoes CASCADE + DELETE auth.users, sistema pronto para uso real ✓ (2026-03-17)
+- [x] Criar 3 contas de produção (admin, gerente, corretor) — org "Imobiliária Lynedesk", emails padrão @lyneimob.com ✓ (2026-03-17)
+- [x] Trocar paleta de cores para gradiente azul vibrante — variáveis CSS grad-start/mid/end/accent-blue, 11 arquivos atualizados ✓ (2026-03-17)
+- [x] Rebranding "CRM" → "Gestão Imobiliária" + novos nomes de planos — 17 arquivos, landing page, sidebar, auth, planos, onboarding ✓ (2026-03-17)
+
+---
+
+## 💬 Sugestões
+
+> Melhorias e otimizações identificadas pela auditoria automática do sistema.
+> O Claude analisa o código a cada hora e sugere o que pode ser melhorado (máximo 5 itens).
+
+(nenhuma sugestão no momento)
 
 ---
 
@@ -113,19 +153,3 @@ Pesquisa: `planejamento/pesquisas/pesquisa-shadcn-ui.md`
 - [ ] Migrar botao-exportar para DropdownMenu oficial
 - [ ] Migrar landing page para Card + Chart oficiais do shadcn
 - [ ] Implementar Dashboard com Charts (Recharts) — gráficos de performance
-
----
-
-## ✔️ Concluído
-
-> Histórico de entregas em ordem cronológica de desenvolvimento.
-
-- [x] Polimento visual pós-rebranding — auditoria completa por 3 agentes UI/UX em todas as telas, design system consistente, dark mode OK ✓ validado por auditoria (2026-03-16)
-- [x] Criar 3 contas de teste (admin, gerente, corretor) — contas criadas no Supabase na mesma org "Imobiliária Teste", fix do bug EstadoFormulario no Turbopack (import corrigido em 3 páginas auth) ✓ validado por auditoria (2026-03-16)
-- [x] Fix loop infinito de renderização no dashboard — causa raiz: recursão infinita no RLS do PostgreSQL. Migration 019 aplicada com função SECURITY DEFINER `organizacao_id_do_usuario()`, policies reescritas em 16+ tabelas, layout e page restaurados ✓ validado por auditoria (2026-03-16)
-- [x] Garantir fontes sans-serif em todo o sistema — fallback chain no globals.css (Geist → Inter → Segoe UI → Helvetica Neue → Arial → sans-serif), font-sans no body ✓ validado por auditoria (2026-03-16)
-- [x] Configurar Stripe Sandbox + auditoria de integração — 2 produtos criados, 5 env vars, webhook handler com 7 correções (dedup, metadata fallback, toast useEffect, verificação de erro, limpeza trial) ✓ validado por auditoria (2026-03-16)
-- [x] Limpar banco de dados para produção — TRUNCATE organizacoes CASCADE + DELETE auth.users, todas as tabelas zeradas, storage limpo, sistema pronto para uso real ✓ (2026-03-17)
-- [x] Criar 3 contas de produção (admin, gerente, corretor) — org "Imobiliária Lynedesk", emails padrão @lyneimob.com, contas limpas sem dados ✓ (2026-03-17)
-- [x] Trocar paleta de cores para gradiente azul vibrante — variáveis CSS grad-start/mid/end/accent-blue, 11 arquivos atualizados, zero hardcodes restantes ✓ (2026-03-17)
-- [x] Rebranding "CRM" → "Gestão Imobiliária" + novos nomes de planos (Essencial, Profissional, Completo) — 17 arquivos, landing page, sidebar, auth, planos, onboarding ✓ (2026-03-17)

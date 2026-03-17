@@ -16,7 +16,8 @@ export async function login(
   })
 
   if (!dados.success) {
-    return { erro: dados.error.issues[0].message }
+    const email = formData.get("email") as string | null
+    return { erro: dados.error.issues[0].message, email: email ?? undefined }
   }
 
   const supabase = await criarClienteServer()
@@ -29,7 +30,7 @@ export async function login(
   if (error) {
     // Verificar se o email não confirmado é o problema
     if (error.message?.includes("Email not confirmed")) {
-      return { erro: "Seu email ainda não foi confirmado. Verifique sua caixa de entrada." }
+      return { erro: "Seu email ainda não foi confirmado. Verifique sua caixa de entrada.", email: dados.data.email }
     }
 
     // Usar admin client pra verificar se o email existe
@@ -41,10 +42,10 @@ export async function login(
       .maybeSingle()
 
     if (!usuario) {
-      return { erro: "Nenhuma conta encontrada com este email." }
+      return { erro: "Nenhuma conta encontrada com este email.", email: dados.data.email }
     }
 
-    return { erro: "Senha incorreta. Tente novamente ou recupere sua senha." }
+    return { erro: "Senha incorreta. Tente novamente ou clique em Esqueci minha senha.", email: dados.data.email }
   }
 
   redirect("/")

@@ -87,20 +87,26 @@ src/
 │   │   │   └── [id]/          # Detalhe e edicao
 │   │   │       ├── page.tsx   # Detalhe com tabs (info, IA) + acoes (concluir, reagendar, cancelar)
 │   │   │       └── editar/page.tsx  # Formulario de edicao
-│   │   ├── usuarios/           # Gestao de equipe (admin only)
-│   │   │   └── page.tsx       # Listagem de membros, convites, alterar cargo
+│   │   ├── usuarios/           # Redirect → /configuracoes/equipe
+│   │   │   └── page.tsx
 │   │   ├── planos/             # Pagina de planos e billing
 │   │   │   └── page.tsx       # Listagem dos 3 planos (Trial, CRM+IA, CRM+IA+SDR)
 │   │   ├── conversas/          # Painel de conversas WhatsApp
 │   │   │   ├── page.tsx       # Listagem com filtros (status, busca) e paginacao
 │   │   │   └── [id]/
 │   │   │       └── page.tsx   # Detalhe com historico de chat + qualificacao do lead
-│   │   ├── integracoes/       # Modulo de integracoes com portais
-│   │   │   └── page.tsx       # Feed XML, webhook de leads, listagem de leads recebidos
-│   │   ├── meu-site/          # Painel de customizacao do site publico
-│   │   │   └── page.tsx       # Configuracoes de cores, hero, sobre nos, logo
-│   │   └── configuracoes/     # Configuracoes de integracoes (chaves de API)
-│   │       └── page.tsx       # Formulario de chaves (Stripe, OpenAI, WhatsApp, Redis)
+│   │   ├── integracoes/       # Redirect → /configuracoes/portais
+│   │   │   └── page.tsx
+│   │   ├── meu-site/          # Redirect → /configuracoes/meu-site
+│   │   │   └── page.tsx
+│   │   └── configuracoes/     # Hub central de configuracoes (6 cards)
+│   │       ├── page.tsx       # Hub com cards: empresa, whatsapp, equipe, distribuicao, portais, meu-site
+│   │       ├── empresa/page.tsx      # Dados da empresa (nome, telefone, CRECI, endereco)
+│   │       ├── whatsapp/page.tsx     # Conexao e configuracao do agente WhatsApp
+│   │       ├── equipe/page.tsx       # Gestao de equipe (membros, convites, cargos)
+│   │       ├── distribuicao/page.tsx # Distribuicao de leads entre corretores
+│   │       ├── portais/page.tsx      # Feed XML, webhook, leads dos portais
+│   │       └── meu-site/page.tsx     # Customizacao do site publico (cores, hero, dominio)
 │   ├── [slug]/                # Site publico da imobiliaria (por slug)
 │   │   ├── layout.tsx         # Layout publico (header + footer + validacao slug)
 │   │   ├── page.tsx           # Home do site (hero + imoveis destaque + sobre)
@@ -137,7 +143,7 @@ src/
 │   ├── meu-site/              # Componentes do painel de customizacao (formulario-configuracoes-site, upload-imagem-site, preview-cores, configuracao-dominio)
 │   ├── dashboard/             # Componentes do dashboard (card-resumo-semanal)
 │   ├── onboarding/            # Componentes de onboarding (provedor-onboarding, card-onboarding, checklist-onboarding)
-│   ├── configuracoes/         # Componentes de configuracoes (formulario-configuracoes-integracoes)
+│   ├── configuracoes/         # Componentes de configuracoes (formulario-configuracoes-organizacao, formulario-configuracoes-integracoes, conteudo-whatsapp-config, conteudo-distribuicao, conteudo-portais)
 │   ├── landing/               # Componentes da pagina de vendas (header-landing, secao-hero, secao-funcionalidades, secao-video, secao-precos, secao-faq, secao-cta-final, footer-landing)
 │   └── usuarios/              # Componentes de gestao de equipe (pagina-usuarios, formulario-convite)
 ├── lib/
@@ -314,13 +320,77 @@ Se o usuário não quiser apagar, basta dizer e o arquivo é mantido.
 
 O `roadmap.md` é o centro de controle do projeto. O Claude atua como gestor de projeto — registra, move e atualiza as tarefas automaticamente, sem precisar ser lembrado. Nenhuma demanda é perdida.
 
-### As 5 seções
+### As 7 seções
 
-- **🔄 Fazendo** — tarefa em execução agora (máximo 1)
 - **📋 A Fazer** — fila priorizada aguardando execução
-- **✅ A Validar** — entregue pelo Claude, aguarda teste do usuário
-- **💡 Futuras** — ideias e implementações sem prazo definido
-- **✔️ Concluído** — validado pelo usuário (manter as 10 mais recentes)
+- **🔄 Fazendo** — tarefa em execução agora (máximo 1)
+- **✅ Pronto** — implementação concluída, aguardando auditoria automática
+- **🔧 A Corrigir** — auditoria automática encontrou problemas (tem prioridade sobre A Fazer)
+- **✔️ Concluído** — passou na auditoria automática (manter as 10 mais recentes)
+- **💬 Sugestões** — melhorias identificadas automaticamente pela análise do sistema (máximo 5 itens)
+- **💡 Orientações Futuras** — ideias e implementações sem prazo definido
+
+---
+
+### Auditoria automática (cron a cada 1 hora)
+
+Um processo automático roda a cada 1 hora enquanto a sessão do Claude Code estiver aberta. Ele faz o seguinte:
+
+1. Lê o `roadmap.md` e identifica tarefas em **Pronto**
+2. Para cada tarefa, faz auditoria real:
+   - Roda `npm run build` pra garantir que compila
+   - Lê os arquivos modificados pela tarefa
+   - Verifica lógica, padrões do projeto, tipagem, segurança
+   - Checa se o que foi descrito como "feito" realmente está no código
+3. Se tudo OK → move pra **Concluído** com data e nota de auditoria
+4. Se encontrar problema → move pra **A Corrigir** com descrição clara do problema (sem corrigir, só anotar)
+
+**Limitação técnica:** os crons só vivem enquanto a sessão estiver aberta e expiram após 3 dias. Ao iniciar uma sessão nova, o Claude deve oferecer ao usuário recriar os crons (auditoria + sugestões).
+
+---
+
+### Sugestões automáticas (cron a cada 1 hora)
+
+Um segundo processo automático roda a cada 1 hora (no minuto :47, separado da auditoria no :17). Ele analisa o sistema inteiro e sugere melhorias:
+
+1. Lê o `roadmap.md` — seções Sugestões, A Fazer, Fazendo, Orientações Futuras
+2. Se a seção **Sugestões** já tem 5+ itens → não adiciona nada (lista cheia)
+3. Analisa a codebase: estrutura, padrões, componentes, actions, hooks, types
+4. Verifica: código duplicado, padrões inconsistentes, oportunidades de otimização, features úteis que faltam
+5. Compara com o que já está em Sugestões, A Fazer e Futuras → evita duplicatas
+6. Se encontrar algo novo e relevante → adiciona em **Sugestões** com descrição curta
+7. Se não encontrar nada novo → não faz nada
+
+**Regras de contenção:**
+- Máximo 5 sugestões ativas — se já tem 5, parar de sugerir
+- Nunca duplicar algo que já existe no roadmap
+- Sugestões devem ser acionáveis e específicas, não genéricas
+- Se não tem nada genuinamente útil, simplesmente não adicionar
+
+**Formato de uma sugestão:**
+```markdown
+- [ ] 💡 [Título curto]
+      Tipo: [otimização | limpeza | melhoria | feature]
+      Detectado em: [arquivo ou área]
+      Descrição: [1-2 frases]
+```
+
+**O que o usuário pode fazer com sugestões:**
+- Promover pra **A Fazer** → vira tarefa normal
+- Descartar → remover da lista (abre espaço pra novas sugestões)
+- Ignorar → fica na lista até ser descartada ou promovida
+
+**Formato da nota de auditoria aprovada:**
+```markdown
+- [x] Título da tarefa ✓ auditoria automática (YYYY-MM-DD)
+      Build OK | Código revisado | Sem problemas encontrados
+```
+
+**Formato da nota de auditoria reprovada:**
+```markdown
+- [ ] Título da tarefa
+      ⚠️ Auditoria (YYYY-MM-DD): [descrição do problema encontrado]
+```
 
 ---
 
@@ -336,7 +406,7 @@ Qualquer pedido — seja uma feature, uma correção, uma pesquisa ou uma melhor
 
 - Se for para fazer agora → entra direto em **Fazendo**
 - Se for para depois → entra em **A Fazer**
-- Se for uma ideia sem prazo → entra em **Futuras**
+- Se for uma ideia sem prazo → entra em **Orientações Futuras**
 
 > O Claude nunca começa a trabalhar em algo que não está registrado no roadmap.
 
@@ -345,9 +415,10 @@ Qualquer pedido — seja uma feature, uma correção, uma pesquisa ou uma melhor
 #### 2. Ao iniciar qualquer tarefa
 
 1. Ler o `roadmap.md`
-2. Mover a tarefa de **A Fazer** → **Fazendo**
-3. Se já houver algo em **Fazendo**: perguntar ao usuário se pausa ou continua
-4. Só então começar a execução
+2. Verificar se há tarefas em **A Corrigir** — essas têm prioridade sobre **A Fazer**
+3. Mover a tarefa de **A Corrigir** ou **A Fazer** → **Fazendo**
+4. Se já houver algo em **Fazendo**: perguntar ao usuário se pausa ou continua
+5. Só então começar a execução
 
 ---
 
@@ -355,17 +426,17 @@ Qualquer pedido — seja uma feature, uma correção, uma pesquisa ou uma melhor
 
 Se durante o trabalho o Claude identificar algo que precisa ser feito mas não estava previsto:
 - Registrar imediatamente em **A Fazer** (se for necessário para a tarefa atual)
-- Ou em **Futuras** (se for melhoria ou dívida técnica)
+- Ou em **Orientações Futuras** (se for melhoria ou dívida técnica)
 - Informar o usuário em uma linha: *"Anotei no roadmap: [nome da tarefa]"*
 
 ---
 
 #### 4. Ao concluir uma tarefa
 
-1. Mover de **Fazendo** → **A Validar**
-2. Adicionar nota do que foi feito e o que o usuário deve testar
-3. Verificar se existe arquivo de planejamento associado (pesquisa ou requisito) — se sim, informar que será apagado ao validar
-4. Nunca mover para Concluído sozinho — apenas o usuário valida
+1. Mover de **Fazendo** → **Pronto**
+2. Adicionar nota do que foi feito e critérios de auditoria (o que o cron deve verificar)
+3. Verificar se existe arquivo de planejamento associado (pesquisa ou requisito) — se sim, informar que será apagado quando a auditoria aprovar
+4. A auditoria automática (cron) cuidará de mover pra **Concluído** ou **A Corrigir**
 
 ---
 
@@ -377,26 +448,7 @@ Se durante o trabalho o Claude identificar algo que precisa ser feito mas não e
 
 ---
 
-#### 6. Ao receber validação do usuário
-
-Quando o usuário disser "ok", "validado", "aprovado", "feito", "pode mover" ou similar:
-1. Mover de **A Validar** → **Concluído** com a data
-2. Apagar arquivos de planejamento associados (`pesquisa-[tema].md`, `requisito-[tema].md`) — informar antes
-3. Manter apenas as 10 tarefas mais recentes em **Concluído**
-4. Verificar se há próxima tarefa em **A Fazer** e perguntar: *"Próximo da fila é [tarefa]. Começo agora?"*
-
----
-
-#### 7. Se a validação falhar
-
-Quando o usuário reportar um problema na tarefa em **A Validar**:
-1. Mover de **A Validar** → **Fazendo** com nota do problema
-2. Exemplo: `- [ ] Listagem de contatos ← voltou: filtro de busca não funciona no mobile`
-3. Corrigir e devolver para **A Validar**
-
----
-
-#### 8. Ao receber pedido de status
+#### 6. Ao receber pedido de status
 
 Quando o usuário disser "o que está pendente?", "próximo passo?", "me atualize", "leia o roadmap" ou similar:
 
@@ -404,7 +456,8 @@ Ler o `roadmap.md` e responder em formato curto:
 
 ```
 Fazendo: [tarefa ou "nada em andamento"]
-A Validar: [lista ou "nada aguardando validação"]
+Pronto (aguardando auditoria): [quantidade ou "nenhuma"]
+A Corrigir: [lista ou "nenhuma"]
 Próximo da fila: [primeira tarefa de A Fazer ou "fila vazia"]
 Futuras: [quantidade de itens]
 ```
@@ -426,7 +479,7 @@ Exemplos:
       Contexto: feature necessária antes do lançamento do módulo de CRM
 
 - [ ] Corrigir filtro de busca na listagem
-      ← voltou: não funciona no mobile (Safari iOS)
+      ⚠️ Auditoria (2026-03-17): query não filtra por nome parcial, só por nome exato
 ```
 
 ---

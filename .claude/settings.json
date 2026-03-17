@@ -296,7 +296,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001)",
       "Bash(npx shadcn@latest init --help)",
       "Bash(npx shadcn@latest init --preset a1D23ulM --force --yes)",
-      "Bash(npx shadcn@latest init --preset a1D23ulM --force)"
+      "Bash(npx shadcn@latest init --preset a1D23ulM --force)",
+      "Bash(npx shadcn@latest add chart breadcrumb checkbox popover radio-group spinner kbd)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
