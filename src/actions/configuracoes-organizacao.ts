@@ -106,7 +106,7 @@ export async function salvarConfiguracoesOrganizacao(
     return { erro: "Erro ao salvar configurações. Tente novamente." }
   }
 
-  revalidatePath("/configuracoes")
+  revalidatePath("/configuracoes/empresa")
 
   return { sucesso: "Configurações da imobiliária salvas com sucesso!" }
 }

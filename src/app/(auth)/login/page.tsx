@@ -39,7 +39,17 @@ export default function LoginPage() {
           {estado.erro && (
             <div className="flex items-start gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{estado.erro}</span>
+              <div>
+                <span>{estado.erro}</span>
+                {estado.erro.includes("Senha incorreta") && (
+                  <Link
+                    href="/esqueci-senha"
+                    className="ml-1 font-medium underline hover:text-destructive/80"
+                  >
+                    Recuperar senha
+                  </Link>
+                )}
+              </div>
             </div>
           )}
 

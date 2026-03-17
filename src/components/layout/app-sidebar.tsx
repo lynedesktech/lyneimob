@@ -9,12 +9,9 @@ import {
   Users,
   Building2,
   CalendarCheck,
-  Plug,
-  Globe,
   Settings,
   MessageCircle,
   CreditCard,
-  UsersRound,
   BarChart3,
   Building,
   Shield,
@@ -63,20 +60,12 @@ const gruposNavegacao: GrupoNavegacao[] = [
       { titulo: "Clientes", href: "/clientes", icone: Users },
       { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
       { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
-    ],
-  },
-  {
-    titulo: "Canais",
-    itens: [
       { titulo: "Conversas", href: "/conversas", icone: MessageCircle, permissao: "ver_conversas_whatsapp" },
-      { titulo: "Integrações", href: "/integracoes", icone: Plug, permissao: "ver_integracoes" },
-      { titulo: "Meu Site", href: "/meu-site", icone: Globe, permissao: "gerenciar_site" },
     ],
   },
   {
     titulo: "Administração",
     itens: [
-      { titulo: "Equipe", href: "/usuarios", icone: UsersRound, permissao: "gerenciar_usuarios" },
       { titulo: "Planos", href: "/planos", icone: CreditCard, permissao: "gerenciar_plano" },
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
     ],

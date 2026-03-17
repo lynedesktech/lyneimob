@@ -200,7 +200,7 @@ export async function processarLead(leadId: string): Promise<EstadoFormulario> {
     })
     .eq("id", leadId)
 
-  revalidatePath("/integracoes")
+  revalidatePath("/configuracoes/portais")
   revalidatePath("/clientes")
   revalidatePath("/negocios")
   return { sucesso: `Lead processado! Cliente e negócio criados com sucesso.` }
@@ -232,7 +232,7 @@ export async function descartarLead(leadId: string): Promise<EstadoFormulario> {
     return { erro: "Erro ao descartar lead. Tente novamente." }
   }
 
-  revalidatePath("/integracoes")
+  revalidatePath("/configuracoes/portais")
   return { sucesso: "Lead descartado com sucesso" }
 }
 
@@ -262,6 +262,6 @@ export async function excluirLead(leadId: string): Promise<EstadoFormulario> {
     return { erro: "Erro ao excluir lead. Tente novamente." }
   }
 
-  revalidatePath("/integracoes")
+  revalidatePath("/configuracoes/portais")
   return { sucesso: "Lead excluído com sucesso" }
 }

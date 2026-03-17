@@ -174,6 +174,6 @@ export async function salvarConfigDistribuicao(
     return { erro: "Erro ao salvar configuração. Tente novamente." }
   }
 
-  revalidatePath("/integracoes")
+  revalidatePath("/configuracoes/distribuicao")
   return { sucesso: "Configuração de distribuição salva com sucesso!" }
 }

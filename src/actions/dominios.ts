@@ -113,7 +113,7 @@ export async function salvarDominio(
     }
   }
 
-  revalidatePath("/meu-site")
+  revalidatePath("/configuracoes/meu-site")
 
   return {
     sucesso:
@@ -174,7 +174,7 @@ export async function verificarDns(
         })
         .eq("id", dominio.id)
 
-      revalidatePath("/meu-site")
+      revalidatePath("/configuracoes/meu-site")
       return { sucesso: "DNS verificado com sucesso! Seu domínio está ativo." }
     }
 
@@ -252,7 +252,7 @@ export async function removerDominio(
     return { erro: "Erro ao remover domínio. Tente novamente." }
   }
 
-  revalidatePath("/meu-site")
+  revalidatePath("/configuracoes/meu-site")
 
   return { sucesso: "Domínio removido. Seu site voltará a funcionar apenas pelo link padrão." }
 }

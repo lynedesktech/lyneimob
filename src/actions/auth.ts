@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { schemaLogin, schemaCadastro, schemaEsqueciSenha } from "@/types/auth"
 import type { EstadoFormulario } from "@/types/formulario"
 
@@ -26,7 +27,24 @@ export async function login(
   })
 
   if (error) {
-    return { erro: "Email ou senha incorretos" }
+    // Verificar se o email não confirmado é o problema
+    if (error.message?.includes("Email not confirmed")) {
+      return { erro: "Seu email ainda não foi confirmado. Verifique sua caixa de entrada." }
+    }
+
+    // Usar admin client pra verificar se o email existe
+    const admin = criarClienteAdmin()
+    const { data: usuario } = await admin
+      .from("usuarios")
+      .select("id")
+      .eq("email", dados.data.email)
+      .maybeSingle()
+
+    if (!usuario) {
+      return { erro: "Nenhuma conta encontrada com este email." }
+    }
+
+    return { erro: "Senha incorreta. Tente novamente ou recupere sua senha." }
   }
 
   redirect("/")

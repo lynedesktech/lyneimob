@@ -95,7 +95,7 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
               Para usar o agente WhatsApp, primeiro configure a URL e o token da sua conta
               Uazapi na página de configurações.
             </p>
-            <Button className="mt-6" render={<Link href="/configuracoes" />}>
+            <Button className="mt-6" render={<Link href="/configuracoes/whatsapp" />}>
               <Settings className="mr-2 h-4 w-4" />
               Ir para Configurações
             </Button>
