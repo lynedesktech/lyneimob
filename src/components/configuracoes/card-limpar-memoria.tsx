@@ -25,24 +25,23 @@ export function CardLimparMemoria() {
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <BrainCircuit className="h-5 w-5" />
         </div>
-        <div className="flex-1 space-y-3">
-          <div className="space-y-1">
-            <h3 className="font-medium leading-tight">Memória do Agente</h3>
-            <p className="text-sm text-muted-foreground">
-              O agente guarda as últimas 20 mensagens de cada conversa por 24h.
-              Limpe para reiniciar o contexto em testes.
-            </p>
+        <div className="flex-1 space-y-1">
+          <h3 className="font-medium leading-tight">Memória do Agente</h3>
+          <p className="text-sm text-muted-foreground">
+            Reseta o contexto de conversa de todos os atendimentos
+          </p>
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={limpando}
+              onClick={handleLimpar}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              {limpando ? "Limpando..." : "Limpar memória"}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={limpando}
-            onClick={handleLimpar}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-            {limpando ? "Limpando..." : "Limpar memória de todas as conversas"}
-          </Button>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,8 @@
 import { criarClienteServer } from "@/lib/supabase/server"
+import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { PainelAdmin } from "@/components/dashboard/painel-admin"
 import { PainelCorretor } from "@/components/dashboard/painel-corretor"
+import { PainelSuperAdmin } from "@/components/painel/painel-super-admin"
 import type { AtividadeHojeItem } from "@/components/dashboard/lista-atividades-hoje"
 import type { EtapaFunil } from "@/components/dashboard/grafico-funil"
 import type { PontoMensal } from "@/components/dashboard/grafico-evolucao"
@@ -14,12 +16,13 @@ export default async function DashboardPage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("nome, cargo")
+    .select("nome, cargo, super_admin")
     .eq("id", user?.id)
     .single()
 
   const nomeUsuario = usuario?.nome ?? "Usuário"
   const cargo = usuario?.cargo ?? "corretor"
+  const isSuperAdmin = !!usuario?.super_admin
   const isCorretor = cargo === "corretor"
 
   // Datas de hoje
@@ -82,15 +85,22 @@ export default async function DashboardPage() {
         (a.clientes as unknown as { nome: string } | null)?.nome ?? null,
     }))
 
+    const metricasPlataforma = isSuperAdmin
+      ? await buscarMetricasPlataforma()
+      : null
+
     return (
-      <PainelCorretor
-        nomeUsuario={nomeUsuario}
-        negociosAbertos={negociosAbertos ?? 0}
-        clientesAtivos={clientesAtivos ?? 0}
-        atividadesHoje={atividadesHoje ?? 0}
-        conversasAtivas={conversasAtivas ?? 0}
-        atividadesLista={atividadesLista}
-      />
+      <div className="space-y-10">
+        <PainelCorretor
+          nomeUsuario={nomeUsuario}
+          negociosAbertos={negociosAbertos ?? 0}
+          clientesAtivos={clientesAtivos ?? 0}
+          atividadesHoje={atividadesHoje ?? 0}
+          conversasAtivas={conversasAtivas ?? 0}
+          atividadesLista={atividadesLista}
+        />
+        {metricasPlataforma && <PainelSuperAdmin {...metricasPlataforma} />}
+      </div>
     )
   }
 
@@ -230,21 +240,69 @@ export default async function DashboardPage() {
     return { mes: MESES_PT[parseInt(mes) - 1], criados }
   })
 
+  const metricasPlataforma = isSuperAdmin
+    ? await buscarMetricasPlataforma()
+    : null
+
   return (
-    <PainelAdmin
-      nomeUsuario={nomeUsuario}
-      cargo={cargo as "admin" | "gerente"}
-      negociosAbertos={negociosAbertos ?? 0}
-      negociosGanhos={negociosGanhos ?? 0}
-      negociosPerdidos={negociosPerdidos ?? 0}
-      totalClientes={totalClientes ?? 0}
-      imoveisDisponiveis={imoveisDisponiveis ?? 0}
-      atividadesHoje={atividadesHoje ?? 0}
-      conversasAtivas={conversasAtivas ?? 0}
-      atividadesPendentes={atividadesPendentes}
-      etapasFunil={etapasFunil}
-      imoveisPorStatus={contagemImoveis}
-      evolucaoMensal={evolucaoMensal}
-    />
+    <div className="space-y-10">
+      <PainelAdmin
+        nomeUsuario={nomeUsuario}
+        cargo={cargo as "admin" | "gerente"}
+        negociosAbertos={negociosAbertos ?? 0}
+        negociosGanhos={negociosGanhos ?? 0}
+        negociosPerdidos={negociosPerdidos ?? 0}
+        totalClientes={totalClientes ?? 0}
+        imoveisDisponiveis={imoveisDisponiveis ?? 0}
+        atividadesHoje={atividadesHoje ?? 0}
+        conversasAtivas={conversasAtivas ?? 0}
+        atividadesPendentes={atividadesPendentes}
+        etapasFunil={etapasFunil}
+        imoveisPorStatus={contagemImoveis}
+        evolucaoMensal={evolucaoMensal}
+      />
+      {metricasPlataforma && <PainelSuperAdmin {...metricasPlataforma} />}
+    </div>
   )
+}
+
+async function buscarMetricasPlataforma() {
+  const admin = criarClienteAdmin()
+
+  const [
+    { count: totalOrgs },
+    { count: totalUsuarios },
+    { count: totalImoveis },
+    { count: totalNegocios },
+    { data: orgsPorPlano },
+    { data: orgsTrialExpirado },
+  ] = await Promise.all([
+    admin.from("organizacoes").select("id", { count: "exact", head: true }),
+    admin.from("usuarios").select("id", { count: "exact", head: true }),
+    admin.from("imoveis").select("id", { count: "exact", head: true }),
+    admin.from("negocios").select("id", { count: "exact", head: true }),
+    admin.from("organizacoes").select("plano"),
+    admin
+      .from("organizacoes")
+      .select("id")
+      .eq("plano", "trial")
+      .lt("trial_fim_em", new Date().toISOString()),
+  ])
+
+  const planosBreakdown = { trial: 0, crm_ia: 0, crm_ia_sdr: 0 }
+  orgsPorPlano?.forEach((org: { plano: string }) => {
+    if (org.plano in planosBreakdown) {
+      planosBreakdown[org.plano as keyof typeof planosBreakdown]++
+    }
+  })
+
+  return {
+    totalOrgs: totalOrgs ?? 0,
+    totalUsuarios: totalUsuarios ?? 0,
+    totalImoveis: totalImoveis ?? 0,
+    totalNegocios: totalNegocios ?? 0,
+    trialsExpirados: orgsTrialExpirado?.length ?? 0,
+    assinaturasAtivas: planosBreakdown.crm_ia + planosBreakdown.crm_ia_sdr,
+    planosBreakdown,
+  }
 }

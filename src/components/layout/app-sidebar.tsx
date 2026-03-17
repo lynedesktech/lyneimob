@@ -10,9 +10,7 @@ import {
   Building2,
   CalendarCheck,
   Settings,
-  BarChart3,
   Building,
-  Shield,
 } from "lucide-react"
 import {
   Sidebar,
@@ -72,9 +70,7 @@ const gruposPlataforma: GrupoNavegacao[] = [
   {
     titulo: "Plataforma",
     itens: [
-      { titulo: "Painel Plataforma", href: "/admin/painel", icone: BarChart3 },
       { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
-      { titulo: "Config Plataforma", href: "/admin/configuracoes", icone: Shield },
     ],
   },
 ]
