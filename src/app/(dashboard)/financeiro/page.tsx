@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { criarClienteStripe } from "@/lib/stripe"
 import { PaginaPlanos } from "@/components/planos/pagina-planos"
-import type { InfoAssinatura, TipoPlano, StatusPlano, LimitesPlano } from "@/types/billing"
+import type { InfoAssinatura, TipoPlano, StatusPlano, LimitesPlano, FaturaStripe } from "@/types/billing"
 
 export default async function PlanosPage() {
   const supabase = await criarClienteServer()
@@ -52,25 +53,34 @@ export default async function PlanosPage() {
     trialExpirado = diff <= 0
   }
 
-  // Buscar contagens reais de uso
-  const [corretoresRes, imoveisRes, conversasRes] = await Promise.all([
-    supabase
-      .from("usuarios")
-      .select("id", { count: "exact", head: true })
-      .eq("organizacao_id", usuario.organizacao_id)
-      .eq("ativo", true),
-    supabase
-      .from("imoveis")
-      .select("id", { count: "exact", head: true })
-      .eq("organizacao_id", usuario.organizacao_id)
-      .neq("status", "inativo"),
-    supabase
-      .from("eventos_billing")
-      .select("id", { count: "exact", head: true })
-      .eq("organizacao_id", usuario.organizacao_id)
-      .eq("tipo_evento", "conversa_ia")
-      .gte("created_at", new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString()),
-  ])
+  // Buscar dados de cobrança do Stripe
+  let proximaCobranca: string | null = null
+  let faturasRecentes: FaturaStripe[] = []
+
+  try {
+    const stripe = criarClienteStripe()
+
+    if (org.stripe_subscription_id) {
+      const sub = await stripe.subscriptions.retrieve(org.stripe_subscription_id)
+      proximaCobranca = new Date(sub.current_period_end * 1000).toISOString()
+    }
+
+    if (org.stripe_customer_id) {
+      const { data: invoices } = await stripe.invoices.list({
+        customer: org.stripe_customer_id,
+        limit: 5,
+      })
+      faturasRecentes = invoices.map((inv) => ({
+        id: inv.id,
+        data: new Date(inv.created * 1000).toISOString(),
+        valor: inv.amount_paid,
+        status: inv.status ?? "unknown",
+        url: inv.hosted_invoice_url ?? null,
+      }))
+    }
+  } catch {
+    // Se Stripe falhar, continua sem dados de cobrança
+  }
 
   const info: InfoAssinatura = {
     plano: org.plano as TipoPlano,
@@ -82,9 +92,8 @@ export default async function PlanosPage() {
     eh_trial: ehTrial,
     trial_expirado: trialExpirado,
     dias_restantes_trial: diasRestantes,
-    uso_corretores: corretoresRes.count ?? 0,
-    uso_imoveis: imoveisRes.count ?? 0,
-    uso_conversas_ia: conversasRes.count ?? 0,
+    proxima_cobranca: proximaCobranca,
+    faturas_recentes: faturasRecentes,
   }
 
   return <PaginaPlanos info={info} ehAdmin={usuario.cargo === "admin"} />

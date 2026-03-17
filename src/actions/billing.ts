@@ -188,27 +188,6 @@ export async function buscarStatusAssinatura(): Promise<InfoAssinatura | null> {
     trialExpirado = diff <= 0
   }
 
-  // Buscar contagens reais de uso
-  const supabase = await criarClienteServer()
-  const [corretoresRes, imoveisRes, conversasRes] = await Promise.all([
-    supabase
-      .from("usuarios")
-      .select("id", { count: "exact", head: true })
-      .eq("organizacao_id", usuario.organizacao_id)
-      .eq("ativo", true),
-    supabase
-      .from("imoveis")
-      .select("id", { count: "exact", head: true })
-      .eq("organizacao_id", usuario.organizacao_id)
-      .neq("status", "inativo"),
-    supabase
-      .from("eventos_billing")
-      .select("id", { count: "exact", head: true })
-      .eq("organizacao_id", usuario.organizacao_id)
-      .eq("tipo_evento", "conversa_ia")
-      .gte("created_at", new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString()),
-  ])
-
   return {
     plano: org.plano as TipoPlano,
     plano_status: org.plano_status as InfoAssinatura["plano_status"],
@@ -219,8 +198,7 @@ export async function buscarStatusAssinatura(): Promise<InfoAssinatura | null> {
     eh_trial: ehTrial,
     trial_expirado: trialExpirado,
     dias_restantes_trial: diasRestantes,
-    uso_corretores: corretoresRes.count ?? 0,
-    uso_imoveis: imoveisRes.count ?? 0,
-    uso_conversas_ia: conversasRes.count ?? 0,
+    proxima_cobranca: null,
+    faturas_recentes: [],
   }
 }

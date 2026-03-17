@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { CreditCard, ExternalLink } from "lucide-react"
+import { CreditCard, ExternalLink, Receipt, Calendar, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CardPlano } from "@/components/planos/card-plano"
 import { BannerTrial } from "@/components/planos/banner-trial"
 import { criarSessaoCheckout, criarSessaoPortal } from "@/actions/billing"
-import { PLANOS } from "@/types/billing"
+import { PLANOS, formatarPreco } from "@/types/billing"
 import type { TipoPlano, InfoAssinatura } from "@/types/billing"
 
 interface PaginaPlanosProps {
@@ -86,6 +87,25 @@ export function PaginaPlanos({ info, ehAdmin }: PaginaPlanosProps) {
   }
 
   const statusAtual = statusLabels[info.plano_status] || statusLabels.active
+  const planoConfig = PLANOS[info.plano]
+
+  // Texto da próxima cobrança
+  function formatarData(iso: string) {
+    return new Date(iso).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    })
+  }
+
+  // Status da fatura em português
+  const statusFatura: Record<string, { texto: string; cor: string }> = {
+    paid: { texto: "Pago", cor: "text-success" },
+    open: { texto: "Em aberto", cor: "text-warning" },
+    void: { texto: "Cancelado", cor: "text-muted-foreground" },
+    uncollectible: { texto: "Não cobrado", cor: "text-muted-foreground" },
+    unknown: { texto: "—", cor: "text-muted-foreground" },
+  }
 
   return (
     <div className="space-y-6">
@@ -98,35 +118,78 @@ export function PaginaPlanos({ info, ehAdmin }: PaginaPlanosProps) {
       )}
 
       {/* Cabeçalho */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Financeiro</h1>
           <p className="text-muted-foreground mt-1">
             Gerencie seu plano e acompanhe sua assinatura
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Badge className={statusAtual.cor}>{statusAtual.texto}</Badge>
-
-          {info.stripe_customer_id && ehAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePortal}
-              disabled={carregando}
-            >
-              <CreditCard className="mr-2 h-4 w-4" />
-              Gerenciar assinatura
-              <ExternalLink className="ml-1 h-3 w-3" />
-            </Button>
-          )}
-        </div>
+        <Badge className={statusAtual.cor}>{statusAtual.texto}</Badge>
       </div>
 
-      {/* Plano atual */}
+      {/* Card: Resumo da assinatura */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            Sua assinatura
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-3">
+              {/* Plano e valor */}
+              <div>
+                <p className="text-sm text-muted-foreground">Plano atual</p>
+                <p className="text-lg font-semibold">{planoConfig.nome}</p>
+              </div>
+              <div className="flex gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor mensal</p>
+                  <p className="font-medium">
+                    {planoConfig.preco_mensal === 0
+                      ? "Grátis"
+                      : formatarPreco(planoConfig.preco_mensal)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {info.eh_trial ? "Expira em" : "Próxima cobrança"}
+                  </p>
+                  <p className="font-medium">
+                    {info.eh_trial && info.trial_fim_em
+                      ? formatarData(info.trial_fim_em)
+                      : info.proxima_cobranca
+                        ? formatarData(info.proxima_cobranca)
+                        : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {info.stripe_customer_id && ehAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePortal}
+                disabled={carregando}
+                className="shrink-0"
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                Gerenciar assinatura
+                <ExternalLink className="ml-1 h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Alerta de pagamento pendente */}
       {info.plano_status === "past_due" && (
-        <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-3">
+        <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 flex items-start gap-3">
+          <AlertCircle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
           <p className="text-sm text-warning">
             Seu último pagamento falhou. Atualize seu método de pagamento para
             evitar a suspensão da conta.
@@ -134,41 +197,72 @@ export function PaginaPlanos({ info, ehAdmin }: PaginaPlanosProps) {
         </div>
       )}
 
-      {/* Grid de planos */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {Object.values(PLANOS).map((plano) => (
-          <CardPlano
-            key={plano.id}
-            config={plano}
-            planoAtual={info.plano}
-            carregando={carregando}
-            onAssinar={handleAssinar}
-          />
-        ))}
-      </div>
+      {/* Card: Histórico de pagamentos */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-muted-foreground" />
+            Histórico de pagamentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {info.faturas_recentes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma cobrança realizada ainda.
+            </p>
+          ) : (
+            <div className="space-y-1">
+              {info.faturas_recentes.map((fatura) => {
+                const s = statusFatura[fatura.status] || statusFatura.unknown
+                return (
+                  <div
+                    key={fatura.id}
+                    className="flex items-center justify-between py-2.5 border-b last:border-0"
+                  >
+                    <div className="flex items-center gap-4">
+                      <p className="text-sm text-muted-foreground w-32">
+                        {formatarData(fatura.data)}
+                      </p>
+                      <span className={`text-xs font-medium ${s.cor}`}>
+                        {s.texto}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm font-medium">
+                        {formatarPreco(fatura.valor)}
+                      </p>
+                      {fatura.url && (
+                        <a
+                          href={fatura.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Info sobre limites atuais */}
-      <div className="rounded-lg border bg-muted/30 p-6">
-        <h3 className="font-semibold mb-3">Seu uso atual</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <p className="text-sm text-muted-foreground">Corretores</p>
-            <p className="text-lg font-medium">
-              {info.uso_corretores} / {info.limites.max_corretores}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Imóveis</p>
-            <p className="text-lg font-medium">
-              {info.uso_imoveis} / {info.limites.max_imoveis}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Conversas IA / mês</p>
-            <p className="text-lg font-medium">
-              {info.uso_conversas_ia} / {info.limites.max_conversas_ia_mes}
-            </p>
-          </div>
+      {/* Seção de planos */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Planos disponíveis</h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          {Object.values(PLANOS).map((plano) => (
+            <CardPlano
+              key={plano.id}
+              config={plano}
+              planoAtual={info.plano}
+              carregando={carregando}
+              onAssinar={handleAssinar}
+            />
+          ))}
         </div>
       </div>
     </div>
