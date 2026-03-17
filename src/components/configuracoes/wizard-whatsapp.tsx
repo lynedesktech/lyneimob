@@ -307,7 +307,7 @@ function PassoQRCode({ onAvancar }: { onAvancar: () => void }) {
 // Seletor visual de horário
 // ============================================================
 
-const DIAS_SEMANA = [
+const DIAS_SEMANA: Array<{ key: keyof HorarioAtendimento; label: string }> = [
   { key: "segunda", label: "Seg" },
   { key: "terca", label: "Ter" },
   { key: "quarta", label: "Qua" },
@@ -324,7 +324,7 @@ function SeletorHorario({
   value: HorarioAtendimento
   onChange: (v: HorarioAtendimento) => void
 }) {
-  const toggleDia = (dia: string, ativo: boolean) => {
+  const toggleDia = (dia: keyof HorarioAtendimento, ativo: boolean) => {
     const novo = { ...value }
     if (ativo) {
       novo[dia] = { inicio: "08:00", fim: "18:00" }
@@ -334,7 +334,7 @@ function SeletorHorario({
     onChange(novo)
   }
 
-  const alterarHorario = (dia: string, campo: "inicio" | "fim", hora: string) => {
+  const alterarHorario = (dia: keyof HorarioAtendimento, campo: "inicio" | "fim", hora: string) => {
     const diaAtual = value[dia]
     if (!diaAtual) return
     onChange({ ...value, [dia]: { ...diaAtual, [campo]: hora } })

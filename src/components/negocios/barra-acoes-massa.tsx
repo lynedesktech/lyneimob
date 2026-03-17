@@ -203,7 +203,7 @@ function DialogMoverEtapa({
         </DialogHeader>
         <div className="space-y-2">
           <Label>Etapa de destino</Label>
-          <Select value={etapaId} onValueChange={setEtapaId}>
+          <Select value={etapaId} onValueChange={(val) => { if (val) setEtapaId(val) }}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma etapa..." />
             </SelectTrigger>

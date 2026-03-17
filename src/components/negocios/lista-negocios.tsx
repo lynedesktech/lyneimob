@@ -111,7 +111,8 @@ export function ListaNegocios() {
               <TableRow>
                 <TableHead className="w-8">
                   <Checkbox
-                    checked={todosSelecionados ? true : algunsSelecionados ? "mixed" : false}
+                    checked={todosSelecionados}
+                    indeterminate={!todosSelecionados && algunsSelecionados}
                     onCheckedChange={toggleTodos}
                   />
                 </TableHead>
