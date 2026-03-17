@@ -368,9 +368,9 @@ async function executarCriarCliente(
       .from("clientes")
       .update({
         nome: args.nome as string,
-        ...(args.email && { email: args.email as string }),
-        ...(args.tipo && { tipo: args.tipo as string }),
-        ...(args.observacoes && { observacoes: args.observacoes as string }),
+        ...(args.email ? { email: args.email as string } : {}),
+        ...(args.tipo ? { tipo: args.tipo as string } : {}),
+        ...(args.observacoes ? { observacoes: args.observacoes as string } : {}),
       })
       .eq("id", contexto.clienteId)
 
@@ -421,10 +421,10 @@ async function executarCriarNegocio(
     const { error } = await supabase
       .from("negocios")
       .update({
-        ...(args.titulo && { titulo: args.titulo as string }),
-        ...(args.tipo && { tipo: args.tipo as string }),
-        ...(args.valor && { valor: args.valor as number }),
-        ...(args.imovel_id && { imovel_id: args.imovel_id as string }),
+        ...(args.titulo ? { titulo: args.titulo as string } : {}),
+        ...(args.tipo ? { tipo: args.tipo as string } : {}),
+        ...(args.valor ? { valor: args.valor as number } : {}),
+        ...(args.imovel_id ? { imovel_id: args.imovel_id as string } : {}),
       })
       .eq("id", contexto.negocioId)
 
