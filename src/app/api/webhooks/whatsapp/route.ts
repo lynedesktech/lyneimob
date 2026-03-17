@@ -16,8 +16,14 @@ export async function POST(request: Request) {
     console.log("[WhatsApp Webhook] Recebido:", JSON.stringify(body))
 
     // Checar tipo de evento ANTES de validar com Zod
-    // Eventos de conexão têm estrutura diferente (sem data.key) e causariam falha no Zod
-    const event = typeof body.event === "string" ? body.event : ""
+    // A Uazapi envia "EventType" (com maiúsculas), não "event"
+    const event =
+      typeof body.EventType === "string"
+        ? body.EventType
+        : typeof body.event === "string"
+          ? body.event
+          : ""
+
     if (!event.startsWith("messages")) {
       console.log("[WhatsApp Webhook] Ignorado — evento:", event)
       return NextResponse.json({ status: "ignorado", motivo: "evento_nao_mensagem" })
@@ -39,41 +45,40 @@ export async function POST(request: Request) {
 
     const payload = resultado.data
 
-    // Aceitar messages.upsert e também eventos genéricos "messages"
-    if (payload.event !== "messages.upsert" && payload.event !== "messages") {
-      console.log("[WhatsApp Webhook] Ignorado pós-Zod — evento:", payload.event)
-      return NextResponse.json({ status: "ignorado", motivo: "evento_nao_mensagem" })
+    // Extrair dados do novo formato da Uazapi
+    const messageData = payload.message
+    if (!messageData) {
+      return NextResponse.json({ status: "ignorado", motivo: "sem_conteudo" })
     }
 
-    const { key, pushName, message } = payload.data
+    const remoteJid = messageData.chatid
+    const fromMe = messageData.fromMe
+    const messageId = messageData.messageid
+    const pushName = messageData.senderName || payload.chat?.wa_contactName || null
+    const instanceIdent = payload.instanceName || payload.instance
 
     // Ignorar mensagens do próprio bot
-    if (key.fromMe) {
+    if (fromMe) {
       return NextResponse.json({ status: "ignorado", motivo: "mensagem_propria" })
     }
 
     // Ignorar mensagens de grupo
-    if (ehGrupo(key.remoteJid)) {
+    if (messageData.isGroup || ehGrupo(remoteJid)) {
       return NextResponse.json({ status: "ignorado", motivo: "grupo" })
     }
 
-    // Ignorar se não tem conteúdo de mensagem
-    if (!message) {
-      return NextResponse.json({ status: "ignorado", motivo: "sem_conteudo" })
-    }
-
-    const numeroCliente = extrairNumero(key.remoteJid)
+    const numeroCliente = extrairNumero(remoteJid)
     const supabase = criarClienteAdmin()
 
     // Identificar organização pela config do WhatsApp
     // Tenta buscar pelo instance_id do payload, depois fallback por ativo
     let config = null
 
-    if (payload.instance) {
+    if (instanceIdent) {
       const { data } = await supabase
         .from("config_whatsapp")
         .select("*")
-        .eq("instance_id", payload.instance)
+        .eq("instance_id", instanceIdent)
         .eq("ativo", true)
         .single()
       config = data
@@ -91,7 +96,7 @@ export async function POST(request: Request) {
     }
 
     if (!config) {
-      console.error("[WhatsApp Webhook] Config não encontrada para instance:", payload.instance)
+      console.error("[WhatsApp Webhook] Config não encontrada para instance:", instanceIdent)
       return NextResponse.json(
         { erro: "Nenhuma configuração WhatsApp ativa encontrada" },
         { status: 404 }
@@ -103,14 +108,14 @@ export async function POST(request: Request) {
     const organizacaoId = config.organizacao_id
 
     // Detectar tipo de conteúdo e extrair texto
-    const { tipo, conteudo } = detectarConteudo(message)
+    const { tipo, conteudo } = detectarConteudo(messageData)
 
     // Buscar ou criar conversa
     const conversaId = await buscarOuCriarConversa(
       supabase,
       organizacaoId,
       numeroCliente,
-      pushName || null
+      pushName
     )
 
     // Salvar mensagem no banco (com dedup pelo message_id_whatsapp)
@@ -123,8 +128,8 @@ export async function POST(request: Request) {
         tipo_conteudo: tipo,
         conteudo: conteudo,
         conteudo_original: conteudo,
-        message_id_whatsapp: key.id,
-        metadata: message as unknown as Record<string, unknown>,
+        message_id_whatsapp: messageId,
+        metadata: messageData as unknown as Record<string, unknown>,
       })
       .select("id")
       .single()
@@ -151,7 +156,7 @@ export async function POST(request: Request) {
       .eq("id", conversaId)
 
     // Marcar como lida no WhatsApp
-    marcarComoLida(config, key.id).catch((erro) => {
+    marcarComoLida(config, messageId).catch((erro) => {
       console.error("[WhatsApp Webhook] Erro ao marcar como lida:", erro instanceof Error ? erro.message : erro)
     })
 
@@ -183,70 +188,30 @@ export async function POST(request: Request) {
 // ============================================================
 
 /**
- * Detecta o tipo de conteúdo da mensagem e extrai o texto quando possível
+ * Detecta o tipo de conteúdo da mensagem pelo campo "type" da Uazapi
  */
-function detectarConteudo(message: Record<string, unknown>): {
+function detectarConteudo(msg: {
+  type?: string
+  text?: string
+  content?: string
+  mediaType?: string
+}): {
   tipo: TipoConteudo
   conteudo: string | null
 } {
-  const msg = message as {
-    conversation?: string
-    extendedTextMessage?: { text?: string }
-    imageMessage?: { caption?: string }
-    audioMessage?: Record<string, unknown>
-    documentMessage?: { fileName?: string }
-    videoMessage?: { caption?: string }
-    stickerMessage?: Record<string, unknown>
-    locationMessage?: { degreesLatitude?: number; degreesLongitude?: number }
-  }
+  const tipo = (msg.type || "").toLowerCase()
+  const texto = msg.text || msg.content || null
 
-  // Texto simples
-  if (msg.conversation) {
-    return { tipo: "texto", conteudo: msg.conversation }
-  }
+  if (tipo === "text" || tipo === "conversation") return { tipo: "texto", conteudo: texto }
+  if (tipo === "audio" || tipo === "audiomessage" || tipo === "ptt") return { tipo: "audio", conteudo: null }
+  if (tipo === "image" || tipo === "imagemessage") return { tipo: "imagem", conteudo: texto }
+  if (tipo === "document" || tipo === "documentmessage") return { tipo: "documento", conteudo: texto }
+  if (tipo === "video" || tipo === "videomessage") return { tipo: "video", conteudo: texto }
+  if (tipo === "sticker" || tipo === "stickermessage") return { tipo: "sticker", conteudo: null }
+  if (tipo === "location" || tipo === "locationmessage") return { tipo: "localizacao", conteudo: texto }
 
-  // Texto com formatação/citação
-  if (msg.extendedTextMessage?.text) {
-    return { tipo: "texto", conteudo: msg.extendedTextMessage.text }
-  }
-
-  // Imagem (pode ter legenda)
-  if (msg.imageMessage) {
-    return { tipo: "imagem", conteudo: msg.imageMessage.caption || null }
-  }
-
-  // Áudio
-  if (msg.audioMessage) {
-    return { tipo: "audio", conteudo: null }
-  }
-
-  // Documento (PDF, etc)
-  if (msg.documentMessage) {
-    return { tipo: "documento", conteudo: msg.documentMessage.fileName || null }
-  }
-
-  // Vídeo
-  if (msg.videoMessage) {
-    return { tipo: "video", conteudo: msg.videoMessage.caption || null }
-  }
-
-  // Sticker
-  if (msg.stickerMessage) {
-    return { tipo: "sticker", conteudo: null }
-  }
-
-  // Localização
-  if (msg.locationMessage) {
-    const lat = msg.locationMessage.degreesLatitude
-    const lng = msg.locationMessage.degreesLongitude
-    return {
-      tipo: "localizacao",
-      conteudo: lat && lng ? `Localização: ${lat}, ${lng}` : null,
-    }
-  }
-
-  // Fallback: texto desconhecido
-  return { tipo: "texto", conteudo: null }
+  // Fallback: se tiver texto, trata como texto
+  return { tipo: "texto", conteudo: texto }
 }
 
 /**

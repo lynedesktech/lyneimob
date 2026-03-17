@@ -143,50 +143,30 @@ export type FiltrosConversasInput = z.infer<typeof schemaFiltrosConversas>
 // ============================================================
 
 export const schemaPayloadUazapi = z.object({
-  event: z.string(),
+  // Formato real da Uazapi (EventType com maiúsculas, sem campo "event")
+  EventType: z.string().optional(),
+  // Manter compatibilidade com formato Evolution API (fallback)
+  event: z.string().optional(),
+  instanceName: z.string().optional(),
   instance: z.string().optional(),
-  data: z.object({
-    key: z.object({
-      remoteJid: z.string(),
-      fromMe: z.boolean(),
-      id: z.string(),
-    }),
-    pushName: z.string().optional(),
-    message: z.object({
-      conversation: z.string().optional(),
-      extendedTextMessage: z.object({
-        text: z.string().optional(),
-      }).optional(),
-      imageMessage: z.object({
-        url: z.string().optional(),
-        caption: z.string().optional(),
-        mimetype: z.string().optional(),
-      }).optional(),
-      audioMessage: z.object({
-        url: z.string().optional(),
-        mimetype: z.string().optional(),
-        seconds: z.number().optional(),
-      }).optional(),
-      documentMessage: z.object({
-        url: z.string().optional(),
-        fileName: z.string().optional(),
-        mimetype: z.string().optional(),
-      }).optional(),
-      videoMessage: z.object({
-        url: z.string().optional(),
-        caption: z.string().optional(),
-        mimetype: z.string().optional(),
-      }).optional(),
-      stickerMessage: z.object({
-        url: z.string().optional(),
-      }).optional(),
-      locationMessage: z.object({
-        degreesLatitude: z.number().optional(),
-        degreesLongitude: z.number().optional(),
-      }).optional(),
-    }).optional(),
-    messageTimestamp: z.union([z.string(), z.number()]).optional(),
-  }),
+  message: z.object({
+    chatid: z.string(),
+    fromMe: z.boolean(),
+    messageid: z.string(),
+    senderName: z.string().optional(),
+    text: z.string().optional(),
+    content: z.string().optional(),
+    type: z.string().optional(),
+    mediaType: z.string().optional(),
+    isGroup: z.boolean().optional(),
+    sender_pn: z.string().optional(),
+  }).optional(),
+  chat: z.object({
+    wa_isGroup: z.boolean().optional(),
+    wa_contactName: z.string().optional(),
+    name: z.string().optional(),
+    phone: z.string().optional(),
+  }).optional(),
 })
 
 export type PayloadUazapi = z.infer<typeof schemaPayloadUazapi>
