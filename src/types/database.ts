@@ -41,6 +41,7 @@ export type Usuario = {
   avatar_url: string | null
   creci: string | null
   ativo: boolean
+  super_admin: boolean
   created_at: string
 }
 
@@ -234,7 +235,7 @@ export type NegocioComRelacoes = Negocio & {
   clientes: { id: string; nome: string; telefone: string | null; email: string | null } | null
   imoveis: { id: string; titulo: string; codigo: string; tipo: TipoImovel } | null
   usuarios: { id: string; nome: string } | null
-  pipeline_etapas: PipelineEtapa | null
+  pipeline_etapas?: PipelineEtapa | null
 }
 
 export type EtapaComNegocios = PipelineEtapa & {

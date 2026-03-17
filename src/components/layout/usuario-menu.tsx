@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { LogOut, User, ChevronsUpDown } from "lucide-react"
 import { sair } from "@/actions/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -36,6 +37,8 @@ function obterIniciais(nome: string): string {
 }
 
 export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
+  const router = useRouter()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -96,7 +99,7 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/meu-perfil")}>
               <User className="mr-2 h-4 w-4" />
               <span>Meu perfil</span>
             </DropdownMenuItem>

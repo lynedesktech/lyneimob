@@ -15,6 +15,9 @@ import {
   MessageCircle,
   CreditCard,
   UsersRound,
+  BarChart3,
+  Building,
+  Shield,
 } from "lucide-react"
 import {
   Sidebar,
@@ -27,7 +30,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { UsuarioMenu } from "@/components/layout/usuario-menu"
 import type { Acao } from "@/lib/permissoes"
@@ -127,7 +129,6 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
 
           return (
             <React.Fragment key={grupo.titulo}>
-              {indice > 0 && <SidebarSeparator className="mx-4" />}
               <SidebarGroup>
                 <SidebarGroupLabel className="text-sidebar-foreground/50 text-[11px] uppercase tracking-wider">
                   {grupo.titulo}

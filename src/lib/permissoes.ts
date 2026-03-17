@@ -34,9 +34,10 @@ const MAPA_PERMISSOES: Record<Acao, Cargo[]> = {
 
 /**
  * Verifica se um cargo tem permissao para executar uma acao.
- * Retorna true se permitido, false caso contrario.
+ * Super admin tem acesso total a qualquer acao.
  */
-export function temPermissao(cargo: Cargo, acao: Acao): boolean {
+export function temPermissao(cargo: Cargo, acao: Acao, superAdmin?: boolean): boolean {
+  if (superAdmin) return true
   return MAPA_PERMISSOES[acao]?.includes(cargo) ?? false
 }
 
@@ -46,9 +47,10 @@ export function temPermissao(cargo: Cargo, acao: Acao): boolean {
  */
 export function verificarPermissao(
   cargo: Cargo,
-  acao: Acao
+  acao: Acao,
+  superAdmin?: boolean
 ): { erro?: string } {
-  if (!temPermissao(cargo, acao)) {
+  if (!temPermissao(cargo, acao, superAdmin)) {
     return { erro: "Voce nao tem permissao para realizar esta acao." }
   }
   return {}
@@ -62,4 +64,11 @@ export function obterPermissoes(cargo: Cargo): Acao[] {
   return (Object.entries(MAPA_PERMISSOES) as [Acao, Cargo[]][])
     .filter(([, cargos]) => cargos.includes(cargo))
     .map(([acao]) => acao)
+}
+
+/**
+ * Verifica se o usuario e super admin (dono do SaaS).
+ */
+export function ehSuperAdmin(usuario: { super_admin?: boolean } | null): boolean {
+  return usuario?.super_admin === true
 }

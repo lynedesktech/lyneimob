@@ -4,6 +4,15 @@
       "type": "stdio",
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@upstash/context7-mcp@latest"]
+    },
+    "gamma": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "node", "build/index.js"],
+      "cwd": "C:\\Users\\Lynedesk\\Desktop\\Tech\\gamma-mcp-server",
+      "env": {
+        "GAMMA_API_KEY": "sk-gamma-sXSFAVwAzQu6EtK3JlEqDx5bpWu0ClfHJkprVO8a88"
+      }
     }
   }
 }

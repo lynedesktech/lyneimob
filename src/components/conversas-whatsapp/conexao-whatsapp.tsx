@@ -105,49 +105,44 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
     )
   }
 
-  // Desconectado — botão para conectar
+  // Desconectado — banner compacto + conversas visíveis abaixo
   if (status === "disconnected") {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Conversas WhatsApp</h1>
-          <p className="text-sm text-muted-foreground">
-            Conecte seu WhatsApp para ativar o agente
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Conversas WhatsApp</h1>
+            <div className="mt-1 flex items-center gap-2">
+              <Badge variant="destructive">
+                <WifiOff className="mr-1 h-3 w-3" />
+                Desconectado
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                Conecte o WhatsApp para ativar o agente IA
+              </span>
+            </div>
+          </div>
+          <Button
+            className="bg-[#25D366] text-white hover:bg-[#1da851]"
+            onClick={() => conectar()}
+            disabled={conectando}
+          >
+            {conectando ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando QR Code...
+              </>
+            ) : (
+              <>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Conectar WhatsApp
+              </>
+            )}
+          </Button>
         </div>
 
-        <Card>
-          <CardContent className="flex flex-col items-center py-16">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-              <WifiOff className="h-8 w-8 text-destructive" />
-            </div>
-            <h3 className="mt-5 text-lg font-semibold">
-              WhatsApp desconectado
-            </h3>
-            <p className="mt-2 max-w-sm text-center text-sm text-muted-foreground">
-              Conecte o WhatsApp da sua imobiliária para que o agente IA possa atender
-              seus clientes automaticamente.
-            </p>
-            <Button
-              size="lg"
-              className="mt-6 bg-[#25D366] text-white hover:bg-[#1da851]"
-              onClick={() => conectar()}
-              disabled={conectando}
-            >
-              {conectando ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Gerando QR Code...
-                </>
-              ) : (
-                <>
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Conectar WhatsApp
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Conversas históricas */}
+        {children}
       </div>
     )
   }
