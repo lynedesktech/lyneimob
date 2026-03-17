@@ -10,6 +10,12 @@
 
 > Implementação concluída. Aguardando validação do usuário.
 
+- [ ] Bugs críticos nos formulários — Tarefas 1, 2 e 3
+      Tarefa 1: redirect server-side implementado nas 6 actions (criar/editar cliente, negócio, imóvel, atividade). Formulários simplificados sem `useRouter`. Build 100% limpo.
+      Tarefa 2: Application errors investigados — causa era o build quebrado (arquivos não commitados). Build local passou 100% em 57 rotas. Deploy já está no ar.
+      Tarefa 3: (a) Botão "Cancelar" adicionado no formulário de negócio, (b) Valor zero aceito no negócio (`nonnegative()`), (c) Schema de imóvel com campos mínimos confirmados.
+      O que testar: (1) criar cliente → redireciona para detalhe sem precisar clicar em nada, (2) editar cliente → mesmo, (3) criar negócio com valor 0 → sem erro de validação, (4) abrir `/clientes/[id]/editar` diretamente → não crasha, (5) abrir `/negocios/novo` → formulário carrega com botão "Cancelar" no rodapé.
+
 - [ ] Configurações de Funil de Vendas e Tipos de Atividade
       O que foi feito: (1) migration 021 — tabela `tipos_atividade` com 7 tipos padrão (`sistema=true`), constraint CHECK removida de `atividades.tipo`, constraint UNIQUE de `ordem` removida de `pipeline_etapas` (facilita reordenamento), trigger para novas orgs, seed para orgs existentes. (2) `src/actions/pipeline.ts` — server actions criar, atualizar, excluir e reordenar etapas do pipeline. (3) `src/hooks/use-pipeline-config.ts` — hook para config. (4) `/configuracoes/pipeline` — nova página com componente `ConteudoPipelineConfig` (lista, criar, editar, reordenar, excluir etapas com proteção para Ganho/Perdido). (5) `src/actions/tipos-atividade.ts` — server actions para tipos. (6) `src/hooks/use-tipos-atividade.ts` — hook dinâmico com `labelDoTipo` e `corDoTipo`. (7) `/configuracoes/tipos-atividade` — nova página com componente `ConteudoTiposAtividadeConfig`. (8) `formulario-atividade.tsx` e `filtros-atividades.tsx` atualizados para usar tipos do banco. (9) `card-atividade.tsx` usa `labelDoTipo` do hook. (10) Dois novos cards (Funil de Vendas + Tipos de Atividade) na página `/configuracoes`.
       O que testar: (1) /configuracoes mostra 8 cards incluindo "Funil de Vendas" e "Tipos de Atividade", (2) /configuracoes/pipeline lista as 7 etapas padrão, permite criar nova etapa (nome + cor), editar, reordenar com setas ↑↓, excluir — tentar excluir "Ganho" deve bloquear com mensagem, (3) /configuracoes/tipos-atividade lista os 7 tipos padrão com badge "Padrão", permite criar tipo personalizado, editar nome/cor dos tipos padrão, reordenar, excluir tipo personalizado (bloqueado se tiver atividades), (4) /atividades/novo — select de tipo carrega tipos do banco dinamicamente com pontinhos coloridos, (5) filtros em /atividades — filtro de tipo usa tipos do banco, (6) build compila sem erros (57 rotas)
@@ -61,22 +67,9 @@
 
 > Tarefa em andamento agora.
 
-### [URGENTE] Corrigir bugs críticos nos formulários e navegação
+### [URGENTE] Corrigir bugs críticos nos formulários e navegação — Tarefas 4 e 5 pendentes
 
 Auditoria: `C:\Users\Lynedesk\.claude\plans\immutable-marinating-coral.md`
-
-- [x] **Tarefa 1 — Redirect pós-submissão** ✓
-      Fix: redirect server-side via `redirect()` nas 6 actions (criar/atualizar cliente, negócio, imóvel, atividade).
-      Formulários simplificados: removido `useRouter`, `useEffect` agora só trata erros.
-      Build 100% limpo.
-
-- [x] **Tarefa 2 — Application errors remanescentes** ✓
-      Investigação: build local compilou 100% sem erros (57 rotas, incluindo `/clientes/[id]/editar` e `/negocios/novo`). Todos os arquivos estão commitados em 13838dd. Causa confirmada: os crashes eram causados pelo build quebrado (mesma raiz da Tarefa 1 — arquivos `field.tsx`, `combobox-campo.tsx`, etc. não commitados). Com o deploy atualizado, as páginas funcionam corretamente.
-
-- [x] **Tarefa 3 — UX nos formulários** ✓
-      (a) Botão "Cancelar" adicionado no rodapé do formulário de negócio
-      (b) Validação: campo valor do negócio aceita 0 agora (`nonnegative()`)
-      (c) Schema do imóvel revisado: campos obrigatórios mínimos confirmados (código, título, tipo, finalidade, cidade, estado)
 
 - [ ] **Tarefa 4 — Seção "Interesses" do cliente**
       Renomear para "Preferências de Imóvel" + adicionar aba ou seção "Negócios do Cliente" separada
