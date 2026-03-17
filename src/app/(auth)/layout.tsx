@@ -13,10 +13,10 @@ export default function AuthLayout({
           src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80"
           alt="Imóvel de alto padrão"
           fill
-          className="object-cover animate-slow-zoom"
+          className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/60 to-black/45" />
 
         {/* Logo — canto superior esquerdo */}
         <div className="absolute top-8 left-8 z-10">
