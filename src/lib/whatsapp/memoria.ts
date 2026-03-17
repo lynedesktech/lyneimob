@@ -24,6 +24,7 @@ export async function salvarMensagemMemoria(
   conteudo: string
 ): Promise<void> {
   const { redis } = await import("@/lib/redis")
+  if (!redis) return
   const chave = `${CHAVE_PREFIX}${conversaId}`
 
   const mensagem: MensagemMemoria = {
@@ -50,6 +51,7 @@ export async function buscarMemoria(
   conversaId: string
 ): Promise<Array<{ papel: "usuario" | "assistente"; conteudo: string }>> {
   const { redis } = await import("@/lib/redis")
+  if (!redis) return []
   const chave = `${CHAVE_PREFIX}${conversaId}`
 
   const itens = await redis.lrange(chave, 0, -1)
@@ -69,6 +71,7 @@ export async function buscarMemoria(
  */
 export async function limparMemoria(conversaId: string): Promise<void> {
   const { redis } = await import("@/lib/redis")
+  if (!redis) return
   const chave = `${CHAVE_PREFIX}${conversaId}`
   await redis.del(chave)
 }

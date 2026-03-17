@@ -28,6 +28,7 @@ export function adicionarAoDebounce(
 
   // Registrar no Redis que essa conversa tem mensagens pendentes
   import("@/lib/redis").then(({ redis }) => {
+    if (!redis) return
     redis.set(chave, organizacaoId, { ex: REDIS_TTL_S }).catch((erro) => {
       console.error("[Debounce] Erro ao registrar no Redis:", erro instanceof Error ? erro.message : erro)
     })
@@ -66,7 +67,7 @@ async function processarLote(
   try {
     // Limpar flag do Redis
     const { redis } = await import("@/lib/redis")
-    await redis.del(chaveRedis)
+    if (redis) await redis.del(chaveRedis)
 
     const { criarClienteAdmin } = await import("@/lib/supabase/admin")
     const supabase = criarClienteAdmin()

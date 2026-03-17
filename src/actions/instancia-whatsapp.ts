@@ -254,12 +254,15 @@ export async function verificarStatusInstancia(): Promise<
     const statusConexao = resposta.instance?.status || "disconnected"
     const conectado = resposta.status?.connected || statusConexao === "connected"
 
-    // Se acabou de conectar, salvar número e ativar
-    if (conectado && resposta.status?.jid && !config.numero_whatsapp) {
-      const numero = extrairNumero(resposta.status.jid)
+    // Se acabou de conectar, ativar instância e salvar número quando disponível
+    if (conectado && !config.ativo) {
+      const updates: Record<string, unknown> = { ativo: true }
+      if (resposta.status?.jid) {
+        updates.numero_whatsapp = extrairNumero(resposta.status.jid)
+      }
       await supabase
         .from("config_whatsapp")
-        .update({ numero_whatsapp: numero, ativo: true })
+        .update(updates)
         .eq("id", config.id)
     }
 
