@@ -17,6 +17,7 @@ export type Acao =
   | "excluir_registros"
   | "ver_conversas_whatsapp"
   | "ver_integracoes"
+  | "gerenciar_organizacao"
 
 const MAPA_PERMISSOES: Record<Acao, Cargo[]> = {
   gerenciar_usuarios:     ["admin"],
@@ -30,6 +31,7 @@ const MAPA_PERMISSOES: Record<Acao, Cargo[]> = {
   excluir_registros:      ["admin"],
   ver_conversas_whatsapp: ["admin", "gerente"],
   ver_integracoes:        ["admin", "gerente"],
+  gerenciar_organizacao:  ["admin"],
 }
 
 /**

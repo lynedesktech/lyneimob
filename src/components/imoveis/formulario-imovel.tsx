@@ -1,9 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useEffect, useState } from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
 import Link from "next/link"
 import { criarImovel, atualizarImovel } from "@/actions/imoveis"
-import type { EstadoFormulario } from "@/types/formulario"
+import { schemaCriarImovel } from "@/types/imoveis"
+import type { CriarImovelInput } from "@/types/imoveis"
 import type { Imovel } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,11 +45,88 @@ type FormularioImovelProps = {
 }
 
 export function FormularioImovel({ imovel }: FormularioImovelProps) {
-  const action = imovel ? atualizarImovel : criarImovel
-  const [estado, formAction, pendente] = useActionState<
-    EstadoFormulario,
-    FormData
-  >(action, {})
+  const editando = !!imovel
+  const action = editando ? atualizarImovel : criarImovel
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<CriarImovelInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schemaCriarImovel) as any,
+    defaultValues: {
+      codigo: imovel?.codigo ?? "",
+      titulo: imovel?.titulo ?? "",
+      descricao: imovel?.descricao ?? "",
+      tipo: (imovel?.tipo ?? "") as CriarImovelInput["tipo"],
+      finalidade: (imovel?.finalidade ?? "") as CriarImovelInput["finalidade"],
+      cep: imovel?.cep ?? "",
+      logradouro: imovel?.logradouro ?? "",
+      numero: imovel?.numero ?? "",
+      complemento: imovel?.complemento ?? "",
+      bairro: imovel?.bairro ?? "",
+      cidade: imovel?.cidade ?? "",
+      estado: imovel?.estado ?? "",
+      preco_venda: imovel?.preco_venda ?? undefined,
+      preco_aluguel: imovel?.preco_aluguel ?? undefined,
+      iptu: imovel?.iptu ?? undefined,
+      condominio: imovel?.condominio ?? undefined,
+      area_total: imovel?.area_total ?? undefined,
+      area_construida: imovel?.area_construida ?? undefined,
+      quartos: imovel?.quartos ?? 0,
+      suites: imovel?.suites ?? 0,
+      banheiros: imovel?.banheiros ?? 0,
+      vagas_garagem: imovel?.vagas_garagem ?? 0,
+      andares: imovel?.andares ?? undefined,
+      observacoes_internas: imovel?.observacoes_internas ?? "",
+      publicar_site: imovel?.publicar_site ?? true,
+      publicar_portais: imovel?.publicar_portais ?? true,
+    },
+  })
+
+  // Status é controlado separadamente (só existe em edição)
+  const [statusValue, setStatusValue] = useState(imovel?.status ?? "disponivel")
+
+  const [retorno, formAction, pendente] = useActionState(action, {})
+
+  useEffect(() => {
+    if (retorno.erro) toast.error(retorno.erro)
+  }, [retorno])
+
+  function onSubmit(dados: CriarImovelInput) {
+    const formData = new FormData()
+    if (editando) formData.set("id", imovel.id)
+    formData.set("codigo", dados.codigo)
+    formData.set("titulo", dados.titulo)
+    formData.set("tipo", dados.tipo)
+    formData.set("finalidade", dados.finalidade)
+    formData.set("cidade", dados.cidade)
+    formData.set("estado", dados.estado)
+    if (dados.descricao) formData.set("descricao", dados.descricao)
+    if (dados.cep) formData.set("cep", dados.cep)
+    if (dados.logradouro) formData.set("logradouro", dados.logradouro)
+    if (dados.numero) formData.set("numero", dados.numero)
+    if (dados.complemento) formData.set("complemento", dados.complemento)
+    if (dados.bairro) formData.set("bairro", dados.bairro)
+    if (dados.preco_venda !== undefined) formData.set("preco_venda", String(dados.preco_venda))
+    if (dados.preco_aluguel !== undefined) formData.set("preco_aluguel", String(dados.preco_aluguel))
+    if (dados.iptu !== undefined) formData.set("iptu", String(dados.iptu))
+    if (dados.condominio !== undefined) formData.set("condominio", String(dados.condominio))
+    if (dados.area_total !== undefined) formData.set("area_total", String(dados.area_total))
+    if (dados.area_construida !== undefined) formData.set("area_construida", String(dados.area_construida))
+    formData.set("quartos", String(dados.quartos))
+    formData.set("suites", String(dados.suites))
+    formData.set("banheiros", String(dados.banheiros))
+    formData.set("vagas_garagem", String(dados.vagas_garagem))
+    if (dados.andares !== undefined) formData.set("andares", String(dados.andares))
+    if (dados.observacoes_internas) formData.set("observacoes_internas", dados.observacoes_internas)
+    formData.set("publicar_site", dados.publicar_site ? "on" : "")
+    formData.set("publicar_portais", dados.publicar_portais ? "on" : "")
+    if (editando) formData.set("status", statusValue)
+    formAction(formData)
+  }
 
   return (
     <div className="space-y-6">
@@ -65,15 +146,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
         </div>
       </div>
 
-      <form action={formAction} className="space-y-6">
-        {imovel && <input type="hidden" name="id" value={imovel.id} />}
-
-        {estado.erro && (
-          <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {estado.erro}
-          </div>
-        )}
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Dados Básicos */}
         <Card>
           <CardHeader>
@@ -81,70 +154,85 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="codigo">Código interno</Label>
+              <Label htmlFor="codigo">Código interno *</Label>
               <Input
                 id="codigo"
-                name="codigo"
                 placeholder="Ex: APT-001"
-                defaultValue={imovel?.codigo ?? ""}
-                required
+                {...register("codigo")}
+                aria-invalid={!!errors.codigo}
               />
+              {errors.codigo && (
+                <p className="text-xs text-destructive">{errors.codigo.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="titulo">Título do anúncio</Label>
+              <Label htmlFor="titulo">Título do anúncio *</Label>
               <Input
                 id="titulo"
-                name="titulo"
                 placeholder="Ex: Apartamento 3 quartos no Centro"
-                defaultValue={imovel?.titulo ?? ""}
-                required
+                {...register("titulo")}
+                aria-invalid={!!errors.titulo}
               />
+              {errors.titulo && (
+                <p className="text-xs text-destructive">{errors.titulo.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo</Label>
-              <Select name="tipo" defaultValue={imovel?.tipo} required>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {opcoesTipo.map((opcao) => (
-                    <SelectItem key={opcao.value} value={opcao.value}>
-                      {opcao.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="tipo">Tipo *</Label>
+              <Controller
+                name="tipo"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full" aria-invalid={!!errors.tipo}>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opcoesTipo.map((opcao) => (
+                        <SelectItem key={opcao.value} value={opcao.value}>
+                          {opcao.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.tipo && (
+                <p className="text-xs text-destructive">{errors.tipo.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="finalidade">Finalidade</Label>
-              <Select
+              <Label htmlFor="finalidade">Finalidade *</Label>
+              <Controller
                 name="finalidade"
-                defaultValue={imovel?.finalidade}
-                required
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione a finalidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {opcoesFinalidade.map((opcao) => (
-                    <SelectItem key={opcao.value} value={opcao.value}>
-                      {opcao.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full" aria-invalid={!!errors.finalidade}>
+                      <SelectValue placeholder="Selecione a finalidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opcoesFinalidade.map((opcao) => (
+                        <SelectItem key={opcao.value} value={opcao.value}>
+                          {opcao.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.finalidade && (
+                <p className="text-xs text-destructive">{errors.finalidade.message}</p>
+              )}
             </div>
 
-            {imovel && (
+            {editando && (
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select
-                  name="status"
-                  defaultValue={imovel.status}
-                >
+                <Select value={statusValue} onValueChange={(v) => v && setStatusValue(v)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
@@ -163,10 +251,9 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="descricao">Descrição</Label>
               <Textarea
                 id="descricao"
-                name="descricao"
                 placeholder="Descreva o imóvel em detalhes..."
                 rows={4}
-                defaultValue={imovel?.descricao ?? ""}
+                {...register("descricao")}
               />
             </div>
           </CardContent>
@@ -182,9 +269,8 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="cep">CEP</Label>
               <Input
                 id="cep"
-                name="cep"
                 placeholder="00000-000"
-                defaultValue={imovel?.cep ?? ""}
+                {...register("cep")}
               />
             </div>
 
@@ -192,9 +278,8 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="logradouro">Logradouro</Label>
               <Input
                 id="logradouro"
-                name="logradouro"
                 placeholder="Rua, Avenida, etc."
-                defaultValue={imovel?.logradouro ?? ""}
+                {...register("logradouro")}
               />
             </div>
 
@@ -202,9 +287,8 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="numero">Número</Label>
               <Input
                 id="numero"
-                name="numero"
                 placeholder="123"
-                defaultValue={imovel?.numero ?? ""}
+                {...register("numero")}
               />
             </div>
 
@@ -212,9 +296,8 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="complemento">Complemento</Label>
               <Input
                 id="complemento"
-                name="complemento"
                 placeholder="Apto 101, Bloco A"
-                defaultValue={imovel?.complemento ?? ""}
+                {...register("complemento")}
               />
             </div>
 
@@ -222,37 +305,47 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="bairro">Bairro</Label>
               <Input
                 id="bairro"
-                name="bairro"
                 placeholder="Centro"
-                defaultValue={imovel?.bairro ?? ""}
+                {...register("bairro")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cidade">Cidade</Label>
+              <Label htmlFor="cidade">Cidade *</Label>
               <Input
                 id="cidade"
-                name="cidade"
                 placeholder="São Paulo"
-                defaultValue={imovel?.cidade ?? ""}
-                required
+                {...register("cidade")}
+                aria-invalid={!!errors.cidade}
               />
+              {errors.cidade && (
+                <p className="text-xs text-destructive">{errors.cidade.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="estado">Estado</Label>
-              <Select name="estado" defaultValue={imovel?.estado} required>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="UF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {estados.map((uf) => (
-                    <SelectItem key={uf} value={uf}>
-                      {uf}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="estado_uf">Estado *</Label>
+              <Controller
+                name="estado"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full" aria-invalid={!!errors.estado}>
+                      <SelectValue placeholder="UF" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {estados.map((uf) => (
+                        <SelectItem key={uf} value={uf}>
+                          {uf}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.estado && (
+                <p className="text-xs text-destructive">{errors.estado.message}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -267,52 +360,64 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="preco_venda">Preço de venda (R$)</Label>
               <Input
                 id="preco_venda"
-                name="preco_venda"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="500000"
-                defaultValue={imovel?.preco_venda ?? ""}
+                {...register("preco_venda")}
+                aria-invalid={!!errors.preco_venda}
               />
+              {errors.preco_venda && (
+                <p className="text-xs text-destructive">{errors.preco_venda.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="preco_aluguel">Aluguel (R$/mês)</Label>
               <Input
                 id="preco_aluguel"
-                name="preco_aluguel"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="2500"
-                defaultValue={imovel?.preco_aluguel ?? ""}
+                {...register("preco_aluguel")}
+                aria-invalid={!!errors.preco_aluguel}
               />
+              {errors.preco_aluguel && (
+                <p className="text-xs text-destructive">{errors.preco_aluguel.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="iptu">IPTU (R$/ano)</Label>
               <Input
                 id="iptu"
-                name="iptu"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="1200"
-                defaultValue={imovel?.iptu ?? ""}
+                {...register("iptu")}
+                aria-invalid={!!errors.iptu}
               />
+              {errors.iptu && (
+                <p className="text-xs text-destructive">{errors.iptu.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="condominio">Condomínio (R$/mês)</Label>
               <Input
                 id="condominio"
-                name="condominio"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="800"
-                defaultValue={imovel?.condominio ?? ""}
+                {...register("condominio")}
+                aria-invalid={!!errors.condominio}
               />
+              {errors.condominio && (
+                <p className="text-xs text-destructive">{errors.condominio.message}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -327,12 +432,11 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="area_total">Área total (m²)</Label>
               <Input
                 id="area_total"
-                name="area_total"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="120"
-                defaultValue={imovel?.area_total ?? ""}
+                {...register("area_total")}
               />
             </div>
 
@@ -340,12 +444,11 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="area_construida">Área construída (m²)</Label>
               <Input
                 id="area_construida"
-                name="area_construida"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="90"
-                defaultValue={imovel?.area_construida ?? ""}
+                {...register("area_construida")}
               />
             </div>
 
@@ -353,11 +456,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="quartos">Quartos</Label>
               <Input
                 id="quartos"
-                name="quartos"
                 type="number"
                 min="0"
                 placeholder="3"
-                defaultValue={imovel?.quartos ?? 0}
+                {...register("quartos")}
               />
             </div>
 
@@ -365,11 +467,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="suites">Suítes</Label>
               <Input
                 id="suites"
-                name="suites"
                 type="number"
                 min="0"
                 placeholder="1"
-                defaultValue={imovel?.suites ?? 0}
+                {...register("suites")}
               />
             </div>
 
@@ -377,11 +478,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="banheiros">Banheiros</Label>
               <Input
                 id="banheiros"
-                name="banheiros"
                 type="number"
                 min="0"
                 placeholder="2"
-                defaultValue={imovel?.banheiros ?? 0}
+                {...register("banheiros")}
               />
             </div>
 
@@ -389,11 +489,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="vagas_garagem">Vagas de garagem</Label>
               <Input
                 id="vagas_garagem"
-                name="vagas_garagem"
                 type="number"
                 min="0"
                 placeholder="2"
-                defaultValue={imovel?.vagas_garagem ?? 0}
+                {...register("vagas_garagem")}
               />
             </div>
 
@@ -401,11 +500,10 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <Label htmlFor="andares">Andares</Label>
               <Input
                 id="andares"
-                name="andares"
                 type="number"
                 min="1"
                 placeholder="Apenas para comercial"
-                defaultValue={imovel?.andares ?? ""}
+                {...register("andares")}
               />
             </div>
           </CardContent>
@@ -419,10 +517,9 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           <CardContent>
             <Textarea
               id="observacoes_internas"
-              name="observacoes_internas"
               placeholder="Notas privadas sobre o imóvel (só visíveis para sua equipe)..."
               rows={3}
-              defaultValue={imovel?.observacoes_internas ?? ""}
+              {...register("observacoes_internas")}
             />
           </CardContent>
         </Card>
@@ -438,9 +535,15 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
               <label className="flex items-center gap-3 cursor-pointer">
-                <Switch
+                <Controller
                   name="publicar_site"
-                  defaultChecked={imovel?.publicar_site ?? true}
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4 text-muted-foreground" />
@@ -451,9 +554,15 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 </div>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
-                <Switch
+                <Controller
                   name="publicar_portais"
-                  defaultChecked={imovel?.publicar_portais ?? true}
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <div className="flex items-center gap-2">
                   <Rss className="h-4 w-4 text-muted-foreground" />

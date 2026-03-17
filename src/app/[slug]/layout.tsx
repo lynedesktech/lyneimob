@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { buscarOrganizacaoPorSlug } from "@/lib/site/buscar-dados-site"
 import { HeaderSite } from "@/components/site/header-site"
 import { FooterSite } from "@/components/site/footer-site"
+import { ProvedorTemaClaro } from "@/components/site/provedor-tema-claro"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
 import type { Metadata } from "next"
 
@@ -47,19 +48,21 @@ export default async function SiteLayout({
   )
 
   return (
-    <div
-      className="flex min-h-screen flex-col bg-background"
-      style={
-        {
-          "--site-primaria": configs.cores.primaria,
-          "--site-destaque": configs.cores.destaque,
-          "--site-hero-fundo": configs.cores.hero_fundo,
-        } as React.CSSProperties
-      }
-    >
-      <HeaderSite organizacao={organizacao} />
-      <main className="flex-1">{children}</main>
-      <FooterSite organizacao={organizacao} />
-    </div>
+    <ProvedorTemaClaro>
+      <div
+        className="flex min-h-screen flex-col bg-background"
+        style={
+          {
+            "--site-primaria": configs.cores.primaria,
+            "--site-destaque": configs.cores.destaque,
+            "--site-hero-fundo": configs.cores.hero_fundo,
+          } as React.CSSProperties
+        }
+      >
+        <HeaderSite organizacao={organizacao} />
+        <main className="flex-1">{children}</main>
+        <FooterSite organizacao={organizacao} />
+      </div>
+    </ProvedorTemaClaro>
   )
 }

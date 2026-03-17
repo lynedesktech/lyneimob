@@ -29,6 +29,8 @@ import {
   LayoutDashboard,
   ArrowRight,
   Loader2,
+  BarChart3,
+  Shield,
 } from "lucide-react"
 
 // ============================================================
@@ -39,12 +41,14 @@ type ContextoBuscaGlobal = {
   aberta: boolean
   abrir: () => void
   fechar: () => void
+  superAdmin: boolean
 }
 
 const BuscaGlobalContext = React.createContext<ContextoBuscaGlobal>({
   aberta: false,
   abrir: () => {},
   fechar: () => {},
+  superAdmin: false,
 })
 
 function useBuscaGlobalContext() {
@@ -55,7 +59,7 @@ function useBuscaGlobalContext() {
 // Provider
 // ============================================================
 
-export function ProvedorBuscaGlobal({ children }: { children: React.ReactNode }) {
+export function ProvedorBuscaGlobal({ children, superAdmin = false }: { children: React.ReactNode; superAdmin?: boolean }) {
   const [aberta, setAberta] = React.useState(false)
 
   React.useEffect(() => {
@@ -74,8 +78,9 @@ export function ProvedorBuscaGlobal({ children }: { children: React.ReactNode })
       aberta,
       abrir: () => setAberta(true),
       fechar: () => setAberta(false),
+      superAdmin,
     }),
-    [aberta]
+    [aberta, superAdmin]
   )
 
   return (
@@ -114,7 +119,7 @@ type AcaoRapida = {
   label: string
   href: string
   icone: React.ReactNode
-  grupo: "criar" | "navegar"
+  grupo: "criar" | "navegar" | "plataforma"
 }
 
 const acoesRapidas: AcaoRapida[] = [
@@ -127,6 +132,12 @@ const acoesRapidas: AcaoRapida[] = [
   { label: "Clientes", href: "/clientes", icone: <Users className="h-4 w-4" />, grupo: "navegar" },
   { label: "Negócios", href: "/negocios", icone: <Handshake className="h-4 w-4" />, grupo: "navegar" },
   { label: "Atividades", href: "/atividades", icone: <CalendarCheck className="h-4 w-4" />, grupo: "navegar" },
+]
+
+const acoesPlataforma: AcaoRapida[] = [
+  { label: "Painel Plataforma", href: "/admin/painel", icone: <BarChart3 className="h-4 w-4" />, grupo: "plataforma" },
+  { label: "Organizações", href: "/admin/organizacoes", icone: <Building2 className="h-4 w-4" />, grupo: "plataforma" },
+  { label: "Config Plataforma", href: "/admin/configuracoes", icone: <Shield className="h-4 w-4" />, grupo: "plataforma" },
 ]
 
 // ============================================================
@@ -147,7 +158,7 @@ type ItemFlat = {
 // ============================================================
 
 export function DialogBuscaGlobal() {
-  const { aberta, fechar } = useBuscaGlobalContext()
+  const { aberta, fechar, superAdmin } = useBuscaGlobalContext()
   const router = useRouter()
   const [termo, setTermo] = React.useState("")
   const [termoDebounced, setTermoDebounced] = React.useState("")
@@ -174,11 +185,17 @@ export function DialogBuscaGlobal() {
 
   const { resultados, carregando } = useBuscaGlobal(termoDebounced)
 
+  // Todas as ações rápidas (incluindo plataforma se super admin)
+  const todasAcoes = React.useMemo(
+    () => (superAdmin ? [...acoesRapidas, ...acoesPlataforma] : acoesRapidas),
+    [superAdmin]
+  )
+
   // Monta lista flat de itens para navegação por teclado
   const itensFlat = React.useMemo<ItemFlat[]>(() => {
     if (termoDebounced.length < 2) {
       // Ações rápidas
-      return acoesRapidas.map((a) => ({
+      return todasAcoes.map((a) => ({
         id: `acao-${a.href}`,
         label: a.label,
         href: a.href,
@@ -283,8 +300,9 @@ export function DialogBuscaGlobal() {
   const buscaAtiva = termoDebounced.length >= 2
 
   // Agrupa ações rápidas para exibição
-  const acoesCriar = acoesRapidas.filter((a) => a.grupo === "criar")
-  const acoesNavegar = acoesRapidas.filter((a) => a.grupo === "navegar")
+  const acoesCriar = todasAcoes.filter((a) => a.grupo === "criar")
+  const acoesNavegar = todasAcoes.filter((a) => a.grupo === "navegar")
+  const acoesAdmin = todasAcoes.filter((a) => a.grupo === "plataforma")
 
   // Monta seções de resultados para cabeçalhos
   const secoes = React.useMemo(() => {
@@ -442,6 +460,37 @@ export function DialogBuscaGlobal() {
                   />
                 )
               })}
+
+              {acoesAdmin.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 px-4 py-1.5 mt-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Plataforma
+                    </span>
+                  </div>
+                  {acoesAdmin.map((acao, i) => {
+                    const indice = acoesCriar.length + acoesNavegar.length + i
+                    return (
+                      <ItemResultado
+                        key={acao.href}
+                        item={{
+                          id: `acao-${acao.href}`,
+                          label: acao.label,
+                          href: acao.href,
+                          icone: acao.icone,
+                        }}
+                        ativo={indice === indiceAtivo}
+                        indice={indice}
+                        onClick={() => {
+                          router.push(acao.href)
+                          fechar()
+                        }}
+                        onMouseEnter={() => { if (!scrollandoRef.current) setIndiceAtivo(indice) }}
+                      />
+                    )
+                  })}
+                </>
+              )}
             </>
           )}
         </div>

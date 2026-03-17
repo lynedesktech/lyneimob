@@ -1,7 +1,7 @@
 "use server"
 
 import { criarClienteServer } from "@/lib/supabase/server"
-import { verificarPermissao } from "@/lib/permissoes"
+import { ehSuperAdmin } from "@/lib/permissoes"
 import {
   criarInstanciaUazapi,
   conectarInstanciaUazapi,
@@ -26,7 +26,7 @@ async function buscarUsuarioLogado() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, organizacao_id, cargo")
+    .select("id, organizacao_id, cargo, super_admin")
     .eq("id", user.id)
     .single()
 
@@ -61,11 +61,9 @@ export async function criarEConectarInstancia(): Promise<
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
 
-  const permissao = verificarPermissao(
-    usuario.cargo as "admin" | "corretor" | "gerente",
-    "gerenciar_integracoes"
-  )
-  if (permissao.erro) return permissao
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode gerenciar instâncias WhatsApp." }
+  }
 
   const credenciais = await buscarCredenciaisAdmin(usuario.organizacao_id)
   if (!credenciais) {
@@ -222,11 +220,9 @@ export async function desconectarInstancia(): Promise<EstadoFormulario> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
 
-  const permissao = verificarPermissao(
-    usuario.cargo as "admin" | "corretor" | "gerente",
-    "gerenciar_integracoes"
-  )
-  if (permissao.erro) return permissao
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode gerenciar instâncias WhatsApp." }
+  }
 
   const credenciais = await buscarCredenciaisAdmin(usuario.organizacao_id)
   if (!credenciais) return { erro: "Credenciais Uazapi não configuradas" }

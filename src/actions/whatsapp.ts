@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { verificarPermissao } from "@/lib/permissoes"
+import { verificarPermissao, ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfigWhatsapp } from "@/types/whatsapp"
 import type { StatusConversa } from "@/types/whatsapp"
 import type { EstadoFormulario } from "@/types/formulario"
@@ -22,7 +22,7 @@ async function buscarUsuarioLogado() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, organizacao_id, cargo")
+    .select("id, organizacao_id, cargo, super_admin")
     .eq("id", user.id)
     .single()
 
@@ -155,9 +155,8 @@ export async function salvarConfigWhatsapp(
     return { erro: "Usuário não autenticado" }
   }
 
-  const permissao = verificarPermissao(usuario.cargo as "admin" | "corretor" | "gerente", "gerenciar_integracoes")
-  if (permissao.erro) {
-    return permissao
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode alterar configurações do WhatsApp." }
   }
 
   const supabase = await criarClienteServer()

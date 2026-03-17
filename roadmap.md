@@ -28,6 +28,8 @@
       Depende de: Stripe configurado
 - [ ] Deploy na Vercel
       Contexto: conectar GitHub, env vars, build de produção, webhook Stripe para URL final
+- [ ] Adoção 100% shadcn/ui — redesign do dashboard
+      Contexto: substituir sidebar azul pesado por padrão shadcn (cinza claro + acentos), instalar componentes faltantes (Field, Breadcrumb, Command, etc), configurar Skills + MCP Server. Pesquisa feita em planejamento/pesquisas/pesquisa-shadcn-ui.md — próximo passo é /requisitos
 
 ---
 
@@ -35,10 +37,13 @@
 
 > Tarefas concluídas pelo Claude que aguardam sua validação manual.
 
+- [ ] Corrigir formulários: perda de dados ao dar erro de validação + campo obrigatório sem borda vermelha
+      O que foi feito: migrou os 4 formulários (atividade, negócio, cliente, imóvel) para React Hook Form + Zod. Agora os campos são controlados (nunca perdem dados ao re-renderizar), validação roda no client antes de enviar ao servidor, e campos com erro ficam com borda vermelha + mensagem explicativa.
+      O que testar: (1) abrir qualquer formulário de criação (negócio, cliente, imóvel, atividade), (2) preencher quase tudo mas deixar um campo obrigatório vazio, (3) clicar em Criar → campo com erro deve ficar com borda vermelha e mensagem abaixo, e os outros campos devem manter seus valores, (4) preencher o campo faltante e submeter → deve funcionar normalmente, (5) testar modo edição também
 - [ ] Implementar cargo Super Admin (dono do SaaS)
-      O que foi feito: migration 020 aplicada (campo super_admin boolean), 3 páginas /admin/* criadas (painel, organizações, configurações), sidebar com grupo "Plataforma" condicional, /configuracoes separada (super_admin → chaves API, admin org → dados da imobiliária), server actions protegidas com guard super_admin
-      O que testar: (1) marcar seu usuário como super_admin no banco, (2) logar → sidebar mostra grupo "Plataforma", (3) /admin/painel → métricas globais, (4) /admin/organizacoes → tabela com todas as orgs, (5) /admin/configuracoes → chaves de API, (6) logar com admin normal → NÃO vê grupo Plataforma, (7) admin normal em /configuracoes → vê dados da imobiliária (nome, telefone, CRECI, etc)
-      Pendente: criar conta superadmin@lyneimob.com ou marcar admin@lyneimob.com como super_admin (UPDATE usuarios SET super_admin = true WHERE email = 'admin@lyneimob.com')
+      O que foi feito: migration 020 aplicada (campo super_admin boolean), 3 páginas /admin/* criadas (painel, organizações, configurações), sidebar com grupo "Plataforma" condicional, /configuracoes separada (super_admin → chaves API, admin org → dados da imobiliária), server actions protegidas com guard super_admin. Conta superadmin@lyneimob.com criada (senha: Lyneimob@2026).
+      Auditoria de segurança: actions WhatsApp (whatsapp.ts e instancia-whatsapp.ts) corrigidas — agora exigem ehSuperAdmin() em vez de gerenciar_integracoes. Nova permissão "gerenciar_organizacao" criada para separar config da org de config de integrações.
+      O que testar: (1) logar com superadmin@lyneimob.com → sidebar mostra grupo "Plataforma", (2) /admin/painel → métricas globais, (3) /admin/organizacoes → tabela com todas as orgs, (4) /admin/configuracoes → chaves de API, (5) logar com admin normal → NÃO vê grupo Plataforma, (6) admin normal em /configuracoes → vê dados da imobiliária (nome, telefone, CRECI, etc), (7) admin normal NÃO consegue salvar config WhatsApp nem criar instância
 - [ ] Remover separadores da sidebar + criar página Meu Perfil + corrigir erro menu usuário
       O que testar: (1) sidebar light e dark — sem linhas separadoras entre grupos, (2) clicar no usuário no rodapé da sidebar → menu abre, (3) clicar "Meu perfil" → abre /meu-perfil com seus dados, (4) editar nome/telefone/creci → salvar → toast de sucesso
       Nota sobre erro produção: o build compila limpo — o erro client-side em produção provavelmente é do deploy anterior. Deploy atualizado deve resolver.

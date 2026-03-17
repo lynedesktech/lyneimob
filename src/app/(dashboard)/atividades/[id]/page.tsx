@@ -99,7 +99,7 @@ export default async function DetalheAtividadePage({ params }: Props) {
           <ConfirmacaoExclusao
               titulo="Excluir atividade"
               descricao={`Tem certeza que deseja excluir a atividade "${a.titulo}"? Esta ação não pode ser desfeita.`}
-              onConfirmar={() => excluirAtividade(a.id)}
+              onConfirmar={excluirAtividade.bind(null, a.id)}
               tamanho="sm"
             />
         </div>

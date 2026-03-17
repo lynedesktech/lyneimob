@@ -83,7 +83,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
           <ConfirmacaoExclusao
               titulo="Excluir negócio"
               descricao={`Tem certeza que deseja excluir o negócio "${n.titulo}"? Esta ação não pode ser desfeita.`}
-              onConfirmar={() => excluirNegocio(n.id)}
+              onConfirmar={excluirNegocio.bind(null, n.id)}
               tamanho="sm"
             />
         </div>

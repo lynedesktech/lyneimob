@@ -12,9 +12,7 @@ export const schemaCriarCliente = z.object({
   tipo: z.enum(["comprador", "vendedor", "locatario", "proprietario"], {
     message: "Selecione o tipo do cliente",
   }),
-  origem: z
-    .enum(["indicacao", "portal", "site", "whatsapp", "outro"])
-    .default("outro"),
+  origem: z.enum(["indicacao", "portal", "site", "whatsapp", "outro"]),
   observacoes: z.string().optional(),
 })
 

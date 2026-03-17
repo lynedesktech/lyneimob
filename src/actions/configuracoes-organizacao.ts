@@ -61,7 +61,7 @@ export async function salvarConfiguracoesOrganizacao(
 
   const permissao = verificarPermissao(
     usuario.cargo as "admin" | "corretor" | "gerente",
-    "gerenciar_integracoes"
+    "gerenciar_organizacao"
   )
   if (permissao.erro) {
     return permissao

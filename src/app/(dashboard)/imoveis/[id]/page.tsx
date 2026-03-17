@@ -95,7 +95,7 @@ export default async function DetalheImovelPage({
           <ConfirmacaoExclusao
               titulo="Excluir imóvel"
               descricao="Tem certeza que deseja excluir este imóvel? Todas as fotos e dados serão removidos permanentemente. Esta ação não pode ser desfeita."
-              onConfirmar={() => excluirImovel(id)}
+              onConfirmar={excluirImovel.bind(null, id)}
             />
         </div>
       </div>

@@ -1,6 +1,8 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { criarNegocio, atualizarNegocio } from "@/actions/negocios"
 import { Button } from "@/components/ui/button"
@@ -17,6 +19,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { labelsTipoNegocio } from "@/lib/constantes"
 import { criarClienteBrowser } from "@/lib/supabase/client"
+import { schemaCriarNegocio } from "@/types/negocios"
+import type { CriarNegocioInput } from "@/types/negocios"
 import type { NegocioComRelacoes, PipelineEtapa } from "@/types/database"
 
 interface FormularioNegocioProps {
@@ -29,6 +33,26 @@ type ImovelSimples = { id: string; titulo: string; codigo: string }
 export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const editando = !!negocio
   const action = editando ? atualizarNegocio : criarNegocio
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<CriarNegocioInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schemaCriarNegocio) as any,
+    defaultValues: {
+      titulo: negocio?.titulo || "",
+      tipo: (negocio?.tipo || "") as CriarNegocioInput["tipo"],
+      valor: negocio?.valor ?? undefined,
+      etapa_id: negocio?.etapa_id || "",
+      cliente_id: negocio?.cliente_id || "",
+      imovel_id: negocio?.imovel_id || "",
+      previsao_fechamento: negocio?.previsao_fechamento || "",
+      observacoes: negocio?.observacoes || "",
+    },
+  })
 
   const [estado, formAction, pendente] = useActionState(action, {})
   const [clientes, setClientes] = useState<ClienteSimples[]>([])
@@ -70,10 +94,22 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
     if (estado.erro) toast.error(estado.erro)
   }, [estado])
 
-  return (
-    <form action={formAction} className="space-y-6">
-      {editando && <input type="hidden" name="id" value={negocio.id} />}
+  function onSubmit(dados: CriarNegocioInput) {
+    const formData = new FormData()
+    if (editando) formData.set("id", negocio.id)
+    formData.set("titulo", dados.titulo)
+    formData.set("tipo", dados.tipo)
+    formData.set("cliente_id", dados.cliente_id)
+    formData.set("etapa_id", dados.etapa_id)
+    if (dados.imovel_id) formData.set("imovel_id", dados.imovel_id)
+    if (dados.valor !== undefined) formData.set("valor", String(dados.valor))
+    if (dados.previsao_fechamento) formData.set("previsao_fechamento", dados.previsao_fechamento)
+    if (dados.observacoes) formData.set("observacoes", dados.observacoes)
+    formAction(formData)
+  }
 
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Dados do negócio */}
       <Card>
         <CardHeader>
@@ -85,67 +121,86 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
               <Label htmlFor="titulo">Título *</Label>
               <Input
                 id="titulo"
-                name="titulo"
                 placeholder="Ex: Venda apto 3Q - João Silva"
-                defaultValue={negocio?.titulo}
-                required
+                {...register("titulo")}
+                aria-invalid={!!errors.titulo}
               />
+              {errors.titulo && (
+                <p className="text-xs text-destructive">{errors.titulo.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="tipo">Tipo *</Label>
-              <Select name="tipo" defaultValue={negocio?.tipo || ""}>
-                <SelectTrigger id="tipo">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(labelsTipoNegocio).map(([valor, label]) => (
-                    <SelectItem key={valor} value={valor}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="tipo"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="tipo" aria-invalid={!!errors.tipo}>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(labelsTipoNegocio).map(([valor, label]) => (
+                        <SelectItem key={valor} value={valor}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.tipo && (
+                <p className="text-xs text-destructive">{errors.tipo.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="valor">Valor (R$)</Label>
               <Input
                 id="valor"
-                name="valor"
                 type="number"
                 step="0.01"
                 placeholder="0,00"
-                defaultValue={negocio?.valor || ""}
+                {...register("valor")}
+                aria-invalid={!!errors.valor}
               />
+              {errors.valor && (
+                <p className="text-xs text-destructive">{errors.valor.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="etapa_id">Etapa do Pipeline *</Label>
-              <Select
+              <Controller
                 name="etapa_id"
-                defaultValue={negocio?.etapa_id || ""}
-              >
-                <SelectTrigger id="etapa_id">
-                  <SelectValue placeholder="Selecione a etapa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {etapas.map((etapa) => (
-                    <SelectItem key={etapa.id} value={etapa.id}>
-                      {etapa.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="etapa_id" aria-invalid={!!errors.etapa_id}>
+                      <SelectValue placeholder="Selecione a etapa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {etapas.map((etapa) => (
+                        <SelectItem key={etapa.id} value={etapa.id}>
+                          {etapa.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.etapa_id && (
+                <p className="text-xs text-destructive">{errors.etapa_id.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="previsao_fechamento">Previsão de Fechamento</Label>
               <Input
                 id="previsao_fechamento"
-                name="previsao_fechamento"
                 type="date"
-                defaultValue={negocio?.previsao_fechamento || ""}
+                {...register("previsao_fechamento")}
               />
             </div>
           </div>
@@ -161,40 +216,49 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="cliente_id">Cliente *</Label>
-              <Select
+              <Controller
                 name="cliente_id"
-                defaultValue={negocio?.cliente_id || ""}
-              >
-                <SelectTrigger id="cliente_id">
-                  <SelectValue placeholder="Selecione um cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((cliente) => (
-                    <SelectItem key={cliente.id} value={cliente.id}>
-                      {cliente.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="cliente_id" aria-invalid={!!errors.cliente_id}>
+                      <SelectValue placeholder="Selecione um cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientes.map((cliente) => (
+                        <SelectItem key={cliente.id} value={cliente.id}>
+                          {cliente.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.cliente_id && (
+                <p className="text-xs text-destructive">{errors.cliente_id.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="imovel_id">Imóvel (opcional)</Label>
-              <Select
+              <Controller
                 name="imovel_id"
-                defaultValue={negocio?.imovel_id || ""}
-              >
-                <SelectTrigger id="imovel_id">
-                  <SelectValue placeholder="Selecione um imóvel" />
-                </SelectTrigger>
-                <SelectContent>
-                  {imoveis.map((imovel) => (
-                    <SelectItem key={imovel.id} value={imovel.id}>
-                      {imovel.codigo} — {imovel.titulo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="imovel_id">
+                      <SelectValue placeholder="Selecione um imóvel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {imoveis.map((imovel) => (
+                        <SelectItem key={imovel.id} value={imovel.id}>
+                          {imovel.codigo} — {imovel.titulo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
         </CardContent>
@@ -207,10 +271,9 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
         </CardHeader>
         <CardContent>
           <Textarea
-            name="observacoes"
             placeholder="Anotações internas sobre o negócio..."
             rows={4}
-            defaultValue={negocio?.observacoes || ""}
+            {...register("observacoes")}
           />
         </CardContent>
       </Card>

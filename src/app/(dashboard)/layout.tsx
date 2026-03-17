@@ -49,7 +49,7 @@ export default async function DashboardLayout({
   return (
     <Providers>
       <ProvedorOnboarding>
-        <ProvedorBuscaGlobal>
+        <ProvedorBuscaGlobal superAdmin={usuario.super_admin === true}>
           <TooltipProvider>
             <SidebarProvider>
               <AppSidebar usuario={usuario} organizacao={organizacao} />

@@ -280,7 +280,20 @@
       "Bash(grep -r \"from-\\\\|to-\\\\|via-\" c:UsersLynedeskDesktopTechLyneImobsrc --include=*.tsx --include=*.ts --include=*.jsx --include=*.js)",
       "Bash(grep -r \"023373\\\\|3b82f6\\\\|01245a\\\\|011a42\" c:UsersLynedeskDesktopTechLyneImob --include=*.tsx --include=*.ts --include=*.json --include=*.html)",
       "mcp__supabase__get_logs",
-      "Bash(find c:UsersLynedeskDesktopTechLyneImobsrccomponents -name *alternador* -o -name *theme*)"
+      "Bash(find c:UsersLynedeskDesktopTechLyneImobsrccomponents -name *alternador* -o -name *theme*)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(rm -rf .next)",
+      "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/admin/\")",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/*.js /c/Users/Lynedesk/Desktop/Tech/LyneImob/*.ts)",
+      "Bash(taskkill /F /PID 24420 /PID 22864 /PID 14912)",
+      "Bash(cmd //c 'rmdir /s /q .next')",
+      "Bash(taskkill /F /PID 9048)",
+      "Bash(grep -rn \"grad-start\\\\|grad-mid\\\\|grad-end\\\\|#0A5\\\\|#063\\\\|#011\\\\|#2B8\\\\|oklch\\(0\\\\.4[0-9]\\\\|oklch\\(0\\\\.3[0-9]\\\\|oklch\\(0\\\\.2[0-9]\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src --include=*.tsx --include=*.ts)",
+      "Bash(grep -rn sidebar /c/Users/Lynedesk/Desktop/Tech/LyneImob/src --include=*.tsx --include=*.ts)",
+      "Bash(git diff:*)",
+      "Bash(cat src/app/\\\\\\(dashboard\\\\\\)/admin/layout.tsx)",
+      "Bash(tasklist)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3001)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

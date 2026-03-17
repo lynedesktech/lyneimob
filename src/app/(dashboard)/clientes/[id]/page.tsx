@@ -90,7 +90,7 @@ export default async function DetalheClientePage({
           <ConfirmacaoExclusao
               titulo="Excluir cliente"
               descricao="Tem certeza que deseja excluir este cliente? Todos os interesses, interações e dados serão perdidos. Esta ação não pode ser desfeita."
-              onConfirmar={() => excluirCliente(id)}
+              onConfirmar={excluirCliente.bind(null, id)}
             />
         </div>
       </div>

@@ -47,4 +47,7 @@ Agente IA.json
 # configuracoes locais
 .claude/settings.local.json
 
+# playwright mcp (logs de debug)
+.playwright-mcp/
+
 .vercel
