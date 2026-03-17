@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StatusBadge, configStatusCliente } from "@/components/ui/status-badge"
+import { StatusBadge, configStatusCliente, configStatusNegocio } from "@/components/ui/status-badge"
 import { ScoreBadge } from "@/components/clientes/score-badge"
 import { InteressesCliente } from "@/components/clientes/interesses-cliente"
 import { TimelineInteracoes } from "@/components/clientes/timeline-interacoes"
@@ -26,8 +26,11 @@ import {
   User,
   FileText,
   Sparkles,
+  Handshake,
+  ExternalLink,
 } from "lucide-react"
-import { labelsTipoCliente, labelsOrigem } from "@/lib/constantes"
+import { labelsTipoCliente, labelsOrigem, labelsTipoNegocio } from "@/lib/constantes"
+import { formatarPreco } from "@/lib/formatadores"
 
 type Params = Promise<{ id: string }>
 
@@ -41,7 +44,7 @@ export default async function DetalheClientePage({
 
   const { data: cliente } = await supabase
     .from("clientes")
-    .select("*, cliente_interesses(*), cliente_interacoes(*, usuarios(nome))")
+    .select("*, cliente_interesses(*), cliente_interacoes(*, usuarios(nome)), negocios(id, titulo, valor, status, tipo, created_at)")
     .eq("id", id)
     .order("data", { referencedTable: "cliente_interacoes", ascending: false })
     .single()
@@ -100,7 +103,10 @@ export default async function DetalheClientePage({
         <TabsList>
           <TabsTrigger value="informacoes">Informações</TabsTrigger>
           <TabsTrigger value="interesses">
-            Interesses ({cliente.cliente_interesses?.length ?? 0})
+            Preferências ({cliente.cliente_interesses?.length ?? 0})
+          </TabsTrigger>
+          <TabsTrigger value="negocios">
+            Negócios ({(cliente as { negocios?: unknown[] }).negocios?.length ?? 0})
           </TabsTrigger>
           <TabsTrigger value="timeline">
             Timeline ({cliente.cliente_interacoes?.length ?? 0})
@@ -241,12 +247,57 @@ export default async function DetalheClientePage({
           </div>
         </TabsContent>
 
-        {/* Tab Interesses */}
+        {/* Tab Preferências de Imóvel */}
         <TabsContent value="interesses">
           <InteressesCliente
             clienteId={id}
             interesses={cliente.cliente_interesses ?? []}
           />
+        </TabsContent>
+
+        {/* Tab Negócios do Cliente */}
+        <TabsContent value="negocios">
+          {(() => {
+            const negocios = (cliente as { negocios?: { id: string; titulo: string; valor: number | null; status: string; tipo: string }[] }).negocios ?? []
+            if (negocios.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
+                  <Handshake className="mb-4 h-10 w-10 text-muted-foreground" />
+                  <h3 className="text-base font-medium">Nenhum negócio</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Este cliente ainda não tem negócios vinculados.
+                  </p>
+                  <Button className="mt-4" render={<Link href={`/negocios/novo`} />}>
+                    Criar negócio
+                  </Button>
+                </div>
+              )
+            }
+            return (
+              <div className="space-y-2">
+                {negocios.map((neg) => (
+                  <div
+                    key={neg.id}
+                    className="flex items-center justify-between rounded-lg border bg-card p-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <StatusBadge status={neg.status} config={configStatusNegocio} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{neg.titulo}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {labelsTipoNegocio[neg.tipo as keyof typeof labelsTipoNegocio] ?? neg.tipo}
+                          {neg.valor ? ` · ${formatarPreco(neg.valor)}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" render={<Link href={`/negocios/${neg.id}`} />}>
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
         </TabsContent>
 
         {/* Tab Timeline */}

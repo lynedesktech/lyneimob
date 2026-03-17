@@ -14,6 +14,8 @@ import {
   DollarSign,
   ArrowLeft,
   MessageCircle,
+  UserCheck,
+  FileText,
 } from "lucide-react"
 import { labelsTipoNegocio } from "@/lib/constantes"
 import { formatarPreco, formatarData } from "@/lib/formatadores"
@@ -61,7 +63,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
             </Button>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{n.titulo}</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={n.status} config={configStatusNegocio} />
             {n.pipeline_etapas && (
               <Badge variant="outline" style={{ borderColor: n.pipeline_etapas.cor }}>
@@ -81,11 +83,11 @@ export default async function DetalheNegocioPage({ params }: Props) {
             Editar
           </Button>
           <ConfirmacaoExclusao
-              titulo="Excluir negócio"
-              descricao={`Tem certeza que deseja excluir o negócio "${n.titulo}"? Esta ação não pode ser desfeita.`}
-              onConfirmar={excluirNegocio.bind(null, n.id)}
-              tamanho="sm"
-            />
+            titulo="Excluir negócio"
+            descricao={`Tem certeza que deseja excluir o negócio "${n.titulo}"? Esta ação não pode ser desfeita.`}
+            onConfirmar={excluirNegocio.bind(null, n.id)}
+            tamanho="sm"
+          />
         </div>
       </div>
 
@@ -96,178 +98,212 @@ export default async function DetalheNegocioPage({ params }: Props) {
           <TabsTrigger value="ia">IA</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="informacoes" className="space-y-4">
-          {/* Cards de resumo */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardContent className="flex items-center gap-3 p-4">
-                <DollarSign className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Valor</p>
-                  <p className="text-lg font-bold">{formatarPreco(n.valor)}</p>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Tab Informações — layout 2 colunas */}
+        <TabsContent value="informacoes">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
 
-            <Card>
-              <CardContent className="flex items-center gap-3 p-4">
-                <User className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Cliente</p>
-                  {n.clientes ? (
-                    <Link
-                      href={`/clientes/${n.clientes.id}`}
-                      className="text-sm font-medium hover:underline"
+            {/* Coluna principal (esquerda) */}
+            <div className="space-y-4 lg:col-span-2">
+
+              {/* Sugestão de próxima ação (apenas negócios abertos) */}
+              {n.status === "aberto" && (
+                <CardSugestaoAcao
+                  negocioId={n.id}
+                  sugestaoIA={n.sugestao_ia}
+                  sugestaoResumo={n.sugestao_ia_resumo}
+                />
+              )}
+
+              {/* Detalhes */}
+              {(n.observacoes || n.motivo_perda) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <FileText className="h-4 w-4" />
+                      Detalhes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm">
+                    {n.observacoes && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Observações</p>
+                        <p className="mt-1 whitespace-pre-wrap">{n.observacoes}</p>
+                      </div>
+                    )}
+                    {n.motivo_perda && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Motivo da perda</p>
+                        <p className="mt-1 text-destructive">{n.motivo_perda}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Conversa WhatsApp vinculada */}
+              {conversaWhatsapp && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <MessageCircle className="h-4 w-4 text-success" />
+                      Conversa WhatsApp
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Contato</span>
+                      <span>{conversaWhatsapp.nome_cliente || conversaWhatsapp.numero_cliente}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status</span>
+                      <Badge variant="outline">{conversaWhatsapp.status.replace("_", " ")}</Badge>
+                    </div>
+                    {conversaWhatsapp.resumo_ia && (
+                      <>
+                        <Separator />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Resumo da IA</p>
+                          <p className="mt-1 text-muted-foreground/80">{conversaWhatsapp.resumo_ia}</p>
+                        </div>
+                      </>
+                    )}
+                    <Separator />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      render={<Link href={`/conversas/${conversaWhatsapp.id}`} />}
                     >
-                      {n.clientes.nome}
-                    </Link>
-                  ) : (
-                    <p className="text-sm">—</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Ver conversa completa
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
-            <Card>
-              <CardContent className="flex items-center gap-3 p-4">
-                <Building2 className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Imóvel</p>
-                  {n.imoveis ? (
+              {/* Estado vazio quando não há observações nem WhatsApp */}
+              {!n.observacoes && !n.motivo_perda && !conversaWhatsapp && n.status !== "aberto" && (
+                <Card>
+                  <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhuma informação adicional registrada.
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Sidebar (direita) */}
+            <div className="space-y-4">
+
+              {/* Card Valor */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <DollarSign className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Valor</p>
+                      <p className="text-xl font-bold">{formatarPreco(n.valor)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card Pessoas */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <User className="h-4 w-4" />
+                    Pessoas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Cliente</p>
+                    {n.clientes ? (
+                      <Link
+                        href={`/clientes/${n.clientes.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {n.clientes.nome}
+                      </Link>
+                    ) : (
+                      <p className="text-muted-foreground">—</p>
+                    )}
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Corretor</p>
+                    <div className="flex items-center gap-1.5">
+                      <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="font-medium">{n.usuarios?.nome || "—"}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card Imóvel */}
+              {n.imoveis && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <Building2 className="h-4 w-4" />
+                      Imóvel vinculado
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
                     <Link
                       href={`/imoveis/${n.imoveis.id}`}
-                      className="text-sm font-medium hover:underline"
+                      className="font-medium hover:underline"
                     >
-                      {n.imoveis.codigo}
+                      {n.imoveis.codigo} — {n.imoveis.titulo}
                     </Link>
-                  ) : (
-                    <p className="text-sm">Não vinculado</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center gap-3 p-4">
-                <Calendar className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Previsão</p>
-                  <p className="text-sm font-medium">
-                    {formatarData(n.previsao_fechamento)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sugestão de próxima ação (apenas negócios abertos) */}
-          {n.status === "aberto" && (
-            <CardSugestaoAcao
-              negocioId={n.id}
-              sugestaoIA={n.sugestao_ia}
-              sugestaoResumo={n.sugestao_ia_resumo}
-            />
-          )}
-
-          {/* Detalhes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Detalhes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Corretor</span>
-                <span>{n.usuarios?.nome || "—"}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Criado em</span>
-                <span>{formatarData(n.created_at)}</span>
-              </div>
-              {n.data_ganho && (
-                <>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Data do ganho</span>
-                    <span className="text-success font-medium">
-                      {formatarData(n.data_ganho)}
-                    </span>
-                  </div>
-                </>
+                  </CardContent>
+                </Card>
               )}
-              {n.data_perda && (
-                <>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Data da perda</span>
-                    <span className="text-destructive font-medium">
-                      {formatarData(n.data_perda)}
-                    </span>
-                  </div>
-                </>
-              )}
-              {n.motivo_perda && (
-                <>
-                  <Separator />
-                  <div>
-                    <span className="text-muted-foreground">Motivo da perda</span>
-                    <p className="mt-1">{n.motivo_perda}</p>
-                  </div>
-                </>
-              )}
-              {n.observacoes && (
-                <>
-                  <Separator />
-                  <div>
-                    <span className="text-muted-foreground">Observações</span>
-                    <p className="mt-1 whitespace-pre-wrap">{n.observacoes}</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Conversa WhatsApp vinculada */}
-          {conversaWhatsapp && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-success" />
-                  Conversa WhatsApp
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Contato</span>
-                  <span>{conversaWhatsapp.nome_cliente || conversaWhatsapp.numero_cliente}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <Badge variant="outline">{conversaWhatsapp.status.replace("_", " ")}</Badge>
-                </div>
-                {conversaWhatsapp.resumo_ia && (
-                  <>
-                    <Separator />
+              {/* Card Datas */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                    <Calendar className="h-4 w-4" />
+                    Datas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  {n.previsao_fechamento && (
                     <div>
-                      <span className="text-muted-foreground">Resumo da IA</span>
-                      <p className="mt-1 text-muted-foreground/80">{conversaWhatsapp.resumo_ia}</p>
+                      <p className="text-xs text-muted-foreground">Previsão de fechamento</p>
+                      <p className="font-medium">{formatarData(n.previsao_fechamento)}</p>
                     </div>
-                  </>
-                )}
-                <Separator />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  render={<Link href={`/conversas/${conversaWhatsapp.id}`} />}
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Ver conversa completa
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+                  )}
+                  <div>
+                    <p className="text-xs text-muted-foreground">Criado em</p>
+                    <p className="font-medium">{formatarData(n.created_at)}</p>
+                  </div>
+                  {n.data_ganho && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Data do ganho</p>
+                        <p className="font-medium text-success">{formatarData(n.data_ganho)}</p>
+                      </div>
+                    </>
+                  )}
+                  {n.data_perda && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Data da perda</p>
+                        <p className="font-medium text-destructive">{formatarData(n.data_perda)}</p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="ia">

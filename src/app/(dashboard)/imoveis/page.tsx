@@ -65,9 +65,6 @@ export default async function ImoveisPage({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Imóveis</h1>
-          <p className="text-muted-foreground">
-            {total} {total === 1 ? "imóvel encontrado" : "imóveis encontrados"}
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <ToggleVisualizacao />
@@ -100,7 +97,7 @@ export default async function ImoveisPage({
       {imoveis && imoveis.length > 0 ? (
         <>
           {modoVisualizacao === "lista" ? (
-            <TabelaImoveis imoveis={imoveis} />
+            <TabelaImoveis imoveis={imoveis} total={total} />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {imoveis.map((imovel) => (

@@ -27,8 +27,8 @@ export function SecaoHero() {
           {/* Badge */}
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium text-white/90 backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
             </span>
             Plataforma de gestão imobiliária com IA
           </div>
@@ -36,7 +36,7 @@ export function SecaoHero() {
           {/* Headline */}
           <h1 className="text-4xl leading-tight font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
             Venda mais imóveis com{" "}
-            <span className="bg-gradient-to-r from-accent-blue to-cyan-300 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent-blue to-white/80 bg-clip-text text-transparent">
               IA que trabalha por você
             </span>
           </h1>

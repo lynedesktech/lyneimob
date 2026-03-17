@@ -51,7 +51,7 @@ const labelsFinalidade: Record<string, string> = {
   venda_aluguel: "Venda e Aluguel",
 }
 
-export function TabelaImoveis({ imoveis }: { imoveis: ImovelComCapa[] }) {
+export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelComCapa[]; total?: number }) {
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [colunas, setColunas] = useState<ColunasVisiveis>(colunasPadrao)
 
@@ -83,7 +83,10 @@ export function TabelaImoveis({ imoveis }: { imoveis: ImovelComCapa[] }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {total} {total === 1 ? "imóvel encontrado" : "imóveis encontrados"}
+        </p>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

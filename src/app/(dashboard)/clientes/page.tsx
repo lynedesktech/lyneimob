@@ -57,9 +57,6 @@ export default async function ClientesPage({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground">
-            {total} {total === 1 ? "cliente encontrado" : "clientes encontrados"}
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <ToggleVisualizacao />
@@ -85,7 +82,7 @@ export default async function ClientesPage({
       {clientes && clientes.length > 0 ? (
         <>
           {modoVisualizacao === "lista" ? (
-            <TabelaClientes clientes={clientes} />
+            <TabelaClientes clientes={clientes} total={total} />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {clientes.map((cliente) => (

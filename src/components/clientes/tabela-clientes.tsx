@@ -43,7 +43,7 @@ const colunasPadrao: ColunasVisiveis = {
   cadastro: true,
 }
 
-export function TabelaClientes({ clientes }: { clientes: Cliente[] }) {
+export function TabelaClientes({ clientes, total = 0 }: { clientes: Cliente[]; total?: number }) {
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [colunas, setColunas] = useState<ColunasVisiveis>(colunasPadrao)
 
@@ -75,7 +75,10 @@ export function TabelaClientes({ clientes }: { clientes: Cliente[] }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {total} {total === 1 ? "cliente encontrado" : "clientes encontrados"}
+        </p>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

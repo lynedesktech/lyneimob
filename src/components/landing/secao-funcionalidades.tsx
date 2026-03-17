@@ -13,42 +13,42 @@ const funcionalidades = [
     titulo: "Gestão completa",
     descricao:
       "Gerencie imóveis, clientes, negócios e atividades em um só lugar. Tudo organizado pra você focar no que importa: vender.",
-    cor: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400",
+    cor: "bg-primary/10 text-primary",
   },
   {
     icone: Sparkles,
     titulo: "IA em todos os módulos",
     descricao:
       "Descrições de imóveis, análise de perfil de clientes, sugestões de ação em negócios — a IA trabalha junto com você.",
-    cor: "bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
+    cor: "bg-accent-blue/10 text-accent-blue",
   },
   {
     icone: KanbanSquare,
     titulo: "Pipeline visual",
     descricao:
       "Acompanhe seus negócios em um Kanban intuitivo com drag-and-drop. Veja onde cada venda está e o que fazer pra avançar.",
-    cor: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+    cor: "bg-success/10 text-success",
   },
   {
     icone: MessageCircle,
     titulo: "Agente SDR por WhatsApp",
     descricao:
       "Um agente de IA que responde seus leads 24/7 pelo WhatsApp, qualifica e agenda visitas automaticamente.",
-    cor: "bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400",
+    cor: "bg-success/10 text-success",
   },
   {
     icone: Globe,
     titulo: "Site público personalizado",
     descricao:
       "Seu site de imóveis pronto em minutos. Personalize cores, logo, sobre nós — sem precisar de desenvolvedor.",
-    cor: "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400",
+    cor: "bg-warning/10 text-warning",
   },
   {
     icone: Link2,
     titulo: "Integração com portais",
     descricao:
       "Feed XML automático para portais como ZAP, OLX e VivaReal. Receba leads diretamente na plataforma por webhook.",
-    cor: "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400",
+    cor: "bg-info/10 text-info",
   },
 ]
 
