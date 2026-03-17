@@ -190,7 +190,7 @@ export type ClienteCompleto = Cliente & {
 // Pipeline / Negócios
 // ============================================================
 
-export type TipoEtapa = "normal" | "ganho" | "perdido"
+export type TipoEtapa = "normal" | "ganho" | "perdido" | "pre_atendimento_ia"
 
 export type StatusNegocio = "aberto" | "ganho" | "perdido"
 
