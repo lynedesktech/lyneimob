@@ -49,5 +49,3 @@ Agente IA.json
 
 # playwright mcp (logs de debug)
 .playwright-mcp/
-
-.vercel
