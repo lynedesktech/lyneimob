@@ -53,6 +53,7 @@ _(nenhum item aguardando validação)_
 
 > Histórico completo de entregas auditadas e aprovadas.
 
+- [x] Auditoria estrutural + limpeza completa — eliminar .agent/ e .agents/ (symlink resolvido), unificar CLAUDE.md (3→1), consolidar toggle-visualizacao (3→1), renumerar migrations (022-025), dividir tools-sdr.ts e importador-imoveis.tsx em módulos menores, remover PNGs/SVGs/pesquisas/requisitos não utilizados (2026-03-17)
 - [x] Agente WhatsApp v4 — Consciência de canal (multi-canal) — migration 024, webhook detecta portal/site por telefone, IA recebe canal e imóvel de interesse, PASSO -1 com modos LEAD_QUENTE/LEAD_MORNO/LEAD_FRIO (2026-03-17)
 - [x] Agente WhatsApp v3 — Prompt algorítmico + ferramentas renomeadas — prompt com árvore de decisão (PASSO 0–5), 3 cenários (PRIMEIRA_RESPOSTA / EM_ANDAMENTO / REATIVACAO), ferramentas `atualizar_cliente` e `atualizar_negocio` (2026-03-17)
 - [x] Agente WhatsApp v2 — Regras de negócio + comportamento da IA — gate de etapa (só atende em pré-atendimento IA), archive da conversa ao ganhar negócio, upsert de cliente por telefone ao retornar, remoção da página /conversas, sidebar corrigida (2026-03-17)
