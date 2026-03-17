@@ -58,6 +58,7 @@ const iconesPorGrupo: Record<string, typeof CreditCard> = {
 type Props = {
   integracoesMascaradas: IntegracoesMascaradas
   ehAdmin: boolean
+  grupoFiltro?: string
 }
 
 // ============================================================
@@ -67,6 +68,7 @@ type Props = {
 export function FormularioConfiguracoesIntegracoes({
   integracoesMascaradas,
   ehAdmin,
+  grupoFiltro,
 }: Props) {
   // Estado dos campos do formulário (valores que o usuário está digitando)
   const [campos, setCampos] = useState<Record<string, string>>({})
@@ -157,17 +159,115 @@ export function FormularioConfiguracoesIntegracoes({
     )
   }
 
+  const gruposFiltrados = grupoFiltro
+    ? gruposIntegracoes.filter((g) => g.id === grupoFiltro)
+    : gruposIntegracoes
+
+  function renderCamposGrupo(grupo: typeof gruposIntegracoes[number]) {
+    return grupo.campos.map((campo) => {
+      const info = mascaradas[campo]
+      if (!info) return null
+      const valorDigitado = campos[campo] ?? ""
+      const visivel = camposVisiveis[campo] ?? false
+
+      return (
+        <div key={campo} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor={campo}>{nomesChaves[campo]}</Label>
+            {info.temChave && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                onClick={() => handleRemover(campo)}
+                disabled={pendenteRemover}
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                Remover
+              </Button>
+            )}
+          </div>
+
+          <div className="relative">
+            <Input
+              id={campo}
+              type={visivel ? "text" : "password"}
+              value={valorDigitado}
+              onChange={(e) => atualizarCampo(campo, e.target.value)}
+              placeholder={
+                info.temChave
+                  ? `Chave atual: ${info.mascarada} — deixe vazio para manter`
+                  : "Cole a chave aqui..."
+              }
+              className="pr-10 font-mono text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => toggleVisibilidade(campo)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
+            >
+              {visivel ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+
+          {info.temChave && !valorDigitado && (
+            <p className="text-xs text-muted-foreground">
+              Chave configurada. Deixe o campo vazio para manter a chave atual.
+            </p>
+          )}
+          {ajudaChaves[campo] && (
+            <p className="text-xs text-muted-foreground/70">
+              {ajudaChaves[campo]}
+            </p>
+          )}
+        </div>
+      )
+    })
+  }
+
+  function renderCardGrupo(grupo: typeof gruposIntegracoes[number]) {
+    const todoConfigurado = grupoConfigurado(grupo.campos)
+    const parcial = grupoParcial(grupo.campos)
+
+    return (
+      <Card key={grupo.id}>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <CardTitle>{grupo.nome}</CardTitle>
+            {todoConfigurado && <Badge variant="success">Configurado</Badge>}
+            {parcial && <Badge variant="warning">Parcial</Badge>}
+            {!todoConfigurado && !parcial && (
+              <Badge variant="secondary">Não configurado</Badge>
+            )}
+          </div>
+          <CardDescription>{grupo.descricao}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {renderCamposGrupo(grupo)}
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div>
-      {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
-          <p className="text-sm text-muted-foreground">
-            Gerencie as chaves de API das integrações do sistema
-          </p>
+      {/* Header — só no modo completo (sem filtro de grupo) */}
+      {!grupoFiltro && (
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
+            <p className="text-sm text-muted-foreground">
+              Gerencie as chaves de API das integrações do sistema
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Aviso de segurança */}
       <div className="mb-6 flex items-start gap-3 rounded-lg border border-info/20 bg-info/5 p-4">
@@ -187,131 +287,39 @@ export function FormularioConfiguracoesIntegracoes({
           formActionSalvar(formData)
         }}
       >
-        <Tabs defaultValue="stripe" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-none sm:flex">
-            {gruposIntegracoes.map((grupo) => {
-              const Icone = iconesPorGrupo[grupo.id]
-              return (
-                <TabsTrigger key={grupo.id} value={grupo.id}>
-                  <Icone className="mr-1.5 h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{grupo.nome}</span>
-                  <span className="sm:hidden">
-                    {grupo.nome.split(" ")[0]}
-                  </span>
-                  {grupoConfigurado(grupo.campos) && (
-                    <span className="ml-1.5 h-2 w-2 rounded-full bg-success" />
-                  )}
-                </TabsTrigger>
-              )
-            })}
-          </TabsList>
+        {grupoFiltro ? (
+          /* Modo grupo único — sem tabs */
+          <div className="space-y-6">
+            {gruposFiltrados.map((grupo) => renderCardGrupo(grupo))}
+          </div>
+        ) : (
+          /* Modo completo — com tabs */
+          <Tabs defaultValue="stripe" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-none sm:flex">
+              {gruposFiltrados.map((grupo) => {
+                const Icone = iconesPorGrupo[grupo.id]
+                return (
+                  <TabsTrigger key={grupo.id} value={grupo.id}>
+                    <Icone className="mr-1.5 h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{grupo.nome}</span>
+                    <span className="sm:hidden">{grupo.nome.split(" ")[0]}</span>
+                    {grupoConfigurado(grupo.campos) && (
+                      <span className="ml-1.5 h-2 w-2 rounded-full bg-success" />
+                    )}
+                  </TabsTrigger>
+                )
+              })}
+            </TabsList>
 
-          {gruposIntegracoes.map((grupo) => {
-            const todoConfigurado = grupoConfigurado(grupo.campos)
-            const parcial = grupoParcial(grupo.campos)
-
-            return (
+            {gruposFiltrados.map((grupo) => (
               <TabsContent key={grupo.id} value={grupo.id}>
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CardTitle>{grupo.nome}</CardTitle>
-                        {todoConfigurado && (
-                          <Badge variant="success">
-                            Configurado
-                          </Badge>
-                        )}
-                        {parcial && (
-                          <Badge variant="warning">
-                            Parcial
-                          </Badge>
-                        )}
-                        {!todoConfigurado && !parcial && (
-                          <Badge variant="secondary">Não configurado</Badge>
-                        )}
-                      </div>
-                    </div>
-                    <CardDescription>{grupo.descricao}</CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-5">
-                    {grupo.campos.map((campo) => {
-                      const info = mascaradas[campo]
-                      if (!info) return null
-                      const valorDigitado = campos[campo] ?? ""
-                      const visivel = camposVisiveis[campo] ?? false
-
-                      return (
-                        <div key={campo} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor={campo}>{nomesChaves[campo]}</Label>
-                            {info.temChave && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                                onClick={() => handleRemover(campo)}
-                                disabled={pendenteRemover}
-                              >
-                                <Trash2 className="mr-1 h-3 w-3" />
-                                Remover
-                              </Button>
-                            )}
-                          </div>
-
-                          <div className="relative">
-                            <Input
-                              id={campo}
-                              type={visivel ? "text" : "password"}
-                              value={valorDigitado}
-                              onChange={(e) =>
-                                atualizarCampo(campo, e.target.value)
-                              }
-                              placeholder={
-                                info.temChave
-                                  ? `Chave atual: ${info.mascarada} — deixe vazio para manter`
-                                  : "Cole a chave aqui..."
-                              }
-                              className="pr-10 font-mono text-sm"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => toggleVisibilidade(campo)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                              tabIndex={-1}
-                            >
-                              {visivel ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-
-                          {info.temChave && !valorDigitado && (
-                            <p className="text-xs text-muted-foreground">
-                              Chave configurada. Deixe o campo vazio para manter
-                              a chave atual.
-                            </p>
-                          )}
-                          {ajudaChaves[campo] && (
-                            <p className="text-xs text-muted-foreground/70">
-                              {ajudaChaves[campo]}
-                            </p>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </CardContent>
-                </Card>
+                {renderCardGrupo(grupo)}
               </TabsContent>
-            )
-          })}
-        </Tabs>
+            ))}
+          </Tabs>
+        )}
 
-        {/* Botão salvar fixo embaixo */}
+        {/* Botão salvar */}
         <div className="mt-6 flex justify-end">
           <Button type="submit" disabled={pendenteSalvar}>
             <Save className="mr-1.5 h-4 w-4" />

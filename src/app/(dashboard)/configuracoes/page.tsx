@@ -12,8 +12,13 @@ import {
   ChevronRight,
   Kanban,
   ListTodo,
+  CreditCard,
+  Bot,
+  Database,
+  BrainCircuit,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { CardLimparMemoria } from "@/components/configuracoes/card-limpar-memoria"
 
 const cardsConfiguracoes = [
   {
@@ -66,6 +71,33 @@ const cardsConfiguracoes = [
   },
 ]
 
+const cardsPlataforma = [
+  {
+    titulo: "Stripe",
+    descricao: "Cobrança recorrente, checkout e portal do cliente",
+    href: "/admin/configuracoes/stripe",
+    icone: CreditCard,
+  },
+  {
+    titulo: "OpenAI",
+    descricao: "IA usada em análise de imóveis, clientes e negócios",
+    href: "/admin/configuracoes/openai",
+    icone: Bot,
+  },
+  {
+    titulo: "WhatsApp / Uazapi",
+    descricao: "Credenciais do servidor Uazapi para o agente SDR",
+    href: "/admin/configuracoes/uazapi",
+    icone: MessageCircle,
+  },
+  {
+    titulo: "Upstash Redis",
+    descricao: "Cache e memória de conversa do agente",
+    href: "/admin/configuracoes/redis",
+    icone: Database,
+  },
+]
+
 export default async function ConfiguracoesPage() {
   const supabase = await criarClienteServer()
 
@@ -83,11 +115,10 @@ export default async function ConfiguracoesPage() {
 
   if (!usuario) redirect("/login")
 
-  if (usuario.super_admin) {
-    redirect("/admin/configuracoes")
-  }
+  const isSuperAdmin = !!usuario.super_admin
+  const isAdmin = usuario.cargo === "admin"
 
-  if (usuario.cargo !== "admin") {
+  if (!isAdmin && !isSuperAdmin) {
     return (
       <div className="mx-auto max-w-md py-12 text-center">
         <ShieldAlert className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
@@ -101,32 +132,69 @@ export default async function ConfiguracoesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie sua imobiliária, equipe, integrações e site
-        </p>
+    <div className="mx-auto max-w-4xl space-y-10 p-4 sm:p-6">
+      {/* Seção da imobiliária */}
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
+          <p className="text-sm text-muted-foreground">
+            Gerencie sua imobiliária, equipe, integrações e site
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {cardsConfiguracoes.map((card) => (
+            <Link key={card.href} href={card.href} className="group">
+              <Card className="h-full transition-colors hover:bg-accent/50">
+                <CardContent className="flex items-start gap-4 p-5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <card.icone className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h3 className="font-medium leading-tight">{card.titulo}</h3>
+                    <p className="text-sm text-muted-foreground">{card.descricao}</p>
+                  </div>
+                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5" />
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {cardsConfiguracoes.map((card) => (
-          <Link key={card.href} href={card.href} className="group">
-            <Card className="h-full transition-colors hover:bg-accent/50">
-              <CardContent className="flex items-start gap-4 p-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <card.icone className="h-5 w-5" />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <h3 className="font-medium leading-tight">{card.titulo}</h3>
-                  <p className="text-sm text-muted-foreground">{card.descricao}</p>
-                </div>
-                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5" />
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {/* Seção da plataforma — só para super_admin */}
+      {isSuperAdmin && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Configurações da Plataforma</h2>
+            <p className="text-sm text-muted-foreground">
+              Chaves de API e integrações do sistema
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {cardsPlataforma.map((card) => (
+              <Link key={card.href} href={card.href} className="group">
+                <Card className="h-full transition-colors hover:bg-accent/50">
+                  <CardContent className="flex items-start gap-4 p-5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <card.icone className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <h3 className="font-medium leading-tight">{card.titulo}</h3>
+                      <p className="text-sm text-muted-foreground">{card.descricao}</p>
+                    </div>
+                    <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5" />
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+
+            {/* Card de ação: limpar memória */}
+            <CardLimparMemoria />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

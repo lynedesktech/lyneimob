@@ -283,6 +283,36 @@ export async function salvarConfigAgenteWhatsapp(
 }
 
 // ============================================================
+// Limpar memória Redis de todas as conversas da organização
+// ============================================================
+
+export async function limparMemoriasOrganizacao(): Promise<EstadoFormulario> {
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  if (!ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador da plataforma pode limpar a memória do agente." }
+  }
+
+  const supabase = await criarClienteServer()
+
+  const { data: conversas } = await supabase
+    .from("conversas_whatsapp")
+    .select("id")
+
+  if (!conversas || conversas.length === 0) {
+    return { sucesso: "Nenhuma memória para limpar." }
+  }
+
+  const { limparMemoria } = await import("@/lib/whatsapp/memoria")
+  await Promise.all(conversas.map((c) => limparMemoria(c.id)))
+
+  return {
+    sucesso: `Memória limpa para ${conversas.length} conversa(s). O agente começa do zero na próxima mensagem.`,
+  }
+}
+
+// ============================================================
 // Buscar conversa WhatsApp vinculada a um negócio
 // ============================================================
 
