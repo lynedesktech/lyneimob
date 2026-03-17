@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useActionState } from "react"
 import Link from "next/link"
 import { login } from "@/actions/auth"
@@ -15,13 +16,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
     login,
     {}
   )
+  const [senhaVisivel, setSenhaVisivel] = useState(false)
 
   return (
     <Card>
@@ -63,14 +65,28 @@ export default function LoginPage() {
                 Esqueci minha senha
               </Link>
             </div>
-            <Input
-              id="senha"
-              name="senha"
-              type="password"
-              placeholder="••••••"
-              required
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <Input
+                id="senha"
+                name="senha"
+                type={senhaVisivel ? "text" : "password"}
+                placeholder="••••••"
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setSenhaVisivel(!senhaVisivel)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {senhaVisivel ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         </CardContent>
 

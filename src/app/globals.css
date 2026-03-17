@@ -145,3 +145,23 @@
     @apply font-sans;
   }
 }
+
+/* Animação de zoom sutil para imagem de fundo auth */
+@keyframes slowZoom {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.animate-slow-zoom {
+  animation: slowZoom 20s ease-in-out infinite;
+}
+
+/* Text shadow para contraste sobre imagens */
+.text-shadow-lg {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.text-shadow-sm {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
