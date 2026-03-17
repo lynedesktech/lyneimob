@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
@@ -90,7 +91,7 @@ export default async function ClientesPage({
             <TabelaClientes
               clientes={clientes}
               total={total}
-              filtros={<FiltrosClientes />}
+              filtros={<Suspense fallback={<div />}><FiltrosClientes /></Suspense>}
               paginacao={
                 <PaginacaoListagem
                   pagina={pagina}

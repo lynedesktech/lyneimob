@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StatusBadge, configStatusCliente, configStatusNegocio } from "@/components/ui/status-badge"
 import { ScoreBadge } from "@/components/clientes/score-badge"
 import { InteressesCliente } from "@/components/clientes/interesses-cliente"
@@ -25,7 +24,6 @@ import {
   MessageCircle,
   User,
   FileText,
-  Sparkles,
   Handshake,
   ExternalLink,
 } from "lucide-react"
@@ -52,6 +50,8 @@ export default async function DetalheClientePage({
   if (!cliente) {
     redirect("/clientes")
   }
+
+  const negocios = (cliente as { negocios?: { id: string; titulo: string; valor: number | null; status: string; tipo: string }[] }).negocios ?? []
 
   return (
     <div className="space-y-6">
@@ -91,34 +91,19 @@ export default async function DetalheClientePage({
             Editar
           </Button>
           <ConfirmacaoExclusao
-              titulo="Excluir cliente"
-              descricao="Tem certeza que deseja excluir este cliente? Todos os interesses, interações e dados serão perdidos. Esta ação não pode ser desfeita."
-              onConfirmar={excluirCliente.bind(null, id)}
-            />
+            titulo="Excluir cliente"
+            descricao="Tem certeza que deseja excluir este cliente? Todos os interesses, interações e dados serão perdidos. Esta ação não pode ser desfeita."
+            onConfirmar={excluirCliente.bind(null, id)}
+          />
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="informacoes">
-        <TabsList>
-          <TabsTrigger value="informacoes">Informações</TabsTrigger>
-          <TabsTrigger value="interesses">
-            Preferências ({cliente.cliente_interesses?.length ?? 0})
-          </TabsTrigger>
-          <TabsTrigger value="negocios">
-            Negócios ({(cliente as { negocios?: unknown[] }).negocios?.length ?? 0})
-          </TabsTrigger>
-          <TabsTrigger value="timeline">
-            Timeline ({cliente.cliente_interacoes?.length ?? 0})
-          </TabsTrigger>
-          <TabsTrigger value="match">Match</TabsTrigger>
-          <TabsTrigger value="ia">IA</TabsTrigger>
-        </TabsList>
-
-        {/* Tab Informações */}
-        <TabsContent value="informacoes">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Dados Pessoais */}
+      {/* Duas colunas */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Coluna esquerda — informações, preferências, match */}
+        <div className="space-y-6 lg:col-span-3">
+          {/* Dados pessoais + Contato */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -158,7 +143,6 @@ export default async function DetalheClientePage({
               </CardContent>
             </Card>
 
-            {/* Contato */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -176,9 +160,7 @@ export default async function DetalheClientePage({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Email não informado
-                  </p>
+                  <p className="text-sm text-muted-foreground">Email não informado</p>
                 )}
 
                 {cliente.telefone ? (
@@ -190,9 +172,7 @@ export default async function DetalheClientePage({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Telefone não informado
-                  </p>
+                  <p className="text-sm text-muted-foreground">Telefone não informado</p>
                 )}
 
                 {cliente.whatsapp ? (
@@ -204,127 +184,115 @@ export default async function DetalheClientePage({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    WhatsApp não informado
-                  </p>
+                  <p className="text-sm text-muted-foreground">WhatsApp não informado</p>
                 )}
               </CardContent>
             </Card>
-
-            {/* Observações */}
-            {cliente.observacoes && (
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <FileText className="h-4 w-4" />
-                    Observações
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                    {cliente.observacoes}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Resumo IA */}
-            {cliente.resumo_ia && (
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Sparkles className="h-4 w-4" />
-                    Resumo IA
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-sm">
-                    {cliente.resumo_ia}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
           </div>
-        </TabsContent>
 
-        {/* Tab Preferências de Imóvel */}
-        <TabsContent value="interesses">
+          {/* Observações */}
+          {cliente.observacoes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <FileText className="h-4 w-4" />
+                  Observações
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {cliente.observacoes}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Preferências */}
           <InteressesCliente
             clienteId={id}
             interesses={cliente.cliente_interesses ?? []}
           />
-        </TabsContent>
 
-        {/* Tab Negócios do Cliente */}
-        <TabsContent value="negocios">
-          {(() => {
-            const negocios = (cliente as { negocios?: { id: string; titulo: string; valor: number | null; status: string; tipo: string }[] }).negocios ?? []
-            if (negocios.length === 0) {
-              return (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
-                  <Handshake className="mb-4 h-10 w-10 text-muted-foreground" />
-                  <h3 className="text-base font-medium">Nenhum negócio</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Este cliente ainda não tem negócios vinculados.
-                  </p>
-                  <Button className="mt-4" render={<Link href={`/negocios/novo`} />}>
-                    Criar negócio
-                  </Button>
-                </div>
-              )
-            }
-            return (
-              <div className="space-y-2">
-                {negocios.map((neg) => (
-                  <div
-                    key={neg.id}
-                    className="flex items-center justify-between rounded-lg border bg-card p-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <StatusBadge status={neg.status} config={configStatusNegocio} />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{neg.titulo}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {labelsTipoNegocio[neg.tipo as keyof typeof labelsTipoNegocio] ?? neg.tipo}
-                          {neg.valor ? ` · ${formatarPreco(neg.valor)}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" render={<Link href={`/negocios/${neg.id}`} />}>
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )
-          })()}
-        </TabsContent>
+          {/* Match automático */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Match de Imóveis</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MatchImoveis
+                organizacaoId={cliente.organizacao_id}
+                interesses={cliente.cliente_interesses ?? []}
+              />
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Tab Timeline */}
-        <TabsContent value="timeline">
-          <TimelineInteracoes
-            clienteId={id}
-            interacoes={cliente.cliente_interacoes ?? []}
-          />
-        </TabsContent>
-
-        {/* Tab Match */}
-        <TabsContent value="match">
-          <MatchImoveis
-            organizacaoId={cliente.organizacao_id}
-            interesses={cliente.cliente_interesses ?? []}
-          />
-        </TabsContent>
-
-        {/* Tab IA */}
-        <TabsContent value="ia">
+        {/* Coluna direita — IA + negócios */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* IA */}
           <IACliente
             clienteId={id}
             scoreAtual={cliente.score_lead}
             resumoAtual={cliente.resumo_ia}
           />
-        </TabsContent>
-      </Tabs>
+
+          {/* Negócios */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Handshake className="h-4 w-4" />
+                Negócios ({negocios.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {negocios.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum negócio vinculado
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    render={<Link href="/negocios/novo" />}
+                  >
+                    Criar negócio
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {negocios.map((neg) => (
+                    <div
+                      key={neg.id}
+                      className="flex items-center justify-between rounded-lg border bg-card p-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <StatusBadge status={neg.status} config={configStatusNegocio} />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{neg.titulo}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {labelsTipoNegocio[neg.tipo as keyof typeof labelsTipoNegocio] ?? neg.tipo}
+                            {neg.valor ? ` · ${formatarPreco(neg.valor)}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" render={<Link href={`/negocios/${neg.id}`} />}>
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Timeline — largura total */}
+      <TimelineInteracoes
+        clienteId={id}
+        interacoes={cliente.cliente_interacoes ?? []}
+      />
     </div>
   )
 }
