@@ -16,6 +16,7 @@ type SearchParams = Promise<{
   origem?: string
   status?: string
   pagina?: string
+  porPagina?: string
   view?: string
 }>
 
@@ -28,7 +29,10 @@ export default async function ClientesPage({
   const supabase = await criarClienteServer()
   const modoVisualizacao = params.view === "lista" ? "lista" : "cards"
   const pagina = Number(params.pagina) || 1
-  const porPagina = 12
+  const porPaginaOpcoes = [12, 24, 48]
+  const porPagina = porPaginaOpcoes.includes(Number(params.porPagina))
+    ? Number(params.porPagina)
+    : 12
   const inicio = (pagina - 1) * porPagina
   const fim = inicio + porPagina - 1
 
@@ -95,8 +99,12 @@ export default async function ClientesPage({
           <PaginacaoListagem
             pagina={pagina}
             totalPaginas={totalPaginas}
+            porPagina={porPagina}
             construtorHref={(p) =>
               `/clientes?${new URLSearchParams({ ...params, pagina: String(p) }).toString()}`
+            }
+            construtorHrefPorPagina={(n) =>
+              `/clientes?${new URLSearchParams({ ...params, pagina: "1", porPagina: String(n) }).toString()}`
             }
           />
         </>

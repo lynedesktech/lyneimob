@@ -19,6 +19,7 @@ type SearchParams = Promise<{
   bairro?: string
   canal?: string
   pagina?: string
+  porPagina?: string
   view?: string
 }>
 
@@ -31,7 +32,10 @@ export default async function ImoveisPage({
   const supabase = await criarClienteServer()
   const pagina = Number(params.pagina) || 1
   const modoVisualizacao = params.view === "lista" ? "lista" : "cards"
-  const porPagina = 12
+  const porPaginaOpcoes = [12, 24, 48]
+  const porPagina = porPaginaOpcoes.includes(Number(params.porPagina))
+    ? Number(params.porPagina)
+    : 12
   const inicio = (pagina - 1) * porPagina
   const fim = inicio + porPagina - 1
 
@@ -109,8 +113,12 @@ export default async function ImoveisPage({
           <PaginacaoListagem
             pagina={pagina}
             totalPaginas={totalPaginas}
+            porPagina={porPagina}
             construtorHref={(p) =>
               `/imoveis?${new URLSearchParams({ ...params, pagina: String(p) }).toString()}`
+            }
+            construtorHrefPorPagina={(n) =>
+              `/imoveis?${new URLSearchParams({ ...params, pagina: "1", porPagina: String(n) }).toString()}`
             }
           />
         </>
