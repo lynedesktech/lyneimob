@@ -102,9 +102,9 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
-      name: "criar_cliente",
+      name: "atualizar_cliente",
       description:
-        "Registrar ou atualizar o cliente na plataforma. Se o cliente já existe (pré-criado automaticamente), atualiza os dados. Use assim que souber o nome do cliente.",
+        "Atualizar os dados do cliente na plataforma. O cliente já existe (criado automaticamente no primeiro contato) — esta ferramenta preenche o nome e informações que a IA coletou. Use assim que souber o nome do cliente.",
       parameters: {
         type: "object",
         properties: {
@@ -133,9 +133,9 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
-      name: "criar_negocio",
+      name: "atualizar_negocio",
       description:
-        "Registrar ou atualizar o negócio no pipeline. Se o negócio já existe (pré-criado automaticamente), atualiza os dados como título, tipo e valor. Use quando o cliente demonstrar interesse concreto.",
+        "Atualizar o negócio no pipeline. O negócio já existe (criado automaticamente no primeiro contato) — esta ferramenta enriquece com título, tipo e valor conforme a conversa avança. Use quando o cliente demonstrar interesse concreto.",
       parameters: {
         type: "object",
         properties: {
@@ -287,9 +287,9 @@ export async function executarTool(
   switch (nome) {
     case "buscar_imoveis":
       return executarBuscarImoveis(argumentos, contexto)
-    case "criar_cliente":
+    case "atualizar_cliente":
       return executarCriarCliente(argumentos, contexto)
-    case "criar_negocio":
+    case "atualizar_negocio":
       return executarCriarNegocio(argumentos, contexto)
     case "criar_atividade":
       return executarCriarAtividade(argumentos, contexto)

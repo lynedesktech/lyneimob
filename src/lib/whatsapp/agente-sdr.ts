@@ -108,9 +108,23 @@ export async function processarComAgente(
     const jaRespondeu = mensagensOrdenadas.some((m) => m.direcao === "enviada")
     const nomeVerificado = conversa.cliente_id && nomeCliente ? `\n- Nome do cliente: ${nomeCliente}` : ""
 
+    // Detectar reativação: já respondemos antes, mas última mensagem foi há mais de 24h
+    const agora = new Date()
+    const ultimaMensagemEm = conversa.ultima_mensagem_em ? new Date(conversa.ultima_mensagem_em) : null
+    const horasDecorridas = ultimaMensagemEm
+      ? (agora.getTime() - ultimaMensagemEm.getTime()) / (1000 * 60 * 60)
+      : 0
+    const ehReativacao = jaRespondeu && horasDecorridas > 24
+
+    const statusConversa = !jaRespondeu
+      ? "PRIMEIRA_RESPOSTA"
+      : ehReativacao
+        ? "REATIVACAO"
+        : "EM_ANDAMENTO"
+
     let contextoExtra = `\n\nCONTEXTO DA CONVERSA:${nomeVerificado}
 - Número WhatsApp: ${conversa.numero_cliente}
-- Já respondemos antes nesta conversa: ${jaRespondeu ? "SIM — não se apresente de novo, continue de onde parou" : "NÃO — primeira resposta, pode se apresentar"}`
+- Status da conversa: ${statusConversa}`
 
     // Adicionar qualificação existente se houver
     if (conversa.qualificacao) {
