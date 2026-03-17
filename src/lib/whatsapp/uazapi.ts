@@ -167,11 +167,14 @@ export async function configurarWebhookUazapi(
 export async function enviarTexto(
   config: ConfigWhatsapp,
   numero: string,
-  texto: string
+  texto: string,
+  opcoes?: { delay?: number; readmessages?: boolean }
 ): Promise<void> {
-  await requisicaoUazapi(config, "/message/sendText", {
-    phone: numero,
-    message: texto,
+  await requisicaoUazapi(config, "/send/text", {
+    number: numero,
+    text: texto,
+    ...(opcoes?.delay !== undefined ? { delay: opcoes.delay } : {}),
+    ...(opcoes?.readmessages ? { readmessages: true } : {}),
   })
 }
 
@@ -181,9 +184,9 @@ export async function enviarImagem(
   url: string,
   legenda?: string
 ): Promise<void> {
-  await requisicaoUazapi(config, "/message/sendImage", {
-    phone: numero,
-    image: url,
+  await requisicaoUazapi(config, "/send/media", {
+    number: numero,
+    media: url,
     caption: legenda || "",
   })
 }
@@ -192,8 +195,8 @@ export async function simularDigitando(
   config: ConfigWhatsapp,
   numero: string
 ): Promise<void> {
-  await requisicaoUazapi(config, "/chat/sendPresence", {
-    phone: numero,
+  await requisicaoUazapi(config, "/message/presence", {
+    number: numero,
     presence: "composing",
   })
 }
@@ -202,18 +205,19 @@ export async function pararDigitando(
   config: ConfigWhatsapp,
   numero: string
 ): Promise<void> {
-  await requisicaoUazapi(config, "/chat/sendPresence", {
-    phone: numero,
+  await requisicaoUazapi(config, "/message/presence", {
+    number: numero,
     presence: "paused",
   })
 }
 
 export async function marcarComoLida(
   config: ConfigWhatsapp,
-  messageId: string
+  chatid: string
 ): Promise<void> {
-  await requisicaoUazapi(config, "/chat/markRead", {
-    messageId,
+  await requisicaoUazapi(config, "/chat/read", {
+    number: chatid,
+    read: true,
   })
 }
 

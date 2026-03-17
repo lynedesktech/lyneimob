@@ -1,5 +1,5 @@
 import type { ConfigWhatsapp } from "@/types/whatsapp"
-import { enviarTexto, simularDigitando, pararDigitando } from "./uazapi"
+import { enviarTexto } from "./uazapi"
 
 // ============================================================
 // Envio humanizado de mensagens
@@ -105,11 +105,9 @@ function dividirPorTamanho(texto: string, maxCaracteres: number): string[] {
 
 /**
  * Envia mensagem de forma humanizada:
- * 1. Simula digitando
- * 2. Aguarda delay proporcional ao tamanho
- * 3. Envia a mensagem
- * 4. Para de digitar
- * Se a mensagem for longa, quebra em partes com 1s entre cada
+ * Usa o parâmetro `delay` nativo da Uazapi — mostra "Digitando..." automaticamente
+ * antes do envio. Na primeira parte, marca as mensagens anteriores como lidas.
+ * Se a mensagem for longa, quebra em partes com 1s entre cada.
  */
 export async function enviarHumanizado(
   config: ConfigWhatsapp,
@@ -120,19 +118,12 @@ export async function enviarHumanizado(
 
   for (let i = 0; i < partes.length; i++) {
     const parte = partes[i]
-
-    // Simula digitando
-    await simularDigitando(config, numero)
-
-    // Delay proporcional ao tamanho da parte
     const delay = calcularDelayDigitacao(parte)
-    await aguardar(delay)
 
-    // Envia a parte
-    await enviarTexto(config, numero, parte)
-
-    // Para de digitar
-    await pararDigitando(config, numero)
+    await enviarTexto(config, numero, parte, {
+      delay,
+      readmessages: i === 0,
+    })
 
     // Se tem mais partes, espera 1s antes da próxima
     if (i < partes.length - 1) {

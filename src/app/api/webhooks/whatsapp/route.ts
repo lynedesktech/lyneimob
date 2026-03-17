@@ -155,8 +155,8 @@ export async function POST(request: Request) {
       })
       .eq("id", conversaId)
 
-    // Marcar como lida no WhatsApp
-    marcarComoLida(config, messageId).catch((erro) => {
+    // Marcar como lida no WhatsApp (usa o chatid completo, ex: "5511999999999@s.whatsapp.net")
+    marcarComoLida(config, remoteJid).catch((erro) => {
       console.error("[WhatsApp Webhook] Erro ao marcar como lida:", erro instanceof Error ? erro.message : erro)
     })
 
