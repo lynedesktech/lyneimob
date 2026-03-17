@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/ui/page-header"
 import { CardImovel } from "@/components/imoveis/card-imovel"
 import { TabelaImoveis } from "@/components/imoveis/tabela-imoveis"
 import { FiltrosImoveis } from "@/components/imoveis/filtros-imoveis"
@@ -66,35 +67,36 @@ export default async function ImoveisPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Imóveis</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <ToggleVisualizacao />
-          <BotaoExportar
-            modulo="imoveis"
-            filtros={{
-              busca: params.busca,
-              tipo: params.tipo,
-              finalidade: params.finalidade,
-              status: params.status,
-              cidade: params.cidade,
-              bairro: params.bairro,
-              canal: params.canal,
-            }}
-            total={total}
-          />
-          <Button variant="outline" render={<Link href="/imoveis/importar" />}>
-            <Upload className="mr-2 h-4 w-4" />
-            Importar
-          </Button>
-          <Button render={<Link href="/imoveis/novo" />}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo imóvel
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        titulo="Imóveis"
+        descricao="Gerencie o portfólio de imóveis da sua imobiliária"
+        acoes={
+          <>
+            <ToggleVisualizacao />
+            <BotaoExportar
+              modulo="imoveis"
+              filtros={{
+                busca: params.busca,
+                tipo: params.tipo,
+                finalidade: params.finalidade,
+                status: params.status,
+                cidade: params.cidade,
+                bairro: params.bairro,
+                canal: params.canal,
+              }}
+              total={total}
+            />
+            <Button variant="outline" render={<Link href="/imoveis/importar" />}>
+              <Upload className="mr-2 h-4 w-4" />
+              Importar
+            </Button>
+            <Button render={<Link href="/imoveis/novo" />}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo imóvel
+            </Button>
+          </>
+        }
+      />
 
       <FiltrosImoveis />
 

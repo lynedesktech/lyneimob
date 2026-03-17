@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/ui/page-header"
 import { CardCliente } from "@/components/clientes/card-cliente"
 import { TabelaClientes } from "@/components/clientes/tabela-clientes"
 import { FiltrosClientes } from "@/components/clientes/filtros-clientes"
@@ -59,28 +60,29 @@ export default async function ClientesPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <ToggleVisualizacao />
-          <BotaoExportar
-            modulo="clientes"
-            filtros={{
-              busca: params.busca,
-              tipo: params.tipo,
-              origem: params.origem,
-              status: params.status,
-            }}
-            total={total}
-          />
-          <Button render={<Link href="/clientes/novo" />}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo cliente
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        titulo="Clientes"
+        descricao="Gerencie sua carteira de clientes e leads"
+        acoes={
+          <>
+            <ToggleVisualizacao />
+            <BotaoExportar
+              modulo="clientes"
+              filtros={{
+                busca: params.busca,
+                tipo: params.tipo,
+                origem: params.origem,
+                status: params.status,
+              }}
+              total={total}
+            />
+            <Button render={<Link href="/clientes/novo" />}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo cliente
+            </Button>
+          </>
+        }
+      />
 
       {/* Filtros standalone — apenas no modo cards */}
       {modoVisualizacao !== "lista" && <FiltrosClientes />}

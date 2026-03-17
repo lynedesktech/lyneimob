@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server"
+import { after, NextResponse } from "next/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { schemaPayloadUazapi } from "@/types/whatsapp"
 import type { TipoConteudo } from "@/types/whatsapp"
 import { extrairNumero, ehGrupo, marcarComoLida } from "@/lib/whatsapp/uazapi"
-import { adicionarAoDebounce } from "@/lib/whatsapp/debounce"
 
 // ============================================================
 // Webhook WhatsApp — recebe mensagens da Uazapi
@@ -13,9 +12,17 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    // Validar payload com Zod
+    // Checar tipo de evento ANTES de validar com Zod
+    // Eventos de conexão têm estrutura diferente (sem data.key) e causariam falha no Zod
+    const event = typeof body.event === "string" ? body.event : ""
+    if (!event.startsWith("messages")) {
+      return NextResponse.json({ status: "ignorado", motivo: "evento_nao_mensagem" })
+    }
+
+    // Validar payload com Zod (só chega aqui se for evento de mensagem)
     const resultado = schemaPayloadUazapi.safeParse(body)
     if (!resultado.success) {
+      console.error("[WhatsApp Webhook] Payload inválido:", resultado.error.issues)
       return NextResponse.json(
         { erro: "Payload inválido" },
         { status: 400 }
@@ -24,8 +31,8 @@ export async function POST(request: Request) {
 
     const payload = resultado.data
 
-    // Ignorar eventos que não são mensagem recebida
-    if (payload.event !== "messages.upsert") {
+    // Aceitar messages.upsert e também eventos genéricos "messages"
+    if (payload.event !== "messages.upsert" && payload.event !== "messages") {
       return NextResponse.json({ status: "ignorado", motivo: "evento_nao_mensagem" })
     }
 
@@ -137,8 +144,14 @@ export async function POST(request: Request) {
       console.error("[WhatsApp Webhook] Erro ao marcar como lida:", erro instanceof Error ? erro.message : erro)
     })
 
-    // Adicionar ao debounce para agrupar mensagens
-    adicionarAoDebounce(conversaId, organizacaoId)
+    // Processar com agente IA após retornar resposta
+    // Usa after() do Next.js para manter a função viva no Vercel (serverless-compatible)
+    const { processarComAgente } = await import("@/lib/whatsapp/agente-sdr")
+    after(() =>
+      processarComAgente(conversaId, organizacaoId).catch((err) =>
+        console.error("[Webhook] Erro ao processar agente:", err instanceof Error ? err.message : err)
+      )
+    )
 
     return NextResponse.json({
       status: "ok",

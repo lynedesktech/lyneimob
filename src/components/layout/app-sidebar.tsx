@@ -13,7 +13,6 @@ import {
   BarChart3,
   Building,
   Shield,
-  CreditCard,
 } from "lucide-react"
 import {
   Sidebar,
@@ -65,7 +64,6 @@ const gruposNavegacao: GrupoNavegacao[] = [
     titulo: "Administração",
     itens: [
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
-      { titulo: "Financeiro", href: "/financeiro", icone: CreditCard, permissao: "gerenciar_integracoes" },
     ],
   },
 ]
