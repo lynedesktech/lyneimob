@@ -12,27 +12,36 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
+    // LOG DIAGNÓSTICO — ver exatamente o que a Uazapi envia
+    console.log("[WhatsApp Webhook] Recebido:", JSON.stringify(body))
+
     // Checar tipo de evento ANTES de validar com Zod
     // Eventos de conexão têm estrutura diferente (sem data.key) e causariam falha no Zod
     const event = typeof body.event === "string" ? body.event : ""
     if (!event.startsWith("messages")) {
+      console.log("[WhatsApp Webhook] Ignorado — evento:", event)
       return NextResponse.json({ status: "ignorado", motivo: "evento_nao_mensagem" })
     }
+
+    console.log("[WhatsApp Webhook] Evento aceito:", event)
 
     // Validar payload com Zod (só chega aqui se for evento de mensagem)
     const resultado = schemaPayloadUazapi.safeParse(body)
     if (!resultado.success) {
-      console.error("[WhatsApp Webhook] Payload inválido:", resultado.error.issues)
+      console.error("[WhatsApp Webhook] Zod falhou:", JSON.stringify(resultado.error.issues))
       return NextResponse.json(
         { erro: "Payload inválido" },
         { status: 400 }
       )
     }
 
+    console.log("[WhatsApp Webhook] Zod OK, processando...")
+
     const payload = resultado.data
 
     // Aceitar messages.upsert e também eventos genéricos "messages"
     if (payload.event !== "messages.upsert" && payload.event !== "messages") {
+      console.log("[WhatsApp Webhook] Ignorado pós-Zod — evento:", payload.event)
       return NextResponse.json({ status: "ignorado", motivo: "evento_nao_mensagem" })
     }
 
@@ -88,6 +97,8 @@ export async function POST(request: Request) {
         { status: 404 }
       )
     }
+
+    console.log("[WhatsApp Webhook] Config encontrada, org:", config.organizacao_id)
 
     const organizacaoId = config.organizacao_id
 
