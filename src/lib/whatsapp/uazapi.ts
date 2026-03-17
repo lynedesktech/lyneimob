@@ -17,7 +17,7 @@ function montarUrlBase(url: string, caminho: string): string {
 function montarHeaders(config: ConfigWhatsapp): HeadersInit {
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${config.uazapi_token}`,
+    token: config.uazapi_token,
   }
 }
 
