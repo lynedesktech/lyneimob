@@ -8,7 +8,7 @@ export const schemaCriarNegocio = z.object({
   cliente_id: z.string().uuid("Selecione um cliente"),
   imovel_id: z.string().uuid("Selecione um imóvel").optional().or(z.literal("")),
   etapa_id: z.string().uuid("Selecione uma etapa"),
-  valor: z.coerce.number().positive("Valor deve ser positivo").optional(),
+  valor: z.coerce.number().nonnegative("Valor não pode ser negativo").optional(),
   tipo: z.enum(["venda", "aluguel"], { message: "Selecione o tipo" }),
   previsao_fechamento: z.string().optional(),
   observacoes: z.string().optional(),

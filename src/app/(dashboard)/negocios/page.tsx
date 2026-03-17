@@ -37,9 +37,7 @@ export default function NegociosPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {visao === "lista" ? "Negócios" : "Pipeline"}
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Negócios</h1>
           {visao === "kanban" && (
             <p className="text-sm text-muted-foreground">
               {totalNegocios} negócio{totalNegocios !== 1 ? "s" : ""} aberto

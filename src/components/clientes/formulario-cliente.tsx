@@ -1,7 +1,6 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -41,7 +40,6 @@ type FormularioClienteProps = {
 export function FormularioCliente({ cliente }: FormularioClienteProps) {
   const editando = !!cliente
   const action = editando ? atualizarCliente : criarCliente
-  const router = useRouter()
 
   const {
     register,
@@ -69,11 +67,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
 
   useEffect(() => {
     if (estado.erro) toast.error(estado.erro)
-    if (estado.sucesso && estado.id) {
-      toast.success(estado.sucesso)
-      router.push(`/clientes/${estado.id}`)
-    }
-  }, [estado, router])
+  }, [estado])
 
   function onSubmit(dados: CriarClienteInput) {
     const formData = new FormData()

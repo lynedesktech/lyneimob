@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   Building2,
-  CalendarCheck,
   Handshake,
   MessageCircle,
   Plus,
@@ -18,7 +17,9 @@ import {
   Users,
 } from "lucide-react"
 import { CardKpi } from "./cards-kpi"
-import { GraficoStatusNegocios } from "./grafico-status-negocios"
+import { GraficoFunil, type EtapaFunil } from "./grafico-funil"
+import { GraficoImoveis } from "./grafico-imoveis"
+import { GraficoEvolucao, type PontoMensal } from "./grafico-evolucao"
 import { ListaAtividadesHoje, type AtividadeHojeItem } from "./lista-atividades-hoje"
 import { CardResumoSemanal } from "./card-resumo-semanal"
 
@@ -33,6 +34,9 @@ interface PainelAdminProps {
   atividadesHoje: number
   conversasAtivas: number
   atividadesPendentes: AtividadeHojeItem[]
+  etapasFunil: EtapaFunil[]
+  imoveisPorStatus: { disponivel: number; reservado: number; vendido: number; alugado: number }
+  evolucaoMensal: PontoMensal[]
 }
 
 export function PainelAdmin({
@@ -46,6 +50,9 @@ export function PainelAdmin({
   atividadesHoje,
   conversasAtivas,
   atividadesPendentes,
+  etapasFunil,
+  imoveisPorStatus,
+  evolucaoMensal,
 }: PainelAdminProps) {
   const labelCargo = cargo === "gerente" ? "Gerente" : "Admin"
   const descricaoCargo =
@@ -117,32 +124,54 @@ export function PainelAdmin({
         />
       </div>
 
-      {/* Gráfico de negócios + Resumo semanal */}
-      <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="lg:col-span-3">
+      {/* Gráficos + Resumo semanal */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Negócios por Status</CardTitle>
+              <CardTitle className="text-base">Funil de Negócios</CardTitle>
             </div>
             <CardDescription>
-              {negociosGanhos} ganho{negociosGanhos !== 1 ? "s" : ""},{" "}
-              {negociosPerdidos} perdido{negociosPerdidos !== 1 ? "s" : ""} no total
+              {negociosAbertos} aberto{negociosAbertos !== 1 ? "s" : ""} nas etapas
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <GraficoStatusNegocios
-              abertos={negociosAbertos}
-              ganhos={negociosGanhos}
-              perdidos={negociosPerdidos}
-            />
+            <GraficoFunil etapas={etapasFunil} />
           </CardContent>
         </Card>
 
-        <div className="lg:col-span-2">
-          <CardResumoSemanal />
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Portfólio de Imóveis</CardTitle>
+            </div>
+            <CardDescription>
+              {imoveisDisponiveis} disponível{imoveisDisponiveis !== 1 ? "is" : ""} para venda/aluguel
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <GraficoImoveis {...imoveisPorStatus} />
+          </CardContent>
+        </Card>
+
+        <CardResumoSemanal />
       </div>
+
+      {/* Evolução mensal */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base">Evolução Mensal</CardTitle>
+          </div>
+          <CardDescription>Negócios criados nos últimos 6 meses</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <GraficoEvolucao dados={evolucaoMensal} />
+        </CardContent>
+      </Card>
 
       {/* Atividades pendentes */}
       <Card>

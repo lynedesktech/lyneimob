@@ -61,7 +61,35 @@
 
 > Tarefa em andamento agora.
 
-### Adoção 100% shadcn/ui — redesign do dashboard
+### [URGENTE] Corrigir bugs críticos nos formulários e navegação
+
+Auditoria: `C:\Users\Lynedesk\.claude\plans\immutable-marinating-coral.md`
+
+- [ ] **Tarefa 1 — Redirect + toast pós-submissão**
+      Causa raiz: `useActionState` + `revalidatePath` causa unmount do componente antes do useEffect disparar. Fix: mover redirect para server-side via `redirect()` nas actions + toast via URL param.
+      Arquivos: `src/actions/clientes.ts`, `src/actions/negocios.ts`, `src/actions/imoveis.ts`, `src/actions/atividades.ts`, formulários correspondentes
+
+- [ ] **Tarefa 2 — Application errors remanescentes**
+      Investigar crashes em `/clientes/[id]/editar` e `/negocios/[id]` após o deploy estar correto.
+      Pode ser resolvido pela Tarefa 1 ou requerer investigação específica de runtime.
+
+- [ ] **Tarefa 3 — UX nos formulários**
+      (a) Botão "Cancelar" no rodapé do formulário de negócio (igual cliente e imóvel)
+      (b) Validação: campo valor do negócio deve aceitar 0 (`nonnegative()` em vez de `positive()`)
+      (c) Campos obrigatórios no imóvel: reduzir para mínimo (código, título, tipo, finalidade, cidade, estado)
+      Arquivos: `src/components/negocios/formulario-negocio.tsx`, `src/types/negocios.ts`, `src/types/imoveis.ts`, `src/components/imoveis/formulario-imovel.tsx`
+
+- [ ] **Tarefa 4 — Seção "Interesses" do cliente**
+      Renomear para "Preferências de Imóvel" + adicionar aba ou seção "Negócios do Cliente" separada
+      Arquivo: `src/app/(dashboard)/clientes/[id]/page.tsx`, `src/components/clientes/interesses-cliente.tsx`
+
+- [ ] **Tarefa 5 — Redesign da página de detalhes do negócio**
+      Usar skill `frontend-design` para planejar layout em 2 colunas (principal + sidebar)
+      Arquivo: `src/app/(dashboard)/negocios/[id]/page.tsx`
+
+---
+
+### Adoção 100% shadcn/ui — redesign do dashboard (PAUSADO — retomar após bugs críticos)
 
 Requisitos: `planejamento/requisitos/requisito-shadcn-ui.md`
 Pesquisa: `planejamento/pesquisas/pesquisa-shadcn-ui.md`
@@ -107,6 +135,18 @@ Pesquisa: `planejamento/pesquisas/pesquisa-shadcn-ui.md`
       Dark mode: landing e login verificados — cores corretas em ambos os temas.
       Mobile (390px): login e landing responsivos, header adapta para hamburguer.
       Páginas do dashboard (painel, imoveis, clientes, etc.) requerem login — verificar manualmente após logar.
+
+- [x] **Etapa 7C — Fase C: Command Palette (Busca Global)** ✓
+      BuscaGlobal migrada para Command shadcn (cmdk). ~200 linhas removidas: estado de índice ativo,
+      handleKeyDown manual, scroll tracking com refs, ItemResultado customizado.
+      Substituído por: CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem, CommandSeparator.
+      Ctrl+K, grupos (Criar/Navegar/Plataforma), busca async com debounce 300ms, loading indicator — tudo preservado.
+      Build 100% limpo.
+
+- [x] **Etapa 7B — Fase B: Dashboard com Charts** ✓
+      3 novos gráficos no painel admin/gerente: Funil de Negócios (BarChart horizontal por etapa),
+      Portfólio de Imóveis (PieChart donut por status), Evolução Mensal (AreaChart 6 meses).
+      GraficoStatusNegocios antigo removido. Build 100% limpo.
 
 - [x] **Etapa 7A — Fase A: Field + InputGroup + Combobox em formulários** ✓
       Componentes instalados: field, input-group, command. Criado: combobox-campo.tsx.

@@ -28,7 +28,7 @@ export function CardImovel({ imovel }: { imovel: ImovelComCapa }) {
 
   return (
     <Link href={`/imoveis/${imovel.id}`}>
-      <Card className="overflow-hidden transition-shadow hover:shadow-md">
+      <Card className="overflow-hidden pt-0 transition-shadow hover:shadow-md">
         <div className="relative aspect-video w-full bg-muted">
           {fotoUrl ? (
             <Image

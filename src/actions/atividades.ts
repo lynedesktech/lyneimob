@@ -94,7 +94,7 @@ export async function criarAtividade(
   }
 
   revalidarAtividades(atividade.id)
-  return { sucesso: "Atividade criada com sucesso!", id: atividade.id }
+  redirect(`/atividades/${atividade.id}`)
 }
 
 // ============================================================
@@ -148,7 +148,7 @@ export async function atualizarAtividade(
   }
 
   revalidarAtividades(id)
-  return { sucesso: "Atividade atualizada!", id }
+  redirect(`/atividades/${id}`)
 }
 
 // ============================================================

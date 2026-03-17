@@ -1,7 +1,6 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -49,7 +48,6 @@ function formatarParaInput(data: string | null) {
 export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAtividadeProps) {
   const editando = !!atividade
   const action = editando ? atualizarAtividade : criarAtividade
-  const router = useRouter()
   const { tipos, carregando: carregandoTipos } = useTiposAtividade()
 
   const {
@@ -110,11 +108,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
 
   useEffect(() => {
     if (estado.erro) toast.error(estado.erro)
-    if (estado.sucesso && estado.id) {
-      toast.success(estado.sucesso)
-      router.push(`/atividades/${estado.id}`)
-    }
-  }, [estado, router])
+  }, [estado])
 
   function onSubmit(dados: CriarAtividadeInput) {
     const formData = new FormData()

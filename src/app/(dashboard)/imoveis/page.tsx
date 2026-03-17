@@ -2,7 +2,9 @@ import Link from "next/link"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { CardImovel } from "@/components/imoveis/card-imovel"
+import { TabelaImoveis } from "@/components/imoveis/tabela-imoveis"
 import { FiltrosImoveis } from "@/components/imoveis/filtros-imoveis"
+import { ToggleVisualizacao } from "@/components/imoveis/toggle-visualizacao"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Building2, Upload } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
@@ -17,6 +19,7 @@ type SearchParams = Promise<{
   bairro?: string
   canal?: string
   pagina?: string
+  view?: string
 }>
 
 export default async function ImoveisPage({
@@ -27,6 +30,7 @@ export default async function ImoveisPage({
   const params = await searchParams
   const supabase = await criarClienteServer()
   const pagina = Number(params.pagina) || 1
+  const modoVisualizacao = params.view === "lista" ? "lista" : "cards"
   const porPagina = 12
   const inicio = (pagina - 1) * porPagina
   const fim = inicio + porPagina - 1
@@ -66,6 +70,7 @@ export default async function ImoveisPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ToggleVisualizacao />
           <BotaoExportar
             modulo="imoveis"
             filtros={{
@@ -94,13 +99,16 @@ export default async function ImoveisPage({
 
       {imoveis && imoveis.length > 0 ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {imoveis.map((imovel) => (
-              <CardImovel key={imovel.id} imovel={imovel} />
-            ))}
-          </div>
+          {modoVisualizacao === "lista" ? (
+            <TabelaImoveis imoveis={imoveis} />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {imoveis.map((imovel) => (
+                <CardImovel key={imovel.id} imovel={imovel} />
+              ))}
+            </div>
+          )}
 
-          {/* Paginação */}
           <PaginacaoListagem
             pagina={pagina}
             totalPaginas={totalPaginas}

@@ -11,6 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel"
 import { ImagePlus, Trash2, Star, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import type { ImovelFoto } from "@/types/database"
@@ -159,53 +166,59 @@ export function GaleriaFotos({ imovelId, fotos: fotosIniciais }: GaleriaFotosPro
 
       <CardContent>
         {fotos.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {fotos
-              .sort((a, b) => a.ordem - b.ordem)
-              .map((foto) => (
-                <div key={foto.id} className="group relative aspect-video overflow-hidden rounded-lg border">
-                  <Image
-                    src={foto.url}
-                    alt={foto.descricao ?? "Foto do imóvel"}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
+          <Carousel className="w-full" opts={{ align: "start" }}>
+            <CarouselContent>
+              {fotos
+                .sort((a, b) => a.ordem - b.ordem)
+                .map((foto) => (
+                  <CarouselItem key={foto.id} className="basis-1/2 sm:basis-1/3 lg:basis-1/4">
+                    <div className="group relative aspect-video overflow-hidden rounded-lg border">
+                      <Image
+                        src={foto.url}
+                        alt={foto.descricao ?? "Foto do imóvel"}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      />
 
-                  {foto.eh_capa && (
-                    <div className="absolute left-2 top-2">
-                      <span className="flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
-                        <Star className="h-3 w-3" />
-                        Capa
-                      </span>
+                      {foto.eh_capa && (
+                        <div className="absolute left-2 top-2">
+                          <span className="flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                            <Star className="h-3 w-3" />
+                            Capa
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 flex items-end justify-end gap-1 bg-gradient-to-t from-black/50 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+                        {!foto.eh_capa && (
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => marcarComoCapa(foto.id)}
+                            title="Definir como capa"
+                          >
+                            <Star className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => excluirFoto(foto)}
+                          title="Excluir foto"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-
-                  <div className="absolute inset-0 flex items-end justify-end gap-1 bg-gradient-to-t from-black/50 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    {!foto.eh_capa && (
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => marcarComoCapa(foto.id)}
-                        title="Definir como capa"
-                      >
-                        <Star className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => excluirFoto(foto)}
-                      title="Excluir foto"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-          </div>
+                  </CarouselItem>
+                ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-2" />
+            <CarouselNext className="right-2" />
+          </Carousel>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
             <ImagePlus className="mb-4 h-12 w-12 text-muted-foreground" />

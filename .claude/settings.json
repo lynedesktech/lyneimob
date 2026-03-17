@@ -333,7 +333,12 @@
       "Bash(find c:UsersLynedeskDesktopTechLyneImob -iname *seed* -o -iname *init* -o -iname *setup*)",
       "Bash(grep -E \"\\\\.\\(tsx|ts|js\\)$\")",
       "Bash(find c:UsersLynedeskDesktopTechLyneImobsrcapp -path *api* -name *callback* -o -path *api* -name *auth*)",
-      "Bash(grep -r \"auth/callback\\\\|confirmEmail\\\\|resetPassword\" c:UsersLynedeskDesktopTechLyneImobsrc --include=*.ts --include=*.tsx)"
+      "Bash(grep -r \"auth/callback\\\\|confirmEmail\\\\|resetPassword\" c:UsersLynedeskDesktopTechLyneImobsrc --include=*.ts --include=*.tsx)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(npx shadcn@latest add carousel --yes)",
+      "Bash(npx shadcn@latest add context-menu)",
+      "Bash(npx shadcn@latest add alert-dialog alert)",
+      "Bash(echo \"EXIT: $?\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

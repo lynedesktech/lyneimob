@@ -1,7 +1,6 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -49,7 +48,6 @@ type FormularioImovelProps = {
 export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const editando = !!imovel
   const action = editando ? atualizarImovel : criarImovel
-  const router = useRouter()
 
   const {
     register,
@@ -96,11 +94,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
 
   useEffect(() => {
     if (retorno.erro) toast.error(retorno.erro)
-    if (retorno.sucesso && retorno.id) {
-      toast.success(retorno.sucesso)
-      router.push(`/imoveis/${retorno.id}`)
-    }
-  }, [retorno, router])
+  }, [retorno])
 
   function onSubmit(dados: CriarImovelInput) {
     const formData = new FormData()

@@ -5,14 +5,16 @@ import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface ConfirmacaoExclusaoProps {
   titulo: string
@@ -49,8 +51,8 @@ export function ConfirmacaoExclusao({
   }
 
   return (
-    <Dialog open={aberto} onOpenChange={setAberto}>
-      <DialogTrigger
+    <AlertDialog open={aberto} onOpenChange={setAberto}>
+      <AlertDialogTrigger
         render={
           trigger || (
             <Button variant="destructive" size={tamanho}>
@@ -60,24 +62,22 @@ export function ConfirmacaoExclusao({
           )
         }
       />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{titulo}</DialogTitle>
-          <DialogDescription>{descricao}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setAberto(false)}>
-            {textoCancelar}
-          </Button>
-          <Button
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{titulo}</AlertDialogTitle>
+          <AlertDialogDescription>{descricao}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{textoCancelar}</AlertDialogCancel>
+          <AlertDialogAction
             variant="destructive"
             onClick={handleConfirmar}
             disabled={excluindo}
           >
             {excluindo ? textoExcluindo : textoConfirmar}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

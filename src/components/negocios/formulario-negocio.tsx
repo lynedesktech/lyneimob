@@ -1,10 +1,10 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
+import Link from "next/link"
 import { criarNegocio, atualizarNegocio } from "@/actions/negocios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,7 +36,6 @@ type ImovelSimples = { id: string; titulo: string; codigo: string }
 export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const editando = !!negocio
   const action = editando ? atualizarNegocio : criarNegocio
-  const router = useRouter()
 
   const {
     register,
@@ -96,11 +95,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
 
   useEffect(() => {
     if (estado.erro) toast.error(estado.erro)
-    if (estado.sucesso && estado.id) {
-      toast.success(estado.sucesso)
-      router.push(`/negocios/${estado.id}`)
-    }
-  }, [estado, router])
+  }, [estado])
 
   function onSubmit(dados: CriarNegocioInput) {
     const formData = new FormData()
@@ -273,8 +268,11 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
         </CardContent>
       </Card>
 
-      {/* Botão submit */}
-      <div className="flex justify-end">
+      {/* Ações */}
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" size="lg" render={<Link href="/negocios" />}>
+          Cancelar
+        </Button>
         <Button type="submit" disabled={pendente} size="lg">
           {pendente
             ? "Salvando..."

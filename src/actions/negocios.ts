@@ -97,8 +97,7 @@ export async function criarNegocio(
 
   revalidatePath("/negocios")
   revalidatePath("/")
-  revalidatePath(`/negocios/${negocio.id}`)
-  return { sucesso: "Negócio criado com sucesso!", id: negocio.id }
+  redirect(`/negocios/${negocio.id}`)
 }
 
 // ============================================================
@@ -148,7 +147,7 @@ export async function atualizarNegocio(
 
   revalidatePath("/negocios")
   revalidatePath(`/negocios/${id}`)
-  return { sucesso: "Negócio atualizado!", id }
+  redirect(`/negocios/${id}`)
 }
 
 // ============================================================

@@ -84,8 +84,7 @@ export async function criarCliente(
 
   revalidatePath("/clientes")
   revalidatePath("/")
-  revalidatePath(`/clientes/${cliente.id}`)
-  return { sucesso: "Cliente cadastrado com sucesso!", id: cliente.id }
+  redirect(`/clientes/${cliente.id}`)
 }
 
 // ============================================================
@@ -135,7 +134,7 @@ export async function atualizarCliente(
 
   revalidatePath("/clientes")
   revalidatePath(`/clientes/${id}`)
-  return { sucesso: "Cliente atualizado!", id }
+  redirect(`/clientes/${id}`)
 }
 
 // ============================================================

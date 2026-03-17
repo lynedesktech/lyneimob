@@ -2,6 +2,8 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { PainelAdmin } from "@/components/dashboard/painel-admin"
 import { PainelCorretor } from "@/components/dashboard/painel-corretor"
 import type { AtividadeHojeItem } from "@/components/dashboard/lista-atividades-hoje"
+import type { EtapaFunil } from "@/components/dashboard/grafico-funil"
+import type { PontoMensal } from "@/components/dashboard/grafico-evolucao"
 
 export default async function DashboardPage() {
   const supabase = await criarClienteServer()
@@ -94,6 +96,9 @@ export default async function DashboardPage() {
 
   // ── Painel do Admin / Gerente ────────────────────────────────────────
 
+  const seiseMesesAtras = new Date(hoje)
+  seiseMesesAtras.setMonth(seiseMesesAtras.getMonth() - 6)
+
   const [
     { count: negociosAbertos },
     { count: negociosGanhos },
@@ -103,6 +108,10 @@ export default async function DashboardPage() {
     { count: atividadesHoje },
     { count: conversasAtivas },
     { data: rawAtividades },
+    { data: rawEtapas },
+    { data: rawNegociosPorEtapa },
+    { data: rawImoveisPorStatus },
+    { data: rawNegociosRecentes },
   ] = await Promise.all([
     supabase
       .from("negocios")
@@ -148,6 +157,30 @@ export default async function DashboardPage() {
       .lt("data_inicio", fimDia)
       .order("data_inicio", { ascending: true })
       .limit(5),
+
+    // Etapas do pipeline para o funil
+    supabase
+      .from("pipeline_etapas")
+      .select("id, nome, cor")
+      .eq("tipo", "normal")
+      .order("ordem"),
+
+    // Negócios abertos por etapa (para funil)
+    supabase
+      .from("negocios")
+      .select("etapa_id")
+      .eq("status", "aberto"),
+
+    // Imóveis por status (para donut)
+    supabase
+      .from("imoveis")
+      .select("status"),
+
+    // Negócios dos últimos 6 meses (para evolução)
+    supabase
+      .from("negocios")
+      .select("criado_em")
+      .gte("criado_em", seiseMesesAtras.toISOString()),
   ])
 
   const atividadesPendentes: AtividadeHojeItem[] = (rawAtividades ?? []).map((a) => ({
@@ -158,6 +191,44 @@ export default async function DashboardPage() {
     cliente_nome:
       (a.clientes as unknown as { nome: string } | null)?.nome ?? null,
   }))
+
+  // Funil: contar negócios por etapa
+  const contagemPorEtapa: Record<string, number> = {}
+  for (const n of rawNegociosPorEtapa ?? []) {
+    if (n.etapa_id) contagemPorEtapa[n.etapa_id] = (contagemPorEtapa[n.etapa_id] ?? 0) + 1
+  }
+  const etapasFunil: EtapaFunil[] = (rawEtapas ?? []).map((e) => ({
+    nome: e.nome,
+    cor: e.cor ?? "var(--chart-1)",
+    total: contagemPorEtapa[e.id] ?? 0,
+  }))
+
+  // Imóveis por status
+  const contagemImoveis = { disponivel: 0, reservado: 0, vendido: 0, alugado: 0 }
+  for (const i of rawImoveisPorStatus ?? []) {
+    if (i.status in contagemImoveis) {
+      contagemImoveis[i.status as keyof typeof contagemImoveis]++
+    }
+  }
+
+  // Evolução mensal: últimos 6 meses
+  const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+  const evolucaoMap: Record<string, number> = {}
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    evolucaoMap[chave] = 0
+  }
+  for (const n of rawNegociosRecentes ?? []) {
+    if (!n.criado_em) continue
+    const d = new Date(n.criado_em)
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    if (chave in evolucaoMap) evolucaoMap[chave]++
+  }
+  const evolucaoMensal: PontoMensal[] = Object.entries(evolucaoMap).map(([chave, criados]) => {
+    const [, mes] = chave.split("-")
+    return { mes: MESES_PT[parseInt(mes) - 1], criados }
+  })
 
   return (
     <PainelAdmin
@@ -171,6 +242,9 @@ export default async function DashboardPage() {
       atividadesHoje={atividadesHoje ?? 0}
       conversasAtivas={conversasAtivas ?? 0}
       atividadesPendentes={atividadesPendentes}
+      etapasFunil={etapasFunil}
+      imoveisPorStatus={contagemImoveis}
+      evolucaoMensal={evolucaoMensal}
     />
   )
 }

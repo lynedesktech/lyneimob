@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { StatusBadge, configStatusCliente } from "@/components/ui/status-badge"
-import { ScoreBadge } from "./score-badge"
+import { StatusBadge, configStatusImovel } from "@/components/ui/status-badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,39 +23,48 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu"
-import { labelsTipoCliente, labelsOrigem } from "@/lib/constantes"
-import type { Cliente } from "@/types/database"
+import { labelsTipoImovel } from "@/lib/constantes"
+import { formatarPreco } from "@/lib/formatadores"
+import type { Imovel, ImovelFoto } from "@/types/database"
+
+type ImovelComCapa = Imovel & {
+  imovel_fotos: Pick<ImovelFoto, "url" | "eh_capa">[]
+}
 
 type ColunasVisiveis = {
-  origem: boolean
-  telefone: boolean
-  email: boolean
-  score: boolean
-  cadastro: boolean
+  finalidade: boolean
+  cidade: boolean
+  area: boolean
+  quartos: boolean
 }
 
 const colunasPadrao: ColunasVisiveis = {
-  origem: true,
-  telefone: true,
-  email: true,
-  score: true,
-  cadastro: true,
+  finalidade: true,
+  cidade: true,
+  area: true,
+  quartos: true,
 }
 
-export function TabelaClientes({ clientes }: { clientes: Cliente[] }) {
+const labelsFinalidade: Record<string, string> = {
+  venda: "Venda",
+  aluguel: "Aluguel",
+  venda_aluguel: "Venda e Aluguel",
+}
+
+export function TabelaImoveis({ imoveis }: { imoveis: ImovelComCapa[] }) {
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [colunas, setColunas] = useState<ColunasVisiveis>(colunasPadrao)
 
   const todosSelecionados =
-    clientes.length > 0 && clientes.every((c) => selecionados.has(c.id))
+    imoveis.length > 0 && imoveis.every((i) => selecionados.has(i.id))
   const algunsSelecionados =
-    clientes.some((c) => selecionados.has(c.id)) && !todosSelecionados
+    imoveis.some((i) => selecionados.has(i.id)) && !todosSelecionados
 
   function toggleTodos() {
     if (todosSelecionados) {
       setSelecionados(new Set())
     } else {
-      setSelecionados(new Set(clientes.map((c) => c.id)))
+      setSelecionados(new Set(imoveis.map((i) => i.id)))
     }
   }
 
@@ -89,34 +97,28 @@ export function TabelaClientes({ clientes }: { clientes: Cliente[] }) {
             <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
-              checked={colunas.origem}
-              onCheckedChange={() => toggleColuna("origem")}
+              checked={colunas.finalidade}
+              onCheckedChange={() => toggleColuna("finalidade")}
             >
-              Origem
+              Finalidade
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              checked={colunas.telefone}
-              onCheckedChange={() => toggleColuna("telefone")}
+              checked={colunas.cidade}
+              onCheckedChange={() => toggleColuna("cidade")}
             >
-              Telefone
+              Cidade
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              checked={colunas.email}
-              onCheckedChange={() => toggleColuna("email")}
+              checked={colunas.area}
+              onCheckedChange={() => toggleColuna("area")}
             >
-              E-mail
+              Área
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              checked={colunas.score}
-              onCheckedChange={() => toggleColuna("score")}
+              checked={colunas.quartos}
+              onCheckedChange={() => toggleColuna("quartos")}
             >
-              Score
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.cadastro}
-              onCheckedChange={() => toggleColuna("cadastro")}
-            >
-              Cadastro
+              Quartos
             </DropdownMenuCheckboxItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -133,75 +135,80 @@ export function TabelaClientes({ clientes }: { clientes: Cliente[] }) {
                   onCheckedChange={toggleTodos}
                 />
               </TableHead>
-              <TableHead>Nome</TableHead>
+              <TableHead>Código</TableHead>
+              <TableHead>Título</TableHead>
               <TableHead>Tipo</TableHead>
-              {colunas.origem && <TableHead>Origem</TableHead>}
+              {colunas.finalidade && <TableHead>Finalidade</TableHead>}
+              <TableHead>Preço</TableHead>
               <TableHead>Status</TableHead>
-              {colunas.telefone && <TableHead>Telefone</TableHead>}
-              {colunas.email && <TableHead>E-mail</TableHead>}
-              {colunas.score && <TableHead>Score</TableHead>}
-              {colunas.cadastro && <TableHead>Cadastro</TableHead>}
+              {colunas.cidade && <TableHead>Cidade</TableHead>}
+              {colunas.area && <TableHead>Área</TableHead>}
+              {colunas.quartos && <TableHead>Quartos</TableHead>}
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clientes.map((cliente) => {
-              const selecionado = selecionados.has(cliente.id)
+            {imoveis.map((imovel) => {
+              const selecionado = selecionados.has(imovel.id)
+              const preco =
+                imovel.finalidade === "aluguel" ? imovel.preco_aluguel : imovel.preco_venda
+
               return (
                 <TableRow
-                  key={cliente.id}
+                  key={imovel.id}
                   data-state={selecionado ? "selected" : undefined}
                   className="cursor-pointer"
-                  onClick={() => toggleSelecionado(cliente.id)}
+                  onClick={() => toggleSelecionado(imovel.id)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selecionado}
-                      onCheckedChange={() => toggleSelecionado(cliente.id)}
+                      onCheckedChange={() => toggleSelecionado(imovel.id)}
                     />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground font-mono text-xs">
+                    {imovel.codigo}
                   </TableCell>
                   <TableCell>
                     <Link
-                      href={`/clientes/${cliente.id}`}
+                      href={`/imoveis/${imovel.id}`}
                       className="font-medium hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {cliente.nome}
+                      {imovel.titulo}
                     </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {labelsTipoCliente[cliente.tipo] ?? cliente.tipo}
+                    {labelsTipoImovel[imovel.tipo] ?? imovel.tipo}
                   </TableCell>
-                  {colunas.origem && (
+                  {colunas.finalidade && (
                     <TableCell className="text-muted-foreground">
-                      {labelsOrigem[cliente.origem] ?? cliente.origem}
+                      {labelsFinalidade[imovel.finalidade] ?? imovel.finalidade}
                     </TableCell>
                   )}
+                  <TableCell className="font-medium">
+                    {formatarPreco(preco)}
+                    {imovel.finalidade !== "venda" && preco ? (
+                      <span className="text-xs font-normal text-muted-foreground">/mês</span>
+                    ) : null}
+                  </TableCell>
                   <TableCell>
-                    <StatusBadge status={cliente.status} config={configStatusCliente} />
+                    <StatusBadge status={imovel.status} config={configStatusImovel} />
                   </TableCell>
-                  {colunas.telefone && (
+                  {colunas.cidade && (
                     <TableCell className="text-muted-foreground">
-                      {cliente.telefone ?? "—"}
+                      {imovel.bairro ? `${imovel.bairro}, ` : ""}
+                      {imovel.cidade}
                     </TableCell>
                   )}
-                  {colunas.email && (
-                    <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                      {cliente.email ?? "—"}
-                    </TableCell>
-                  )}
-                  {colunas.score && (
-                    <TableCell>
-                      {cliente.score_lead > 0 ? (
-                        <ScoreBadge score={cliente.score_lead} />
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                  )}
-                  {colunas.cadastro && (
+                  {colunas.area && (
                     <TableCell className="text-muted-foreground">
-                      {new Date(cliente.created_at).toLocaleDateString("pt-BR")}
+                      {imovel.area_total ? `${imovel.area_total}m²` : "—"}
+                    </TableCell>
+                  )}
+                  {colunas.quartos && (
+                    <TableCell className="text-muted-foreground">
+                      {imovel.quartos > 0 ? imovel.quartos : "—"}
                     </TableCell>
                   )}
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -221,12 +228,12 @@ export function TabelaClientes({ clientes }: { clientes: Cliente[] }) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem
-                          render={<Link href={`/clientes/${cliente.id}`} />}
+                          render={<Link href={`/imoveis/${imovel.id}`} />}
                         >
-                          Ver cliente
+                          Ver imóvel
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          render={<Link href={`/clientes/${cliente.id}/editar`} />}
+                          render={<Link href={`/imoveis/${imovel.id}/editar`} />}
                         >
                           Editar
                         </DropdownMenuItem>

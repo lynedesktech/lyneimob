@@ -103,8 +103,7 @@ export async function criarImovel(
 
   revalidatePath("/imoveis")
   revalidatePath("/")
-  revalidatePath(`/imoveis/${imovel.id}`)
-  return { sucesso: "Imóvel cadastrado com sucesso!", id: imovel.id }
+  redirect(`/imoveis/${imovel.id}`)
 }
 
 // ============================================================
@@ -172,7 +171,7 @@ export async function atualizarImovel(
 
   revalidatePath("/imoveis")
   revalidatePath(`/imoveis/${id}`)
-  return { sucesso: "Imóvel atualizado!", id }
+  redirect(`/imoveis/${id}`)
 }
 
 // ============================================================
