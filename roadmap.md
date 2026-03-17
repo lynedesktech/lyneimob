@@ -165,8 +165,22 @@ Pesquisa: `planejamento/pesquisas/pesquisa-shadcn-ui.md`
 ## 💬 Sugestões de Refatoração Técnica
 
 > Melhorias identificadas pelo Claude durante o trabalho. Não são urgentes — executar quando houver espaço no roadmap.
+> Pesquisa completa de oportunidades shadcn em: `planejamento/pesquisas/pesquisa-oportunidades-shadcn.md`
 
-- [ ] Migrar formulários para Field + Input Group do shadcn (escopo grande: 15+ formulários)
-- [ ] Migrar Busca Global para Command (cmdk) oficial
+### 🔴 Alto impacto (top prioridade quando for executar)
+
+- [ ] **Dashboard com Charts** — usar componente `chart` (já instalado) no /painel: gráficos de imóveis ativos, negócios por etapa do funil, evolução mensal
+- [ ] **Command palette** — substituir BuscaGlobal por `command` shadcn com atalho Ctrl+K: busca imóveis, clientes, negócios, navega para páginas
+- [ ] **Carousel na galeria de imóveis** — instalar `carousel` shadcn para galeria de fotos no detalhe do imóvel (substituir grade manual)
+- [ ] **Field + Input Group nos formulários** — instalar `field` e `input-group` shadcn para unificar Label+Input+erro em 15+ formulários; inputs com prefixo (R$, https://, m²)
+- [ ] **Combobox em seleções longas** — instalar `combobox` para busca de imóveis (interesses), clientes e corretores em listas com 10+ opções
+- [ ] **Context Menu no Kanban** — instalar `context-menu` shadcn para click-direito nos cards de negócios: editar, mover etapa, ganhar/perder
+
+### 🟡 Médio impacto
+
+- [ ] **Calendar shadcn em /atividades** — instalar `calendar` para substituir calendário manual; suporte a range de datas
+- [ ] **Alert para avisos inline** — instalar `alert` para trial expirando, limites próximos, webhook inativo, proposta expirando
+- [ ] **Alert Dialog** — instalar `alert-dialog` para substituir `ConfirmacaoExclusao` customizada em todas as exclusões do sistema
+- [ ] **Collapsible em filtros e seções** — instalar `collapsible` para filtros avançados de imóveis, seções de detalhe de cliente/negócio
+- [ ] **Toggle Group** — instalar `toggle-group` para alternância Mensal/Semanal/Diário em atividades e Cards/Lista/Kanban em negócios
 - [ ] Migrar botao-exportar para DropdownMenu oficial
-- [ ] Migrar landing page para Card + Chart oficiais do shadcn

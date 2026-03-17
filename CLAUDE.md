@@ -156,13 +156,26 @@ Regras que valem sempre, em qualquer tarefa:
 - **Na duvida, parar e pesquisar** — se nao tiver certeza sobre como algo funciona ou se ja existe, pesquisar antes de seguir. Nunca chutar.
 - **Atualizar CLAUDE.md** — apos toda implementacao que crie, remova ou renomeie algo relevante (funcoes, rotas, componentes, dependencias, estrutura de pastas). Este documento e o coracao do projeto.
 
+## UI e Design — Regras Obrigatorias
+
+**shadcn/ui e o especialista de UI deste projeto.** Toda interface deve seguir o design system definido na skill `frontend-design`.
+
+Regras que valem SEMPRE para qualquer trabalho visual:
+
+- **shadcn primeiro** — antes de criar qualquer elemento visual (botao, card, formulario, tabela, modal), verificar se ja existe um componente no shadcn. Usar o MCP shadcn para buscar. So criar componente customizado se nao existir equivalente.
+- **MCP shadcn para componentes novos** — ao precisar de um componente que nao esta em `src/components/ui/`, usar o MCP shadcn para verificar disponibilidade e instalar via CLI: `npx shadcn@latest add [nome]`
+- **Nunca hardcodar cores** — usar exclusivamente as variaveis CSS do design system (ver skill frontend-design). Excecoes: `#25D366` (WhatsApp) e `var(--site-primaria)` (site publico).
+- **Skill frontend-design obrigatoria** — ler antes de qualquer implementacao visual. Contem paleta completa, tipografia, radius, catalogo de componentes e checklist de entrega.
+
+---
+
 ## MCPs Configurados
 
 MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados via `.mcp.json` e settings do Claude Code.
 
 - **Context7** — busca documentacao atualizada de bibliotecas e frameworks
 - **Gamma** — gera apresentacoes profissionais (slides)
-- **shadcn** — gerencia componentes shadcn/ui (adicionar, atualizar)
+- **shadcn** — especialista de UI: gerencia componentes shadcn/ui, busca exemplos, verifica disponibilidade, instala novos componentes
 - **Supabase** — acesso direto ao banco (executar SQL, listar tabelas, criar migrations, gerar tipos)
 - **Playwright** — automacao de browser (testes visuais, navegacao, screenshots)
 
@@ -171,7 +184,7 @@ MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados 
 - **pesquisa** — etapa 1 do metodo: pesquisa qualquer tema e gera `planejamento/pesquisas/pesquisa-[tema].md`. Nao executa nada, nao altera o projeto — produto final e apenas o arquivo .md
 - **requisitos** — etapa 2 do metodo: le uma pesquisa (ou trabalha com escopo conhecido) e gera `planejamento/requisitos/requisito-[tema].md` com o plano de execucao completo. Nao executa nada, nao implementa, nao altera o codigo — produto final e apenas o arquivo .md
 - **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Quando conclui, gera tarefas executaveis no roadmap.md. Nao implementa nada, nao altera codigo — produto final sao as tarefas no roadmap
-- **frontend-design** — OBRIGATORIO para qualquer alteracao visual (layout, componentes, CSS, paginas)
+- **frontend-design** — OBRIGATORIO para qualquer alteracao visual (layout, componentes, CSS, paginas). Contem o design system completo do projeto.
 - **busca-no-yt** — buscar videos no YouTube
 
 ---

@@ -316,7 +316,10 @@
       "Bash(python3 -c \":*)",
       "Bash(grep -v \"^$\")",
       "Bash(python3 fix_roadmap.py)",
-      "Bash(del fix_roadmap.py)"
+      "Bash(del fix_roadmap.py)",
+      "mcp__shadcn__get_project_registries",
+      "mcp__shadcn__list_items_in_registries",
+      "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/financeiro/\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

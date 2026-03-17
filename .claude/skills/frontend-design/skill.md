@@ -5,6 +5,17 @@ description: "OBRIGATORIO para qualquer alteracao visual. Garante interfaces pro
 
 # Skill: Frontend Design — LyneImob
 
+## Passo 0 — Consultar o MCP shadcn ANTES de implementar
+
+Antes de criar qualquer componente visual, perguntar ao MCP shadcn se existe o componente:
+- **Listar disponíveis**: `mcp__shadcn__list_items_in_registries` com `["@shadcn"]`
+- **Ver exemplos**: `mcp__shadcn__get_item_examples_from_registries`
+- **Instalar novo**: `npx shadcn@latest add [nome-do-componente]`
+
+Se existe no shadcn → instalar e usar. Só criar componente customizado se não houver equivalente.
+
+---
+
 ## Quando usar
 
 OBRIGATÓRIO sempre que for:
