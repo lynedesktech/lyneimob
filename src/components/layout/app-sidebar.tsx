@@ -94,7 +94,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Building2 className="h-5 w-5" />
           </div>
-          <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
+          <div className="flex min-w-0 flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground truncate">
               {organizacao.nome}
             </span>

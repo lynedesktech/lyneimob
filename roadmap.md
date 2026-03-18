@@ -31,13 +31,32 @@
 - [ ] Central de Suporte
       Contexto: área com FAQ e tutoriais passo a passo para os usuários do CRM — ajuda contextual dentro da plataforma
 
+### Módulo de Loteamentos — implementação
+
+- [ ] Loteamentos Etapa 4 — Sidebar + navegação
+      Contexto: adicionar item "Loteamentos" com ícone MapPin entre Imóveis e Atividades
+- [ ] Loteamentos Etapa 5 — Páginas e componentes do CRUD
+      Contexto: 4 páginas (listagem, novo, detalhe, editar) + 5 componentes (formulário, card, tabela-lotes, filtros, resumo)
+- [ ] Loteamentos Etapa 6 — Importador CSV de lotes
+      Contexto: action importacao-lotes.ts + componente importador-lotes.tsx + página /[id]/importar. Testar com vendas-reserva-mar.csv (348 lotes)
+- [ ] Loteamentos Etapa 7 — Galeria de fotos
+      Contexto: upload, reordenar, definir capa, excluir — bucket loteamento-fotos
+- [ ] Loteamentos Etapa 8 — Descrição com IA
+      Contexto: ia-loteamentos.ts + componente ia-loteamento.tsx — gerar descrição comercial via GPT-4o-mini
+- [ ] Loteamentos Etapa 9 — Site público (listagem + detalhe)
+      Contexto: /[slug]/loteamentos/ e /[slug]/loteamentos/[id] + link no menu do site público
+- [ ] Loteamentos Etapa 10 — Integração com negócios (pipeline)
+      Contexto: seletor de loteamento+lote no formulário de negócio, exibir no Kanban
+- [ ] Loteamentos Etapa 11 — Limites de plano
+      Contexto: max_loteamentos por plano (Trial: 1, CRM IA: 5, CRM IA+SDR: 20)
+
 ---
 
 ## 🔄 Fazendo
 
 > Tarefa em andamento agora.
 
-_(nenhuma tarefa ativa no momento)_
+_(nenhuma tarefa em andamento)_
 
 ---
 
@@ -45,7 +64,24 @@ _(nenhuma tarefa ativa no momento)_
 
 > Implementação concluída. Aguardando validação do usuário.
 
-_(nenhum item aguardando validação)_
+- [x] Loteamentos Etapa 3 — Server Actions (CRUD loteamentos + lotes)
+      O que foi feito: actions/loteamentos.ts criado com 7 funções (criarLoteamento, atualizarLoteamento, excluirLoteamento, criarLote, atualizarLote, excluirLote, alterarStatusLote). Padrão idêntico a imoveis.ts. Build OK.
+      Testar: será validado na Etapa 5 (páginas com formulários)
+
+- [x] Loteamentos Etapa 2 — Tipos, schemas Zod e constantes
+      O que foi feito: 3 arquivos criados (types/loteamentos.ts, types/importacao-lotes.ts, lib/constantes/loteamentos.ts) + 2 editados (database.ts com tipos Loteamento/Lote/LoteamentoFoto + lote_id em Negocio, constantes/index.ts com re-exports). Build OK.
+      Testar: npm run build passa sem erros
+
+- [x] Loteamentos Etapa 1 — Banco de dados (migration + tabelas + RLS + triggers)
+      O que foi feito: migration 026 executada — 3 tabelas (loteamentos, lotes, loteamento_fotos) com RLS, trigger de contadores automáticos, storage bucket, campo lote_id em negocios
+      Testar: verificar tabelas no Supabase Dashboard → Table Editor
+
+- [ ] Upload de logo do cliente no site público
+      O que foi feito: aba "Logo" adicionada em Meu Site com upload de imagem, Server Action atualizada para salvar logo_url no banco, footer do site público agora exibe a logo do cliente (com fallback para logo padrão)
+      Testar: /configuracoes/meu-site → aba Logo → enviar imagem → salvar → acessar site público /{slug}/ → verificar header e footer
+
+- [x] Módulo de Loteamentos — pesquisa + requisito
+      Contexto: documentos de pesquisa e requisito criados em `planejamento/`. Pesquisa cobre modelo de dados, CSV, integrações. Requisito cobre SQL completo, schemas, actions, páginas, componentes, site público.
 
 ---
 

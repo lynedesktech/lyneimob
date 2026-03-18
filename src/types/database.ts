@@ -225,6 +225,7 @@ export type Negocio = {
   motivo_perda: string | null
   posicao: number
   observacoes: string | null
+  lote_id: string | null
   analise_ia: string | null
   sugestao_ia: string | null
   sugestao_ia_resumo: string | null
@@ -350,6 +351,75 @@ export type Convite = {
 
 export type ConviteComRelacoes = Convite & {
   usuarios: { id: string; nome: string } | null
+}
+
+// ============================================================
+// Loteamentos
+// ============================================================
+
+export type Loteamento = {
+  id: string
+  organizacao_id: string
+  nome: string
+  descricao: string | null
+  descricao_ia: string | null
+  status: "lancamento" | "em_vendas" | "esgotado"
+  cep: string | null
+  logradouro: string | null
+  numero: string | null
+  complemento: string | null
+  bairro: string | null
+  cidade: string
+  estado: string
+  total_lotes: number
+  lotes_disponiveis: number
+  lotes_vendidos: number
+  lotes_reservados: number
+  valor_total: number
+  publicar_site: boolean
+  observacoes_internas: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type Lote = {
+  id: string
+  loteamento_id: string
+  organizacao_id: string
+  quadra: string
+  numero_lote: string
+  unidade: string
+  status: "disponivel" | "reservado" | "vendido"
+  comprador: string | null
+  valor: number
+  data_venda: string | null
+  area: number | null
+  observacoes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type LoteamentoFoto = {
+  id: string
+  loteamento_id: string
+  url: string
+  descricao: string | null
+  ordem: number
+  eh_capa: boolean
+  created_at: string
+}
+
+export type LoteamentoComFotos = Loteamento & {
+  loteamento_fotos: LoteamentoFoto[]
+}
+
+export type LoteamentoComLotes = Loteamento & {
+  lotes: Lote[]
+}
+
+export type LoteamentoCompleto = Loteamento & {
+  lotes: Lote[]
+  loteamento_fotos: LoteamentoFoto[]
 }
 
 // ============================================================

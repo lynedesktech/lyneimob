@@ -425,7 +425,10 @@
       "Bash(rm -rf .agents/)",
       "Bash(rm planejamento/pesquisas/CLAUDE.md)",
       "Bash(rm planejamento/requisitos/CLAUDE.md)",
-      "Bash(grep -r \"404\\\\|notFound\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/ --include=*.tsx --include=*.ts)"
+      "Bash(grep -r \"404\\\\|notFound\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/ --include=*.tsx --include=*.ts)",
+      "Bash(grep -n \"config.uazapi_token\\\\|config\\\\.uazapi_token\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/lib/whatsapp/*.ts)",
+      "Bash(ls -la c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/configuracoes/)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/[slug]/ -type f)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
