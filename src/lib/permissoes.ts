@@ -10,6 +10,7 @@ export type Acao =
   | "gerenciar_plano"
   | "gerenciar_integracoes"
   | "gerenciar_site"
+  | "ver_configuracoes"
   | "processar_leads"
   | "ver_todos_registros"
   | "criar_registros"
@@ -24,6 +25,7 @@ const MAPA_PERMISSOES: Record<Acao, Cargo[]> = {
   gerenciar_plano:        ["admin"],
   gerenciar_integracoes:  ["admin"],
   gerenciar_site:         ["admin", "gerente"],
+  ver_configuracoes:      ["admin", "gerente"],
   processar_leads:        ["admin", "gerente"],
   ver_todos_registros:    ["admin", "gerente"],
   criar_registros:        ["admin", "gerente", "corretor"],

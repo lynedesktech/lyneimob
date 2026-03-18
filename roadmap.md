@@ -19,10 +19,6 @@
       Contexto: checkout → webhook → portal → upgrade → cancelamento — cartão de teste 4242 4242 4242 4242
       Depende de: Stripe configurado com variáveis de ambiente corretas
 
-- [ ] Deploy na Vercel
-      Contexto: conectar GitHub, configurar env vars, build de produção, webhook Stripe para URL final
-      Depende de: Stripe e Supabase de produção configurados
-
 ---
 
 ## 🔄 Fazendo
@@ -83,6 +79,7 @@ _(nenhuma tarefa aguardando validação)_
 - [x] Limpar banco de dados para produção — TRUNCATE organizacoes CASCADE + DELETE auth.users, sistema pronto para uso real (2026-03-17)
 - [x] Criar 3 contas de produção (admin, gerente, corretor) — org "Imobiliária Lynedesk", emails padrão @lyneimob.com (2026-03-17)
 - [x] Trocar paleta de cores para gradiente azul vibrante — variáveis CSS grad-start/mid/end/accent-blue, 11 arquivos atualizados (2026-03-17)
+- [x] Deploy na Vercel — GitHub conectado, env vars configuradas, build de produção, webhook Stripe apontando para URL final (2026-03-18)
 - [x] Rebranding "CRM" → "Gestão Imobiliária" + novos nomes de planos — 17 arquivos, landing page, sidebar, auth, planos, onboarding (2026-03-17)
 
 ---

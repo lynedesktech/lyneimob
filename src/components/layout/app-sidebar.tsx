@@ -12,6 +12,7 @@ import {
   Settings,
   Building,
   MapPin,
+  CreditCard,
   HelpCircle,
 } from "lucide-react"
 import {
@@ -53,7 +54,7 @@ const gruposNavegacao: GrupoNavegacao[] = [
       { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
       { titulo: "Loteamentos", href: "/loteamentos", icone: MapPin },
       { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
-      { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
+      { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "ver_configuracoes" },
       { titulo: "Ajuda", href: "/ajuda", icone: HelpCircle },
     ],
   },
