@@ -17,6 +17,20 @@ export async function processarComAgente(
   conversaId: string,
   organizacaoId: string
 ): Promise<void> {
+  // Lock Redis: impedir processamento simultâneo da mesma conversa
+  // Se outra instância já está processando, abortar silenciosamente
+  const { redis } = await import("@/lib/redis")
+  const chaveLock = `lock:agente:${conversaId}`
+
+  if (redis) {
+    // SET NX = só seta se não existir, EX = TTL de 60s (segurança)
+    const adquiriu = await redis.set(chaveLock, "1", { nx: true, ex: 60 })
+    if (!adquiriu) {
+      console.log(`[Agente SDR] Conversa ${conversaId} já está sendo processada, ignorando.`)
+      return
+    }
+  }
+
   try {
     const { criarClienteAdmin } = await import("@/lib/supabase/admin")
     const supabase = criarClienteAdmin()
@@ -144,20 +158,24 @@ export async function processarComAgente(
 
     // Adicionar qualificação existente se houver
     if (conversa.qualificacao) {
-      const q = conversa.qualificacao as Record<string, unknown>
-      const partes: string[] = []
-      if (q.tipo_imovel) partes.push(`Tipo: ${q.tipo_imovel}`)
-      if (q.finalidade) partes.push(`Finalidade: ${q.finalidade}`)
-      if (q.bairros) partes.push(`Bairros: ${(q.bairros as string[]).join(", ")}`)
-      if (q.faixa_preco) {
-        const fp = q.faixa_preco as { min?: number; max?: number }
-        const min = fp.min ? `R$ ${fp.min.toLocaleString("pt-BR")}` : "sem mínimo"
-        const max = fp.max ? `R$ ${fp.max.toLocaleString("pt-BR")}` : "sem máximo"
-        partes.push(`Faixa de preço: ${min} a ${max}`)
-      }
-      if (q.urgencia) partes.push(`Urgência: ${q.urgencia}`)
-      if (partes.length > 0) {
-        contextoExtra += `\n\nDADOS DE QUALIFICAÇÃO JÁ COLETADOS:\n${partes.join("\n")}`
+      try {
+        const q = conversa.qualificacao as Record<string, unknown>
+        const partes: string[] = []
+        if (q.tipo_imovel) partes.push(`Tipo: ${q.tipo_imovel}`)
+        if (q.finalidade) partes.push(`Finalidade: ${q.finalidade}`)
+        if (Array.isArray(q.bairros)) partes.push(`Bairros: ${q.bairros.join(", ")}`)
+        if (q.faixa_preco && typeof q.faixa_preco === "object") {
+          const fp = q.faixa_preco as { min?: number; max?: number }
+          const min = fp.min ? `R$ ${fp.min.toLocaleString("pt-BR")}` : "sem mínimo"
+          const max = fp.max ? `R$ ${fp.max.toLocaleString("pt-BR")}` : "sem máximo"
+          partes.push(`Faixa de preço: ${min} a ${max}`)
+        }
+        if (q.urgencia) partes.push(`Urgência: ${q.urgencia}`)
+        if (partes.length > 0) {
+          contextoExtra += `\n\nDADOS DE QUALIFICAÇÃO JÁ COLETADOS:\n${partes.join("\n")}`
+        }
+      } catch {
+        // Qualificação com formato inesperado — ignorar sem crashar
       }
     }
 
@@ -277,7 +295,19 @@ export async function processarComAgente(
         for (const toolCall of mensagemIA.tool_calls) {
           if (toolCall.type !== "function") continue
 
-          const args = JSON.parse(toolCall.function.arguments) as Record<string, unknown>
+          let args: Record<string, unknown>
+          try {
+            args = JSON.parse(toolCall.function.arguments) as Record<string, unknown>
+          } catch {
+            console.error(`[Agente SDR] JSON inválido nos argumentos da tool ${toolCall.function.name}:`, toolCall.function.arguments)
+            messages.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              content: "Erro: argumentos inválidos. Tente novamente.",
+            })
+            continue
+          }
+
           const resultado = await executarTool(
             toolCall.function.name,
             args,
@@ -323,7 +353,15 @@ export async function processarComAgente(
     // Salvar resposta da IA
     await salvarMensagemMemoria(conversaId, "assistente", respostaFinal)
   } catch (erro) {
-    console.error(`[Agente SDR] Erro ao processar conversa ${conversaId}:`, erro)
+    console.error(
+      `[Agente SDR] Erro ao processar conversa ${conversaId}:`,
+      erro instanceof Error ? `${erro.message}\n${erro.stack}` : erro
+    )
+  } finally {
+    // Liberar lock independente de sucesso ou erro
+    if (redis) {
+      await redis.del(chaveLock).catch(() => {})
+    }
   }
 }
 

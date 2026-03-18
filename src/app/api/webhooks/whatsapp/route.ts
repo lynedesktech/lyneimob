@@ -167,12 +167,14 @@ export async function POST(request: Request) {
 
     // Processar com agente IA após retornar resposta
     // Usa after() do Next.js para manter a função viva no Vercel (serverless-compatible)
+    // Delay de 5s para agrupar mensagens rápidas — o lock Redis no agente evita duplicatas
     const { processarComAgente } = await import("@/lib/whatsapp/agente-sdr")
-    after(() =>
-      processarComAgente(conversaId, organizacaoId).catch((err) =>
+    after(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+      await processarComAgente(conversaId, organizacaoId).catch((err) =>
         console.error("[Webhook] Erro ao processar agente:", err instanceof Error ? err.message : err)
       )
-    )
+    })
 
     return NextResponse.json({
       status: "ok",
