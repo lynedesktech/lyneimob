@@ -8,6 +8,9 @@ import { extrairNumero, ehGrupo, marcarComoLida } from "@/lib/whatsapp/uazapi"
 // Webhook WhatsApp — recebe mensagens da Uazapi
 // ============================================================
 
+// Permitir até 60s para o debounce (20s) + processamento de mídia + IA
+export const maxDuration = 60
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
