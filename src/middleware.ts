@@ -19,8 +19,9 @@ export async function middleware(request: NextRequest) {
   // Remover porta para comparação (ex: "localhost:3000" → "localhost")
   const hostnameBase = hostname.split(":")[0]
 
-  // Se é o domínio principal → fluxo normal (auth, dashboard, etc.)
-  if (hostnameBase === dominioPrincipal) {
+  // Se é o domínio principal ou domínio Vercel → fluxo normal (auth, dashboard, etc.)
+  const ehVercel = hostnameBase.endsWith(".vercel.app")
+  if (hostnameBase === dominioPrincipal || ehVercel) {
     return await atualizarSessao(request)
   }
 

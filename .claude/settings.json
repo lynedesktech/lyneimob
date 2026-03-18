@@ -424,7 +424,8 @@
       "Bash(cp -r .agents/skills/shadcn .claude/skills/shadcn)",
       "Bash(rm -rf .agents/)",
       "Bash(rm planejamento/pesquisas/CLAUDE.md)",
-      "Bash(rm planejamento/requisitos/CLAUDE.md)"
+      "Bash(rm planejamento/requisitos/CLAUDE.md)",
+      "Bash(grep -r \"404\\\\|notFound\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/ --include=*.tsx --include=*.ts)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

@@ -1,7 +1,7 @@
 import { after, NextResponse } from "next/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { schemaPayloadUazapi } from "@/types/whatsapp"
-import type { TipoConteudo } from "@/types/whatsapp"
+import type { TipoConteudo, ConfigWhatsapp } from "@/types/whatsapp"
 import { extrairNumero, ehGrupo, marcarComoLida } from "@/lib/whatsapp/uazapi"
 
 // ============================================================
@@ -161,9 +161,14 @@ export async function POST(request: Request) {
       .eq("id", conversaId)
 
     // Marcar como lida no WhatsApp (usa o chatid completo, ex: "5511999999999@s.whatsapp.net")
-    marcarComoLida(config, remoteJid).catch((erro) => {
-      console.error("[WhatsApp Webhook] Erro ao marcar como lida:", erro instanceof Error ? erro.message : erro)
-    })
+    if (config.uazapi_token) {
+      marcarComoLida(config as unknown as ConfigWhatsapp, remoteJid).catch((erro) => {
+        console.error(
+          `[WhatsApp Webhook] Erro ao marcar como lida (config: ${config.id}, instance: ${config.instance_id}):`,
+          erro instanceof Error ? erro.message : erro
+        )
+      })
+    }
 
     // Processar com agente IA após retornar resposta
     // Usa after() do Next.js para manter a função viva no Vercel (serverless-compatible)
