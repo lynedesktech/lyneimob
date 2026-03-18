@@ -71,10 +71,23 @@ export async function POST(request: Request) {
     const supabase = criarClienteAdmin()
 
     // Identificar organização pela config do WhatsApp
-    // Tenta buscar pelo instance_id do payload, depois fallback por ativo
+    // Prioridade: token do payload > instance_id > orgPrefix do instanceName
     let config = null
 
-    if (instanceIdent) {
+    // 1. Buscar pelo token da instância (vem no root do payload, único por instância)
+    const tokenPayload = body.token as string | undefined
+    if (tokenPayload) {
+      const { data } = await supabase
+        .from("config_whatsapp")
+        .select("*")
+        .eq("uazapi_token", tokenPayload)
+        .eq("ativo", true)
+        .single()
+      config = data
+    }
+
+    // 2. Fallback: buscar pelo instance_id
+    if (!config && instanceIdent) {
       const { data } = await supabase
         .from("config_whatsapp")
         .select("*")
@@ -84,13 +97,14 @@ export async function POST(request: Request) {
       config = data
     }
 
-    // Fallback: buscar por qualquer config ativa (compatibilidade)
-    if (!config) {
+    // 3. Fallback: extrair org do padrão "lyneimob-{orgPrefix}"
+    if (!config && instanceIdent?.startsWith("lyneimob-")) {
+      const orgPrefix = instanceIdent.replace("lyneimob-", "")
       const { data } = await supabase
         .from("config_whatsapp")
         .select("*")
+        .ilike("organizacao_id", `${orgPrefix}%`)
         .eq("ativo", true)
-        .limit(1)
         .single()
       config = data
     }
