@@ -1,60 +1,65 @@
 import type { ConfigWhatsapp, TipoConteudo } from "@/types/whatsapp"
 
 // ============================================================
-// Sistema de debounce com Redis
+// Sistema de debounce com Redis (serverless-compatible)
 // Agrupa mensagens em janela de 20s antes de enviar pra IA
 // Evita que a IA responda cada mensagem separadamente
 // quando o cliente manda várias seguidas
 // ============================================================
 
 const DEBOUNCE_MS = 20_000 // 20 segundos
-const REDIS_TTL_S = 25 // 25 segundos (margem de segurança)
+const REDIS_TTL_S = 30 // TTL da chave Redis (margem de segurança)
 
 /**
- * Map em memória para controlar timers ativos por conversa
- * Cada conversa tem no máximo 1 timer ativo
+ * Agenda processamento da conversa com debounce via Redis.
+ * Cada chamada registra seu timestamp no Redis. Após esperar DEBOUNCE_MS,
+ * verifica se ainda é a última mensagem. Se sim, processa. Se não, ignora.
+ *
+ * Compatível com serverless (Vercel) — não usa setTimeout em memória nem Map.
  */
-const timersAtivos = new Map<string, NodeJS.Timeout>()
-
-/**
- * Adiciona conversa ao debounce
- * Se já tem timer ativo, cancela e reagenda (reinicia a janela)
- */
-export function adicionarAoDebounce(
+export async function agendarDebounce(
   conversaId: string,
   organizacaoId: string
-): void {
+): Promise<void> {
+  const { redis } = await import("@/lib/redis")
   const chave = `debounce:whatsapp:${conversaId}`
+  const meuTimestamp = Date.now().toString()
 
-  // Registrar no Redis que essa conversa tem mensagens pendentes
-  import("@/lib/redis").then(({ redis }) => {
-    if (!redis) return
-    redis.set(chave, organizacaoId, { ex: REDIS_TTL_S }).catch((erro) => {
-      console.error("[Debounce] Erro ao registrar no Redis:", erro instanceof Error ? erro.message : erro)
-    })
-  })
+  if (redis) {
+    // Registrar que esta mensagem chegou agora
+    await redis.set(chave, meuTimestamp, { ex: REDIS_TTL_S })
 
-  // Cancelar timer anterior se existir
-  const timerExistente = timersAtivos.get(conversaId)
-  if (timerExistente) {
-    clearTimeout(timerExistente)
+    // Esperar o período de debounce
+    await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_MS))
+
+    // Verificar se ainda sou a última mensagem
+    const timestampAtual = await redis.get(chave)
+    if (timestampAtual !== meuTimestamp) {
+      // Mensagem mais nova chegou — ela vai processar, eu ignoro
+      console.log(`[Debounce] Conversa ${conversaId} — ignorando (mensagem mais nova existe)`)
+      return
+    }
+
+    // Limpar flag do Redis
+    await redis.del(chave)
+  } else {
+    // Fallback sem Redis: delay fixo de 5s (ambiente local sem Redis configurado)
+    await new Promise((resolve) => setTimeout(resolve, 5000))
   }
 
-  // Agendar novo timer
-  const novoTimer = setTimeout(() => {
-    timersAtivos.delete(conversaId)
-    processarLote(conversaId, organizacaoId).catch((erro) => {
-      console.error(`[Debounce] Erro ao processar lote da conversa ${conversaId}:`, erro instanceof Error ? erro.message : erro)
-    })
-  }, DEBOUNCE_MS)
-
-  timersAtivos.set(conversaId, novoTimer)
+  // Processar mídia pendente + chamar agente
+  console.log(`[Debounce] Processando lote da conversa ${conversaId}`)
+  await processarLote(conversaId, organizacaoId)
 }
 
+// ============================================================
+// Processamento do lote acumulado
+// ============================================================
+
 /**
- * Processa lote de mensagens acumuladas após o debounce
- * 1. Busca mensagens não processadas da conversa
- * 2. Processa mídia (áudio, imagem, PDF)
+ * Processa lote de mensagens acumuladas após o debounce:
+ * 1. Busca mensagens de mídia não processadas da conversa
+ * 2. Processa mídia (áudio → texto, imagem → descrição, PDF → texto)
  * 3. Atualiza conteúdo processado no banco
  * 4. Chama o agente IA para responder
  */
@@ -62,13 +67,7 @@ async function processarLote(
   conversaId: string,
   organizacaoId: string
 ): Promise<void> {
-  const chaveRedis = `debounce:whatsapp:${conversaId}`
-
   try {
-    // Limpar flag do Redis
-    const { redis } = await import("@/lib/redis")
-    if (redis) await redis.del(chaveRedis)
-
     const { criarClienteAdmin } = await import("@/lib/supabase/admin")
     const supabase = criarClienteAdmin()
 
