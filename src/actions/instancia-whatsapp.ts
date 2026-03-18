@@ -148,9 +148,29 @@ export async function criarEConectarInstancia(): Promise<
   let instanceId: string
 
   if (configExistente?.uazapi_token && configExistente?.instance_id) {
-    // Já tem instância criada — reusar
-    instanceToken = configExistente.uazapi_token
-    instanceId = configExistente.instance_id
+    // Já tem instância criada — validar se o token ainda funciona
+    try {
+      await verificarStatusUazapi(credenciais.url, configExistente.uazapi_token)
+      instanceToken = configExistente.uazapi_token
+      instanceId = configExistente.instance_id
+    } catch {
+      // Token inválido — excluir instância antiga e criar nova
+      console.log("[Instância WhatsApp] Token antigo inválido, recriando instância...")
+      try {
+        await excluirInstanciaUazapi(credenciais.url, credenciais.adminToken, configExistente.instance_id)
+      } catch { /* instância pode já não existir */ }
+
+      const nomeInstancia = `lyneimob-${usuario.organizacao_id.slice(0, 8)}`
+      const instancia = await criarInstanciaUazapi(credenciais.url, credenciais.adminToken, nomeInstancia)
+      instanceToken = instancia.token
+      instanceId = instancia.id
+
+      // Salvar novo token no banco
+      await supabase
+        .from("config_whatsapp")
+        .update({ uazapi_url: credenciais.url, uazapi_token: instanceToken, instance_id: instanceId })
+        .eq("id", configExistente.id)
+    }
   } else {
     // Criar nova instância
     try {
@@ -253,6 +273,16 @@ export async function verificarStatusInstancia(): Promise<
     const resposta = await verificarStatusUazapi(credenciais.url, config.uazapi_token)
     const statusConexao = resposta.instance?.status || "disconnected"
     const conectado = resposta.status?.connected || statusConexao === "connected"
+
+    // Sincronizar token — se a Uazapi retornou um token diferente, atualizar no banco
+    const tokenRetornado = resposta.instance?.token
+    if (tokenRetornado && tokenRetornado !== config.uazapi_token) {
+      await supabase
+        .from("config_whatsapp")
+        .update({ uazapi_token: tokenRetornado })
+        .eq("id", config.id)
+      console.log(`[Instância WhatsApp] Token atualizado no banco para config ${config.id}`)
+    }
 
     // Se acabou de conectar, ativar instância e salvar número quando disponível
     if (conectado && !config.ativo) {
