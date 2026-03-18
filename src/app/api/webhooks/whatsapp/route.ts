@@ -198,7 +198,7 @@ export async function POST(request: Request) {
             "Content-Type": "application/json",
             "x-internal-secret": process.env.SUPABASE_SERVICE_ROLE_KEY!,
           },
-          body: JSON.stringify({ conversaId, organizacaoId }),
+          body: JSON.stringify({ conversaId, organizacaoId, numeroCliente }),
         })
         console.log(`[Webhook] Debounce agendado para conversa ${conversaId}`)
       } catch (err) {
@@ -276,7 +276,9 @@ async function buscarOuCriarConversa(
     return { id: conversaExistente.id, isNova: false }
   }
 
-  // Criar nova conversa
+  // Criar nova conversa (com proteção contra race condition)
+  // Se 5 webhooks chegam ao mesmo tempo, todos tentam INSERT.
+  // O unique index parcial garante que só 1 consegue — os outros recebem erro 23505.
   const { data: novaConversa, error: erroConversa } = await supabase
     .from("conversas_whatsapp")
     .insert({
@@ -289,8 +291,24 @@ async function buscarOuCriarConversa(
     .select("id")
     .single()
 
-  if (erroConversa || !novaConversa) {
-    throw new Error(`Erro ao criar conversa: ${erroConversa?.message}`)
+  if (erroConversa) {
+    // Erro 23505 = unique violation — outra invocação criou a conversa primeiro
+    if (erroConversa.code === "23505") {
+      const { data: conversaCriada } = await supabase
+        .from("conversas_whatsapp")
+        .select("id")
+        .eq("organizacao_id", organizacaoId)
+        .eq("numero_cliente", numeroCliente)
+        .in("status", ["em_andamento", "qualificado", "encaminhado"])
+        .order("criado_em", { ascending: false })
+        .limit(1)
+        .single()
+
+      if (conversaCriada) {
+        return { id: conversaCriada.id, isNova: false }
+      }
+    }
+    throw new Error(`Erro ao criar conversa: ${erroConversa.message}`)
   }
 
   return { id: novaConversa.id, isNova: true }

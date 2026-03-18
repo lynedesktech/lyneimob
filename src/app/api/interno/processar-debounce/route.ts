@@ -18,22 +18,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 })
   }
 
-  const { conversaId, organizacaoId } = await request.json()
+  const { conversaId, organizacaoId, numeroCliente } = await request.json()
 
   if (!conversaId || !organizacaoId) {
     return NextResponse.json({ erro: "Dados incompletos" }, { status: 400 })
   }
 
-  // Lock Redis: só uma invocação processa por conversa
+  // Lock Redis: só uma invocação processa por número de cliente
+  // Usa organizacaoId + numeroCliente (não conversaId) para evitar race condition
+  // onde múltiplas conversas são criadas para o mesmo número
   const { redis } = await import("@/lib/redis")
-  const chaveLock = `lock:debounce:${conversaId}`
+  const chaveCliente = numeroCliente || conversaId // fallback pro conversaId se não tiver numero
+  const chaveLock = `lock:debounce:${organizacaoId}:${chaveCliente}`
 
   if (redis) {
     const adquiriu = await redis.set(chaveLock, "1", { nx: true, ex: 90 })
     if (!adquiriu) {
-      console.log(`[Debounce] Lock não adquirido para conversa ${conversaId} — outra invocação cuida`)
+      console.log(`[Debounce] Lock não adquirido para ${chaveCliente} — outra invocação cuida`)
       return NextResponse.json({ status: "ignorado" })
     }
+  } else {
+    console.warn("[Debounce] Redis não configurado — lock desativado")
   }
 
   try {
