@@ -14,21 +14,13 @@ export function HeaderSite({ organizacao }: Props) {
           href={`/${organizacao.slug}`}
           className="flex items-center gap-2.5"
         >
-          {organizacao.logo_url ? (
+          {organizacao.logo_url && (
             <Image
               src={organizacao.logo_url}
               alt={organizacao.nome}
               width={36}
               height={36}
               className="rounded"
-            />
-          ) : (
-            <Image
-              src="/logo-preto.png"
-              alt={organizacao.nome}
-              width={120}
-              height={30}
-              className="h-7 w-auto"
             />
           )}
           <span className="text-lg font-bold text-[var(--site-primaria)]">

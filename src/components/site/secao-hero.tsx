@@ -36,8 +36,18 @@ export function SecaoHero({ organizacao }: Props) {
 
       <div className="relative mx-auto max-w-4xl text-center">
         <h1 className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-          {configs.hero.titulo} com a{" "}
-          <span style={{ color: 'var(--site-destaque)' }}>{organizacao.nome}</span>
+          {configs.hero.titulo.includes("{empresa}") ? (
+            configs.hero.titulo.split("{empresa}").map((parte, i, arr) => (
+              <span key={i}>
+                {parte}
+                {i < arr.length - 1 && (
+                  <span style={{ color: 'var(--site-destaque)' }}>{organizacao.nome}</span>
+                )}
+              </span>
+            ))
+          ) : (
+            configs.hero.titulo
+          )}
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-white/80 sm:text-lg">
           {configs.hero.subtitulo}

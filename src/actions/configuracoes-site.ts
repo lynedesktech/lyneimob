@@ -64,12 +64,16 @@ export async function salvarConfiguracoesSite(
     return { erro: "Dados de configuração inválidos. Verifique os campos." }
   }
 
+  // Logo URL (campo separado na tabela organizacoes)
+  const logoUrl = (formData.get("logo_url") as string) || null
+
   const supabase = await criarClienteServer()
 
   const { error } = await supabase
     .from("organizacoes")
     .update({
       configuracoes_site: resultado.data,
+      logo_url: logoUrl || null,
     })
     .eq("id", usuario.organizacao_id)
 

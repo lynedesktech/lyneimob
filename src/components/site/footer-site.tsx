@@ -34,13 +34,15 @@ export function FooterSite({ organizacao }: Props) {
           {/* Sobre */}
           <div>
             <div className="mb-4 flex items-center gap-2">
-              <Image
-                src="/logo-branco.png"
-                alt={organizacao.nome}
-                width={120}
-                height={30}
-                className="h-6 w-auto"
-              />
+              {organizacao.logo_url && (
+                <Image
+                  src={organizacao.logo_url}
+                  alt={organizacao.nome}
+                  width={36}
+                  height={36}
+                  className="rounded brightness-0 invert"
+                />
+              )}
               <span className="text-lg font-bold">{organizacao.nome}</span>
             </div>
             {organizacao.creci && (

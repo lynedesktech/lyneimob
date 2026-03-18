@@ -13,7 +13,7 @@ export const schemaCoresSite = z.object({
 })
 
 export const schemaHeroSite = z.object({
-  titulo: z.string().default("Encontre o imóvel ideal"),
+  titulo: z.string().default("Encontre o imóvel ideal com a {empresa}"),
   subtitulo: z
     .string()
     .default(
@@ -37,7 +37,7 @@ const coresPadrao = {
 }
 
 const heroPadrao = {
-  titulo: "Encontre o imóvel ideal",
+  titulo: "Encontre o imóvel ideal com a {empresa}",
   subtitulo:
     "Explore nossos imóveis disponíveis e encontre a casa, apartamento ou terreno perfeito para você.",
   imagem_fundo_url: null,

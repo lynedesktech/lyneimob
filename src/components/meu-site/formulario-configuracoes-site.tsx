@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useState, useEffect } from "react"
-import { ExternalLink, Globe, Palette, Type, Info, Save, RotateCcw } from "lucide-react"
+import { ExternalLink, Globe, Palette, Type, Info, Save, RotateCcw, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,6 +30,7 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
     organizacao.configuracoes_site as Record<string, unknown>
   )
   const [configs, setConfigs] = useState<ConfiguracoesSite>(configsIniciais)
+  const [logoUrl, setLogoUrl] = useState<string | null>(organizacao.logo_url || null)
 
   // Action para salvar
   const [estado, formAction, pendente] = useActionState(salvarConfiguracoesSite, {})
@@ -71,6 +72,7 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
     <form
       action={(formData) => {
         formData.set("configuracoes", JSON.stringify(configs))
+        formData.set("logo_url", logoUrl || "")
         formAction(formData)
       }}
     >
@@ -110,8 +112,12 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
         </div>
       </div>
 
-      <Tabs defaultValue="cores" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 sm:w-auto sm:grid-cols-none sm:flex">
+      <Tabs defaultValue="identidade" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 sm:w-auto sm:grid-cols-none sm:flex">
+          <TabsTrigger value="identidade">
+            <ImageIcon className="mr-1.5 h-3.5 w-3.5" />
+            Logo
+          </TabsTrigger>
           <TabsTrigger value="cores">
             <Palette className="mr-1.5 h-3.5 w-3.5" />
             Cores
@@ -223,6 +229,30 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
           </Card>
         </TabsContent>
 
+        {/* ========== TAB IDENTIDADE ========== */}
+        <TabsContent value="identidade">
+          <Card>
+            <CardHeader>
+              <CardTitle>Logo da Imobiliária</CardTitle>
+              <CardDescription>
+                A logo aparece no header e no footer do seu site público. Envie uma
+                imagem quadrada (PNG ou JPG) com fundo transparente para melhor resultado.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UploadImagemSite
+                tipo="logo"
+                urlAtual={logoUrl}
+                onUrlChange={setLogoUrl}
+                aspecto="square"
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Recomendado: imagem quadrada, mínimo 200x200px. Formatos: JPG, PNG ou WebP (até 5MB).
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ========== TAB HERO ========== */}
         <TabsContent value="hero">
           <Card>
@@ -241,10 +271,10 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
                     id="hero-titulo"
                     value={configs.hero.titulo}
                     onChange={(e) => atualizarHero("titulo", e.target.value)}
-                    placeholder="Encontre o imóvel ideal"
+                    placeholder="Encontre o imóvel ideal com a {empresa}"
                   />
                   <p className="text-xs text-muted-foreground">
-                    O nome da sua imobiliária aparece automaticamente em destaque
+                    Use <strong>{"{empresa}"}</strong> onde quiser que o nome da sua imobiliária apareça em destaque. Ex: &quot;Os melhores imóveis da {"{empresa}"}&quot;
                   </p>
                 </div>
 
