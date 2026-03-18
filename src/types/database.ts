@@ -236,6 +236,7 @@ export type Negocio = {
 export type NegocioComRelacoes = Negocio & {
   clientes: { id: string; nome: string; telefone: string | null; email: string | null } | null
   imoveis: { id: string; titulo: string; codigo: string; tipo: TipoImovel } | null
+  lotes: { id: string; quadra: string; numero_lote: string; unidade: string; valor: number; loteamento_id: string; loteamentos?: { id: string; nome: string } | null } | null
   usuarios: { id: string; nome: string } | null
   pipeline_etapas?: PipelineEtapa | null
 }

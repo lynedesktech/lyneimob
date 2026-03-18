@@ -428,7 +428,40 @@
       "Bash(grep -r \"404\\\\|notFound\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/ --include=*.tsx --include=*.ts)",
       "Bash(grep -n \"config.uazapi_token\\\\|config\\\\.uazapi_token\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/lib/whatsapp/*.ts)",
       "Bash(ls -la c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/configuracoes/)",
-      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/[slug]/ -type f)"
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/[slug]/ -type f)",
+      "Bash(grep -l \"formatarPreco\\\\|opcoesDeLabels\" \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/lib/\"*)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -name *constante* -o -name *label*)",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/meu-site/)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/configuracoes/meu-site/)",
+      "WebFetch(domain:upstash.com)",
+      "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/loteamentos/[id]/\")",
+      "Bash(ls /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/loteamentos/)",
+      "Bash(wc -l /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/loteamentos/[id]/page.tsx)",
+      "Bash(cat \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/loteamentos/[id]/page.tsx\")",
+      "Bash(cat \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/loteamentos/[id]/editar/page.tsx\")",
+      "Bash(grep -A5 import.*ia-imoveis /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/*/imoveis/*/page.tsx)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/[slug] -type f)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -type f -name *loteamento*)",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/[slug]/imoveis/)",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/[slug]/imoveis/[id]/)",
+      "Bash(ls -la \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/negocios/\")",
+      "Bash(cat \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/negocios/page.tsx\")",
+      "Bash(cat \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/negocios/[id]/page.tsx\")",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations -name *026* -o -name *loteamento*)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -type f -name *importad* -o -name *lotes*)",
+      "Bash(grep -r lote_id /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/actions/ --include=*.ts)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app -type f -name *meu-site*)",
+      "Bash(grep -l \"lote\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/negocios/*.tsx)",
+      "Bash(head -20 /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/loteamentos/[id]/importar/page.tsx)",
+      "mcp__shadcn__search_items_in_registries",
+      "Bash(npx shadcn@latest add accordion --yes)",
+      "Bash(grep -A 20 \"CREATE TABLE public.usuarios\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
+      "Bash(grep -E \"^\\\\s+\\\\{$\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/ajuda/page.tsx)",
+      "Bash(grep -E \"^\\\\s+\\\\{$\")",
+      "Bash(grep 'select\\(\"\"\\\\*\"\"\\)' /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/organizacoes/[id]/page.tsx)",
+      "Bash(grep -n \"data: org\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/organizacoes/[id]/page.tsx)",
+      "Bash(ls -la \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/027\"* \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/028\"* \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/public/favicon.ico\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
@@ -441,7 +474,10 @@
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(auth)\\convite",
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\api\\xml\\[slug]",
       "C:\\Users\\Lynedesk\\Desktop\\Tech\\gamma-mcp-server",
-      "C:\\Users\\Lynedesk\\Desktop\\Tech"
+      "C:\\Users\\Lynedesk\\Desktop\\Tech",
+      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\loteamentos\\[id]",
+      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\[slug]\\loteamentos",
+      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\organizacoes"
     ]
   }
 }

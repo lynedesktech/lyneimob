@@ -32,14 +32,14 @@ export function CardImovelPublico({ imovel, slug }: Props) {
 
   return (
     <Link href={`/${slug}/imoveis/${imovel.id}`}>
-      <Card className="overflow-hidden transition-all hover:shadow-lg">
-        <div className="relative aspect-video w-full bg-muted">
+      <Card className="group overflow-hidden transition-all hover:shadow-lg">
+        <div className="relative aspect-video w-full overflow-hidden bg-muted">
           {fotoUrl ? (
             <Image
               src={fotoUrl}
               alt={imovel.titulo}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (

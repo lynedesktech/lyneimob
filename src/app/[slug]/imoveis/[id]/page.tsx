@@ -3,9 +3,12 @@ import Link from "next/link"
 import {
   buscarOrganizacaoPorSlug,
   buscarImovelPublico,
+  buscarImoveisSimilares,
   formatarPreco,
 } from "@/lib/site/buscar-dados-site"
 import { GaleriaImovel } from "@/components/site/galeria-imovel"
+import { CardImovelPublico } from "@/components/site/card-imovel-publico"
+import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import {
   MapPin,
   BedDouble,
@@ -60,6 +63,12 @@ export default async function DetalheImovelPage({
   if (!imovel) {
     notFound()
   }
+
+  const similares = await buscarImoveisSimilares(organizacao.id, {
+    id: imovel.id,
+    tipo: imovel.tipo,
+    bairro: imovel.bairro,
+  })
 
   const titulo = imovel.titulo_ia || imovel.titulo
   const descricao = imovel.descricao_ia || imovel.descricao
@@ -264,6 +273,24 @@ export default async function DetalheImovelPage({
           </div>
         </div>
       </div>
+
+      {/* Imóveis similares */}
+      {similares.length > 0 && (
+        <AnimacaoScroll className="mt-12">
+          <div className="border-t pt-10">
+            <h2 className="mb-6 text-xl font-bold">Imóveis similares</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {similares.map((similar) => (
+                <CardImovelPublico
+                  key={similar.id}
+                  imovel={similar}
+                  slug={slug}
+                />
+              ))}
+            </div>
+          </div>
+        </AnimacaoScroll>
+      )}
     </div>
   )
 }

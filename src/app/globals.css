@@ -162,3 +162,17 @@
 .text-shadow-sm {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
+
+/* Animação sutil de pulse para o botão flutuante do WhatsApp */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.animate-bounce-subtle:hover {
+  animation: none;
+}

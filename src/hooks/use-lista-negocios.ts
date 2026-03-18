@@ -29,7 +29,7 @@ export function useListaNegocios(filtros: FiltrosListaNegocios = {}) {
       let query = supabase
         .from("negocios")
         .select(
-          "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), usuarios(id, nome), pipeline_etapas(id, nome, cor, icone, tipo, ordem)",
+          "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), lotes(id, quadra, numero_lote, unidade, valor, loteamento_id, loteamentos(id, nome)), usuarios(id, nome), pipeline_etapas(id, nome, cor, icone, tipo, ordem)",
           { count: "exact" }
         )
         .order("created_at", { ascending: false })

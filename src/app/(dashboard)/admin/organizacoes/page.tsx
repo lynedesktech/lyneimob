@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import {
@@ -105,8 +106,12 @@ export default async function AdminOrganizacoesPage() {
                 const qtdImoveis = contarPorOrg(imoveisPorOrg, org.id)
 
                 return (
-                  <TableRow key={org.id}>
-                    <TableCell className="font-medium">{org.nome}</TableCell>
+                  <TableRow key={org.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableCell className="font-medium">
+                      <Link href={`/admin/organizacoes/${org.id}`} className="hover:underline">
+                        {org.nome}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-muted-foreground font-mono text-xs">
                       {org.slug}
                     </TableCell>

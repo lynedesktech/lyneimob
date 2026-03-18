@@ -11,6 +11,8 @@ import {
   CalendarCheck,
   Settings,
   Building,
+  MapPin,
+  HelpCircle,
 } from "lucide-react"
 import {
   Sidebar,
@@ -49,8 +51,10 @@ const gruposNavegacao: GrupoNavegacao[] = [
       { titulo: "Negócios", href: "/negocios", icone: Handshake },
       { titulo: "Clientes", href: "/clientes", icone: Users },
       { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
+      { titulo: "Loteamentos", href: "/loteamentos", icone: MapPin },
       { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "gerenciar_integracoes" },
+      { titulo: "Ajuda", href: "/ajuda", icone: HelpCircle },
     ],
   },
 ]

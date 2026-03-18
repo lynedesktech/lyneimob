@@ -45,6 +45,7 @@ export async function criarNegocio(
     titulo: formData.get("titulo"),
     cliente_id: formData.get("cliente_id"),
     imovel_id: formData.get("imovel_id") || undefined,
+    lote_id: formData.get("lote_id") || undefined,
     etapa_id: formData.get("etapa_id"),
     valor: formData.get("valor") || undefined,
     tipo: formData.get("tipo"),
@@ -79,6 +80,7 @@ export async function criarNegocio(
     .insert({
       ...dados.data,
       imovel_id: dados.data.imovel_id || null,
+      lote_id: dados.data.lote_id || null,
       organizacao_id: usuario.organizacao_id,
       corretor_id: usuario.id,
       posicao,
@@ -113,6 +115,7 @@ export async function atualizarNegocio(
     titulo: formData.get("titulo"),
     cliente_id: formData.get("cliente_id"),
     imovel_id: formData.get("imovel_id") || undefined,
+    lote_id: formData.get("lote_id") || undefined,
     etapa_id: formData.get("etapa_id"),
     valor: formData.get("valor") || undefined,
     tipo: formData.get("tipo"),
@@ -138,6 +141,7 @@ export async function atualizarNegocio(
     .update({
       ...camposAtualizar,
       imovel_id: camposAtualizar.imovel_id || null,
+      lote_id: camposAtualizar.lote_id || null,
     })
     .eq("id", id)
 
@@ -254,6 +258,25 @@ export async function ganharNegocio(
 
   if (error) {
     return { erro: "Erro ao marcar como ganho. Tente novamente." }
+  }
+
+  // Se tem lote vinculado, marcar como vendido
+  const { data: negocioGanho } = await supabase
+    .from("negocios")
+    .select("lote_id, clientes(nome)")
+    .eq("id", id)
+    .single()
+
+  if (negocioGanho?.lote_id) {
+    const cliente = negocioGanho.clientes as unknown as { nome: string } | null
+    await supabase
+      .from("lotes")
+      .update({
+        status: "vendido",
+        data_venda: new Date().toISOString().split("T")[0],
+        comprador: cliente?.nome || null,
+      })
+      .eq("id", negocioGanho.lote_id)
   }
 
   // Arquivar conversa WhatsApp associada, se houver

@@ -10,6 +10,7 @@ import {
   Pencil,
   User,
   Building2,
+  MapPin,
   Calendar,
   DollarSign,
   ArrowLeft,
@@ -40,7 +41,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
   const { data: negocio, error } = await supabase
     .from("negocios")
     .select(
-      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), usuarios(id, nome), pipeline_etapas(*)"
+      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), lotes(id, quadra, numero_lote, unidade, valor, loteamento_id, loteamentos(id, nome)), usuarios(id, nome), pipeline_etapas(*)"
     )
     .eq("id", id)
     .single()
@@ -219,6 +220,29 @@ export default async function DetalheNegocioPage({ params }: Props) {
                     >
                       {n.imoveis.codigo} — {n.imoveis.titulo}
                     </Link>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Card Lote */}
+              {n.lotes && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <MapPin className="h-4 w-4" />
+                      Lote vinculado
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1 text-sm">
+                    <Link
+                      href={`/loteamentos/${n.lotes.loteamento_id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {n.lotes.loteamentos?.nome}
+                    </Link>
+                    <p className="text-muted-foreground">
+                      Quadra {n.lotes.quadra}, Lote {n.lotes.numero_lote}
+                    </p>
                   </CardContent>
                 </Card>
               )}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical, User, Building2, Calendar, Lightbulb, ExternalLink, Pencil, Trophy, XCircle } from "lucide-react"
+import { GripVertical, User, Building2, MapPin, Calendar, Lightbulb, ExternalLink, Pencil, Trophy, XCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -108,6 +108,16 @@ export function KanbanCard({ negocio, overlay }: KanbanCardProps) {
                         <Building2 className="h-3 w-3" />
                         <span className="truncate">
                           {negocio.imoveis.codigo} — {negocio.imoveis.titulo}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Lote */}
+                    {negocio.lotes && (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        <span className="truncate">
+                          {negocio.lotes.loteamentos?.nome} — Q{negocio.lotes.quadra} L{negocio.lotes.numero_lote}
                         </span>
                       </div>
                     )}

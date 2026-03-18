@@ -32,6 +32,8 @@ interface FormularioNegocioProps {
 
 type ClienteSimples = { id: string; nome: string }
 type ImovelSimples = { id: string; titulo: string; codigo: string }
+type LoteamentoSimples = { id: string; nome: string }
+type LoteSimples = { id: string; quadra: string; numero_lote: string; unidade: string; valor: number; loteamento_id: string }
 
 export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const editando = !!negocio
@@ -41,6 +43,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<CriarNegocioInput>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,6 +55,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
       etapa_id: negocio?.etapa_id || "",
       cliente_id: negocio?.cliente_id || "",
       imovel_id: negocio?.imovel_id || "",
+      lote_id: negocio?.lote_id || "",
       previsao_fechamento: negocio?.previsao_fechamento || "",
       observacoes: negocio?.observacoes || "",
     },
@@ -61,13 +65,18 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const [clientes, setClientes] = useState<ClienteSimples[]>([])
   const [imoveis, setImoveis] = useState<ImovelSimples[]>([])
   const [etapas, setEtapas] = useState<PipelineEtapa[]>([])
+  const [loteamentos, setLoteamentos] = useState<LoteamentoSimples[]>([])
+  const [lotes, setLotes] = useState<LoteSimples[]>([])
+  const [loteamentoSelecionado, setLoteamentoSelecionado] = useState(
+    negocio?.lotes?.loteamento_id || ""
+  )
 
   // Carregar dados para os selects
   useEffect(() => {
     const supabase = criarClienteBrowser()
 
     async function carregar() {
-      const [resClientes, resImoveis, resEtapas] = await Promise.all([
+      const [resClientes, resImoveis, resEtapas, resLoteamentos] = await Promise.all([
         supabase
           .from("clientes")
           .select("id, nome")
@@ -83,15 +92,44 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
           .select("*")
           .eq("tipo", "normal")
           .order("ordem"),
+        supabase
+          .from("loteamentos")
+          .select("id, nome")
+          .order("nome"),
       ])
 
       setClientes((resClientes.data as ClienteSimples[]) || [])
       setImoveis((resImoveis.data as ImovelSimples[]) || [])
       setEtapas((resEtapas.data as PipelineEtapa[]) || [])
+      setLoteamentos((resLoteamentos.data as LoteamentoSimples[]) || [])
     }
 
     carregar()
   }, [])
+
+  // Carregar lotes quando loteamento mudar
+  useEffect(() => {
+    if (!loteamentoSelecionado) {
+      setLotes([])
+      return
+    }
+
+    const supabase = criarClienteBrowser()
+
+    async function carregarLotes() {
+      const { data } = await supabase
+        .from("lotes")
+        .select("id, quadra, numero_lote, unidade, valor, loteamento_id")
+        .eq("loteamento_id", loteamentoSelecionado)
+        .in("status", ["disponivel", "reservado"])
+        .order("quadra")
+        .order("numero_lote")
+
+      setLotes((data as LoteSimples[]) || [])
+    }
+
+    carregarLotes()
+  }, [loteamentoSelecionado])
 
   useEffect(() => {
     if (estado.erro) toast.error(estado.erro)
@@ -105,6 +143,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
     formData.set("cliente_id", dados.cliente_id)
     formData.set("etapa_id", dados.etapa_id)
     if (dados.imovel_id) formData.set("imovel_id", dados.imovel_id)
+    if (dados.lote_id) formData.set("lote_id", dados.lote_id)
     if (dados.valor !== undefined) formData.set("valor", String(dados.valor))
     if (dados.previsao_fechamento) formData.set("previsao_fechamento", dados.previsao_fechamento)
     if (dados.observacoes) formData.set("observacoes", dados.observacoes)
@@ -246,6 +285,45 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                     placeholderBusca="Buscar por código ou título..."
                     permitirVazio
                     labelVazio="Nenhum"
+                  />
+                )}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel>Loteamento (opcional)</FieldLabel>
+              <ComboboxCampo
+                opcoes={loteamentos.map((l) => ({ value: l.id, label: l.nome }))}
+                value={loteamentoSelecionado}
+                onChange={(v) => {
+                  setLoteamentoSelecionado(v)
+                  setValue("lote_id", "")
+                }}
+                placeholder="Selecionar loteamento..."
+                placeholderBusca="Buscar por nome..."
+                permitirVazio
+                labelVazio="Nenhum"
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel>Lote (opcional)</FieldLabel>
+              <Controller
+                name="lote_id"
+                control={control}
+                render={({ field }) => (
+                  <ComboboxCampo
+                    opcoes={lotes.map((l) => ({
+                      value: l.id,
+                      label: `Quadra ${l.quadra}, Lote ${l.numero_lote}${l.unidade !== `${l.quadra}-${l.numero_lote}` ? ` (${l.unidade})` : ""}`,
+                    }))}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder={loteamentoSelecionado ? "Selecionar lote..." : "Selecione um loteamento primeiro"}
+                    placeholderBusca="Buscar por quadra ou lote..."
+                    permitirVazio
+                    labelVazio="Nenhum"
+                    disabled={!loteamentoSelecionado}
                   />
                 )}
               />

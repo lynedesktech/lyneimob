@@ -9,6 +9,7 @@ import { FiltrosImoveisPublico } from "@/components/site/filtros-imoveis-publico
 import { PaginacaoSite } from "@/components/site/paginacao-site"
 import { Building2 } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
+import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import type { Metadata } from "next"
 
 type Params = Promise<{ slug: string }>
@@ -84,20 +85,23 @@ export default async function ListagemImoveisPage({
       {/* Grid de imóveis */}
       {imoveis.length > 0 ? (
         <>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {imoveis.map((imovel) => (
-              <CardImovelPublico
-                key={imovel.id}
-                imovel={imovel}
-                slug={slug}
-              />
-            ))}
-          </div>
+          <AnimacaoScroll>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {imoveis.map((imovel) => (
+                <CardImovelPublico
+                  key={imovel.id}
+                  imovel={imovel}
+                  slug={slug}
+                />
+              ))}
+            </div>
+          </AnimacaoScroll>
 
           {/* Paginação */}
           <div className="mt-10">
             <PaginacaoSite
               slug={slug}
+              basePath="imoveis"
               paginaAtual={paginaAtual}
               totalPaginas={totalPaginas}
               searchParams={filtrosAtuais}

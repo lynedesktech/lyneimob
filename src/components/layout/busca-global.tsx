@@ -33,6 +33,8 @@ import {
   Loader2,
   BarChart3,
   Shield,
+  MapPin,
+  HelpCircle,
 } from "lucide-react"
 
 // ============================================================
@@ -129,11 +131,14 @@ const acoesRapidas: AcaoRapida[] = [
   { label: "Novo Cliente", href: "/clientes/novo", icone: <Plus className="h-4 w-4" />, grupo: "criar" },
   { label: "Novo Negócio", href: "/negocios/novo", icone: <Plus className="h-4 w-4" />, grupo: "criar" },
   { label: "Nova Atividade", href: "/atividades/novo", icone: <Plus className="h-4 w-4" />, grupo: "criar" },
+  { label: "Novo Loteamento", href: "/loteamentos/novo", icone: <Plus className="h-4 w-4" />, grupo: "criar" },
   { label: "Dashboard", href: "/painel", icone: <LayoutDashboard className="h-4 w-4" />, grupo: "navegar" },
   { label: "Imóveis", href: "/imoveis", icone: <Building2 className="h-4 w-4" />, grupo: "navegar" },
+  { label: "Loteamentos", href: "/loteamentos", icone: <MapPin className="h-4 w-4" />, grupo: "navegar" },
   { label: "Clientes", href: "/clientes", icone: <Users className="h-4 w-4" />, grupo: "navegar" },
   { label: "Negócios", href: "/negocios", icone: <Handshake className="h-4 w-4" />, grupo: "navegar" },
   { label: "Atividades", href: "/atividades", icone: <CalendarCheck className="h-4 w-4" />, grupo: "navegar" },
+  { label: "Ajuda", href: "/ajuda", icone: <HelpCircle className="h-4 w-4" />, grupo: "navegar" },
 ]
 
 const acoesPlataforma: AcaoRapida[] = [

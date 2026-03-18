@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import type { StatusImovel, StatusCliente } from "@/types/database"
+import type { StatusLoteamento, StatusLote } from "@/types/loteamentos"
 
 type VarianteBadge = "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info"
 
@@ -63,6 +64,18 @@ export const configStatusConversa: ConfigStatusBadge = {
   encaminhado: { label: "Encaminhado", variant: "success" },
   finalizado: { label: "Finalizado", variant: "secondary" },
   arquivado: { label: "Arquivado", variant: "secondary" },
+}
+
+export const configStatusLoteamento: ConfigStatusBadge<StatusLoteamento> = {
+  lancamento: { label: "Lançamento", variant: "info" },
+  em_vendas: { label: "Em Vendas", variant: "default" },
+  esgotado: { label: "Esgotado", variant: "secondary" },
+}
+
+export const configStatusLote: ConfigStatusBadge<StatusLote> = {
+  disponivel: { label: "Disponível", variant: "success" },
+  reservado: { label: "Reservado", variant: "warning" },
+  vendido: { label: "Vendido", variant: "outline" },
 }
 
 export const configStatusLead: ConfigStatusBadge = {

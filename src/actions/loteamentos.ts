@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { verificarPermissao } from "@/lib/permissoes"
+import { verificarLimiteLoteamentos } from "@/lib/verificar-limites"
 import {
   schemaCriarLoteamento,
   schemaAtualizarLoteamento,
@@ -66,6 +67,12 @@ export async function criarLoteamento(
   const usuario = await buscarUsuarioLogado()
   if (!usuario) {
     return { erro: "Usuário não autenticado" }
+  }
+
+  // Verificar limite de loteamentos do plano
+  const limite = await verificarLimiteLoteamentos(usuario.organizacao_id)
+  if (!limite.permitido) {
+    return { erro: limite.mensagem! }
   }
 
   const supabase = await criarClienteServer()

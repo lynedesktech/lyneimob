@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 
 type Props = {
   slug: string
+  basePath: string
   paginaAtual: number
   totalPaginas: number
   searchParams?: Record<string, string>
@@ -10,6 +11,7 @@ type Props = {
 
 export function PaginacaoSite({
   slug,
+  basePath,
   paginaAtual,
   totalPaginas,
   searchParams = {},
@@ -19,7 +21,7 @@ export function PaginacaoSite({
   function criarUrl(pagina: number) {
     const params = new URLSearchParams(searchParams)
     params.set("pagina", String(pagina))
-    return `/${slug}/imoveis?${params.toString()}`
+    return `/${slug}/${basePath}?${params.toString()}`
   }
 
   return (

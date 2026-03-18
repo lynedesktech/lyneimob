@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { buscarOrganizacaoPorSlug } from "@/lib/site/buscar-dados-site"
 import { FormularioContato } from "@/components/site/formulario-contato"
 import { Phone, Mail, MapPin, MessageCircle, Clock } from "lucide-react"
+import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import type { Metadata } from "next"
 
 type Params = Promise<{ slug: string }>
@@ -71,7 +72,7 @@ export default async function ContatoPage({
 
       <div className="grid gap-10 lg:grid-cols-5">
         {/* Formulário (3/5) */}
-        <div className="lg:col-span-3">
+        <AnimacaoScroll className="lg:col-span-3" direcao="left">
           <div className="rounded-lg border bg-background p-6 sm:p-8">
             <h2 className="mb-6 text-lg font-semibold">Envie sua mensagem</h2>
             <FormularioContato
@@ -79,10 +80,10 @@ export default async function ContatoPage({
               imovelCodigo={query.imovel}
             />
           </div>
-        </div>
+        </AnimacaoScroll>
 
         {/* Informações de contato (2/5) */}
-        <div className="lg:col-span-2">
+        <AnimacaoScroll className="lg:col-span-2" direcao="right" delay={0.15}>
           <div className="space-y-6">
             <div className="rounded-lg border bg-background p-6">
               <h2 className="mb-4 text-lg font-semibold">
@@ -162,7 +163,7 @@ export default async function ContatoPage({
               </p>
             )}
           </div>
-        </div>
+        </AnimacaoScroll>
       </div>
     </div>
   )

@@ -10,45 +10,18 @@
 
 > Tarefas prontas para execução, em ordem de prioridade.
 
+### Fila (fazer depois)
+
+- [ ] Validar permissões por perfil
+      Contexto: admin vê tudo, gerente vê registros mas não config avançada, corretor vê só os próprios registros — testar com Playwright e as 3 contas criadas
+
 - [ ] Validar fluxo Stripe end-to-end
       Contexto: checkout → webhook → portal → upgrade → cancelamento — cartão de teste 4242 4242 4242 4242
       Depende de: Stripe configurado com variáveis de ambiente corretas
 
-- [ ] Validar permissões por perfil
-      Contexto: admin vê tudo, gerente vê registros mas não config avançada, corretor vê só os próprios registros — testar com as 3 contas criadas
-
 - [ ] Deploy na Vercel
       Contexto: conectar GitHub, configurar env vars, build de produção, webhook Stripe para URL final
       Depende de: Stripe e Supabase de produção configurados
-
-- [ ] Adicionar favicon e meta tags da marca Lynedesk
-      Contexto: criar favicon.ico e apple-touch-icon com o ícone "L" da Lynedesk. Atualizar app/layout.tsx com metadata da marca.
-      Bloqueio: aguardando ícone "L" em SVG do usuário
-
-- [ ] Página de Organizações — lista + detalhe
-      Contexto: /admin/organizacoes precisa de uma tabela no padrão da lista de clientes e uma página de detalhe por organização mostrando dados da empresa, usuários cadastrados e informações financeiras
-
-- [ ] Central de Suporte
-      Contexto: área com FAQ e tutoriais passo a passo para os usuários do CRM — ajuda contextual dentro da plataforma
-
-### Módulo de Loteamentos — implementação
-
-- [ ] Loteamentos Etapa 4 — Sidebar + navegação
-      Contexto: adicionar item "Loteamentos" com ícone MapPin entre Imóveis e Atividades
-- [ ] Loteamentos Etapa 5 — Páginas e componentes do CRUD
-      Contexto: 4 páginas (listagem, novo, detalhe, editar) + 5 componentes (formulário, card, tabela-lotes, filtros, resumo)
-- [ ] Loteamentos Etapa 6 — Importador CSV de lotes
-      Contexto: action importacao-lotes.ts + componente importador-lotes.tsx + página /[id]/importar. Testar com vendas-reserva-mar.csv (348 lotes)
-- [ ] Loteamentos Etapa 7 — Galeria de fotos
-      Contexto: upload, reordenar, definir capa, excluir — bucket loteamento-fotos
-- [ ] Loteamentos Etapa 8 — Descrição com IA
-      Contexto: ia-loteamentos.ts + componente ia-loteamento.tsx — gerar descrição comercial via GPT-4o-mini
-- [ ] Loteamentos Etapa 9 — Site público (listagem + detalhe)
-      Contexto: /[slug]/loteamentos/ e /[slug]/loteamentos/[id] + link no menu do site público
-- [ ] Loteamentos Etapa 10 — Integração com negócios (pipeline)
-      Contexto: seletor de loteamento+lote no formulário de negócio, exibir no Kanban
-- [ ] Loteamentos Etapa 11 — Limites de plano
-      Contexto: max_loteamentos por plano (Trial: 1, CRM IA: 5, CRM IA+SDR: 20)
 
 ---
 
@@ -64,24 +37,7 @@ _(nenhuma tarefa em andamento)_
 
 > Implementação concluída. Aguardando validação do usuário.
 
-- [x] Loteamentos Etapa 3 — Server Actions (CRUD loteamentos + lotes)
-      O que foi feito: actions/loteamentos.ts criado com 7 funções (criarLoteamento, atualizarLoteamento, excluirLoteamento, criarLote, atualizarLote, excluirLote, alterarStatusLote). Padrão idêntico a imoveis.ts. Build OK.
-      Testar: será validado na Etapa 5 (páginas com formulários)
-
-- [x] Loteamentos Etapa 2 — Tipos, schemas Zod e constantes
-      O que foi feito: 3 arquivos criados (types/loteamentos.ts, types/importacao-lotes.ts, lib/constantes/loteamentos.ts) + 2 editados (database.ts com tipos Loteamento/Lote/LoteamentoFoto + lote_id em Negocio, constantes/index.ts com re-exports). Build OK.
-      Testar: npm run build passa sem erros
-
-- [x] Loteamentos Etapa 1 — Banco de dados (migration + tabelas + RLS + triggers)
-      O que foi feito: migration 026 executada — 3 tabelas (loteamentos, lotes, loteamento_fotos) com RLS, trigger de contadores automáticos, storage bucket, campo lote_id em negocios
-      Testar: verificar tabelas no Supabase Dashboard → Table Editor
-
-- [ ] Upload de logo do cliente no site público
-      O que foi feito: aba "Logo" adicionada em Meu Site com upload de imagem, Server Action atualizada para salvar logo_url no banco, footer do site público agora exibe a logo do cliente (com fallback para logo padrão)
-      Testar: /configuracoes/meu-site → aba Logo → enviar imagem → salvar → acessar site público /{slug}/ → verificar header e footer
-
-- [x] Módulo de Loteamentos — pesquisa + requisito
-      Contexto: documentos de pesquisa e requisito criados em `planejamento/`. Pesquisa cobre modelo de dados, CSV, integrações. Requisito cobre SQL completo, schemas, actions, páginas, componentes, site público.
+_(nenhuma tarefa aguardando validação)_
 
 ---
 
@@ -89,6 +45,12 @@ _(nenhuma tarefa em andamento)_
 
 > Histórico completo de entregas auditadas e aprovadas.
 
+- [x] Favicon e meta tags da marca Lynedesk — icon.svg e apple-icon.svg com "L" gradiente azul, favicon.ico em public/, metadata completa com OpenGraph e keywords (2026-03-18)
+- [x] Página de Organizações — detalhe — /admin/organizacoes/[id] com métricas, dados da empresa, financeiro, tabela de usuários. Listagem com linhas clicáveis (2026-03-18)
+- [x] Central de Ajuda — página /ajuda com 9 módulos, placeholder de vídeo + passo a passo em Accordion, HelpCircle na sidebar e busca global (2026-03-18)
+- [x] Módulo de Loteamentos completo (11 etapas) — banco (migration 026), tipos/schemas, server actions, sidebar, CRUD (5 páginas + 9 componentes), importador CSV, galeria de fotos, IA, site público (5 funções + 4 componentes + 2 páginas), integração com negócios, limites de plano (migration 028). Auditado e confirmado (2026-03-18)
+- [x] Site Público completo (4 fases) — homepage 7 seções + busca rápida + tipos + estatísticas + CTA, animações Framer Motion, WhatsApp flutuante + menu mobile, imóveis similares. Auditado e confirmado (2026-03-18)
+- [x] Upload de logo do cliente no site público — aba Logo em Meu Site, exibição no header público (2026-03-18)
 - [x] Auditoria estrutural + limpeza completa — eliminar .agent/ e .agents/ (symlink resolvido), unificar CLAUDE.md (3→1), consolidar toggle-visualizacao (3→1), renumerar migrations (022-025), dividir tools-sdr.ts e importador-imoveis.tsx em módulos menores, remover PNGs/SVGs/pesquisas/requisitos não utilizados (2026-03-17)
 - [x] Agente WhatsApp v4 — Consciência de canal (multi-canal) — migration 024, webhook detecta portal/site por telefone, IA recebe canal e imóvel de interesse, PASSO -1 com modos LEAD_QUENTE/LEAD_MORNO/LEAD_FRIO (2026-03-17)
 - [x] Agente WhatsApp v3 — Prompt algorítmico + ferramentas renomeadas — prompt com árvore de decisão (PASSO 0–5), 3 cenários (PRIMEIRA_RESPOSTA / EM_ANDAMENTO / REATIVACAO), ferramentas `atualizar_cliente` e `atualizar_negocio` (2026-03-17)

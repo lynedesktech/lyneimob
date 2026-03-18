@@ -3,6 +3,7 @@ import Image from "next/image"
 import { Search } from "lucide-react"
 import type { OrganizacaoSite } from "@/lib/site/buscar-dados-site"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
+import { BuscaRapidaHero } from "@/components/site/busca-rapida-hero"
 
 type Props = {
   organizacao: OrganizacaoSite
@@ -68,6 +69,9 @@ export function SecaoHero({ organizacao }: Props) {
             Fale conosco
           </Link>
         </div>
+
+        {/* Busca rápida */}
+        <BuscaRapidaHero slug={organizacao.slug} />
       </div>
     </section>
   )

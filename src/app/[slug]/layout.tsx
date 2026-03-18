@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation"
-import { buscarOrganizacaoPorSlug } from "@/lib/site/buscar-dados-site"
+import {
+  buscarOrganizacaoPorSlug,
+  contarLoteamentosPublicados,
+} from "@/lib/site/buscar-dados-site"
 import { HeaderSite } from "@/components/site/header-site"
 import { FooterSite } from "@/components/site/footer-site"
 import { ProvedorTemaClaro } from "@/components/site/provedor-tema-claro"
+import { BotaoWhatsappFlutuante } from "@/components/site/botao-whatsapp-flutuante"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
 import type { Metadata } from "next"
 
@@ -43,9 +47,14 @@ export default async function SiteLayout({
     notFound()
   }
 
-  const configs = extrairConfiguracoes(
-    organizacao.configuracoes_site as Record<string, unknown>
-  )
+  const [configs, totalLoteamentos] = await Promise.all([
+    Promise.resolve(
+      extrairConfiguracoes(
+        organizacao.configuracoes_site as Record<string, unknown>
+      )
+    ),
+    contarLoteamentosPublicados(organizacao.id),
+  ])
 
   return (
     <ProvedorTemaClaro>
@@ -59,9 +68,18 @@ export default async function SiteLayout({
           } as React.CSSProperties
         }
       >
-        <HeaderSite organizacao={organizacao} />
+        <HeaderSite
+          organizacao={organizacao}
+          temLoteamentos={totalLoteamentos > 0}
+        />
         <main className="flex-1">{children}</main>
         <FooterSite organizacao={organizacao} />
+        {organizacao.whatsapp_numero && (
+          <BotaoWhatsappFlutuante
+            whatsappNumero={organizacao.whatsapp_numero}
+            nomeEmpresa={organizacao.nome}
+          />
+        )}
       </div>
     </ProvedorTemaClaro>
   )

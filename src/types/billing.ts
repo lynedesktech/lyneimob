@@ -11,6 +11,7 @@ export type StatusPlano = "active" | "past_due" | "canceled" | "trialing"
 export type LimitesPlano = {
   max_corretores: number
   max_imoveis: number
+  max_loteamentos: number
   max_conversas_ia_mes: number
 }
 
@@ -37,6 +38,7 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
     limites: {
       max_corretores: 999999,
       max_imoveis: 999999,
+      max_loteamentos: 1,
       max_conversas_ia_mes: 999999,
     },
     stripe_price_id: null,
@@ -56,6 +58,7 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
     limites: {
       max_corretores: 999999,
       max_imoveis: 999999,
+      max_loteamentos: 5,
       max_conversas_ia_mes: 999999,
     },
     stripe_price_id: process.env.STRIPE_PRICE_ID_CRM_IA || null,
@@ -75,6 +78,7 @@ export const PLANOS: Record<TipoPlano, PlanoConfig> = {
     limites: {
       max_corretores: 999999,
       max_imoveis: 999999,
+      max_loteamentos: 20,
       max_conversas_ia_mes: 999999,
     },
     stripe_price_id: process.env.STRIPE_PRICE_ID_CRM_IA_SDR || null,

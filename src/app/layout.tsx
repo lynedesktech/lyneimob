@@ -18,9 +18,31 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "LyneImob — Gestão Imobiliária Inteligente",
+  title: {
+    default: "LyneImob — Gestão Imobiliária Inteligente",
+    template: "%s | LyneImob",
+  },
   description:
-    "Plataforma de gestão imobiliária com IA integrada para corretores e imobiliárias",
+    "Plataforma de gestão imobiliária com IA integrada para corretores e imobiliárias. Gerencie imóveis, clientes, negócios e loteamentos com inteligência artificial.",
+  keywords: [
+    "gestão imobiliária",
+    "CRM imobiliário",
+    "IA imobiliária",
+    "corretores de imóveis",
+    "imobiliária",
+    "loteamentos",
+  ],
+  authors: [{ name: "Lynedesk" }],
+  creator: "Lynedesk",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "LyneImob",
+    title: "LyneImob — Gestão Imobiliária Inteligente",
+    description:
+      "Plataforma de gestão imobiliária com IA integrada para corretores e imobiliárias.",
+  },
 }
 
 export default function RootLayout({

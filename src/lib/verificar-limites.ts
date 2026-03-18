@@ -146,6 +146,43 @@ export async function verificarLimiteCorretores(
 }
 
 // ============================================================
+// Verificar limite de loteamentos
+// ============================================================
+
+export async function verificarLimiteLoteamentos(
+  organizacaoId: string
+): Promise<ResultadoLimite> {
+  const trial = await verificarTrialAtivo(organizacaoId)
+  if (!trial.permitido) return trial
+
+  const org = await buscarOrganizacao(organizacaoId)
+  if (!org) {
+    return { permitido: false, mensagem: "Organização não encontrada." }
+  }
+
+  const supabase = await criarClienteServer()
+
+  const { count } = await supabase
+    .from("loteamentos")
+    .select("id", { count: "exact", head: true })
+    .eq("organizacao_id", organizacaoId)
+
+  const atual = count ?? 0
+  const maximo = org.limites.max_loteamentos
+
+  if (atual >= maximo) {
+    return {
+      permitido: false,
+      mensagem: `Você atingiu o limite de ${maximo} loteamento${maximo > 1 ? "s" : ""} do seu plano. Faça upgrade para cadastrar mais.`,
+      limite_atual: atual,
+      limite_max: maximo,
+    }
+  }
+
+  return { permitido: true, limite_atual: atual, limite_max: maximo }
+}
+
+// ============================================================
 // Verificar limite de conversas IA por mês
 // ============================================================
 
