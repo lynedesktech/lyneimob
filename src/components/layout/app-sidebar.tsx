@@ -14,6 +14,7 @@ import {
   MapPin,
   CreditCard,
   HelpCircle,
+  ClipboardList,
 } from "lucide-react"
 import {
   Sidebar,
@@ -64,6 +65,7 @@ const gruposPlataforma: GrupoNavegacao[] = [
   {
     itens: [
       { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
+      { titulo: "Roadmap", href: "/admin/roadmap", icone: ClipboardList },
     ],
   },
 ]

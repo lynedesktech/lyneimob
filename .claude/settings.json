@@ -461,7 +461,16 @@
       "Bash(grep -E \"^\\\\s+\\\\{$\")",
       "Bash(grep 'select\\(\"\"\\\\*\"\"\\)' /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/organizacoes/[id]/page.tsx)",
       "Bash(grep -n \"data: org\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/organizacoes/[id]/page.tsx)",
-      "Bash(ls -la \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/027\"* \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/028\"* \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/public/favicon.ico\")"
+      "Bash(ls -la \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/027\"* \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/028\"* \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/public/favicon.ico\")",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -iname *seed* -o -iname *test* -type f)",
+      "Bash(grep -n \"CREATE POLICY\\\\|CARGO\\\\|cargo\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
+      "Bash(grep -r STRIPE_ /c/Users/Lynedesk/Desktop/Tech/LyneImob --include=*.env* --include=*.md)",
+      "Bash(ls -la \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\src\\\\app\\\\\\(dashboard\\)\\\\admin\")",
+      "Bash(ls -la \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\src\\\\app\\\\\\(dashboard\\)\\\\admin\\\\configuracoes\")",
+      "Bash(grep -E \"\\\\.ts$|\\\\.tsx$\")",
+      "Bash(grep -l \"onboarding\\\\|primeiro_acesso\\\\|setup\\\\|configuracao_completa\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
+      "Bash(cat /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/providers.tsx)",
+      "Bash(grep -r \"configuracoes_site\\\\|config_distribuicao\\\\|whatsapp\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/types/*.ts)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
