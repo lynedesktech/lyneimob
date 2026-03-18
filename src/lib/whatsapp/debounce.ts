@@ -63,7 +63,7 @@ export async function agendarDebounce(
  * 3. Atualiza conteúdo processado no banco
  * 4. Chama o agente IA para responder
  */
-async function processarLote(
+export async function processarLote(
   conversaId: string,
   organizacaoId: string
 ): Promise<void> {

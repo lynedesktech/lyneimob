@@ -187,14 +187,23 @@ export async function POST(request: Request) {
       })
     }
 
-    // Processar com agente IA após retornar resposta
-    // Usa after() do Next.js para manter a função viva no Vercel (serverless-compatible)
-    // Debounce Redis: acumula mensagens por 20s antes de chamar a IA
-    const { agendarDebounce } = await import("@/lib/whatsapp/debounce")
+    // Agendar debounce via endpoint separado (invocação serverless independente)
+    // O after() só precisa sobreviver ~100ms pra enviar o fetch
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     after(async () => {
-      await agendarDebounce(conversaId, organizacaoId).catch((err) =>
-        console.error("[Webhook] Erro no debounce/agente:", err instanceof Error ? err.message : err)
-      )
+      try {
+        await fetch(`${appUrl}/api/interno/processar-debounce`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          },
+          body: JSON.stringify({ conversaId, organizacaoId }),
+        })
+        console.log(`[Webhook] Debounce agendado para conversa ${conversaId}`)
+      } catch (err) {
+        console.error("[Webhook] Erro ao agendar debounce:", err instanceof Error ? err.message : err)
+      }
     })
 
     return NextResponse.json({

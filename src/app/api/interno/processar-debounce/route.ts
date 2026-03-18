@@ -1,0 +1,87 @@
+import { NextResponse } from "next/server"
+import { criarClienteAdmin } from "@/lib/supabase/admin"
+
+// ============================================================
+// Endpoint interno de debounce — processa mensagens agrupadas
+// Chamado pelo webhook via fetch, roda em invocação separada
+// ============================================================
+
+export const maxDuration = 60
+
+const DEBOUNCE_MS = 20_000 // 20 segundos
+const MAX_CICLOS = 2 // Máximo 2 ciclos de espera (40s total)
+
+export async function POST(request: Request) {
+  // Autenticação: só aceita chamadas internas
+  const secret = request.headers.get("x-internal-secret")
+  if (secret !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ erro: "Não autorizado" }, { status: 401 })
+  }
+
+  const { conversaId, organizacaoId } = await request.json()
+
+  if (!conversaId || !organizacaoId) {
+    return NextResponse.json({ erro: "Dados incompletos" }, { status: 400 })
+  }
+
+  // Lock Redis: só uma invocação processa por conversa
+  const { redis } = await import("@/lib/redis")
+  const chaveLock = `lock:debounce:${conversaId}`
+
+  if (redis) {
+    const adquiriu = await redis.set(chaveLock, "1", { nx: true, ex: 90 })
+    if (!adquiriu) {
+      console.log(`[Debounce] Lock não adquirido para conversa ${conversaId} — outra invocação cuida`)
+      return NextResponse.json({ status: "ignorado" })
+    }
+  }
+
+  try {
+    const supabase = criarClienteAdmin()
+
+    // Loop de polling: espera 20s, checa se novas mensagens chegaram
+    // Replica o padrão do N8N (delay → verificar → delay de novo se necessário)
+    for (let ciclo = 0; ciclo < MAX_CICLOS; ciclo++) {
+      await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_MS))
+
+      // Checar última mensagem recebida no banco
+      const { data: conversa } = await supabase
+        .from("conversas_whatsapp")
+        .select("ultima_mensagem_em")
+        .eq("id", conversaId)
+        .single()
+
+      if (!conversa) break
+
+      const diffMs = Date.now() - new Date(conversa.ultima_mensagem_em).getTime()
+
+      if (diffMs >= DEBOUNCE_MS) {
+        // Nenhuma mensagem nova nos últimos 20s — hora de processar
+        break
+      }
+
+      // Mensagem recente chegou — esperar mais um ciclo
+      console.log(
+        `[Debounce] Conversa ${conversaId} — mensagem recente (${Math.round(diffMs / 1000)}s atrás), esperando mais`
+      )
+    }
+
+    // Processar lote (mídia + agente IA)
+    console.log(`[Debounce] Processando lote da conversa ${conversaId}`)
+    const { processarLote } = await import("@/lib/whatsapp/debounce")
+    await processarLote(conversaId, organizacaoId)
+
+    return NextResponse.json({ status: "processado" })
+  } catch (erro) {
+    console.error(
+      `[Debounce] Erro ao processar conversa ${conversaId}:`,
+      erro instanceof Error ? erro.message : erro
+    )
+    return NextResponse.json({ erro: "Erro no processamento" }, { status: 500 })
+  } finally {
+    // Sempre liberar lock ao finalizar
+    if (redis) {
+      await redis.del(chaveLock).catch(() => {})
+    }
+  }
+}
