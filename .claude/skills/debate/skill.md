@@ -5,7 +5,7 @@ description: "Sessao de debate sobre o plano do projeto. Discutir arquitetura, e
 
 # Debate — Sessao de Planejamento Estrategico
 
-**Objetivo**: Conduzir uma conversa de planejamento com o usuario para discutir, questionar e refinar o plano do projeto antes de gerar tarefas executaveis no roadmap.md. Nao implementa nada, nao altera codigo — gera apenas tarefas no roadmap.
+**Objetivo**: Conduzir uma conversa de planejamento com o usuario para discutir, questionar e refinar o plano do projeto antes de gerar tarefas executaveis no banco de dados (tabela `tarefas_roadmap`). Nao implementa nada, nao altera codigo — gera apenas tarefas no roadmap.
 
 ---
 
@@ -18,7 +18,7 @@ description: "Sessao de debate sobre o plano do projeto. Discutir arquitetura, e
 2. Ler os materiais de planejamento disponiveis:
    - Verificar `planejamento/pesquisas/` — ler pesquisas relevantes ao tema
    - Verificar `planejamento/requisitos/` — ler requisitos relevantes ao tema
-   - Ler `roadmap.md` — entender o que ja esta planejado
+   - Consultar as tarefas existentes no banco via `listarTarefasRoadmap()` — entender o que ja esta planejado
    - Se nao houver materiais: tudo bem — trabalhar com o que o usuario trouxer na conversa
 
 3. Ler o `CLAUDE.md` para entender o estado atual do projeto (stack, estrutura, padroes)
@@ -86,12 +86,9 @@ Perguntar: "Esse resumo esta correto? Posso gerar as tarefas?"
 
 ### 2. Formato das tarefas
 
-Cada tarefa deve seguir o formato do roadmap:
-
-```markdown
-- [ ] Titulo claro e objetivo
-      Contexto: por que isso precisa ser feito
-```
+Cada tarefa deve ter:
+- **Titulo**: claro e objetivo
+- **Descricao**: contexto de por que isso precisa ser feito
 
 **Regras para gerar tarefas:**
 
@@ -105,26 +102,26 @@ Cada tarefa deve seguir o formato do roadmap:
 
 Apresentar as tarefas geradas e perguntar ao usuario onde colocar:
 - **A Fazer** — para execucao na sequencia
-- **Futuras** — para ideias que nao tem prazo
+- **Sugestao** — para ideias que nao tem prazo
 
-Se ja existem tarefas no roadmap que serao substituidas ou reorganizadas, deixar claro:
+Se ja existem tarefas no banco que serao substituidas ou reorganizadas, deixar claro:
 > "As tarefas atuais seriam substituidas por essas X tarefas mais detalhadas. Posso fazer essa troca?"
 
 Nunca alterar o roadmap sem confirmacao explicita do usuario.
 
-### 4. Atualizar o roadmap
+### 4. Registrar no banco
 
 Apos confirmacao do usuario:
-1. Atualizar `roadmap.md` com as novas tarefas
-2. Manter a estrutura das 5 secoes intacta
-3. Informar o que foi alterado
+1. Usar `criarTarefaRoadmap()` para registrar cada tarefa no banco com o status escolhido
+2. Informar o usuario o que foi registrado
+3. Lembrar que as tarefas ficam visiveis em `/admin/roadmap`
 
 ---
 
 ## O que esta skill NAO faz
 
 - **Nao implementa codigo** — zero linhas de codigo
-- **Nao altera arquivos do projeto** — exceto o `roadmap.md`
-- **Nao gera arquivo de planejamento** — o produto final sao as tarefas no roadmap
+- **Nao altera arquivos do projeto** — exceto registrar tarefas no banco
+- **Nao gera arquivo de planejamento** — o produto final sao as tarefas no banco
 - **Nao toma decisoes sozinha** — tudo e proposto e confirmado pelo usuario
 - **Nao substitui pesquisa/requisitos** — se durante o debate perceber que falta informacao, sugerir rodar `/pesquisa` ou `/requisitos` primeiro

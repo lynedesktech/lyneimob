@@ -68,7 +68,8 @@ src/
 │   │   ├── meu-site/      # Customizacao do site publico
 │   │   ├── usuarios/      # Gestao de equipe
 │   │   ├── integracoes/   # Integracoes (WhatsApp, portais)
-│   │   ├── admin/         # Area de super admin (gestao global)
+│   │   ├── loteamentos/   # CRUD de loteamentos + lotes + importacao em massa
+│   │   ├── admin/         # Area de super admin (gestao global, roadmap)
 │   │   └── financeiro/    # Modulo financeiro
 │   ├── [slug]/            # Site publico da imobiliaria (por slug)
 │   ├── api/               # API Routes (XML feed, webhooks: portais, stripe, whatsapp; cron: resumo-semanal)
@@ -87,7 +88,7 @@ src/
 └── middleware.ts          # Middleware de auth (protecao de rotas)
 
 supabase/
-└── migrations/            # Migrations SQL do banco (001 a 025)
+└── migrations/            # Migrations SQL do banco (001 a 030)
 
 planejamento/
 ├── pesquisas/             # Pesquisas geradas pela skill /pesquisa

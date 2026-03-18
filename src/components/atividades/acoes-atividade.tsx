@@ -76,7 +76,7 @@ function BotaoConcluir({ atividadeId }: { atividadeId: string }) {
     <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogTrigger
         render={
-          <Button variant="default" size="sm" className="bg-emerald-600 text-white hover:bg-emerald-700">
+          <Button variant="success" size="sm">
             <CheckCircle className="mr-2 h-4 w-4" />
             Concluir
           </Button>

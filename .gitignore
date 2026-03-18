@@ -49,3 +49,8 @@ Agente IA.json
 
 # playwright mcp (logs de debug)
 .playwright-mcp/
+
+# screenshots de teste e validacao
+teste-*.png
+validacao-*.png
+teste-onboarding/
