@@ -6,28 +6,11 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { verificarPermissao } from "@/lib/permissoes"
 import { schemaDominio } from "@/types/dominios"
 import type { EstadoFormulario } from "@/types/formulario"
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Helpers
 // ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
 
 /** Extrai hostname de NEXT_PUBLIC_APP_URL para comparação com CNAME */
 function obterHostnameApp(): string {

@@ -7,28 +7,7 @@ import { verificarPermissao, ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfigWhatsapp } from "@/types/whatsapp"
 import type { StatusConversa } from "@/types/whatsapp"
 import type { EstadoFormulario } from "@/types/formulario"
-
-// ============================================================
-// Helpers
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo, super_admin")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Atualizar status da conversa

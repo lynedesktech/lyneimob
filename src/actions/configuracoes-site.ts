@@ -5,28 +5,7 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { verificarPermissao } from "@/lib/permissoes"
 import { schemaConfiguracoesSite } from "@/types/configuracoes-site"
 import type { EstadoFormulario } from "@/types/formulario"
-
-// ============================================================
-// Helpers
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Salvar configurações do site

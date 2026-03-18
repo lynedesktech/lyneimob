@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { calcularTotalPaginas as calcularTotalPaginasUtil } from "@/lib/paginacao"
 
 interface FiltrosBase {
   pagina?: number
@@ -56,7 +57,7 @@ export function useFiltrosListagem<T extends FiltrosBase>({
   const paginaAtual = filtros.pagina || 1
 
   function calcularTotalPaginas(total: number) {
-    return Math.ceil(total / porPagina)
+    return calcularTotalPaginasUtil(total, porPagina)
   }
 
   function irParaPagina(pagina: number) {

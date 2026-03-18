@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { SIGLAS_ESTADOS_BR } from "@/types/imoveis"
+import { TIPOS_IMOVEL, FINALIDADES_IMOVEL } from "@/lib/constantes/enums"
 
 // ============================================================
 // Schema para validação de linha importada de CSV/Excel
@@ -10,25 +11,8 @@ export const schemaLinhaImportacao = z.object({
   // Obrigatórios
   codigo: z.string().min(1, "Código obrigatório"),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
-  tipo: z.enum(
-    [
-      "apartamento",
-      "casa",
-      "terreno",
-      "sala_comercial",
-      "galpao",
-      "cobertura",
-      "kitnet",
-      "fazenda",
-      "sitio",
-      "loja",
-      "outro",
-    ],
-    { message: "Tipo inválido" }
-  ),
-  finalidade: z.enum(["venda", "aluguel", "venda_e_aluguel"], {
-    message: "Finalidade inválida",
-  }),
+  tipo: z.enum(TIPOS_IMOVEL, { message: "Tipo inválido" }),
+  finalidade: z.enum(FINALIDADES_IMOVEL, { message: "Finalidade inválida" }),
   cidade: z.string().min(1, "Cidade obrigatória"),
   estado: z
     .string()

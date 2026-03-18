@@ -14,6 +14,7 @@ import {
   Briefcase,
 } from "lucide-react"
 import type { ConversaComRelacoes, QualificacaoLead } from "@/types/whatsapp"
+import { formatarPreco as formatarPrecoBase } from "@/lib/formatadores"
 
 interface InfoQualificacaoProps {
   conversa: ConversaComRelacoes
@@ -33,11 +34,7 @@ const labelsUrgencia: Record<string, string> = {
 
 function formatarPreco(valor?: number) {
   if (!valor) return null
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  }).format(valor)
+  return formatarPrecoBase(valor)
 }
 
 function SecaoQualificacao({ qualificacao }: { qualificacao: QualificacaoLead }) {

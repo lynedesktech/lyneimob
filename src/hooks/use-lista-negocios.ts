@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import type { NegocioComRelacoes } from "@/types/database"
+import { calcularRange, calcularTotalPaginas } from "@/lib/paginacao"
 
 export interface FiltrosListaNegocios {
   busca?: string
@@ -20,8 +21,7 @@ export function useListaNegocios(filtros: FiltrosListaNegocios = {}) {
   const supabase = criarClienteBrowser()
   const porPagina = filtros.por_pagina ?? 20
   const pagina = filtros.pagina ?? 1
-  const inicio = (pagina - 1) * porPagina
-  const fim = inicio + porPagina - 1
+  const { inicio, fim } = calcularRange(pagina, porPagina)
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["lista-negocios", filtros],
@@ -69,7 +69,7 @@ export function useListaNegocios(filtros: FiltrosListaNegocios = {}) {
   })
 
   const total = data?.total ?? 0
-  const totalPaginas = Math.max(1, Math.ceil(total / porPagina))
+  const totalPaginas = calcularTotalPaginas(total, porPagina)
 
   return {
     negocios: data?.negocios ?? [],

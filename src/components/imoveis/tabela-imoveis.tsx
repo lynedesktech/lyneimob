@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { StatusBadge, configStatusImovel } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusImovel } from "@/lib/constantes/status-configs"
 import {
   DropdownMenu,
   DropdownMenuContent,

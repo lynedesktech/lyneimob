@@ -1,17 +1,12 @@
 import { criarClienteAdmin } from "@/lib/supabase/admin"
+import { formatarPreco as formatarPrecoBase } from "@/lib/formatadores"
+import { calcularRange, calcularTotalPaginas } from "@/lib/paginacao"
 
 // ============================================================
 // Utilitários de formatação
 // ============================================================
 
-export function formatarPreco(valor: number | null): string {
-  if (!valor) return "Consulte"
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  })
-}
+export const formatarPreco = (valor: number | null) => formatarPrecoBase(valor, "Consulte")
 
 // ============================================================
 // Tipos de filtros para listagem pública
@@ -107,8 +102,7 @@ export async function buscarImoveisPublicos(
 ) {
   const supabase = criarClienteAdmin()
   const pagina = filtros.pagina || 1
-  const inicio = (pagina - 1) * POR_PAGINA
-  const fim = inicio + POR_PAGINA - 1
+  const { inicio, fim } = calcularRange(pagina, POR_PAGINA)
 
   let query = supabase
     .from("imoveis")
@@ -153,7 +147,7 @@ export async function buscarImoveisPublicos(
   return {
     imoveis: data ?? [],
     total: count ?? 0,
-    totalPaginas: Math.ceil((count ?? 0) / POR_PAGINA),
+    totalPaginas: calcularTotalPaginas(count ?? 0, POR_PAGINA),
     paginaAtual: pagina,
   }
 }
@@ -312,8 +306,7 @@ export async function buscarLoteamentosPublicos(
 ) {
   const supabase = criarClienteAdmin()
   const pagina = filtros.pagina || 1
-  const inicio = (pagina - 1) * POR_PAGINA
-  const fim = inicio + POR_PAGINA - 1
+  const { inicio, fim } = calcularRange(pagina, POR_PAGINA)
 
   let query = supabase
     .from("loteamentos")
@@ -344,7 +337,7 @@ export async function buscarLoteamentosPublicos(
   return {
     loteamentos: data ?? [],
     total: count ?? 0,
-    totalPaginas: Math.ceil((count ?? 0) / POR_PAGINA),
+    totalPaginas: calcularTotalPaginas(count ?? 0, POR_PAGINA),
     paginaAtual: pagina,
   }
 }

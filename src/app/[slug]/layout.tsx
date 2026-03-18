@@ -24,12 +24,22 @@ export async function generateMetadata({
     return { title: "Imobiliária não encontrada" }
   }
 
+  const logoUrl = org.logo_url || undefined
+
   return {
     title: {
       default: `${org.nome} — Imóveis`,
       template: `%s | ${org.nome}`,
     },
     description: `Confira os imóveis disponíveis na ${org.nome}. Encontre casas, apartamentos e muito mais.`,
+    openGraph: {
+      type: "website",
+      locale: "pt_BR",
+      siteName: org.nome,
+      title: `${org.nome} — Imóveis`,
+      description: `Confira os imóveis disponíveis na ${org.nome}. Encontre casas, apartamentos e muito mais.`,
+      ...(logoUrl && { images: [{ url: logoUrl, width: 400, height: 400, alt: org.nome }] }),
+    },
   }
 }
 

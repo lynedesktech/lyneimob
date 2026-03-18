@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import type { AtividadeComRelacoes } from "@/types/database"
 import type { FiltrosAtividadesInput } from "@/types/atividades"
+import { calcularRange } from "@/lib/paginacao"
 
 export function useListaAtividades(filtros: FiltrosAtividadesInput) {
   const supabase = criarClienteBrowser()
@@ -44,8 +45,7 @@ export function useListaAtividades(filtros: FiltrosAtividadesInput) {
       // Paginação
       const pagina = filtros.pagina || 1
       const porPagina = filtros.por_pagina || 20
-      const inicio = (pagina - 1) * porPagina
-      const fim = inicio + porPagina - 1
+      const { inicio, fim } = calcularRange(pagina, porPagina)
 
       query = query
         .order("data_inicio", { ascending: true })

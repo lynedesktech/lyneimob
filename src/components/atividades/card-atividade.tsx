@@ -10,7 +10,8 @@ import {
 } from "lucide-react"
 import { useTiposAtividade } from "@/hooks/use-tipos-atividade"
 import { formatarDataHoraCurta } from "@/lib/formatadores"
-import { StatusBadge, configStatusAtividade, configPrioridade } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusAtividade, configPrioridade } from "@/lib/constantes/status-configs"
 import type { AtividadeComRelacoes } from "@/types/database"
 
 interface CardAtividadeProps {

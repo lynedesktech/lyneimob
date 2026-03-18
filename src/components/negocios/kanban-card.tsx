@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useActionState, useEffect, useState } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical, User, Building2, MapPin, Calendar, Lightbulb, ExternalLink, Pencil, Trophy, XCircle } from "lucide-react"
+import { GripVertical, User, Building2, MapPin, Calendar, Lightbulb, ExternalLink, Pencil, Trophy, XCircle, ArrowRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import {
@@ -27,18 +30,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { ganharNegocio, perderNegocio } from "@/actions/negocios"
+import { ganharNegocio, perderNegocio, moverNegocio } from "@/actions/negocios"
 import { labelsTipoNegocio } from "@/lib/constantes"
 import { formatarPreco, formatarDataCurta } from "@/lib/formatadores"
 import { toast } from "sonner"
-import type { NegocioComRelacoes } from "@/types/database"
+import type { NegocioComRelacoes, PipelineEtapa } from "@/types/database"
 
 interface KanbanCardProps {
   negocio: NegocioComRelacoes
+  etapas?: PipelineEtapa[]
+  onMover?: () => void
   overlay?: boolean
 }
 
-export function KanbanCard({ negocio, overlay }: KanbanCardProps) {
+export function KanbanCard({ negocio, etapas, onMover, overlay }: KanbanCardProps) {
   const router = useRouter()
   const {
     attributes,
@@ -161,6 +166,39 @@ export function KanbanCard({ negocio, overlay }: KanbanCardProps) {
             <Pencil className="mr-2 h-4 w-4" />
             Editar
           </ContextMenuItem>
+
+          {etapas && etapas.length > 0 && negocio.status === "aberto" && (
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Mover para...
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent className="w-48">
+                {etapas
+                  .filter((e) => e.id !== negocio.etapa_id && e.tipo === "normal")
+                  .map((etapa) => (
+                    <ContextMenuItem
+                      key={etapa.id}
+                      onSelect={async () => {
+                        const res = await moverNegocio(negocio.id, etapa.id, 0)
+                        if (res.erro) {
+                          toast.error(res.erro)
+                        } else {
+                          toast.success(`Movido para "${etapa.nome}"`)
+                          onMover?.()
+                        }
+                      }}
+                    >
+                      <div
+                        className="mr-2 h-3 w-3 shrink-0 rounded-full"
+                        style={{ backgroundColor: etapa.cor }}
+                      />
+                      {etapa.nome}
+                    </ContextMenuItem>
+                  ))}
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+          )}
 
           {negocio.status === "aberto" && (
             <>

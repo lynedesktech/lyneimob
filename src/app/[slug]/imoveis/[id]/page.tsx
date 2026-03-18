@@ -37,12 +37,20 @@ export async function generateMetadata({
   const imovel = await buscarImovelPublico(org.id, id)
   if (!imovel) return {}
 
+  const titulo = imovel.titulo_ia || imovel.titulo
+  const descricao = imovel.descricao_ia || imovel.descricao || `Imóvel disponível na ${org.nome}`
+  const fotoCapa = imovel.imovel_fotos?.find((f: { eh_capa: boolean }) => f.eh_capa) || imovel.imovel_fotos?.[0]
+
   return {
-    title: imovel.titulo_ia || imovel.titulo,
-    description:
-      imovel.descricao_ia ||
-      imovel.descricao ||
-      `Imóvel disponível na ${org.nome}`,
+    title: titulo,
+    description: descricao,
+    openGraph: {
+      type: "article",
+      locale: "pt_BR",
+      title: titulo,
+      description: descricao,
+      ...(fotoCapa && { images: [{ url: fotoCapa.url, width: 1200, height: 630, alt: titulo }] }),
+    },
   }
 }
 

@@ -1,12 +1,13 @@
 import { z } from "zod"
 import { SIGLAS_ESTADOS_BR } from "@/types/imoveis"
+import { STATUS_LOTEAMENTO, STATUS_LOTE } from "@/lib/constantes/enums"
 
 // ============================================================
-// Tipos base
+// Tipos base (derivados dos enums centrais)
 // ============================================================
 
-export type StatusLoteamento = "lancamento" | "em_vendas" | "esgotado"
-export type StatusLote = "disponivel" | "reservado" | "vendido"
+export type StatusLoteamento = (typeof STATUS_LOTEAMENTO)[number]
+export type StatusLote = (typeof STATUS_LOTE)[number]
 
 // ============================================================
 // Schemas Zod — Loteamentos
@@ -15,7 +16,7 @@ export type StatusLote = "disponivel" | "reservado" | "vendido"
 export const schemaCriarLoteamento = z.object({
   nome: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
-  status: z.enum(["lancamento", "em_vendas", "esgotado"]).default("em_vendas"),
+  status: z.enum(STATUS_LOTEAMENTO).default("em_vendas"),
   cep: z.string().optional(),
   logradouro: z.string().optional(),
   numero: z.string().optional(),
@@ -47,7 +48,7 @@ export const schemaCriarLote = z.object({
   quadra: z.string().min(1, "Quadra obrigatória"),
   numero_lote: z.string().min(1, "Número do lote obrigatório"),
   unidade: z.string().min(1, "Unidade obrigatória"),
-  status: z.enum(["disponivel", "reservado", "vendido"]).default("disponivel"),
+  status: z.enum(STATUS_LOTE).default("disponivel"),
   comprador: z.string().optional(),
   valor: z.coerce.number().min(0, "Valor deve ser positivo"),
   data_venda: z.string().optional(),
@@ -65,7 +66,7 @@ export const schemaAtualizarLote = schemaCriarLote.extend({
 
 export const schemaFiltrosLoteamentos = z.object({
   busca: z.string().optional(),
-  status: z.enum(["lancamento", "em_vendas", "esgotado"]).optional(),
+  status: z.enum(STATUS_LOTEAMENTO).optional(),
   cidade: z.string().optional(),
   pagina: z.coerce.number().int().positive().default(1),
   por_pagina: z.coerce.number().int().positive().default(12),
@@ -73,7 +74,7 @@ export const schemaFiltrosLoteamentos = z.object({
 
 export const schemaFiltrosLotes = z.object({
   quadra: z.string().optional(),
-  status: z.enum(["disponivel", "reservado", "vendido"]).optional(),
+  status: z.enum(STATUS_LOTE).optional(),
   busca: z.string().optional(),
 })
 

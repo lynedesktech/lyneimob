@@ -5,26 +5,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { gerarResumoParaOrganizacao, obterLimitesSemana, formatarDateISO } from "@/lib/resumo-semanal/gerar-resumo"
 import type { ResumoSemanal } from "@/types/resumo-semanal"
 import type { EstadoFormulario } from "@/types/formulario"
-
-// ============================================================
-// Helper
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Buscar resumo semanal (somente leitura — nao gera nada)

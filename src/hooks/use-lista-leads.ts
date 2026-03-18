@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import type { LeadPortalComRelacoes } from "@/types/database"
 import type { FiltrosLeadsInput } from "@/types/leads-portais"
+import { calcularRange } from "@/lib/paginacao"
 
 export function useListaLeads(filtros: FiltrosLeadsInput) {
   const supabase = criarClienteBrowser()
@@ -37,8 +38,7 @@ export function useListaLeads(filtros: FiltrosLeadsInput) {
       // Paginação
       const pagina = filtros.pagina || 1
       const porPagina = filtros.por_pagina || 20
-      const inicio = (pagina - 1) * porPagina
-      const fim = inicio + porPagina - 1
+      const { inicio, fim } = calcularRange(pagina, porPagina)
 
       query = query
         .order("created_at", { ascending: false })

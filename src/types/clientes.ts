@@ -1,4 +1,12 @@
 import { z } from "zod"
+import {
+  TIPOS_CLIENTE,
+  ORIGENS_CLIENTE,
+  STATUS_CLIENTE,
+  TIPOS_IMOVEL,
+  FINALIDADES_IMOVEL,
+  TIPOS_INTERACAO,
+} from "@/lib/constantes/enums"
 
 // ============================================================
 // Schema de criação de cliente
@@ -9,10 +17,8 @@ export const schemaCriarCliente = z.object({
   telefone: z.string().optional(),
   whatsapp: z.string().optional(),
   cpf_cnpj: z.string().optional(),
-  tipo: z.enum(["comprador", "vendedor", "locatario", "proprietario"], {
-    message: "Selecione o tipo do cliente",
-  }),
-  origem: z.enum(["indicacao", "portal", "site", "whatsapp", "outro"]),
+  tipo: z.enum(TIPOS_CLIENTE, { message: "Selecione o tipo do cliente" }),
+  origem: z.enum(ORIGENS_CLIENTE),
   observacoes: z.string().optional(),
 })
 
@@ -21,9 +27,7 @@ export const schemaCriarCliente = z.object({
 // ============================================================
 export const schemaAtualizarCliente = schemaCriarCliente.extend({
   id: z.string().uuid(),
-  status: z
-    .enum(["ativo", "inativo", "negociando", "fechado"])
-    .optional(),
+  status: z.enum(STATUS_CLIENTE).optional(),
 })
 
 // ============================================================
@@ -31,13 +35,8 @@ export const schemaAtualizarCliente = schemaCriarCliente.extend({
 // ============================================================
 export const schemaCriarInteresse = z.object({
   cliente_id: z.string().uuid(),
-  tipo_imovel: z
-    .enum([
-      "apartamento", "casa", "terreno", "sala_comercial", "galpao",
-      "cobertura", "kitnet", "fazenda", "sitio", "loja", "outro",
-    ])
-    .optional(),
-  finalidade: z.enum(["venda", "aluguel", "venda_e_aluguel"]).optional(),
+  tipo_imovel: z.enum(TIPOS_IMOVEL).optional(),
+  finalidade: z.enum(FINALIDADES_IMOVEL).optional(),
   bairros_interesse: z.string().optional(),
   cidade: z.string().optional(),
   estado: z.string().length(2, "Use a sigla do estado (ex: SP)").optional().or(z.literal("")),
@@ -57,9 +56,7 @@ export const schemaAtualizarInteresse = schemaCriarInteresse.extend({
 // ============================================================
 export const schemaCriarInteracao = z.object({
   cliente_id: z.string().uuid(),
-  tipo: z.enum(["ligacao", "email", "visita", "whatsapp", "reuniao", "outro"], {
-    message: "Selecione o tipo de interação",
-  }),
+  tipo: z.enum(TIPOS_INTERACAO, { message: "Selecione o tipo de interação" }),
   descricao: z.string().min(1, "Descrição é obrigatória"),
   data: z.string().optional(),
 })

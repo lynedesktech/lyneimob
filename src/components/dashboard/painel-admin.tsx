@@ -22,6 +22,7 @@ import { GraficoImoveis } from "./grafico-imoveis"
 import { GraficoEvolucao, type PontoMensal } from "./grafico-evolucao"
 import { ListaAtividadesHoje, type AtividadeHojeItem } from "./lista-atividades-hoje"
 import { CardResumoSemanal } from "./card-resumo-semanal"
+import { ChecklistOnboarding } from "@/components/onboarding/checklist-onboarding"
 
 interface PainelAdminProps {
   nomeUsuario: string
@@ -63,7 +64,7 @@ export function PainelAdmin({
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Cabeçalho */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="animate-fade-in-up flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Olá, {nomeUsuario}!</h1>
           <p className="text-sm text-muted-foreground">{descricaoCargo}</p>
@@ -73,10 +74,16 @@ export function PainelAdmin({
         </Badge>
       </div>
 
+      {/* Checklist de onboarding (some quando completar tudo) */}
+      <div id="onborda-checklist" className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+        <ChecklistOnboarding />
+      </div>
+
       {/* KPI cards */}
       <div
         id="onborda-dashboard-cards"
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="animate-fade-in-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        style={{ animationDelay: "100ms" }}
       >
         <CardKpi
           titulo="Negócios abertos"
@@ -125,7 +132,7 @@ export function PainelAdmin({
       </div>
 
       {/* Gráficos + Resumo semanal */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="animate-fade-in-up grid gap-6 lg:grid-cols-3" style={{ animationDelay: "150ms" }}>
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
@@ -148,7 +155,7 @@ export function PainelAdmin({
               <CardTitle className="text-base">Portfólio de Imóveis</CardTitle>
             </div>
             <CardDescription>
-              {imoveisDisponiveis} disponível{imoveisDisponiveis !== 1 ? "is" : ""} para venda/aluguel
+              {imoveisDisponiveis} {imoveisDisponiveis !== 1 ? "disponíveis" : "disponível"} para venda/aluguel
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -160,7 +167,7 @@ export function PainelAdmin({
       </div>
 
       {/* Evolução mensal */}
-      <Card>
+      <Card className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -174,7 +181,7 @@ export function PainelAdmin({
       </Card>
 
       {/* Atividades pendentes */}
-      <Card>
+      <Card className="animate-fade-in-up" style={{ animationDelay: "250ms" }}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
@@ -198,7 +205,7 @@ export function PainelAdmin({
       </Card>
 
       {/* Ações rápidas */}
-      <div id="onborda-acoes-rapidas">
+      <div id="onborda-acoes-rapidas" className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">Ações rápidas</h2>
         <div className="flex flex-wrap gap-3">
           <Link href="/imoveis/novo">

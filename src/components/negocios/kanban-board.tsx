@@ -148,7 +148,7 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
     >
       <div className="flex gap-4 overflow-x-auto pb-4">
         {etapasVisiveis.map((etapa) => (
-          <KanbanColuna key={etapa.id} etapa={etapa} />
+          <KanbanColuna key={etapa.id} etapa={etapa} todasEtapas={etapasLocal} onMover={onAtualizar} />
         ))}
       </div>
 

@@ -147,9 +147,9 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" id="onborda-form-imovel">
         {/* Dados Básicos */}
-        <Card>
+        <Card id="onborda-imovel-basico">
           <CardHeader>
             <CardTitle>Dados básicos</CardTitle>
           </CardHeader>
@@ -253,7 +253,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
         </Card>
 
         {/* Endereço */}
-        <Card>
+        <Card id="onborda-imovel-endereco">
           <CardHeader>
             <CardTitle>Endereço</CardTitle>
           </CardHeader>
@@ -592,7 +592,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           <Button type="button" variant="outline" render={<Link href="/imoveis" />}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={pendente}>
+          <Button type="submit" disabled={pendente} id="onborda-imovel-salvar">
             {pendente
               ? imovel
                 ? "Salvando..."

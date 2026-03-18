@@ -26,12 +26,58 @@ export async function buscarProgressoOnboarding(): Promise<ProgressoOnboarding |
 
   const etapas = (data.onboarding_etapas ?? {}) as EtapasOnboarding
 
-  // Auto-detecção: se já existem dados na organização, marcar etapas automaticamente
-  if (!etapas.imovel || !etapas.cliente || !etapas.negocio) {
+  // Chaves que possuem auto-detecção (as demais são marcação manual)
+  const chavesAutoDetect: ChaveEtapaOnboarding[] = [
+    "empresa", "whatsapp", "equipe", "imovel", "cliente", "negocio", "atividade",
+  ]
+
+  const precisaDetectar = chavesAutoDetect.some((chave) => !etapas[chave])
+
+  if (precisaDetectar && data.organizacao_id) {
     const orgId = data.organizacao_id
     const etapasAtualizadas = { ...etapas }
     let atualizou = false
 
+    // Empresa: verificar se a organização tem telefone ou CRECI preenchido
+    if (!etapas.empresa) {
+      const { data: org } = await supabase
+        .from("organizacoes")
+        .select("telefone, creci")
+        .eq("id", orgId)
+        .single()
+      if (org && (org.telefone || org.creci)) {
+        etapasAtualizadas.empresa = true
+        atualizou = true
+      }
+    }
+
+    // WhatsApp: verificar se existe config_whatsapp para a org
+    if (!etapas.whatsapp) {
+      const { count } = await supabase
+        .from("config_whatsapp")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.whatsapp = true
+        atualizou = true
+      }
+    }
+
+    // Equipe: verificar se existe ≥2 usuários na org
+    if (!etapas.equipe) {
+      const { count } = await supabase
+        .from("usuarios")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(2)
+      if (count && count >= 2) {
+        etapasAtualizadas.equipe = true
+        atualizou = true
+      }
+    }
+
+    // Imóvel: verificar se existe ≥1 imóvel na org
     if (!etapas.imovel) {
       const { count } = await supabase
         .from("imoveis")
@@ -44,6 +90,7 @@ export async function buscarProgressoOnboarding(): Promise<ProgressoOnboarding |
       }
     }
 
+    // Cliente: verificar se existe ≥1 cliente na org
     if (!etapas.cliente) {
       const { count } = await supabase
         .from("clientes")
@@ -56,6 +103,7 @@ export async function buscarProgressoOnboarding(): Promise<ProgressoOnboarding |
       }
     }
 
+    // Negócio: verificar se existe ≥1 negócio na org
     if (!etapas.negocio) {
       const { count } = await supabase
         .from("negocios")
@@ -64,6 +112,19 @@ export async function buscarProgressoOnboarding(): Promise<ProgressoOnboarding |
         .limit(1)
       if (count && count > 0) {
         etapasAtualizadas.negocio = true
+        atualizou = true
+      }
+    }
+
+    // Atividade: verificar se existe ≥1 atividade na org
+    if (!etapas.atividade) {
+      const { count } = await supabase
+        .from("atividades")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.atividade = true
         atualizou = true
       }
     }

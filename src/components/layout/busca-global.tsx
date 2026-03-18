@@ -12,13 +12,13 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
+import { StatusBadge } from "@/components/ui/status-badge"
 import {
-  StatusBadge,
   configStatusImovel,
   configStatusCliente,
   configStatusNegocio,
   configStatusAtividade,
-} from "@/components/ui/status-badge"
+} from "@/lib/constantes/status-configs"
 import { useBuscaGlobal } from "@/hooks/use-busca-global"
 import { formatarPreco, formatarDataCurta } from "@/lib/formatadores"
 import { labelsTipoImovel } from "@/lib/constantes/imoveis"

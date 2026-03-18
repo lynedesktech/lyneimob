@@ -7,28 +7,7 @@ import type {
   LinhaImportacaoLote,
   ResultadoImportacaoLotes,
 } from "@/types/importacao-lotes"
-
-// ============================================================
-// Helpers
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Importar lotes em massa

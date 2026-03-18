@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { TIPOS_IMOVEL, FINALIDADES_IMOVEL, STATUS_IMOVEL } from "@/lib/constantes/enums"
 
 // ============================================================
 // Siglas válidas dos estados brasileiros
@@ -18,25 +19,8 @@ export const schemaCriarImovel = z.object({
   codigo: z.string().min(1, "Código é obrigatório"),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
-  tipo: z.enum(
-    [
-      "apartamento",
-      "casa",
-      "terreno",
-      "sala_comercial",
-      "galpao",
-      "cobertura",
-      "kitnet",
-      "fazenda",
-      "sitio",
-      "loja",
-      "outro",
-    ],
-    { message: "Selecione o tipo do imóvel" }
-  ),
-  finalidade: z.enum(["venda", "aluguel", "venda_e_aluguel"], {
-    message: "Selecione a finalidade",
-  }),
+  tipo: z.enum(TIPOS_IMOVEL, { message: "Selecione o tipo do imóvel" }),
+  finalidade: z.enum(FINALIDADES_IMOVEL, { message: "Selecione a finalidade" }),
   cep: z.string().optional(),
   logradouro: z.string().optional(),
   numero: z.string().optional(),
@@ -77,9 +61,7 @@ export const schemaCriarImovel = z.object({
 // ============================================================
 export const schemaAtualizarImovel = schemaCriarImovel.extend({
   id: z.string().uuid(),
-  status: z
-    .enum(["disponivel", "reservado", "vendido", "alugado", "inativo"])
-    .optional(),
+  status: z.enum(STATUS_IMOVEL).optional(),
 })
 
 // ============================================================

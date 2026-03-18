@@ -22,7 +22,8 @@ import { excluirAtividade } from "@/actions/atividades"
 import { IAAtividade } from "@/components/atividades/ia-atividade"
 import { labelsTipoAtividade, labelsPrioridade, iconesTipoAtividade } from "@/lib/constantes"
 import { formatarData, formatarDataHora } from "@/lib/formatadores"
-import { StatusBadge, configStatusAtividade } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusAtividade } from "@/lib/constantes/status-configs"
 import type { AtividadeComRelacoes } from "@/types/database"
 
 interface Props {

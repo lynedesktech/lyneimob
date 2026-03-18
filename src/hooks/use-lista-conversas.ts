@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import type { ConversaComRelacoes } from "@/types/whatsapp"
 import type { FiltrosConversasInput } from "@/types/whatsapp"
+import { calcularRange } from "@/lib/paginacao"
 
 export function useListaConversas(filtros: FiltrosConversasInput) {
   const supabase = criarClienteBrowser()
@@ -37,8 +38,7 @@ export function useListaConversas(filtros: FiltrosConversasInput) {
       // Paginação
       const pagina = filtros.pagina || 1
       const porPagina = filtros.por_pagina || 20
-      const inicio = (pagina - 1) * porPagina
-      const fim = inicio + porPagina - 1
+      const { inicio, fim } = calcularRange(pagina, porPagina)
 
       query = query
         .order("ultima_mensagem_em", { ascending: false })

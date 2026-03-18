@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StatusBadge, configStatusImovel } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusImovel } from "@/lib/constantes/status-configs"
 import { GaleriaFotos } from "@/components/imoveis/galeria-fotos"
 import { IAImovel } from "@/components/imoveis/ia-imovel"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
@@ -28,17 +29,9 @@ import {
   Rss,
 } from "lucide-react"
 import { labelsTipoImovel, labelsFinalidade } from "@/lib/constantes"
+import { formatarPreco } from "@/lib/formatadores"
 
 type Params = Promise<{ id: string }>
-
-function formatarPreco(valor: number | null): string {
-  if (!valor) return "—"
-  return valor.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  })
-}
 
 export default async function DetalheImovelPage({
   params,

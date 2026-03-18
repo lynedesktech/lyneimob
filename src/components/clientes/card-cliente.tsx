@@ -5,7 +5,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge, configStatusCliente } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusCliente } from "@/lib/constantes/status-configs"
 import { ScoreBadge } from "./score-badge"
 import { Phone, Mail, User } from "lucide-react"
 import { labelsTipoCliente, labelsOrigem } from "@/lib/constantes"

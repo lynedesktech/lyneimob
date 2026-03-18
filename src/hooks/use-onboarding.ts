@@ -6,10 +6,16 @@ import {
   marcarTourCompleto,
   marcarEtapaChecklist,
 } from "@/actions/onboarding"
+import { ITENS_POR_CARGO } from "@/types/onboarding"
 import type { ProgressoOnboarding, ChaveEtapaOnboarding } from "@/types/onboarding"
+import { useUsuario } from "@/hooks/use-usuario"
 
 export function useOnboarding() {
   const queryClient = useQueryClient()
+  const { usuario } = useUsuario()
+
+  const cargo = (usuario?.cargo as "admin" | "gerente" | "corretor") ?? "corretor"
+  const itensDoCargoAtual = ITENS_POR_CARGO[cargo] ?? ITENS_POR_CARGO.corretor
 
   const { data, isLoading } = useQuery<ProgressoOnboarding | null>({
     queryKey: ["onboarding"],
@@ -32,8 +38,8 @@ export function useOnboarding() {
   })
 
   const etapas = data?.onboarding_etapas ?? {}
-  const totalEtapas = 4
-  const etapasCompletas = Object.values(etapas).filter(Boolean).length
+  const totalEtapas = itensDoCargoAtual.length
+  const etapasCompletas = itensDoCargoAtual.filter((chave) => etapas[chave]).length
   const checklistCompleto = etapasCompletas >= totalEtapas
 
   return {

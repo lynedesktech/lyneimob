@@ -5,28 +5,7 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { verificarLimiteImoveis } from "@/lib/verificar-limites"
 import { schemaLinhaImportacao } from "@/types/importacao"
 import type { LinhaImportacao, ResultadoImportacao } from "@/types/importacao"
-
-// ============================================================
-// Helpers
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Importar imóveis em massa

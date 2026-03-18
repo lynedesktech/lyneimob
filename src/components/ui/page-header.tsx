@@ -2,7 +2,7 @@ import * as React from "react"
 
 type PageHeaderProps = {
   titulo: string
-  descricao?: string
+  descricao?: React.ReactNode
   acoes?: React.ReactNode
 }
 
@@ -15,7 +15,7 @@ export function PageHeader({ titulo, descricao, acoes }: PageHeaderProps) {
           <p className="text-sm text-muted-foreground">{descricao}</p>
         )}
       </div>
-      {acoes && <div className="flex items-center gap-2">{acoes}</div>}
+      {acoes && <div className="flex flex-wrap items-center gap-2">{acoes}</div>}
     </div>
   )
 }

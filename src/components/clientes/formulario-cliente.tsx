@@ -102,9 +102,9 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" id="onborda-form-cliente">
         {/* Dados Pessoais */}
-        <Card>
+        <Card id="onborda-cliente-dados">
           <CardHeader>
             <CardTitle>Dados pessoais</CardTitle>
           </CardHeader>
@@ -255,7 +255,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
           <Button type="button" variant="outline" render={<Link href="/clientes" />}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={pendente}>
+          <Button type="submit" disabled={pendente} id="onborda-cliente-salvar">
             {pendente
               ? cliente
                 ? "Salvando..."

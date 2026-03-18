@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { StatusBadge, configStatusCliente } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusCliente } from "@/lib/constantes/status-configs"
 import { ScoreBadge } from "./score-badge"
 import {
   DropdownMenu,

@@ -8,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge, configStatusCliente, configStatusNegocio } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusCliente, configStatusNegocio } from "@/lib/constantes/status-configs"
 import { ScoreBadge } from "@/components/clientes/score-badge"
 import { InteressesCliente } from "@/components/clientes/interesses-cliente"
 import { TimelineInteracoes } from "@/components/clientes/timeline-interacoes"

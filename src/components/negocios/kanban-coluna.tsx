@@ -3,13 +3,15 @@
 import { useDroppable } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { KanbanCard } from "@/components/negocios/kanban-card"
-import type { EtapaComNegocios } from "@/types/database"
+import type { EtapaComNegocios, PipelineEtapa } from "@/types/database"
 
 interface KanbanColunaProps {
   etapa: EtapaComNegocios
+  todasEtapas: PipelineEtapa[]
+  onMover: () => void
 }
 
-export function KanbanColuna({ etapa }: KanbanColunaProps) {
+export function KanbanColuna({ etapa, todasEtapas, onMover }: KanbanColunaProps) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id })
 
   const totalValor = etapa.negocios.reduce(
@@ -54,7 +56,7 @@ export function KanbanColuna({ etapa }: KanbanColunaProps) {
           strategy={verticalListSortingStrategy}
         >
           {etapa.negocios.map((negocio) => (
-            <KanbanCard key={negocio.id} negocio={negocio} />
+            <KanbanCard key={negocio.id} negocio={negocio} etapas={todasEtapas} onMover={onMover} />
           ))}
         </SortableContext>
 

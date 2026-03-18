@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { PRIORIDADES_ATIVIDADE } from "@/lib/constantes/enums"
 
 // ============================================================
 // Schema de criação de atividade
@@ -6,7 +7,7 @@ import { z } from "zod"
 export const schemaCriarAtividade = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   tipo: z.string().min(1, "Selecione o tipo de atividade"),
-  prioridade: z.enum(["baixa", "media", "alta"]),
+  prioridade: z.enum(PRIORIDADES_ATIVIDADE),
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
   data_fim: z.string().optional(),
   descricao: z.string().optional(),

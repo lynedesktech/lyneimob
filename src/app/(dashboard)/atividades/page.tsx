@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Plus, List, CalendarDays, CalendarCheck2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/ui/page-header"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CardAtividade } from "@/components/atividades/card-atividade"
@@ -30,58 +31,59 @@ export default function AtividadesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Atividades</h1>
-          {modoExibicao === "lista" && (
-            <p className="text-sm text-muted-foreground">
-              {total} atividade{total !== 1 ? "s" : ""} encontrada{total !== 1 ? "s" : ""}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Toggle Lista/Calendário */}
-          <div className="flex items-center gap-1 rounded-lg border p-1">
-            <Button
-              variant={modoExibicao === "lista" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setModoExibicao("lista")}
-              title="Visão lista"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={modoExibicao === "calendario" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setModoExibicao("calendario")}
-              title="Visão calendário"
-            >
-              <CalendarDays className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <BotaoExportar
-            modulo="atividades"
-            filtros={{
-              tipo: filtros.tipo,
-              status: filtros.status,
-              prioridade: filtros.prioridade,
-              usuario_id: filtros.usuario_id,
-              data_inicio: filtros.data_inicio,
-              data_fim: filtros.data_fim,
-            }}
-            total={total}
-          />
-          <Button render={<Link href="/atividades/novo" />}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Atividade
-          </Button>
-        </div>
+      <div className="animate-fade-in-up">
+        <PageHeader
+          titulo="Atividades"
+          descricao={
+            modoExibicao === "lista"
+              ? `${total} atividade${total !== 1 ? "s" : ""} encontrada${total !== 1 ? "s" : ""}`
+              : undefined
+          }
+          acoes={
+            <>
+              <div className="flex items-center gap-1 rounded-lg border p-1">
+                <Button
+                  variant={modoExibicao === "lista" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setModoExibicao("lista")}
+                  title="Visão lista"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={modoExibicao === "calendario" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setModoExibicao("calendario")}
+                  title="Visão calendário"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                </Button>
+              </div>
+              <BotaoExportar
+                modulo="atividades"
+                filtros={{
+                  tipo: filtros.tipo,
+                  status: filtros.status,
+                  prioridade: filtros.prioridade,
+                  usuario_id: filtros.usuario_id,
+                  data_inicio: filtros.data_inicio,
+                  data_fim: filtros.data_fim,
+                }}
+                total={total}
+              />
+              <Button render={<Link href="/atividades/novo" />}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Atividade
+              </Button>
+            </>
+          }
+        />
       </div>
 
       {/* Filtros */}
-      <FiltrosAtividades filtros={filtros} onChange={setFiltros} />
+      <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+        <FiltrosAtividades filtros={filtros} onChange={setFiltros} />
+      </div>
 
       {/* Conteúdo */}
       {modoExibicao === "calendario" ? (

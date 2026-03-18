@@ -25,7 +25,7 @@ export function KanbanContainer() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="animate-fade-in-up flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {totalNegocios} negócio{totalNegocios !== 1 ? "s" : ""} aberto
           {totalNegocios !== 1 ? "s" : ""}
@@ -47,7 +47,9 @@ export function KanbanContainer() {
         />
       </div>
 
-      <FiltrosPipeline filtros={filtros} onChange={setFiltros} />
+      <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+        <FiltrosPipeline filtros={filtros} onChange={setFiltros} />
+      </div>
 
       {carregando ? (
         <div className="flex gap-4">

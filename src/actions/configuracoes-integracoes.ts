@@ -5,6 +5,7 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfiguracoesIntegracoes } from "@/types/configuracoes-integracoes"
 import type { EstadoFormulario } from "@/types/formulario"
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Validação real das chaves contra as APIs
@@ -68,28 +69,6 @@ async function validarChavesNovas(
   }
 
   return null
-}
-
-// ============================================================
-// Helpers
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo, super_admin")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
 }
 
 // ============================================================

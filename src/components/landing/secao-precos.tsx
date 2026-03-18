@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check, ArrowRight } from "lucide-react"
+import { formatarPrecoSimples } from "@/lib/formatadores"
 
 type CicloCobranca = "mensal" | "trimestral" | "anual"
 
@@ -59,10 +60,6 @@ function calcularPreco(precoMensal: number, ciclo: CicloCobranca) {
   const desconto = descontos[ciclo]
   const precoComDesconto = Math.round(precoMensal * (1 - desconto))
   return precoComDesconto
-}
-
-function formatarPreco(valor: number) {
-  return valor.toLocaleString("pt-BR")
 }
 
 export function SecaoPrecos() {
@@ -146,7 +143,7 @@ export function SecaoPrecos() {
                 <div className="mt-6 flex items-baseline gap-1">
                   <span className="text-sm text-muted-foreground">R$</span>
                   <span className="text-5xl font-extrabold tracking-tight text-foreground">
-                    {formatarPreco(precoFinal)}
+                    {formatarPrecoSimples(precoFinal)}
                   </span>
                   <span className="text-sm text-muted-foreground">/mês</span>
                 </div>
@@ -154,7 +151,7 @@ export function SecaoPrecos() {
                 {ciclo !== "mensal" && (
                   <p className="mt-1 text-sm text-muted-foreground">
                     <span className="line-through">
-                      R$ {formatarPreco(plano.precoMensal)}
+                      R$ {formatarPrecoSimples(plano.precoMensal)}
                     </span>
                     <span className="ml-1.5 font-medium text-emerald-600 dark:text-emerald-400">
                       Economize {descontos[ciclo] * 100}%

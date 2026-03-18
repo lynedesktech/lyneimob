@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StatusBadge, configStatusLoteamento } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusLoteamento } from "@/lib/constantes/status-configs"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { ResumoLoteamento } from "@/components/loteamentos/resumo-loteamento"
 import { TabelaLotes } from "@/components/loteamentos/tabela-lotes"

@@ -6,7 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge, configStatusImovel } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusImovel } from "@/lib/constantes/status-configs"
 import { MapPin, BedDouble, Car, Maximize, Globe, Rss } from "lucide-react"
 import { labelsTipoImovel } from "@/lib/constantes"
 import { formatarPreco } from "@/lib/formatadores"

@@ -159,12 +159,7 @@ export function obterLimitesPorPlano(plano: TipoPlano): LimitesPlano {
   return PLANOS[plano].limites
 }
 
-export function formatarPreco(centavos: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(centavos / 100)
-}
+export { formatarPrecoCentavos as formatarPreco } from "@/lib/formatadores"
 
 export function planoPermiteModulo(
   plano: TipoPlano,

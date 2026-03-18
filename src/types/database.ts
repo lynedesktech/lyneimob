@@ -1,6 +1,21 @@
 import type { ConfiguracoesSite } from "./configuracoes-site"
 import type { ConfiguracoesIntegracoes } from "./configuracoes-integracoes"
 import type { ConfigDistribuicao } from "./distribuicao-leads"
+import {
+  TIPOS_IMOVEL,
+  FINALIDADES_IMOVEL,
+  STATUS_IMOVEL,
+  TIPOS_CLIENTE,
+  ORIGENS_CLIENTE,
+  STATUS_CLIENTE,
+  TIPOS_INTERACAO,
+  TIPOS_NEGOCIO,
+  STATUS_NEGOCIO,
+  STATUS_ATIVIDADE,
+  PRIORIDADES_ATIVIDADE,
+  STATUS_LOTEAMENTO,
+  STATUS_LOTE,
+} from "@/lib/constantes/enums"
 
 export type Organizacao = {
   id: string
@@ -50,27 +65,9 @@ export type Usuario = {
 // Imóveis
 // ============================================================
 
-export type TipoImovel =
-  | "apartamento"
-  | "casa"
-  | "terreno"
-  | "sala_comercial"
-  | "galpao"
-  | "cobertura"
-  | "kitnet"
-  | "fazenda"
-  | "sitio"
-  | "loja"
-  | "outro"
-
-export type FinalidadeImovel = "venda" | "aluguel" | "venda_e_aluguel"
-
-export type StatusImovel =
-  | "disponivel"
-  | "reservado"
-  | "vendido"
-  | "alugado"
-  | "inativo"
+export type TipoImovel = (typeof TIPOS_IMOVEL)[number]
+export type FinalidadeImovel = (typeof FINALIDADES_IMOVEL)[number]
+export type StatusImovel = (typeof STATUS_IMOVEL)[number]
 
 export type Imovel = {
   id: string
@@ -127,13 +124,10 @@ export type ImovelComFotos = Imovel & {
 // Clientes
 // ============================================================
 
-export type TipoCliente = "comprador" | "vendedor" | "locatario" | "proprietario"
-
-export type OrigemCliente = "indicacao" | "portal" | "site" | "whatsapp" | "outro"
-
-export type StatusCliente = "ativo" | "inativo" | "negociando" | "fechado"
-
-export type TipoInteracao = "ligacao" | "email" | "visita" | "whatsapp" | "reuniao" | "outro"
+export type TipoCliente = (typeof TIPOS_CLIENTE)[number]
+export type OrigemCliente = (typeof ORIGENS_CLIENTE)[number]
+export type StatusCliente = (typeof STATUS_CLIENTE)[number]
+export type TipoInteracao = (typeof TIPOS_INTERACAO)[number]
 
 export type Cliente = {
   id: string
@@ -192,9 +186,8 @@ export type ClienteCompleto = Cliente & {
 
 export type TipoEtapa = "normal" | "ganho" | "perdido" | "pre_atendimento_ia"
 
-export type StatusNegocio = "aberto" | "ganho" | "perdido"
-
-export type TipoNegocio = "venda" | "aluguel"
+export type StatusNegocio = (typeof STATUS_NEGOCIO)[number]
+export type TipoNegocio = (typeof TIPOS_NEGOCIO)[number]
 
 export type PipelineEtapa = {
   id: string
@@ -265,9 +258,8 @@ export type TipoAtividadeRegistro = {
   created_at: string
 }
 
-export type StatusAtividade = "pendente" | "concluida" | "cancelada"
-
-export type PrioridadeAtividade = "baixa" | "media" | "alta"
+export type StatusAtividade = (typeof STATUS_ATIVIDADE)[number]
+export type PrioridadeAtividade = (typeof PRIORIDADES_ATIVIDADE)[number]
 
 export type Atividade = {
   id: string
@@ -364,7 +356,7 @@ export type Loteamento = {
   nome: string
   descricao: string | null
   descricao_ia: string | null
-  status: "lancamento" | "em_vendas" | "esgotado"
+  status: (typeof STATUS_LOTEAMENTO)[number]
   cep: string | null
   logradouro: string | null
   numero: string | null
@@ -390,7 +382,7 @@ export type Lote = {
   quadra: string
   numero_lote: string
   unidade: string
-  status: "disponivel" | "reservado" | "vendido"
+  status: (typeof STATUS_LOTE)[number]
   comprador: string | null
   valor: number
   data_venda: string | null

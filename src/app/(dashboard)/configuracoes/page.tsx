@@ -170,9 +170,19 @@ export default async function ConfiguracoesPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div id="onborda-config-grid" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {cardsVisiveis.map((card) => (
-            <Link key={card.href} href={card.href} className="group">
+            <Link key={card.href} href={card.href} className="group" id={
+              card.titulo === "Dados da Empresa" ? "onborda-config-empresa" :
+              card.titulo === "WhatsApp" ? "onborda-config-whatsapp" :
+              card.titulo === "Equipe" ? "onborda-config-equipe" :
+              card.titulo === "Funil de Vendas" ? "onborda-config-funil" :
+              card.titulo === "Tipos de Atividade" ? "onborda-config-tipos-atividade" :
+              card.titulo === "Distribuição de Leads" ? "onborda-config-distribuicao" :
+              card.titulo === "Portais" ? "onborda-config-portais" :
+              card.titulo === "Meu Site" ? "onborda-config-meu-site" :
+              undefined
+            }>
               <Card className="h-full transition-colors hover:bg-accent/50">
                 <CardContent className="flex items-start gap-4 p-5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

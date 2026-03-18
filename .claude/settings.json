@@ -470,7 +470,18 @@
       "Bash(grep -E \"\\\\.ts$|\\\\.tsx$\")",
       "Bash(grep -l \"onboarding\\\\|primeiro_acesso\\\\|setup\\\\|configuracao_completa\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
       "Bash(cat /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/providers.tsx)",
-      "Bash(grep -r \"configuracoes_site\\\\|config_distribuicao\\\\|whatsapp\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/types/*.ts)"
+      "Bash(grep -r \"configuracoes_site\\\\|config_distribuicao\\\\|whatsapp\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/types/*.ts)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -type f \\\\\\(-name *.spec.* -o -name *.test.* \\\\\\))",
+      "Bash(grep -A 20 \"CREATE TABLE usuarios\" supabase/migrations/*.sql)",
+      "Bash(grep -n \"CREATE POLICY.*usuarios\" supabase/migrations/*.sql)",
+      "Bash(grep -A 8 \"\"\"admin_atualiza_usuario\"\"\" supabase/migrations/019_fix_rls_recursao.sql)",
+      "mcp__playwright__browser_press_key",
+      "mcp__supabase__list_organizations",
+      "Bash(find \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) -path \"*/app/\\(dashboard\\)/*\")",
+      "Bash(grep -r \"align\\\\|horizontal\\\\|offset\\\\|position\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/node_modules/onborda/dist/*.d.ts)",
+      "Bash(ls \"/c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/\")",
+      "Bash(grep -r \"export \\\\\\(async \\\\\\)\\\\?function\\\\|export const.*=\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/actions/*.ts)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -name provedor-onboarding* -o -name *painel* -type f)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

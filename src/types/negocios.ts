@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { TIPOS_NEGOCIO, STATUS_NEGOCIO } from "@/lib/constantes/enums"
 
 // ============================================================
 // Schema de criação de negócio
@@ -10,7 +11,7 @@ export const schemaCriarNegocio = z.object({
   lote_id: z.string().uuid("Selecione um lote").optional().or(z.literal("")),
   etapa_id: z.string().uuid("Selecione uma etapa"),
   valor: z.coerce.number().nonnegative("Valor não pode ser negativo").optional(),
-  tipo: z.enum(["venda", "aluguel"], { message: "Selecione o tipo" }),
+  tipo: z.enum(TIPOS_NEGOCIO, { message: "Selecione o tipo" }),
   previsao_fechamento: z.string().optional(),
   observacoes: z.string().optional(),
 })
@@ -20,7 +21,7 @@ export const schemaCriarNegocio = z.object({
 // ============================================================
 export const schemaAtualizarNegocio = schemaCriarNegocio.extend({
   id: z.string().uuid(),
-  status: z.enum(["aberto", "ganho", "perdido"]).optional(),
+  status: z.enum(STATUS_NEGOCIO).optional(),
 })
 
 // ============================================================

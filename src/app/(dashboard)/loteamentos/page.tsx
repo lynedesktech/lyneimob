@@ -7,6 +7,7 @@ import { FiltrosLoteamentos } from "@/components/loteamentos/filtros-loteamentos
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
 import { Plus, MapPin } from "lucide-react"
+import { calcularRange, calcularTotalPaginas } from "@/lib/paginacao"
 
 type SearchParams = Promise<{
   busca?: string
@@ -27,8 +28,7 @@ export default async function LoteamentosPage({
   const porPagina = porPaginaOpcoes.includes(Number(params.porPagina))
     ? Number(params.porPagina)
     : 12
-  const inicio = (pagina - 1) * porPagina
-  const fim = inicio + porPagina - 1
+  const { inicio, fim } = calcularRange(pagina, porPagina)
 
   let query = supabase
     .from("loteamentos")
@@ -46,10 +46,11 @@ export default async function LoteamentosPage({
     .range(inicio, fim)
 
   const total = count ?? 0
-  const totalPaginas = Math.ceil(total / porPagina)
+  const totalPaginas = calcularTotalPaginas(total, porPagina)
 
   return (
     <div className="space-y-6">
+      <div className="animate-fade-in-up">
       <PageHeader
         titulo="Loteamentos"
         descricao="Gerencie os loteamentos e lotes da sua imobiliária"
@@ -60,9 +61,13 @@ export default async function LoteamentosPage({
           </Button>
         }
       />
+      </div>
 
-      <FiltrosLoteamentos />
+      <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+        <FiltrosLoteamentos />
+      </div>
 
+      <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
       {loteamentos && loteamentos.length > 0 ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -92,6 +97,7 @@ export default async function LoteamentosPage({
           }
         />
       )}
+      </div>
     </div>
   )
 }

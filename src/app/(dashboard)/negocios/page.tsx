@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { headers } from "next/headers"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/ui/page-header"
@@ -14,7 +15,16 @@ export default async function NegociosPage({
   searchParams: SearchParams
 }) {
   const params = await searchParams
-  const visao = params.visao === "lista" ? "lista" : "kanban"
+
+  // Detectar mobile pelo user-agent — em mobile, forçar lista por padrão
+  const headersList = await headers()
+  const userAgent = headersList.get("user-agent") ?? ""
+  const isMobile = /mobile|android|iphone|ipad/i.test(userAgent)
+  const padrao = isMobile ? "lista" : "kanban"
+
+  const visao = params.visao === "lista" || params.visao === "kanban"
+    ? params.visao
+    : padrao
 
   return (
     <div className="space-y-6">
@@ -23,8 +33,8 @@ export default async function NegociosPage({
         descricao="Acompanhe seu pipeline e feche mais negócios"
         acoes={
           <>
-            <ToggleVisualizacao rota="/negocios" paramNome="visao" padrao="kanban" opcoes={opcoesKanbanLista} />
-            <Button render={<Link href="/negocios/novo" />}>
+            <ToggleVisualizacao rota="/negocios" paramNome="visao" padrao={padrao} opcoes={opcoesKanbanLista} />
+            <Button render={<Link href="/negocios/novo" />} id="onborda-btn-novo-negocio">
               <Plus className="mr-2 h-4 w-4" />
               Novo Negócio
             </Button>
@@ -32,7 +42,9 @@ export default async function NegociosPage({
         }
       />
 
-      {visao === "lista" ? <ListaNegocios /> : <KanbanContainer />}
+      <div id="onborda-kanban">
+        {visao === "lista" ? <ListaNegocios /> : <KanbanContainer />}
+      </div>
     </div>
   )
 }

@@ -7,28 +7,7 @@ import { verificarPermissao } from "@/lib/permissoes"
 import { schemaSalvarConfigDistribuicao } from "@/types/distribuicao-leads"
 import type { ConfigDistribuicao, CorretorComCarga } from "@/types/distribuicao-leads"
 import type { EstadoFormulario } from "@/types/formulario"
-
-// ============================================================
-// Helpers
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Buscar configuração de distribuição + corretores com carga

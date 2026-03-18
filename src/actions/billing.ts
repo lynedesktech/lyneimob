@@ -6,28 +6,11 @@ import { criarClienteStripe } from "@/lib/stripe"
 import { verificarPermissao } from "@/lib/permissoes"
 import { PLANOS, obterLimitesPorPlano } from "@/types/billing"
 import type { TipoPlano, InfoAssinatura } from "@/types/billing"
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Helpers
 // ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
 
 async function buscarOrganizacao(organizacaoId: string) {
   const supabase = await criarClienteServer()

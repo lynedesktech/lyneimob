@@ -5,28 +5,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { verificarPermissao } from "@/lib/permissoes"
 import { verificarLimiteCorretores } from "@/lib/verificar-limites"
 import crypto from "crypto"
-
-// ============================================================
-// Helpers
-// ============================================================
-
-async function buscarUsuarioLogado() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
-
-  return usuario
-}
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 
 // ============================================================
 // Listar usuarios da organizacao

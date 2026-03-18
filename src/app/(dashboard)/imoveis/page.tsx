@@ -10,6 +10,7 @@ import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Plus, Building2, Upload } from "lucide-react"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
 import { BotaoExportar } from "@/components/ui/botao-exportar"
+import { calcularRange, calcularTotalPaginas } from "@/lib/paginacao"
 
 type SearchParams = Promise<{
   busca?: string
@@ -37,8 +38,7 @@ export default async function ImoveisPage({
   const porPagina = porPaginaOpcoes.includes(Number(params.porPagina))
     ? Number(params.porPagina)
     : 12
-  const inicio = (pagina - 1) * porPagina
-  const fim = inicio + porPagina - 1
+  const { inicio, fim } = calcularRange(pagina, porPagina)
 
   let query = supabase
     .from("imoveis")
@@ -63,10 +63,11 @@ export default async function ImoveisPage({
     .range(inicio, fim)
 
   const total = count ?? 0
-  const totalPaginas = Math.ceil(total / porPagina)
+  const totalPaginas = calcularTotalPaginas(total, porPagina)
 
   return (
     <div className="space-y-6">
+      <div className="animate-fade-in-up">
       <PageHeader
         titulo="Imóveis"
         descricao="Gerencie o portfólio de imóveis da sua imobiliária"
@@ -97,9 +98,13 @@ export default async function ImoveisPage({
           </>
         }
       />
+      </div>
 
+      <div className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
       <FiltrosImoveis />
+      </div>
 
+      <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
       {imoveis && imoveis.length > 0 ? (
         <>
           {modoVisualizacao === "lista" ? (
@@ -133,6 +138,7 @@ export default async function ImoveisPage({
           }
         />
       )}
+      </div>
     </div>
   )
 }

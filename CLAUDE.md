@@ -184,7 +184,7 @@ MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados 
 
 - **pesquisa** — etapa 1 do metodo: pesquisa qualquer tema e gera `planejamento/pesquisas/pesquisa-[tema].md`. Nao executa nada, nao altera o projeto — produto final e apenas o arquivo .md
 - **requisitos** — etapa 2 do metodo: le uma pesquisa (ou trabalha com escopo conhecido) e gera `planejamento/requisitos/requisito-[tema].md` com o plano de execucao completo. Nao executa nada, nao implementa, nao altera o codigo — produto final e apenas o arquivo .md
-- **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Quando conclui, gera tarefas executaveis no roadmap.md. Nao implementa nada, nao altera codigo — produto final sao as tarefas no roadmap
+- **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Quando conclui, gera tarefas no banco (tabela `tarefas_roadmap`). Nao implementa nada, nao altera codigo — produto final sao as tarefas no roadmap
 - **frontend-design** — OBRIGATORIO para qualquer alteracao visual (layout, componentes, CSS, paginas). Contem o design system completo do projeto.
 - **busca-no-yt** — buscar videos no YouTube
 
@@ -201,37 +201,34 @@ Pesquisas e requisitos ficam em `planejamento/` e sao temporarios — existem pa
 
 ---
 
-## Gestao de Tarefas — roadmap.md
+## Gestao de Tarefas — Banco de Dados (tabela `tarefas_roadmap`)
 
-O `roadmap.md` e a fonte de verdade do projeto. O Claude atua como gestor — registra, move e atualiza tarefas automaticamente. Nenhuma demanda e perdida.
+O roadmap vive no banco de dados e e acessivel em `/admin/roadmap` (area de Super Admin). O arquivo `roadmap.md` foi removido — a fonte de verdade e o banco.
 
-### As 5 secoes
+### Os 5 status
 
-- **📋 A Fazer** — fila priorizada aguardando execucao
-- **🔄 Fazendo** — tarefa em andamento agora
-- **✅ Pronto** — implementacao concluida, aguardando validacao do usuario
-- **✔️ Concluido** — validado e aprovado pelo usuario
-- **💬 Sugestoes** — melhorias identificadas pelo Claude durante o trabalho
+- **a_fazer** — fila priorizada aguardando execucao
+- **fazendo** — tarefa em andamento agora
+- **pronto** — implementacao concluida, aguardando validacao do usuario
+- **concluido** — validado e aprovado pelo usuario
+- **sugestao** — melhorias identificadas pelo Claude durante o trabalho
+
+### Como gerenciar tarefas
+
+Usar as server actions em `src/actions/roadmap.ts`:
+- `criarTarefaRoadmap(dados)` — criar nova tarefa
+- `atualizarStatusTarefa(id, status)` — mover entre status
+- `excluirTarefaRoadmap(id)` — remover tarefa
+- `listarTarefasRoadmap()` — listar todas
+- `buscarResumoRoadmap()` — contadores por status
 
 ### Comportamento automatico
 
 O Claude atualiza o roadmap **por conta propria**, sem precisar ser solicitado:
 
-1. **Pedido novo** → registrar no roadmap antes de executar. Se e pra agora, vai direto pra Fazendo. Se e pra depois, vai pra A Fazer.
-2. **Iniciar tarefa** → ler roadmap, mover de A Fazer → Fazendo. Se ja tem algo em Fazendo, perguntar ao usuario.
-3. **Tarefa descoberta durante execucao** → registrar em A Fazer e informar o usuario. Se for sugestao de melhoria, registrar em Sugestoes.
-4. **Concluir tarefa** → mover de Fazendo → Pronto. Adicionar nota do que foi feito e o que testar.
-5. **Tarefa interrompida** → deixar em Fazendo com nota do ponto de parada. Retomar na proxima sessao.
-6. **Usuario valida** → mover de Pronto → Concluido com data. Apagar arquivos de planejamento associados. Perguntar se comeca a proxima da fila.
-7. **Validacao falhou** → mover de Pronto → Fazendo com nota do problema. Corrigir e devolver pra Pronto.
-8. **Pedido de status** → responder em formato curto: Fazendo, Pronto, Proximo da fila, Sugestoes.
-
-### Formato de tarefa
-
-```markdown
-- [ ] Titulo claro e objetivo
-      Contexto: por que isso precisa ser feito (opcional)
-      ← nota de parada ou problema (so quando interrompida ou devolvida)
-```
+1. **Pedido novo** → registrar no banco antes de executar (status `fazendo` ou `a_fazer`)
+2. **Concluir tarefa** → mover para `pronto` e informar o usuario
+3. **Usuario valida** → mover para `concluido` com data
+4. **Sugestao de melhoria** → registrar com status `sugestao`
 
 > Se nao esta no roadmap, nao existe. O Claude nunca perde uma demanda e nunca trabalha no escuro.

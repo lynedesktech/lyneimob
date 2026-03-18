@@ -16,7 +16,8 @@ import { EstadoVazio } from "@/components/ui/estado-vazio"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import { StatusBadge, configStatusNegocio } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusNegocio } from "@/lib/constantes/status-configs"
 import {
   DropdownMenu,
   DropdownMenuContent,

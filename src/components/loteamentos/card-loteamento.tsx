@@ -6,7 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StatusBadge, configStatusLoteamento } from "@/components/ui/status-badge"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { configStatusLoteamento } from "@/lib/constantes/status-configs"
 import { MapPin, Layers } from "lucide-react"
 import { formatarPreco } from "@/lib/formatadores"
 import type { Loteamento, LoteamentoFoto } from "@/types/database"

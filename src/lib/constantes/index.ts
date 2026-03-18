@@ -1,4 +1,20 @@
 export {
+  TIPOS_IMOVEL,
+  FINALIDADES_IMOVEL,
+  STATUS_IMOVEL,
+  TIPOS_CLIENTE,
+  ORIGENS_CLIENTE,
+  STATUS_CLIENTE,
+  TIPOS_INTERACAO,
+  TIPOS_NEGOCIO,
+  STATUS_NEGOCIO,
+  STATUS_ATIVIDADE,
+  PRIORIDADES_ATIVIDADE,
+  STATUS_LOTEAMENTO,
+  STATUS_LOTE,
+} from "./enums"
+
+export {
   labelsTipoImovel,
   labelsFinalidade,
   labelsStatusImovel,

@@ -39,18 +39,21 @@ export function PainelCorretor({
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Cabeçalho */}
-      <div>
+      <div className="animate-fade-in-up">
         <h1 className="text-2xl font-bold">Olá, {nomeUsuario}!</h1>
         <p className="text-sm text-muted-foreground">Aqui está o resumo do seu dia.</p>
       </div>
 
       {/* Checklist de onboarding (some quando completar tudo) */}
-      <ChecklistOnboarding />
+      <div id="onborda-checklist" className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+        <ChecklistOnboarding />
+      </div>
 
       {/* KPI cards */}
       <div
         id="onborda-dashboard-cards"
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="animate-fade-in-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        style={{ animationDelay: "100ms" }}
       >
         <CardKpi
           titulo="Meus negócios"
@@ -103,7 +106,7 @@ export function PainelCorretor({
       </div>
 
       {/* Resumo IA + Atividades de hoje */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="animate-fade-in-up grid gap-6 lg:grid-cols-2" style={{ animationDelay: "150ms" }}>
         <CardResumoSemanal />
 
         <Card>
@@ -124,7 +127,7 @@ export function PainelCorretor({
       </div>
 
       {/* Ações rápidas */}
-      <div id="onborda-acoes-rapidas">
+      <div id="onborda-acoes-rapidas" className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">Ações rápidas</h2>
         <div className="flex flex-wrap gap-3">
           <Link href="/imoveis/novo">
