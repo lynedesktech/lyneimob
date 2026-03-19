@@ -33,6 +33,15 @@ export async function atualizarSessao(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Helper: redirecionar propagando cookies refreshed do Supabase
+  function redirecionarComCookies(url: URL) {
+    const redirectResponse = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value)
+    })
+    return redirectResponse
+  }
+
   const pathname = request.nextUrl.pathname
 
   // Rotas que EXIGEM autenticação (dashboard e sub-rotas)
@@ -60,7 +69,7 @@ export async function atualizarSessao(request: NextRequest) {
   if (user && pathname === "/") {
     const url = request.nextUrl.clone()
     url.pathname = "/painel"
-    return NextResponse.redirect(url)
+    return redirecionarComCookies(url)
   }
 
   // Site público e outras rotas: não é dashboard nem auth → passar sem checar
@@ -72,14 +81,17 @@ export async function atualizarSessao(request: NextRequest) {
   if (!user && ehRotaProtegida) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
-    return NextResponse.redirect(url)
+    return redirecionarComCookies(url)
   }
 
   // Se está autenticado e tenta acessar rota de auth → redireciona para painel
+  // Exceção: se veio com ?erro= do layout (sessão inválida), deixar passar para evitar loop
   if (user && ehRotaAuth) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/painel"
-    return NextResponse.redirect(url)
+    if (!request.nextUrl.searchParams.has("erro")) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/painel"
+      return redirecionarComCookies(url)
+    }
   }
 
   // Verificar trial expirado para usuários autenticados
@@ -102,7 +114,7 @@ export async function atualizarSessao(request: NextRequest) {
         const url = request.nextUrl.clone()
         url.pathname = "/financeiro"
         url.searchParams.set("trial_expirado", "true")
-        return NextResponse.redirect(url)
+        return redirecionarComCookies(url)
       }
     }
   }

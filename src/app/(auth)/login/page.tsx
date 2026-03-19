@@ -1,6 +1,7 @@
 "use client"
 
-import { useActionState } from "react"
+import { Suspense, useActionState } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { login } from "@/actions/auth"
 import type { EstadoFormulario } from "@/types/formulario"
@@ -17,6 +18,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+
+const mensagensErro: Record<string, string> = {
+  "sessao-invalida": "Sua sessão expirou. Faça login novamente.",
+  "usuario-nao-encontrado": "Conta não encontrada. Entre em contato com o suporte.",
+  "organizacao-nao-encontrada": "Organização não encontrada. Entre em contato com o suporte.",
+}
+
+function AlertaErroSessao() {
+  const searchParams = useSearchParams()
+  const erroSessao = searchParams.get("erro")
+
+  if (!erroSessao || !mensagensErro[erroSessao]) return null
+
+  return <AlertaFormulario tipo="erro" mensagem={mensagensErro[erroSessao]} />
+}
 
 export default function LoginPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
@@ -35,6 +51,10 @@ export default function LoginPage() {
 
       <form action={formAction}>
         <CardContent className="space-y-5">
+          <Suspense>
+            <AlertaErroSessao />
+          </Suspense>
+
           {estado.erro && (
             <AlertaFormulario tipo="erro" mensagem={estado.erro}>
               {estado.erro.includes("Senha incorreta") && (

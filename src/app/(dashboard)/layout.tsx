@@ -22,7 +22,7 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/login")
+    redirect("/login?erro=sessao-invalida")
   }
 
   // Buscar dados do usuário na tabela usuarios
@@ -33,7 +33,7 @@ export default async function DashboardLayout({
     .single()
 
   if (!usuario) {
-    redirect("/login")
+    redirect("/login?erro=usuario-nao-encontrado")
   }
 
   // Buscar dados da organização
@@ -43,7 +43,7 @@ export default async function DashboardLayout({
     .single()
 
   if (!organizacao) {
-    redirect("/login")
+    redirect("/login?erro=organizacao-nao-encontrada")
   }
 
   return (
