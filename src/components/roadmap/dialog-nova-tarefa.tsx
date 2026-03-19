@@ -67,7 +67,11 @@ export function DialogNovaTarefa() {
       toast.success("Sprint criada.")
       limpar()
       setAberto(false)
-      router.refresh()
+      if (resultado.tarefaId) {
+        router.push(`/admin/roadmap/${resultado.tarefaId}`)
+      } else {
+        router.refresh()
+      }
     }
   }
 
@@ -75,7 +79,7 @@ export function DialogNovaTarefa() {
   const prioridadeConfig = PRIORIDADE_ROADMAP[prioridade]
 
   return (
-    <Dialog open={aberto} onOpenChange={setAberto}>
+    <Dialog open={aberto} onOpenChange={(open) => { if (!open) limpar(); setAberto(open) }}>
       <DialogTrigger
         render={
           <Button size="sm">

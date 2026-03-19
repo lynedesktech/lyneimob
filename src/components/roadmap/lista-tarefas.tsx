@@ -56,6 +56,7 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
   const [busca, setBusca] = useState("")
   const [filtroStatus, setFiltroStatus] = useState<StatusRoadmap | "todos">("todos")
   const [tarefas, setTarefas] = useState(tarefasIniciais)
+  const [processando, setProcessando] = useState<string | null>(null)
   const [abertos, setAbertos] = useState<Record<string, boolean>>({
     fazendo: true,
     a_fazer: true,
@@ -85,7 +86,9 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
   }
 
   async function handleMudarStatus(id: string, novoStatus: StatusRoadmap) {
+    setProcessando(id)
     const resultado = await atualizarStatusTarefa(id, novoStatus)
+    setProcessando(null)
     if (resultado.erro) {
       toast.error(resultado.erro)
     } else {
@@ -108,7 +111,9 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
   }
 
   async function handleExcluir(id: string) {
+    setProcessando(id)
     const resultado = await excluirTarefaRoadmap(id)
+    setProcessando(null)
     if (resultado.erro) {
       toast.error(resultado.erro)
     } else {

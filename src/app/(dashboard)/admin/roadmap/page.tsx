@@ -29,7 +29,7 @@ export default async function RoadmapPage() {
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span className="font-medium text-foreground">{resumo.total_geral}</span>
         tarefas no total
-        {resumo.total_concluido > 0 && (
+        {resumo.total_geral > 0 && resumo.total_concluido > 0 && (
           <>
             {" · "}
             <span className="text-success font-medium">
