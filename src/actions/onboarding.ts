@@ -26,9 +26,10 @@ export async function buscarProgressoOnboarding(): Promise<ProgressoOnboarding |
 
   const etapas = (data.onboarding_etapas ?? {}) as EtapasOnboarding
 
-  // Chaves que possuem auto-detecção (as demais são marcação manual)
+  // Todas as chaves agora possuem auto-detecção (fallback para marcação manual)
   const chavesAutoDetect: ChaveEtapaOnboarding[] = [
     "empresa", "whatsapp", "equipe", "imovel", "cliente", "negocio", "atividade",
+    "funil", "tipos_atividade", "distribuicao", "portais", "meu_site",
   ]
 
   const precisaDetectar = chavesAutoDetect.some((chave) => !etapas[chave])
@@ -125,6 +126,72 @@ export async function buscarProgressoOnboarding(): Promise<ProgressoOnboarding |
         .limit(1)
       if (count && count > 0) {
         etapasAtualizadas.atividade = true
+        atualizou = true
+      }
+    }
+
+    // Funil: verificar se existem etapas personalizadas no pipeline
+    if (!etapas.funil) {
+      const { count } = await supabase
+        .from("pipeline_etapas")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.funil = true
+        atualizou = true
+      }
+    }
+
+    // Tipos de atividade: verificar se existem tipos customizados (não-sistema)
+    if (!etapas.tipos_atividade) {
+      const { count } = await supabase
+        .from("tipos_atividade")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.tipos_atividade = true
+        atualizou = true
+      }
+    }
+
+    // Distribuição: verificar se o modo foi alterado (padrão é "manual")
+    if (!etapas.distribuicao) {
+      const { data: org } = await supabase
+        .from("organizacoes")
+        .select("config_distribuicao")
+        .eq("id", orgId)
+        .single()
+      const config = org?.config_distribuicao as { modo?: string } | null
+      if (config && config.modo && config.modo !== "manual") {
+        etapasAtualizadas.distribuicao = true
+        atualizou = true
+      }
+    }
+
+    // Portais: verificar se existe ≥1 lead de portal recebido
+    if (!etapas.portais) {
+      const { count } = await supabase
+        .from("leads_portais")
+        .select("id", { count: "exact", head: true })
+        .eq("organizacao_id", orgId)
+        .limit(1)
+      if (count && count > 0) {
+        etapasAtualizadas.portais = true
+        atualizou = true
+      }
+    }
+
+    // Meu Site: verificar se a organização tem slug preenchido
+    if (!etapas.meu_site) {
+      const { data: org } = await supabase
+        .from("organizacoes")
+        .select("slug")
+        .eq("id", orgId)
+        .single()
+      if (org && org.slug) {
+        etapasAtualizadas.meu_site = true
         atualizou = true
       }
     }

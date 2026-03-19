@@ -5,7 +5,7 @@ for (const [nome, perfil] of Object.entries(PERFIS)) {
   setup(`autenticar como ${nome}`, async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel('Email').fill(perfil.email)
-    await page.getByLabel('Senha').fill(perfil.senha)
+    await page.getByRole('textbox', { name: 'Senha' }).fill(perfil.senha)
     await page.getByRole('button', { name: /entrar/i }).click()
 
     // Aguarda o dashboard carregar (URL pode ser /painel ou / com redirect pendente)

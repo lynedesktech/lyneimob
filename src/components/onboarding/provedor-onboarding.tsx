@@ -633,7 +633,7 @@ const tourAtividade: Tour = {
           Quando criar, a etapa será marcada automaticamente no checklist!
         </>
       ),
-      selector: "#onborda-acoes-rapidas",
+      selector: "#onborda-btn-nova-atividade",
       side: "bottom" as const,
       showControls: true,
       pointerPadding: 10,

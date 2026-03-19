@@ -1,16 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
-import { UserPlus, Mail, Shield, ShieldCheck, User, Copy, Check } from "lucide-react"
+import { UserPlus, Mail, Copy, Check } from "lucide-react"
 import { useListaUsuarios } from "@/hooks/use-lista-usuarios"
 import { convidarUsuario, alterarCargo, alternarStatusUsuario, removerUsuario, revogarConvite } from "@/actions/usuarios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
@@ -21,15 +20,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { TabelaEquipe } from "@/components/usuarios/tabela-equipe"
+import { FiltrosEquipe, type FiltrosEquipeValores } from "@/components/usuarios/filtros-equipe"
+import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import type { Usuario } from "@/types/database"
+
+const POR_PAGINA = 12
 
 // Helper para extrair erro de resultado de server action
 function temErro(resultado: Record<string, unknown>): string | null {
@@ -43,10 +39,10 @@ function obterSucesso(resultado: Record<string, unknown>): string | null {
   return null
 }
 
-const CARGOS_LABELS: Record<string, { label: string; cor: string }> = {
-  admin: { label: "Admin", cor: "default" },
-  gerente: { label: "Gerente", cor: "secondary" },
-  corretor: { label: "Corretor", cor: "outline" },
+const CARGOS_LABELS: Record<string, { label: string }> = {
+  admin: { label: "Admin" },
+  gerente: { label: "Gerente" },
+  corretor: { label: "Corretor" },
 }
 
 interface PaginaUsuariosProps {
@@ -55,8 +51,65 @@ interface PaginaUsuariosProps {
 }
 
 export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps) {
-  const { usuarios, convites, carregando, recarregar } = useListaUsuarios()
+  const { usuarios, convites, carregando } = useListaUsuarios()
   const queryClient = useQueryClient()
+  const [filtros, setFiltros] = useState<FiltrosEquipeValores>({ busca: "", cargo: "", status: "" })
+  const [pagina, setPagina] = useState(1)
+  const [usuarioAlterarCargo, setUsuarioAlterarCargo] = useState<Usuario | null>(null)
+  const [usuarioRemover, setUsuarioRemover] = useState<Usuario | null>(null)
+
+  function invalidar() {
+    queryClient.invalidateQueries({ queryKey: ["usuarios-equipe"] })
+  }
+
+  function mudarFiltro(chave: keyof FiltrosEquipeValores, valor: string) {
+    setFiltros((prev) => ({ ...prev, [chave]: valor }))
+    setPagina(1)
+  }
+
+  function limparFiltros() {
+    setFiltros({ busca: "", cargo: "", status: "" })
+    setPagina(1)
+  }
+
+  // Filtragem client-side
+  const usuariosFiltrados = useMemo(() => {
+    let resultado = usuarios
+    if (filtros.busca) {
+      const termo = filtros.busca.toLowerCase()
+      resultado = resultado.filter(
+        (u) => u.nome.toLowerCase().includes(termo) || u.email.toLowerCase().includes(termo)
+      )
+    }
+    if (filtros.cargo) {
+      resultado = resultado.filter((u) => u.cargo === filtros.cargo)
+    }
+    if (filtros.status) {
+      resultado = resultado.filter((u) =>
+        filtros.status === "ativo" ? u.ativo : !u.ativo
+      )
+    }
+    return resultado
+  }, [usuarios, filtros])
+
+  // Paginação client-side
+  const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / POR_PAGINA))
+  const paginaAtual = Math.min(pagina, totalPaginas)
+  const usuariosPagina = usuariosFiltrados.slice(
+    (paginaAtual - 1) * POR_PAGINA,
+    paginaAtual * POR_PAGINA
+  )
+
+  async function handleAlternarStatus(usuario: Usuario) {
+    const resultado = await alternarStatusUsuario(usuario.id)
+    const erro = temErro(resultado)
+    if (erro) {
+      toast.error(erro)
+    } else {
+      toast.success(obterSucesso(resultado) ?? "Status alterado.")
+      invalidar()
+    }
+  }
 
   if (carregando) {
     return (
@@ -74,13 +127,11 @@ export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps
         <div>
           <h1 className="text-2xl font-bold">Equipe</h1>
           <p className="text-muted-foreground">
-            {usuarios.length} {usuarios.length === 1 ? "membro" : "membros"} na organizacao
+            {usuarios.length} {usuarios.length === 1 ? "membro" : "membros"} na organização
           </p>
         </div>
         {ehAdmin && (
-          <DialogConvidar onConvidar={() => {
-            queryClient.invalidateQueries({ queryKey: ["usuarios-equipe"] })
-          }} />
+          <DialogConvidar onConvidar={invalidar} />
         )}
       </div>
 
@@ -118,7 +169,7 @@ export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps
                           toast.error(erro)
                         } else {
                           toast.success("Convite revogado.")
-                          queryClient.invalidateQueries({ queryKey: ["usuarios-equipe"] })
+                          invalidar()
                         }
                       }}
                     >
@@ -132,124 +183,51 @@ export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps
         </Card>
       )}
 
-      {/* Tabela de usuarios */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Membros da equipe</CardTitle>
-          <CardDescription>
-            Gerencie os usuarios da sua organizacao
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Status</TableHead>
-                {ehAdmin && <TableHead className="text-right">Acoes</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {usuarios.map((u) => (
-                <LinhaUsuario
-                  key={u.id}
-                  usuario={u}
-                  ehAdmin={ehAdmin}
-                  ehProprioUsuario={u.id === usuarioLogadoId}
-                  onAtualizar={() => {
-                    queryClient.invalidateQueries({ queryKey: ["usuarios-equipe"] })
-                  }}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
+      {/* Tabela de equipe */}
+      <TabelaEquipe
+        usuarios={usuariosPagina}
+        total={usuariosFiltrados.length}
+        ehAdmin={ehAdmin}
+        usuarioLogadoId={usuarioLogadoId}
+        filtros={
+          <FiltrosEquipe
+            filtros={filtros}
+            onMudarFiltro={mudarFiltro}
+            onLimpar={limparFiltros}
+          />
+        }
+        paginacao={
+          <PaginacaoListagem
+            pagina={paginaAtual}
+            totalPaginas={totalPaginas}
+            onMudarPagina={setPagina}
+          />
+        }
+        onAlterarCargo={(u) => setUsuarioAlterarCargo(u)}
+        onAlternarStatus={handleAlternarStatus}
+        onRemover={(u) => setUsuarioRemover(u)}
+      />
 
-// ============================================================
-// Linha de usuario na tabela
-// ============================================================
-
-function LinhaUsuario({
-  usuario,
-  ehAdmin,
-  ehProprioUsuario,
-  onAtualizar,
-}: {
-  usuario: Usuario
-  ehAdmin: boolean
-  ehProprioUsuario: boolean
-  onAtualizar: () => void
-}) {
-  const [carregando, setCarregando] = useState(false)
-
-  const IconeCargo = usuario.cargo === "admin" ? ShieldCheck : usuario.cargo === "gerente" ? Shield : User
-
-  return (
-    <TableRow className={!usuario.ativo ? "opacity-50" : ""}>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <IconeCargo className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{usuario.nome}</span>
-          {ehProprioUsuario && (
-            <Badge variant="outline" className="text-xs">
-              Voce
-            </Badge>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="text-muted-foreground">{usuario.email}</TableCell>
-      <TableCell>
-        <Badge variant={CARGOS_LABELS[usuario.cargo]?.cor as "default" | "secondary" | "outline"}>
-          {CARGOS_LABELS[usuario.cargo]?.label}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <Badge variant={usuario.ativo ? "default" : "destructive"}>
-          {usuario.ativo ? "Ativo" : "Inativo"}
-        </Badge>
-      </TableCell>
-      {ehAdmin && (
-        <TableCell className="text-right">
-          {!ehProprioUsuario && (
-            <div className="flex items-center justify-end gap-2">
-              <DialogAlterarCargo
-                usuario={usuario}
-                onAlterar={onAtualizar}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={carregando}
-                onClick={async () => {
-                  setCarregando(true)
-                  const resultado = await alternarStatusUsuario(usuario.id)
-                  const erro = temErro(resultado)
-                  if (erro) {
-                    toast.error(erro)
-                  } else {
-                    toast.success(obterSucesso(resultado) ?? "Status alterado.")
-                    onAtualizar()
-                  }
-                  setCarregando(false)
-                }}
-              >
-                {usuario.ativo ? "Desativar" : "Ativar"}
-              </Button>
-              <DialogRemoverUsuario
-                usuario={usuario}
-                onRemover={onAtualizar}
-              />
-            </div>
-          )}
-        </TableCell>
+      {/* Dialog: Alterar cargo */}
+      {usuarioAlterarCargo && (
+        <DialogAlterarCargo
+          usuario={usuarioAlterarCargo}
+          aberto={!!usuarioAlterarCargo}
+          onFechar={() => setUsuarioAlterarCargo(null)}
+          onAlterar={invalidar}
+        />
       )}
-    </TableRow>
+
+      {/* Dialog: Remover usuario */}
+      {usuarioRemover && (
+        <DialogRemoverUsuario
+          usuario={usuarioRemover}
+          aberto={!!usuarioRemover}
+          onFechar={() => setUsuarioRemover(null)}
+          onRemover={invalidar}
+        />
+      )}
+    </div>
   )
 }
 
@@ -371,18 +349,21 @@ function DialogConvidar({ onConvidar }: { onConvidar: () => void }) {
 
 function DialogAlterarCargo({
   usuario,
+  aberto,
+  onFechar,
   onAlterar,
 }: {
   usuario: Usuario
+  aberto: boolean
+  onFechar: () => void
   onAlterar: () => void
 }) {
-  const [aberto, setAberto] = useState(false)
   const [novoCargo, setNovoCargo] = useState(usuario.cargo)
   const [alterando, setAlterando] = useState(false)
 
   async function handleAlterar() {
     if (novoCargo === usuario.cargo) {
-      setAberto(false)
+      onFechar()
       return
     }
     setAlterando(true)
@@ -395,18 +376,11 @@ function DialogAlterarCargo({
       onAlterar()
     }
     setAlterando(false)
-    setAberto(false)
+    onFechar()
   }
 
   return (
-    <Dialog open={aberto} onOpenChange={setAberto}>
-      <DialogTrigger
-        render={
-          <Button variant="outline" size="sm">
-            Cargo
-          </Button>
-        }
-      />
+    <Dialog open={aberto} onOpenChange={(open) => { if (!open) onFechar() }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Alterar cargo</DialogTitle>
@@ -427,7 +401,7 @@ function DialogAlterarCargo({
           </Select>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setAberto(false)}>
+          <Button variant="outline" onClick={onFechar}>
             Cancelar
           </Button>
           <Button onClick={handleAlterar} disabled={alterando}>
@@ -445,12 +419,15 @@ function DialogAlterarCargo({
 
 function DialogRemoverUsuario({
   usuario,
+  aberto,
+  onFechar,
   onRemover,
 }: {
   usuario: Usuario
+  aberto: boolean
+  onFechar: () => void
   onRemover: () => void
 }) {
-  const [aberto, setAberto] = useState(false)
   const [removendo, setRemovendo] = useState(false)
 
   async function handleRemover() {
@@ -460,32 +437,25 @@ function DialogRemoverUsuario({
     if (erro) {
       toast.error(erro)
     } else {
-      toast.success(obterSucesso(resultado) ?? "Usuario removido.")
+      toast.success(obterSucesso(resultado) ?? "Usuário removido.")
       onRemover()
     }
     setRemovendo(false)
-    setAberto(false)
+    onFechar()
   }
 
   return (
-    <Dialog open={aberto} onOpenChange={setAberto}>
-      <DialogTrigger
-        render={
-          <Button variant="destructive" size="sm">
-            Remover
-          </Button>
-        }
-      />
+    <Dialog open={aberto} onOpenChange={(open) => { if (!open) onFechar() }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Remover usuario</DialogTitle>
+          <DialogTitle>Remover usuário</DialogTitle>
           <DialogDescription>
-            Tem certeza que deseja remover {usuario.nome} da organizacao?
-            Esta acao nao pode ser desfeita.
+            Tem certeza que deseja remover {usuario.nome} da organização?
+            Esta ação não pode ser desfeita.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setAberto(false)}>
+          <Button variant="outline" onClick={onFechar}>
             Cancelar
           </Button>
           <Button variant="destructive" onClick={handleRemover} disabled={removendo}>

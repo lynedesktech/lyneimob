@@ -200,3 +200,8 @@
 .animate-delay-4 { animation-delay: 200ms; }
 .animate-delay-5 { animation-delay: 250ms; }
 .animate-delay-6 { animation-delay: 300ms; }
+
+/* Esconder wrapper vazio do Onborda quando o card usa Portal */
+[data-name="onborda-card"]:empty {
+  display: none;
+}

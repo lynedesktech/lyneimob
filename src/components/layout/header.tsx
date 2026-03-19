@@ -19,7 +19,7 @@ export function Header({ organizacao }: HeaderProps) {
       <span className="hidden sm:inline text-sm font-medium text-muted-foreground">
         {organizacao.nome}
       </span>
-      <div id="onborda-busca-global" className="flex-1 flex justify-center sm:justify-end sm:flex-none sm:ml-auto sm:mr-2">
+      <div className="flex-1 flex justify-center sm:justify-end sm:flex-none sm:ml-auto sm:mr-2">
         <GatilhoBuscaGlobal />
       </div>
       <AlternadorTema />

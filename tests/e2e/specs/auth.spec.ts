@@ -17,7 +17,7 @@ test.describe('Login valido', () => {
 
     await page.goto('/login')
     await page.getByLabel('Email').fill(email)
-    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('textbox', { name: 'Senha' }).fill(senha)
     await page.getByRole('button', { name: /entrar/i }).click()
 
     await aguardarDashboard(page)
@@ -28,7 +28,7 @@ test.describe('Login valido', () => {
 
     await page.goto('/login')
     await page.getByLabel('Email').fill(email)
-    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('textbox', { name: 'Senha' }).fill(senha)
     await page.getByRole('button', { name: /entrar/i }).click()
 
     await aguardarDashboard(page)
@@ -39,7 +39,7 @@ test.describe('Login valido', () => {
 
     await page.goto('/login')
     await page.getByLabel('Email').fill(email)
-    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('textbox', { name: 'Senha' }).fill(senha)
     await page.getByRole('button', { name: /entrar/i }).click()
 
     await aguardarDashboard(page)
@@ -50,7 +50,7 @@ test.describe('Login valido', () => {
 
     await page.goto('/login')
     await page.getByLabel('Email').fill(email)
-    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('textbox', { name: 'Senha' }).fill(senha)
     await page.getByRole('button', { name: /entrar/i }).click()
 
     await aguardarDashboard(page)
@@ -61,7 +61,7 @@ test.describe('Login invalido', () => {
   test('senha errada mostra mensagem de erro', async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel('Email').fill(PERFIS.admin.email)
-    await page.getByLabel('Senha').fill('SenhaErrada123!')
+    await page.getByRole('textbox', { name: 'Senha' }).fill('SenhaErrada123!')
     await page.getByRole('button', { name: /entrar/i }).click()
 
     const erro = page.locator('div').filter({ hasText: /incorreta|invalido|invalid/i }).first()
@@ -71,7 +71,7 @@ test.describe('Login invalido', () => {
   test('email inexistente mostra mensagem de erro', async ({ page }) => {
     await page.goto('/login')
     await page.getByLabel('Email').fill('nao-existe-9999@teste.com')
-    await page.getByLabel('Senha').fill('QualquerSenha123!')
+    await page.getByRole('textbox', { name: 'Senha' }).fill('QualquerSenha123!')
     await page.getByRole('button', { name: /entrar/i }).click()
 
     const erro = page.locator('div').filter({ hasText: /incorreta|invalido|invalid|nenhuma conta|nao encontr/i }).first()

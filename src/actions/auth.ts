@@ -101,6 +101,18 @@ export async function recuperarSenha(
     return { erro: dados.error.issues[0].message }
   }
 
+  // Verificar se o email existe no sistema antes de tentar enviar
+  const admin = criarClienteAdmin()
+  const { data: usuario } = await admin
+    .from("usuarios")
+    .select("id")
+    .eq("email", dados.data.email)
+    .maybeSingle()
+
+  if (!usuario) {
+    return { erro: "Nenhuma conta encontrada com este email." }
+  }
+
   const supabase = await criarClienteServer()
 
   const { error } = await supabase.auth.resetPasswordForEmail(dados.data.email, {
@@ -108,7 +120,8 @@ export async function recuperarSenha(
   })
 
   if (error) {
-    return { erro: "Erro ao enviar email de recuperação" }
+    console.error("[recuperarSenha] Erro do Supabase:", error.message, error)
+    return { erro: "Erro ao enviar email de recuperação. Tente novamente em alguns minutos." }
   }
 
   return { sucesso: "Email de recuperação enviado! Verifique sua caixa de entrada." }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { ehSuperAdmin } from "@/lib/permissoes"
+import { calcularRange } from "@/lib/paginacao"
 import type { PerfilPlataforma } from "@/lib/permissoes"
 
 // ============================================================
@@ -29,7 +30,7 @@ async function verificarAcessoAdmin() {
 }
 
 // ============================================================
-// Listar todos os usuarios da plataforma
+// Tipos
 // ============================================================
 
 export type UsuarioPlataforma = {
@@ -40,38 +41,88 @@ export type UsuarioPlataforma = {
   perfil_plataforma: PerfilPlataforma
   ativo: boolean
   created_at: string
+  organizacao_id: string | null
   organizacao_nome: string | null
 }
 
-export async function listarUsuariosPlataforma(): Promise<UsuarioPlataforma[]> {
+export type FiltrosUsuariosPlataforma = {
+  busca?: string
+  cargo?: string
+  organizacao?: string
+  status?: string
+}
+
+// ============================================================
+// Listar todos os usuarios da plataforma (com filtros e paginação)
+// ============================================================
+
+export async function listarUsuariosPlataforma(
+  filtros?: FiltrosUsuariosPlataforma,
+  pagina = 1,
+  porPagina = 12
+): Promise<{ usuarios: UsuarioPlataforma[]; total: number; organizacoes: { id: string; nome: string }[] }> {
   const admin = criarClienteAdmin()
 
-  const { data: usuarios } = await admin
+  let query = admin
     .from("usuarios")
-    .select("id, nome, email, cargo, perfil_plataforma, ativo, created_at, organizacao_id")
+    .select("id, nome, email, cargo, perfil_plataforma, ativo, created_at, organizacao_id", { count: "exact" })
+
+  if (filtros?.busca) {
+    query = query.or(
+      `nome.ilike.%${filtros.busca}%,email.ilike.%${filtros.busca}%`
+    )
+  }
+  if (filtros?.cargo) {
+    query = query.eq("cargo", filtros.cargo)
+  }
+  if (filtros?.organizacao) {
+    query = query.eq("organizacao_id", filtros.organizacao)
+  }
+  if (filtros?.status) {
+    query = query.eq("ativo", filtros.status === "ativo")
+  }
+
+  const { inicio, fim } = calcularRange(pagina, porPagina)
+
+  const { data: usuarios, count } = await query
     .order("created_at", { ascending: false })
+    .range(inicio, fim)
 
-  if (!usuarios || usuarios.length === 0) return []
+  if (!usuarios || usuarios.length === 0) {
+    // Mesmo sem resultados, buscar orgs pro dropdown de filtros
+    const { data: todasOrgs } = await admin
+      .from("organizacoes")
+      .select("id, nome")
+      .order("nome")
 
-  // Buscar nomes das organizacoes
+    return { usuarios: [], total: 0, organizacoes: todasOrgs ?? [] }
+  }
+
+  // Buscar nomes das organizacoes dos usuarios retornados + lista completa pra filtros
   const orgIds = [...new Set(usuarios.map((u) => u.organizacao_id).filter(Boolean))]
-  const { data: orgs } = await admin
-    .from("organizacoes")
-    .select("id, nome")
-    .in("id", orgIds)
 
-  const orgMap = new Map(orgs?.map((o) => [o.id, o.nome]) ?? [])
+  const [{ data: orgsUsuarios }, { data: todasOrgs }] = await Promise.all([
+    admin.from("organizacoes").select("id, nome").in("id", orgIds),
+    admin.from("organizacoes").select("id, nome").order("nome"),
+  ])
 
-  return usuarios.map((u) => ({
-    id: u.id,
-    nome: u.nome,
-    email: u.email,
-    cargo: u.cargo,
-    perfil_plataforma: u.perfil_plataforma as PerfilPlataforma,
-    ativo: u.ativo,
-    created_at: u.created_at,
-    organizacao_nome: orgMap.get(u.organizacao_id) ?? null,
-  }))
+  const orgMap = new Map(orgsUsuarios?.map((o) => [o.id, o.nome]) ?? [])
+
+  return {
+    usuarios: usuarios.map((u) => ({
+      id: u.id,
+      nome: u.nome,
+      email: u.email,
+      cargo: u.cargo,
+      perfil_plataforma: u.perfil_plataforma as PerfilPlataforma,
+      ativo: u.ativo,
+      created_at: u.created_at,
+      organizacao_id: u.organizacao_id,
+      organizacao_nome: orgMap.get(u.organizacao_id) ?? null,
+    })),
+    total: count ?? 0,
+    organizacoes: todasOrgs ?? [],
+  }
 }
 
 // ============================================================

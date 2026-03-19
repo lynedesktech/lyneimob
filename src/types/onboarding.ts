@@ -119,7 +119,7 @@ export const ITENS_CHECKLIST: ItemChecklist[] = [
 
 /** Quais itens cada cargo vê no checklist */
 export const ITENS_POR_CARGO: Record<Cargo, ChaveEtapaOnboarding[]> = {
-  admin: ["empresa", "whatsapp", "funil", "tipos_atividade", "equipe", "distribuicao", "portais", "meu_site", "imovel", "cliente", "negocio"],
-  gerente: ["funil", "tipos_atividade", "equipe", "distribuicao", "meu_site", "imovel", "cliente", "negocio"],
+  admin: ["empresa", "whatsapp", "funil", "tipos_atividade", "equipe", "distribuicao", "portais", "meu_site", "imovel", "cliente", "negocio", "atividade"],
+  gerente: ["funil", "tipos_atividade", "equipe", "distribuicao", "meu_site", "imovel", "cliente", "negocio", "atividade"],
   corretor: ["imovel", "cliente", "negocio", "atividade"],
 }

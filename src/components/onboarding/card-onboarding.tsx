@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import type { CardComponentProps } from "onborda"
 import { useOnborda } from "onborda"
 import { useRouter } from "next/navigation"
@@ -12,6 +14,7 @@ import type { ChaveMiniTour } from "@/types/onboarding"
 
 // ============================================================
 // Card do tour (usado em todos os mini-tours)
+// Renderizado via Portal — fixo no centro inferior da tela
 // ============================================================
 
 export function CardOnboarding({
@@ -20,7 +23,6 @@ export function CardOnboarding({
   totalSteps,
   nextStep,
   prevStep,
-  arrow,
 }: CardComponentProps) {
   const { closeOnborda, currentTour } = useOnborda()
   const router = useRouter()
@@ -31,21 +33,44 @@ export function CardOnboarding({
   const ehBoasVindas = tourAtual === "boas-vindas"
   const ehTourManual = tourAtual ? TOURS_MANUAIS.includes(tourAtual as ChaveMiniTour) : false
 
+  // Container do portal — criado uma vez no body
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
+
+  useEffect(() => {
+    let container = document.getElementById("onborda-card-portal")
+    if (!container) {
+      container = document.createElement("div")
+      container.id = "onborda-card-portal"
+      Object.assign(container.style, {
+        position: "fixed",
+        bottom: "2rem",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: "999",
+        pointerEvents: "auto",
+      })
+      document.body.appendChild(container)
+    }
+    setPortalContainer(container)
+
+    return () => {
+      const el = document.getElementById("onborda-card-portal")
+      if (el) el.remove()
+    }
+  }, [])
+
   async function handleNext() {
     if (ehUltimo) {
       if (ehBoasVindas) {
-        // Tour de boas-vindas: marcar onboarding_completado
         await marcarTourCompleto()
         queryClient.invalidateQueries({ queryKey: ["onboarding"] })
       } else if (ehTourManual && tourAtual) {
-        // Tours manuais: último step marca a etapa no checklist
         const chaveEtapa = TOUR_PARA_ETAPA[tourAtual as ChaveMiniTour]
         if (chaveEtapa) {
           await marcarEtapaChecklist(chaveEtapa)
           queryClient.invalidateQueries({ queryKey: ["onboarding"] })
         }
       }
-      // Tours operacionais: apenas fecha (auto-detecção cuida)
       closeOnborda()
       if (ehBoasVindas) router.push("/painel")
       return
@@ -62,15 +87,11 @@ export function CardOnboarding({
     closeOnborda()
   }
 
-  // Texto do botão final
   let textoBotaoFinal = "Finalizar!"
   if (ehTourManual) textoBotaoFinal = "Concluído"
 
-  return (
-    <div className="relative w-80 rounded-xl border bg-card p-5 shadow-lg">
-      {/* Seta apontando pro elemento */}
-      {arrow}
-
+  const cardContent = (
+    <div className="w-80 rounded-xl border bg-card p-5 shadow-lg animate-fade-in-up">
       {/* Botão pular/fechar */}
       <button
         onClick={handlePular}
@@ -139,4 +160,9 @@ export function CardOnboarding({
       </div>
     </div>
   )
+
+  // Enquanto o portal não está pronto, não renderiza nada
+  if (!portalContainer) return null
+
+  return createPortal(cardContent, portalContainer)
 }

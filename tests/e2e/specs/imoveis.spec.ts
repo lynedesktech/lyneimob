@@ -7,10 +7,42 @@ import { PERFIS, dadosImovel } from '../fixtures/test-data'
 
 // --- Helpers ---
 
-async function selecionarOpcao(page: import('@playwright/test').Page, triggerId: string, opcaoTexto: string) {
-  // shadcn/ui Select: clicar no trigger, depois na opcao
-  await page.locator(`[id="${triggerId}"]`).click()
-  await page.locator('[role="option"]').filter({ hasText: opcaoTexto }).click()
+async function fecharTourSeVisivel(page: import('@playwright/test').Page) {
+  // Onboarding tour pode aparecer e bloquear interacoes — fechar se visivel
+  const btnPularTour = page.getByRole('button', { name: /pular tour/i })
+  try {
+    await btnPularTour.waitFor({ state: 'visible', timeout: 5_000 })
+    await btnPularTour.click()
+    // Aguardar overlay sumir completamente
+    await page.locator('[data-name="onborda-overlay"]').waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
+  } catch {
+    // Tour nao apareceu — seguir normalmente
+  }
+}
+
+async function selecionarOpcao(page: import('@playwright/test').Page, placeholderTexto: string, opcaoTexto: string) {
+  // shadcn/ui Select renderiza como combobox — localizar pelo texto do placeholder
+  await page.getByRole('combobox').filter({ hasText: placeholderTexto }).click()
+  // Usar exact: true para evitar match parcial (ex: "Venda" vs "Venda e Aluguel")
+  await page.getByRole('option', { name: opcaoTexto, exact: true }).click()
+}
+
+// Seletor para links de imoveis individuais (exclui /importar, /novo, /editar)
+const SELETOR_LINK_IMOVEL = 'a[href*="/imoveis/"]:not([href*="importar"]):not([href*="novo"]):not([href*="editar"])'
+
+async function navegarParaDetalheImovel(page: import('@playwright/test').Page, imovelUrl: string | null) {
+  if (imovelUrl) {
+    await page.goto(imovelUrl)
+  } else {
+    await page.goto('/imoveis')
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
+    const primeiroLink = page.locator(SELETOR_LINK_IMOVEL).first()
+    await primeiroLink.click()
+    await page.waitForURL(/\/imoveis\/[a-zA-Z0-9-]+/, { timeout: 10_000 })
+  }
+  await page.waitForLoadState('networkidle')
+  await fecharTourSeVisivel(page)
 }
 
 async function criarImovel(page: import('@playwright/test').Page, perfil: string) {
@@ -19,17 +51,20 @@ async function criarImovel(page: import('@playwright/test').Page, perfil: string
   await page.goto('/imoveis/novo')
   await page.waitForLoadState('networkidle')
 
+  // Fechar tour de onboarding se estiver visivel
+  await fecharTourSeVisivel(page)
+
   // Preencher campos de texto
   await page.locator('#codigo').fill(dados.codigo)
   await page.locator('#titulo').fill(dados.titulo)
 
-  // Selects (shadcn)
-  await selecionarOpcao(page, 'tipo', 'Apartamento')
-  await selecionarOpcao(page, 'finalidade', 'Venda')
+  // Selects (shadcn — combobox por placeholder)
+  await selecionarOpcao(page, 'Selecione o tipo', 'Apartamento')
+  await selecionarOpcao(page, 'Selecione a finalidade', 'Venda')
 
   // Localizacao
   await page.locator('#cidade').fill(dados.cidade)
-  await selecionarOpcao(page, 'estado', dados.estado)
+  await selecionarOpcao(page, 'UF', dados.estado)
 
   // Preco
   await page.locator('#preco_venda').fill(dados.preco_venda)
@@ -69,6 +104,7 @@ test.describe('Admin — Imoveis', () => {
   test('listar imoveis — pelo menos 1 visivel', async ({ page }) => {
     await page.goto('/imoveis')
     await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
     // Espera pelo menos 1 card ou linha de imovel
     const items = page.locator('[data-testid="imovel-card"], table tbody tr, .grid > a, .grid > div > a').first()
@@ -76,23 +112,14 @@ test.describe('Admin — Imoveis', () => {
   })
 
   test('editar imovel', async ({ page }) => {
-    // Se nao temos URL do imovel criado, ir para lista e pegar o primeiro
-    if (imovelUrl) {
-      await page.goto(`${imovelUrl}/editar`)
-    } else {
-      await page.goto('/imoveis')
-      await page.waitForLoadState('networkidle')
-      // Clicar no primeiro imovel da lista
-      const primeiroLink = page.locator('a[href*="/imoveis/"]').first()
-      await primeiroLink.click()
-      await page.waitForURL(/\/imoveis\/[a-zA-Z0-9-]+/, { timeout: 10_000 })
-      // Ir para editar
-      const editarBtn = page.getByRole('link', { name: /editar/i }).or(page.locator('a[href$="/editar"]'))
-      await editarBtn.first().click()
-      await page.waitForURL(/\/editar/, { timeout: 10_000 })
-    }
+    // Navegar para detalhe e clicar em Editar (mais confiavel que URL direta)
+    await navegarParaDetalheImovel(page, imovelUrl)
 
+    const editarBtn = page.getByRole('link', { name: /editar/i })
+    await editarBtn.click()
+    await page.waitForURL(/\/editar/, { timeout: 10_000 })
     await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
     // Alterar titulo
     const tituloEditado = `Editado Admin ${Date.now()}`
@@ -109,18 +136,7 @@ test.describe('Admin — Imoveis', () => {
   })
 
   test('excluir imovel', async ({ page }) => {
-    // Navegar para detalhe de um imovel
-    if (imovelUrl) {
-      await page.goto(imovelUrl)
-    } else {
-      await page.goto('/imoveis')
-      await page.waitForLoadState('networkidle')
-      const primeiroLink = page.locator('a[href*="/imoveis/"]').first()
-      await primeiroLink.click()
-      await page.waitForURL(/\/imoveis\/[a-zA-Z0-9-]+/, { timeout: 10_000 })
-    }
-
-    await page.waitForLoadState('networkidle')
+    await navegarParaDetalheImovel(page, imovelUrl)
 
     // Clicar no botao de excluir
     const excluirBtn = page.getByRole('button', { name: /excluir/i })
@@ -164,24 +180,14 @@ test.describe('Gerente — Imoveis', () => {
   test('listar imoveis — pelo menos 1 visivel', async ({ page }) => {
     await page.goto('/imoveis')
     await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
     const items = page.locator('[data-testid="imovel-card"], table tbody tr, .grid > a, .grid > div > a').first()
     await expect(items).toBeVisible({ timeout: 15_000 })
   })
 
   test('excluir bloqueado — botao nao visivel', async ({ page }) => {
-    // Navegar para detalhe
-    if (imovelUrl) {
-      await page.goto(imovelUrl)
-    } else {
-      await page.goto('/imoveis')
-      await page.waitForLoadState('networkidle')
-      const primeiroLink = page.locator('a[href*="/imoveis/"]').first()
-      await primeiroLink.click()
-      await page.waitForURL(/\/imoveis\/[a-zA-Z0-9-]+/, { timeout: 10_000 })
-    }
-
-    await page.waitForLoadState('networkidle')
+    await navegarParaDetalheImovel(page, imovelUrl)
 
     // Botao excluir NAO deve estar visivel para gerente
     const excluirBtn = page.getByRole('button', { name: /excluir/i })
@@ -208,6 +214,7 @@ test.describe('Corretor — Imoveis', () => {
   test('listar imoveis — ve apenas os proprios', async ({ page }) => {
     await page.goto('/imoveis')
     await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
     // Corretor deve ver a lista (pode ter 0 ou mais imoveis proprios)
     // Verificamos que a pagina carregou sem erro

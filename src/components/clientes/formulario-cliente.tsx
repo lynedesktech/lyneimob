@@ -102,7 +102,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" id="onborda-form-cliente">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Dados Pessoais */}
         <Card id="onborda-cliente-dados">
           <CardHeader>

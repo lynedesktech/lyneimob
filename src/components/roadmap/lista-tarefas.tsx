@@ -244,7 +244,7 @@ export function ListaTarefas({ tarefas: tarefasIniciais, superAdmins = [] }: Lis
         </div>
       </CardHeader>
       <CardContent>
-        {grupos.filter((g) => g.tarefas.length > 0).map((grupo) => (
+        {grupos.map((grupo) => (
           <Collapsible
             key={grupo.status}
             open={abertos[grupo.status]}
@@ -265,82 +265,82 @@ export function ListaTarefas({ tarefas: tarefasIniciais, superAdmins = [] }: Lis
               </CollapsibleTrigger>
 
               <CollapsibleContent>
-                <Table className="table-fixed w-full">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Sprint</TableHead>
-                      <TableHead className="w-[130px]">Status</TableHead>
-                      <TableHead className="w-[100px]">Data</TableHead>
-                      <TableHead className="w-[60px]">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {grupo.tarefas.map((tarefa) => (
-                      <TableRow key={tarefa.id}>
-                        <TableCell className="overflow-hidden">
-                          <Link
-                            href={`/admin/roadmap/${tarefa.id}`}
-                            className="font-medium text-sm hover:underline hover:text-primary block truncate"
-                          >
-                            {tarefa.titulo}
-                          </Link>
-                          {tarefa.descricao && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                              {tarefa.descricao}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={tarefa.status}
-                            onValueChange={(v) => handleMudarStatus(tarefa.id, v as StatusRoadmap)}
-                            disabled={!!processando}
-                          >
-                            <SelectTrigger
-                              size="sm"
-                              className={processando === tarefa.id ? "opacity-50" : ""}
-                            >
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
-                                <SelectItem key={key} value={key}>
-                                  {val.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {tarefa.data_conclusao
-                            ? new Date(tarefa.data_conclusao + "T00:00:00").toLocaleDateString("pt-BR")
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleExcluir(tarefa.id)}
-                            disabled={!!processando}
-                            className={`text-destructive hover:text-destructive ${processando === tarefa.id ? "opacity-50" : ""}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                {grupo.tarefas.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 pl-2">
+                    Nenhuma sprint neste status.
+                  </p>
+                ) : (
+                  <Table className="table-fixed w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Sprint</TableHead>
+                        <TableHead className="w-[130px]">Status</TableHead>
+                        <TableHead className="w-[100px]">Data</TableHead>
+                        <TableHead className="w-[60px]">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {grupo.tarefas.map((tarefa) => (
+                        <TableRow key={tarefa.id}>
+                          <TableCell className="overflow-hidden">
+                            <Link
+                              href={`/admin/roadmap/${tarefa.id}`}
+                              className="font-medium text-sm hover:underline hover:text-primary block truncate"
+                            >
+                              {tarefa.titulo}
+                            </Link>
+                            {tarefa.descricao && (
+                              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                {tarefa.descricao}
+                              </p>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={tarefa.status}
+                              onValueChange={(v) => handleMudarStatus(tarefa.id, v as StatusRoadmap)}
+                              disabled={!!processando}
+                            >
+                              <SelectTrigger
+                                size="sm"
+                                className={processando === tarefa.id ? "opacity-50" : ""}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
+                                  <SelectItem key={key} value={key}>
+                                    {val.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                            {tarefa.data_conclusao
+                              ? new Date(tarefa.data_conclusao + "T00:00:00").toLocaleDateString("pt-BR")
+                              : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleExcluir(tarefa.id)}
+                              disabled={!!processando}
+                              className={`text-destructive hover:text-destructive ${processando === tarefa.id ? "opacity-50" : ""}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CollapsibleContent>
             </div>
           </Collapsible>
         ))}
-
-        {tarefasFiltradas.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Nenhuma sprint encontrada.
-          </p>
-        )}
       </CardContent>
     </Card>
   )

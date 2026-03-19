@@ -71,7 +71,7 @@ export default function AtividadesPage() {
                 }}
                 total={total}
               />
-              <Button render={<Link href="/atividades/novo" />}>
+              <Button id="onborda-btn-nova-atividade" render={<Link href="/atividades/novo" />}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Atividade
               </Button>

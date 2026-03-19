@@ -37,6 +37,7 @@ Todo plano deve ser escrito como conversa, nao como documentacao tecnica. Usar l
 - **Formularios**: React Hook Form + Zod v4
 - **IA**: OpenAI GPT-4o-mini (SDK `openai`)
 - **Pagamentos**: Stripe (`stripe`) — checkout, assinaturas, webhooks, customer portal
+- **Email transacional**: Resend (`resend`) — emails de auth (via SMTP no Supabase), convites, notificacoes
 - **Cache/Fila**: Upstash Redis (`@upstash/redis`) — debounce e memoria de conversa do agente WhatsApp
 - **Icones**: Lucide React
 - **Alias de caminho**: `@/` aponta para `./src/`
@@ -129,6 +130,8 @@ STRIPE_PRICE_ID_CRM_IA=price-id-do-plano-crm-ia (criado no dashboard Stripe)
 STRIPE_PRICE_ID_CRM_IA_SDR=price-id-do-plano-crm-ia-sdr (criado no dashboard Stripe)
 UPSTASH_REDIS_REST_URL=url-do-redis-upstash
 UPSTASH_REDIS_REST_TOKEN=token-do-redis-upstash
+RESEND_API_KEY=chave-da-api-resend (nunca expor no browser)
+RESEND_FROM_EMAIL=LyneImob <noreply@seudominio.com>
 ```
 
 ## Arquivos Sensiveis
@@ -186,6 +189,7 @@ MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados 
 - **pesquisa** — etapa 1 do metodo: pesquisa qualquer tema e gera `planejamento/pesquisas/pesquisa-[tema].md`. Nao executa nada, nao altera o projeto — produto final e apenas o arquivo .md
 - **requisitos** — etapa 2 do metodo: le uma pesquisa (ou trabalha com escopo conhecido) e gera `planejamento/requisitos/requisito-[tema].md` com o plano de execucao completo. Nao executa nada, nao implementa, nao altera o codigo — produto final e apenas o arquivo .md
 - **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Quando conclui, gera tarefas no banco (tabela `tarefas_roadmap`). Nao implementa nada, nao altera codigo — produto final sao as tarefas no roadmap
+- **criar-sprint** — cria uma sprint no roadmap com titulo, descricao, checklist, prioridade e prazo. Toda demanda nova deve virar sprint antes de ser executada
 - **frontend-design** — OBRIGATORIO para qualquer alteracao visual (layout, componentes, CSS, paginas). Contem o design system completo do projeto.
 - **busca-no-yt** — buscar videos no YouTube
 - **commit-inteligente** — analisa mudancas, cria mensagem de commit estruturada, commita e faz push automaticamente. Resolve tudo de uma vez.
@@ -227,13 +231,18 @@ Usar as server actions em `src/actions/roadmap.ts`:
 - `listarTarefasRoadmap()` — listar todas
 - `buscarResumoRoadmap()` — contadores por status
 
+### Regra obrigatoria: sprint primeiro
+
+**Ao iniciar trabalho numa sprint, o PRIMEIRO passo — antes de qualquer codigo — e mudar o status pra `fazendo`** via `atualizarStatusTarefa(id, 'fazendo')`. So depois comecar a implementar. Isso garante que o roadmap sempre reflete o que esta sendo trabalhado agora.
+
 ### Comportamento automatico
 
 O Claude atualiza o roadmap **por conta propria**, sem precisar ser solicitado:
 
-1. **Pedido novo** → registrar no banco antes de executar (status `fazendo` ou `a_fazer`)
-2. **Concluir tarefa** → mover para `pronto` e informar o usuario
-3. **Usuario valida** → mover para `concluido` com data
-4. **Sugestao de melhoria** → registrar com status `sugestao`
+1. **Pedido novo** → usar a skill `/criar-sprint` para mapear como sprint antes de executar
+2. **Iniciar sprint** → mudar status para `fazendo` (OBRIGATORIO antes de codar)
+3. **Concluir sprint** → mover para `pronto` e informar o usuario
+4. **Usuario valida** → mover para `concluido` com data
+5. **Sugestao de melhoria** → registrar com status `sugestao`
 
 > Se nao esta no roadmap, nao existe. O Claude nunca perde uma demanda e nunca trabalha no escuro.
