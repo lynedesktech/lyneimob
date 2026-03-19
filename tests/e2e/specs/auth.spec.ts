@@ -1,0 +1,104 @@
+import { test, expect } from '@playwright/test'
+import { PERFIS } from '../fixtures/test-data'
+
+// ============================================================
+// Sprint 1 — Autenticacao
+// ============================================================
+
+test.describe('Login valido', () => {
+  test('admin faz login e redireciona para /painel', async ({ page }) => {
+    const { email, senha } = PERFIS.admin
+
+    await page.goto('/login')
+    await page.getByLabel('Email').fill(email)
+    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('button', { name: /entrar/i }).click()
+
+    await page.waitForURL(/\/painel/, { timeout: 15_000 })
+    expect(page.url()).toContain('/painel')
+  })
+
+  test('gerente faz login e redireciona para /painel', async ({ page }) => {
+    const { email, senha } = PERFIS.gerente
+
+    await page.goto('/login')
+    await page.getByLabel('Email').fill(email)
+    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('button', { name: /entrar/i }).click()
+
+    await page.waitForURL(/\/painel/, { timeout: 15_000 })
+    expect(page.url()).toContain('/painel')
+  })
+
+  test('corretor faz login e redireciona para /painel', async ({ page }) => {
+    const { email, senha } = PERFIS.corretor
+
+    await page.goto('/login')
+    await page.getByLabel('Email').fill(email)
+    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('button', { name: /entrar/i }).click()
+
+    await page.waitForURL(/\/painel/, { timeout: 15_000 })
+    expect(page.url()).toContain('/painel')
+  })
+
+  test('super admin faz login e redireciona para /painel', async ({ page }) => {
+    const { email, senha } = PERFIS.superAdmin
+
+    await page.goto('/login')
+    await page.getByLabel('Email').fill(email)
+    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('button', { name: /entrar/i }).click()
+
+    await page.waitForURL(/\/painel/, { timeout: 15_000 })
+    expect(page.url()).toContain('/painel')
+  })
+})
+
+test.describe('Login invalido', () => {
+  test('senha errada mostra mensagem de erro', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel('Email').fill(PERFIS.admin.email)
+    await page.getByLabel('Senha').fill('SenhaErrada123!')
+    await page.getByRole('button', { name: /entrar/i }).click()
+
+    // Aguarda mensagem de erro aparecer (div com icone AlertCircle)
+    const erro = page.locator('div').filter({ hasText: /incorreta|invalido|invalid/i }).first()
+    await expect(erro).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('email inexistente mostra mensagem de erro', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByLabel('Email').fill('nao-existe-9999@teste.com')
+    await page.getByLabel('Senha').fill('QualquerSenha123!')
+    await page.getByRole('button', { name: /entrar/i }).click()
+
+    const erro = page.locator('div').filter({ hasText: /incorreta|invalido|invalid|nao encontr/i }).first()
+    await expect(erro).toBeVisible({ timeout: 10_000 })
+  })
+})
+
+test.describe('Protecao de rotas — sem autenticacao', () => {
+  test('rota protegida sem auth redireciona para /login', async ({ page }) => {
+    // Sem storageState — usuario nao autenticado
+    await page.goto('/imoveis')
+    await page.waitForURL(/\/login/, { timeout: 15_000 })
+    expect(page.url()).toContain('/login')
+  })
+})
+
+test.describe('Redirecionamentos com sessao ativa', () => {
+  test.use({ storageState: PERFIS.admin.storageState })
+
+  test('rota /login com sessao redireciona para /painel', async ({ page }) => {
+    await page.goto('/login')
+    await page.waitForURL(/\/painel/, { timeout: 15_000 })
+    expect(page.url()).toContain('/painel')
+  })
+
+  test('rota / com sessao redireciona para /painel', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForURL(/\/painel/, { timeout: 15_000 })
+    expect(page.url()).toContain('/painel')
+  })
+})

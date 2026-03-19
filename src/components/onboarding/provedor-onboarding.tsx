@@ -87,7 +87,7 @@ const tourBoasVindas: Tour = {
         </>
       ),
       selector: "#onborda-checklist",
-      side: "bottom" as const,
+      side: "top" as const,
       showControls: true,
       pointerPadding: 10,
       pointerRadius: 10,
@@ -688,6 +688,11 @@ function DisparadorTour({ tourCompleto, carregando }: { tourCompleto: boolean; c
 export function ProvedorOnboarding({ children }: { children: React.ReactNode }) {
   const { tourCompleto, carregando } = useOnboarding()
   const { usuario, carregando: carregandoUsuario } = useUsuario()
+
+  // Super admin não precisa de onboarding
+  if (usuario?.super_admin) {
+    return <>{children}</>
+  }
 
   const cargo = (usuario?.cargo as "admin" | "gerente" | "corretor") ?? "corretor"
   const chavesDoCargoAtual = ITENS_POR_CARGO[cargo] ?? ITENS_POR_CARGO.corretor
