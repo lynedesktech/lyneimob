@@ -30,6 +30,7 @@ type DadosPerfil = {
   creci: string | null
   bio: string | null
   created_at: string
+  super_admin?: boolean | null
 }
 
 const labelsCargo: Record<string, string> = {
@@ -63,9 +64,12 @@ export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
   >(atualizarAvatarPerfil, {})
 
   useEffect(() => {
-    if (estado.sucesso) toast.success(estado.sucesso)
+    if (estado.sucesso) {
+      toast.success(estado.sucesso)
+      router.refresh()
+    }
     if (estado.erro) toast.error(estado.erro)
-  }, [estado])
+  }, [estado, router])
 
   useEffect(() => {
     if (estadoAvatar.sucesso) {
@@ -119,7 +123,7 @@ export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
             <h2 className="text-xl font-semibold">{perfil.nome}</h2>
             <p className="text-sm text-muted-foreground">{perfil.email}</p>
             <Badge variant="secondary">
-              {labelsCargo[perfil.cargo] || perfil.cargo}
+              {perfil.super_admin ? "Super Admin" : (labelsCargo[perfil.cargo] || perfil.cargo)}
             </Badge>
             <p className="text-xs text-muted-foreground pt-0.5">
               Clique na foto para alterar
@@ -222,12 +226,12 @@ export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
             <div className="space-y-2">
               <Label>Cargo</Label>
               <Input
-                value={labelsCargo[perfil.cargo] || perfil.cargo}
+                value={perfil.super_admin ? "Super Admin" : (labelsCargo[perfil.cargo] || perfil.cargo)}
                 disabled
                 className="max-w-xs opacity-60"
               />
               <p className="text-xs text-muted-foreground">
-                Apenas o administrador pode alterar seu cargo
+                {perfil.super_admin ? "Dono da plataforma" : "Apenas o administrador pode alterar seu cargo"}
               </p>
             </div>
 

@@ -15,7 +15,7 @@ export default async function PaginaMeuPerfil() {
 
   const { data: perfil } = await supabase
     .from("usuarios")
-    .select("id, nome, email, telefone, cargo, avatar_url, creci, bio, created_at")
+    .select("id, nome, email, telefone, cargo, avatar_url, creci, bio, created_at, super_admin")
     .eq("id", user.id)
     .single()
 
