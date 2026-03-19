@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { getOpenAI } from "@/lib/openai"
-import type { TarefaRoadmap, AnaliseRoadmap, ResumoRoadmap, DadosTarefaRoadmap, StatusRoadmap, ItemChecklist, PrioridadeRoadmap } from "@/types/roadmap"
+import type { TarefaRoadmap, ResumoRoadmap, DadosTarefaRoadmap, StatusRoadmap, ItemChecklist, PrioridadeRoadmap } from "@/types/roadmap"
 
 // ============================================================
 // Helpers
@@ -181,105 +180,6 @@ export async function excluirTarefaRoadmap(id: string) {
   if (error) return { erro: error.message }
   revalidatePath("/admin/roadmap")
   return { sucesso: "Tarefa excluída." }
-}
-
-// ============================================================
-// Gerar análise da IA
-// ============================================================
-
-export async function gerarAnaliseRoadmap() {
-  const { erro, supabase } = await verificarSuperAdmin()
-  if (erro) return { erro }
-  if (!supabase) return { erro: "Erro interno." }
-
-  // Buscar todas as tarefas
-  const { data: tarefas } = await supabase
-    .from("tarefas_roadmap")
-    .select("titulo, status, data_conclusao")
-    .order("created_at", { ascending: true })
-
-  if (!tarefas || tarefas.length === 0) {
-    return { erro: "Nenhuma tarefa encontrada para analisar." }
-  }
-
-  // Montar resumo
-  const resumo = await buscarResumoRoadmap()
-
-  // Agrupar tarefas por data
-  const concluidas = tarefas.filter(t => t.status === "concluido")
-  const datasUnicas = [...new Set(concluidas.map(t => t.data_conclusao).filter(Boolean))]
-
-  const prompt = `Você é um analista de projetos de software. Analise o progresso deste projeto e gere um relatório em português brasileiro.
-
-## Dados do projeto: LyneImob (CRM imobiliário SaaS)
-
-### Resumo numérico
-- Total de tarefas: ${resumo.total_geral}
-- Concluídas: ${resumo.total_concluido}
-- Em andamento: ${resumo.total_fazendo}
-- A fazer: ${resumo.total_a_fazer}
-- Aguardando validação: ${resumo.total_pronto}
-- Sugestões pendentes: ${resumo.total_sugestao}
-
-### Datas de trabalho
-${datasUnicas.sort().map(d => `- ${d}: ${concluidas.filter(t => t.data_conclusao === d).length} tarefas concluídas`).join("\n")}
-
-### Lista de tarefas concluídas
-${concluidas.map(t => `- ${t.titulo}`).join("\n")}
-
-### Tarefas pendentes
-${tarefas.filter(t => t.status !== "concluido").map(t => `- [${t.status}] ${t.titulo}`).join("\n") || "Nenhuma"}
-
-## Instruções
-Gere um relatório conciso (3-5 parágrafos) analisando:
-1. Ritmo de desenvolvimento (tarefas por dia)
-2. Áreas mais trabalhadas (módulos, integrações, fixes)
-3. Evolução do projeto (do início até agora)
-4. Situação atual e próximos passos sugeridos
-
-Tom: profissional mas acessível. Sem jargão excessivo.`
-
-  try {
-    const openai = getOpenAI()
-    const resposta = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 1000,
-    })
-
-    const conteudo = resposta.choices[0]?.message?.content
-    if (!conteudo) return { erro: "IA não retornou resposta." }
-
-    // Salvar análise no banco
-    await supabase.from("analise_roadmap").insert({
-      conteudo,
-      dados_resumo: resumo,
-    })
-
-    revalidatePath("/admin/roadmap")
-    return { sucesso: "Análise gerada.", conteudo }
-  } catch {
-    return { erro: "Erro ao gerar análise. Verifique a chave da OpenAI." }
-  }
-}
-
-// ============================================================
-// Buscar última análise
-// ============================================================
-
-export async function buscarUltimaAnalise(): Promise<AnaliseRoadmap | null> {
-  const { erro, supabase } = await verificarSuperAdmin()
-  if (erro || !supabase) return null
-
-  const { data } = await supabase
-    .from("analise_roadmap")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single()
-
-  return data as AnaliseRoadmap | null
 }
 
 // ============================================================

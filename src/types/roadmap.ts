@@ -52,17 +52,6 @@ export interface TarefaRoadmap {
   created_at: string
 }
 
-// ============================================================
-// Tipo da análise da IA
-// ============================================================
-
-export interface AnaliseRoadmap {
-  id: string
-  conteudo: string
-  dados_resumo: ResumoRoadmap
-  created_at: string
-}
-
 export interface ResumoRoadmap {
   total_a_fazer: number
   total_fazendo: number

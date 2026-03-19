@@ -1,13 +1,11 @@
-import { listarTarefasRoadmap, buscarResumoRoadmap, buscarUltimaAnalise } from "@/actions/roadmap"
+import { listarTarefasRoadmap, buscarResumoRoadmap } from "@/actions/roadmap"
 import { CardsResumo } from "@/components/roadmap/cards-resumo"
 import { ListaTarefas } from "@/components/roadmap/lista-tarefas"
-import { AnaliseIa } from "@/components/roadmap/analise-ia"
 
 export default async function RoadmapPage() {
-  const [tarefas, resumo, analise] = await Promise.all([
+  const [tarefas, resumo] = await Promise.all([
     listarTarefasRoadmap(),
     buscarResumoRoadmap(),
-    buscarUltimaAnalise(),
   ])
 
   return (
@@ -37,9 +35,6 @@ export default async function RoadmapPage() {
           </>
         )}
       </div>
-
-      {/* Análise da IA */}
-      <AnaliseIa analiseInicial={analise} />
 
       {/* Lista de tarefas */}
       <ListaTarefas tarefas={tarefas} />
