@@ -518,7 +518,8 @@
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/roadmap -type f -name *.tsx)",
       "Bash(wc -l /c/Users/Lynedesk/Desktop/Tech/LyneImob/tests/e2e/specs/*.ts)",
       "Bash(grep -l \"super_admin\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
-      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -iname *nova*tarefa* -o -iname *criar*tarefa*)"
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -iname *nova*tarefa* -o -iname *criar*tarefa*)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -name *super*admin* -o -name *painel-super*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
@@ -535,7 +536,8 @@
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\loteamentos\\[id]",
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\[slug]\\loteamentos",
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\organizacoes",
-      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\roadmap"
+      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\roadmap",
+      "C:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob"
     ]
   }
 }
