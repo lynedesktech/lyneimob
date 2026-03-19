@@ -48,8 +48,30 @@ export interface TarefaRoadmap {
   prioridade: PrioridadeRoadmap
   checklist: ItemChecklist[]
   data_conclusao: string | null
+  data_vencimento: string | null
+  responsavel_id: string | null
   ordem: number
   created_at: string
+}
+
+// ============================================================
+// Histórico de mudanças
+// ============================================================
+
+export type TipoMudancaRoadmap =
+  | "status" | "prioridade" | "checklist" | "titulo"
+  | "descricao" | "responsavel" | "vencimento" | "criacao" | "exclusao"
+
+export interface HistoricoTarefaRoadmap {
+  id: string
+  tarefa_id: string
+  usuario_id: string
+  tipo: TipoMudancaRoadmap
+  valor_anterior: string | null
+  valor_novo: string | null
+  descricao: string
+  created_at: string
+  usuario_nome?: string
 }
 
 export interface ResumoRoadmap {
@@ -77,6 +99,8 @@ export const schemaTarefaRoadmap = z.object({
   prioridade: z.enum(["baixa", "media", "alta", "critica"]).default("media"),
   checklist: z.array(schemaItemChecklist).default([]),
   data_conclusao: z.string().optional(),
+  data_vencimento: z.string().optional(),
+  responsavel_id: z.string().uuid().optional(),
   ordem: z.number().int().default(0),
 })
 

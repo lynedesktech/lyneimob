@@ -2,7 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { buscarTarefaRoadmap } from "@/actions/roadmap"
+import { buscarTarefaRoadmap, buscarHistoricoTarefa } from "@/actions/roadmap"
 import { DetalheTarefaCliente } from "@/components/roadmap/detalhe-tarefa-cliente"
 
 type Params = Promise<{ id: string }>
@@ -13,7 +13,10 @@ export default async function DetalheTarefaPage({
   params: Params
 }) {
   const { id } = await params
-  const tarefa = await buscarTarefaRoadmap(id)
+  const [tarefa, historico] = await Promise.all([
+    buscarTarefaRoadmap(id),
+    buscarHistoricoTarefa(id),
+  ])
 
   if (!tarefa) redirect("/admin/roadmap")
 
@@ -26,7 +29,7 @@ export default async function DetalheTarefaPage({
       </Button>
 
       {/* Conteúdo interativo (client component) */}
-      <DetalheTarefaCliente tarefa={tarefa} />
+      <DetalheTarefaCliente tarefa={tarefa} historicoInicial={historico} />
     </div>
   )
 }

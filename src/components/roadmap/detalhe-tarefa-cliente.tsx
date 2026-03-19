@@ -3,7 +3,10 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Trash2, Plus, CheckCircle2, Circle, FileText, ListChecks, Pencil } from "lucide-react"
+import {
+  Trash2, Plus, CheckCircle2, Circle, FileText, ListChecks,
+  Pencil, History, CalendarDays, User, ArrowRight,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,16 +20,37 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { STATUS_ROADMAP, PRIORIDADE_ROADMAP } from "@/types/roadmap"
-import type { TarefaRoadmap, StatusRoadmap, PrioridadeRoadmap } from "@/types/roadmap"
+import type { TarefaRoadmap, StatusRoadmap, PrioridadeRoadmap, HistoricoTarefaRoadmap } from "@/types/roadmap"
 import { atualizarTarefaRoadmap, excluirTarefaRoadmap } from "@/actions/roadmap"
+
+// ============================================================
+// Ícones por tipo de mudança no histórico
+// ============================================================
+
+const ICONE_HISTORICO: Record<string, string> = {
+  status: "text-info",
+  prioridade: "text-warning",
+  checklist: "text-success",
+  titulo: "text-foreground",
+  descricao: "text-foreground",
+  responsavel: "text-accent-blue",
+  vencimento: "text-warning",
+  criacao: "text-success",
+}
+
+// ============================================================
+// Componente principal
+// ============================================================
 
 interface DetalheTarefaClienteProps {
   tarefa: TarefaRoadmap
+  historicoInicial?: HistoricoTarefaRoadmap[]
 }
 
-export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaClienteProps) {
+export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial = [] }: DetalheTarefaClienteProps) {
   const router = useRouter()
   const [tarefa, setTarefa] = useState(tarefaInicial)
+  const [historico, setHistorico] = useState(historicoInicial)
   const [novoItem, setNovoItem] = useState("")
   const [salvando, setSalvando] = useState(false)
 
@@ -38,6 +62,10 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
   // Estado de edição da descrição
   const [editandoDescricao, setEditandoDescricao] = useState(false)
   const [descricaoTemp, setDescricaoTemp] = useState(tarefa.descricao || "")
+
+  // ============================================================
+  // Handlers
+  // ============================================================
 
   async function salvarTitulo() {
     const novoTitulo = tituloTemp.trim()
@@ -61,6 +89,7 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
     } else {
       toast.success("Título atualizado.")
       setTarefa((prev) => ({ ...prev, titulo: novoTitulo }))
+      router.refresh()
     }
     setEditandoTitulo(false)
   }
@@ -81,6 +110,7 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
     } else {
       toast.success("Descrição atualizada.")
       setTarefa((prev) => ({ ...prev, descricao: novaDescricao }))
+      router.refresh()
     }
     setEditandoDescricao(false)
   }
@@ -100,6 +130,7 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
           ? new Date().toISOString().split("T")[0]
           : prev.data_conclusao,
       }))
+      router.refresh()
     }
   }
 
@@ -112,6 +143,21 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
     } else {
       toast.success("Prioridade atualizada.")
       setTarefa((prev) => ({ ...prev, prioridade: novaPrioridade }))
+      router.refresh()
+    }
+  }
+
+  async function handleMudarVencimento(data: string) {
+    const novaData = data || null
+    setSalvando(true)
+    const resultado = await atualizarTarefaRoadmap(tarefa.id, { data_vencimento: novaData })
+    setSalvando(false)
+    if (resultado.erro) {
+      toast.error(resultado.erro)
+    } else {
+      toast.success(novaData ? "Vencimento definido." : "Vencimento removido.")
+      setTarefa((prev) => ({ ...prev, data_vencimento: novaData }))
+      router.refresh()
     }
   }
 
@@ -126,6 +172,7 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
       toast.error(resultado.erro)
     } else {
       setTarefa((prev) => ({ ...prev, checklist: novaChecklist }))
+      router.refresh()
     }
   }
 
@@ -142,6 +189,7 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
     } else {
       setTarefa((prev) => ({ ...prev, checklist: novaChecklist }))
       setNovoItem("")
+      router.refresh()
     }
   }
 
@@ -155,6 +203,7 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
       toast.error(resultado.erro)
     } else {
       setTarefa((prev) => ({ ...prev, checklist: novaChecklist }))
+      router.refresh()
     }
   }
 
@@ -172,6 +221,10 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
   const concluidosChecklist = tarefa.checklist.filter((i) => i.concluido).length
   const statusConfig = STATUS_ROADMAP[tarefa.status]
   const prioridadeConfig = PRIORIDADE_ROADMAP[tarefa.prioridade] ?? PRIORIDADE_ROADMAP.media
+
+  // Verificar se está atrasada
+  const atrasada = tarefa.data_vencimento && tarefa.status !== "concluido" &&
+    new Date(tarefa.data_vencimento + "T23:59:59") < new Date()
 
   return (
     <div className="space-y-6">
@@ -229,6 +282,19 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
                 month: "long",
                 year: "numeric",
               })}
+            </>
+          )}
+          {tarefa.data_vencimento && (
+            <>
+              {" · "}
+              <span className={atrasada ? "text-destructive font-medium" : ""}>
+                {atrasada ? "Atrasada — " : ""}Vence em{" "}
+                {new Date(tarefa.data_vencimento + "T00:00:00").toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
             </>
           )}
         </p>
@@ -385,6 +451,41 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
               </div>
             </CardContent>
           </Card>
+
+          {/* Histórico */}
+          {historico.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  Histórico
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {historico.map((item) => (
+                    <div key={item.id} className="flex gap-3">
+                      <div className="mt-0.5">
+                        <ArrowRight className={`h-4 w-4 ${ICONE_HISTORICO[item.tipo] || "text-muted-foreground"}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm">{item.descricao}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {item.usuario_nome} · {new Date(item.created_at).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -447,6 +548,32 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial }: DetalheTarefaCli
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+
+              {/* Vencimento */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                  <CalendarDays className="h-3 w-3" />
+                  Vencimento
+                </p>
+                <Input
+                  type="date"
+                  value={tarefa.data_vencimento || ""}
+                  onChange={(e) => handleMudarVencimento(e.target.value)}
+                  disabled={salvando}
+                  className="text-sm w-full"
+                />
+              </div>
+
+              {/* Responsável */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  Responsável
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {tarefa.responsavel_id ? "Definido" : "Não definido"}
+                </p>
               </div>
 
               {/* Excluir */}
