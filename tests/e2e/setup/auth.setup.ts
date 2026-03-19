@@ -7,7 +7,12 @@ for (const [nome, perfil] of Object.entries(PERFIS)) {
     await page.getByLabel('Email').fill(perfil.email)
     await page.getByLabel('Senha').fill(perfil.senha)
     await page.getByRole('button', { name: /entrar/i }).click()
-    await page.waitForURL(/painel/, { timeout: 15_000 })
+
+    // Aguarda o dashboard carregar (URL pode ser /painel ou / com redirect pendente)
+    await page.waitForURL(url => url.pathname === '/painel' || url.pathname === '/', { timeout: 30_000 })
+    // Garante que o dashboard realmente carregou (sidebar visivel)
+    await page.waitForSelector('[data-sidebar="sidebar"]', { timeout: 15_000 })
+
     await page.context().storageState({ path: perfil.storageState })
   })
 }
