@@ -16,6 +16,3 @@ export const schemaEsqueciSenha = z.object({
   email: z.string().email("Email inválido"),
 })
 
-export type LoginInput = z.infer<typeof schemaLogin>
-export type CadastroInput = z.infer<typeof schemaCadastro>
-export type EsqueciSenhaInput = z.infer<typeof schemaEsqueciSenha>

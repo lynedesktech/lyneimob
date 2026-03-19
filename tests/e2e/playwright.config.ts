@@ -19,25 +19,29 @@ export default defineConfig({
   },
 
   projects: [
-    // --- Setup: autenticacao dos 4 perfis ---
+    // --- Setup: autenticacao dos 4 perfis (arquivo unico) ---
     {
       name: 'setup:super-admin',
-      testMatch: /setup\/auth\.super-admin\.setup\.ts/,
+      testMatch: /setup\/auth\.setup\.ts/,
+      testNamePattern: /superAdmin/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'setup:admin',
-      testMatch: /setup\/auth\.admin\.setup\.ts/,
+      testMatch: /setup\/auth\.setup\.ts/,
+      testNamePattern: /\badmin\b/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'setup:gerente',
-      testMatch: /setup\/auth\.gerente\.setup\.ts/,
+      testMatch: /setup\/auth\.setup\.ts/,
+      testNamePattern: /gerente/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'setup:corretor',
-      testMatch: /setup\/auth\.corretor\.setup\.ts/,
+      testMatch: /setup\/auth\.setup\.ts/,
+      testNamePattern: /corretor/,
       use: { ...devices['Desktop Chrome'] },
     },
 
@@ -45,6 +49,7 @@ export default defineConfig({
     {
       name: 'sprint1-auth',
       testMatch: /specs\/auth\.spec\.ts/,
+      dependencies: ['setup:admin'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -104,6 +109,7 @@ export default defineConfig({
     {
       name: 'mobile',
       testMatch: /specs\/auth\.spec\.ts/,
+      dependencies: ['setup:admin'],
       use: { ...devices['Pixel 7'] },
     },
   ],

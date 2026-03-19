@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useActionState } from "react"
 import Link from "next/link"
 import { cadastrar } from "@/actions/auth"
@@ -9,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { InputSenha } from "@/components/ui/input-senha"
+import { AlertaFormulario } from "@/components/ui/alerta-formulario"
 import {
   Card,
   CardContent,
@@ -17,14 +18,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { AlertCircle, Eye, EyeOff } from "lucide-react"
 
 export default function CadastroPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
     cadastrar,
     {}
   )
-  const [senhaVisivel, setSenhaVisivel] = useState(false)
 
   return (
     <Card>
@@ -43,10 +42,7 @@ export default function CadastroPage() {
       <form action={formAction}>
         <CardContent className="space-y-5">
           {estado.erro && (
-            <div className="flex items-start gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{estado.erro}</span>
-            </div>
+            <AlertaFormulario tipo="erro" mensagem={estado.erro} />
           )}
 
           <div className="space-y-2">
@@ -75,29 +71,14 @@ export default function CadastroPage() {
 
           <div className="space-y-2">
             <Label htmlFor="senha">Senha</Label>
-            <div className="relative">
-              <Input
-                id="senha"
-                name="senha"
-                type={senhaVisivel ? "text" : "password"}
-                placeholder="Mínimo 6 caracteres"
-                required
-                minLength={6}
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                onClick={() => setSenhaVisivel(!senhaVisivel)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
-              >
-                {senhaVisivel ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
+            <InputSenha
+              id="senha"
+              name="senha"
+              placeholder="Mínimo 6 caracteres"
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
           </div>
 
           <div className="space-y-2">

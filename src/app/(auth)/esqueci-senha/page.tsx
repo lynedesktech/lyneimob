@@ -7,6 +7,7 @@ import type { EstadoFormulario } from "@/types/formulario"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { AlertaFormulario } from "@/components/ui/alerta-formulario"
 import {
   Card,
   CardContent,
@@ -15,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
 
 export default function EsqueciSenhaPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
@@ -35,17 +35,11 @@ export default function EsqueciSenhaPage() {
       <form action={formAction}>
         <CardContent className="space-y-5">
           {estado.erro && (
-            <div className="flex items-start gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{estado.erro}</span>
-            </div>
+            <AlertaFormulario tipo="erro" mensagem={estado.erro} />
           )}
 
           {estado.sucesso && (
-            <div className="flex items-start gap-3 rounded-lg bg-success/10 px-4 py-3 text-sm text-success">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{estado.sucesso}</span>
-            </div>
+            <AlertaFormulario tipo="sucesso" mensagem={estado.sucesso} />
           )}
 
           <div className="space-y-2">

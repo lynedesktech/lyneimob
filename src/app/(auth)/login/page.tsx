@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useActionState } from "react"
 import Link from "next/link"
 import { login } from "@/actions/auth"
@@ -8,6 +7,8 @@ import type { EstadoFormulario } from "@/types/formulario"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { InputSenha } from "@/components/ui/input-senha"
+import { AlertaFormulario } from "@/components/ui/alerta-formulario"
 import {
   Card,
   CardContent,
@@ -16,14 +17,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { AlertCircle, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
     login,
     {}
   )
-  const [senhaVisivel, setSenhaVisivel] = useState(false)
 
   return (
     <Card>
@@ -37,20 +36,16 @@ export default function LoginPage() {
       <form action={formAction}>
         <CardContent className="space-y-5">
           {estado.erro && (
-            <div className="flex items-start gap-3 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <div>
-                <span>{estado.erro}</span>
-                {estado.erro.includes("Senha incorreta") && (
-                  <Link
-                    href="/esqueci-senha"
-                    className="ml-1 font-medium underline hover:text-destructive/80"
-                  >
-                    Esqueci minha senha
-                  </Link>
-                )}
-              </div>
-            </div>
+            <AlertaFormulario tipo="erro" mensagem={estado.erro}>
+              {estado.erro.includes("Senha incorreta") && (
+                <Link
+                  href="/esqueci-senha"
+                  className="ml-1 font-medium underline hover:text-destructive/80"
+                >
+                  Esqueci minha senha
+                </Link>
+              )}
+            </AlertaFormulario>
           )}
 
           <div className="space-y-2">
@@ -77,28 +72,13 @@ export default function LoginPage() {
                 Esqueci minha senha
               </Link>
             </div>
-            <div className="relative">
-              <Input
-                id="senha"
-                name="senha"
-                type={senhaVisivel ? "text" : "password"}
-                placeholder="••••••"
-                required
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                onClick={() => setSenhaVisivel(!senhaVisivel)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
-              >
-                {senhaVisivel ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
+            <InputSenha
+              id="senha"
+              name="senha"
+              placeholder="••••••"
+              required
+              autoComplete="current-password"
+            />
           </div>
         </CardContent>
 

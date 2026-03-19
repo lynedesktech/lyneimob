@@ -74,9 +74,9 @@ const gruposSuperAdmin: GrupoNavegacao[] = [
   {
     itens: [
       { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
-      { titulo: "Configurações", href: "/configuracoes", icone: Settings },
       { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
       { titulo: "Roadmap", href: "/admin/roadmap", icone: ClipboardList },
+      { titulo: "Configurações", href: "/configuracoes", icone: Settings },
     ],
   },
 ]

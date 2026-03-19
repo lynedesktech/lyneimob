@@ -61,16 +61,6 @@ export function verificarPermissao(
 }
 
 /**
- * Retorna lista de acoes permitidas para um cargo.
- * Util para condicionar UI no frontend.
- */
-export function obterPermissoes(cargo: Cargo): Acao[] {
-  return (Object.entries(MAPA_PERMISSOES) as [Acao, Cargo[]][])
-    .filter(([, cargos]) => cargos.includes(cargo))
-    .map(([acao]) => acao)
-}
-
-/**
  * Verifica se o usuario e super admin (dono do SaaS).
  */
 export function ehSuperAdmin(usuario: { super_admin?: boolean } | null): boolean {
