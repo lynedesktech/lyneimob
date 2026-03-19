@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Trash2, ChevronDown } from "lucide-react"
+import Link from "next/link"
+import { Search, Trash2, ChevronDown, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -21,12 +22,25 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible"
 import { STATUS_ROADMAP } from "@/types/roadmap"
 import type { TarefaRoadmap, StatusRoadmap } from "@/types/roadmap"
 import { atualizarStatusTarefa, excluirTarefaRoadmap } from "@/actions/roadmap"
 
 interface ListaTarefasProps {
   tarefas: TarefaRoadmap[]
+}
+
+const COR_BORDA: Record<StatusRoadmap, string> = {
+  fazendo: "border-l-info",
+  a_fazer: "border-l-warning",
+  pronto: "border-l-muted-foreground",
+  concluido: "border-l-success",
+  sugestao: "border-l-accent-blue",
 }
 
 function BadgeStatus({ status }: { status: StatusRoadmap }) {
@@ -42,6 +56,13 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
   const [busca, setBusca] = useState("")
   const [filtroStatus, setFiltroStatus] = useState<StatusRoadmap | "todos">("todos")
   const [tarefas, setTarefas] = useState(tarefasIniciais)
+  const [abertos, setAbertos] = useState<Record<string, boolean>>({
+    fazendo: true,
+    a_fazer: true,
+    pronto: true,
+    concluido: false,
+    sugestao: true,
+  })
 
   const tarefasFiltradas = tarefas.filter((t) => {
     const matchBusca = t.titulo.toLowerCase().includes(busca.toLowerCase()) ||
@@ -50,7 +71,6 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
     return matchBusca && matchStatus
   })
 
-  // Agrupar por status para exibição
   const grupos: { status: StatusRoadmap; label: string; tarefas: TarefaRoadmap[] }[] = [
     { status: "fazendo", label: "Fazendo", tarefas: [] },
     { status: "a_fazer", label: "A Fazer", tarefas: [] },
@@ -95,6 +115,10 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
       toast.success("Tarefa excluída.")
       setTarefas((prev) => prev.filter((t) => t.id !== id))
     }
+  }
+
+  function toggleGrupo(status: string) {
+    setAbertos((prev) => ({ ...prev, [status]: !prev[status] }))
   }
 
   return (
@@ -142,75 +166,95 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
       </CardHeader>
       <CardContent>
         {grupos.filter((g) => g.tarefas.length > 0).map((grupo) => (
-          <div key={grupo.status} className="mb-6 last:mb-0">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-              {grupo.label}
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                {grupo.tarefas.length}
-              </span>
-            </h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tarefa</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {grupo.tarefas.map((tarefa) => (
-                  <TableRow key={tarefa.id}>
-                    <TableCell>
-                      <p className="font-medium text-sm">{tarefa.titulo}</p>
-                      {tarefa.descricao && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                          {tarefa.descricao}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <button className="cursor-pointer">
-                              <BadgeStatus status={tarefa.status} />
-                            </button>
-                          }
-                        />
-                        <DropdownMenuContent>
-                          {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
-                            <DropdownMenuItem
-                              key={key}
-                              onClick={() => handleMudarStatus(tarefa.id, key as StatusRoadmap)}
-                              disabled={key === tarefa.status}
-                            >
-                              {val.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {tarefa.data_conclusao
-                        ? new Date(tarefa.data_conclusao + "T00:00:00").toLocaleDateString("pt-BR")
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExcluir(tarefa.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <Collapsible
+            key={grupo.status}
+            open={abertos[grupo.status]}
+            onOpenChange={() => toggleGrupo(grupo.status)}
+            className="mb-6 last:mb-0"
+          >
+            <div className={`border-l-4 ${COR_BORDA[grupo.status]} pl-3`}>
+              <CollapsibleTrigger className="flex items-center gap-2 w-full cursor-pointer py-1 hover:opacity-80">
+                {abertos[grupo.status] ? (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                )}
+                <span className="text-sm font-medium">{grupo.label}</span>
+                <Badge variant="secondary" className="text-xs">
+                  {grupo.tarefas.length}
+                </Badge>
+              </CollapsibleTrigger>
+
+              <CollapsibleContent>
+                <Table className="table-fixed w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tarefa</TableHead>
+                      <TableHead className="w-[100px]">Status</TableHead>
+                      <TableHead className="w-[100px]">Data</TableHead>
+                      <TableHead className="w-[60px]">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {grupo.tarefas.map((tarefa) => (
+                      <TableRow key={tarefa.id}>
+                        <TableCell className="overflow-hidden">
+                          <Link
+                            href={`/admin/roadmap/${tarefa.id}`}
+                            className="font-medium text-sm hover:underline hover:text-primary block truncate"
+                          >
+                            {tarefa.titulo}
+                          </Link>
+                          {tarefa.descricao && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                              {tarefa.descricao}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <button className="cursor-pointer">
+                                  <BadgeStatus status={tarefa.status} />
+                                </button>
+                              }
+                            />
+                            <DropdownMenuContent>
+                              {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
+                                <DropdownMenuItem
+                                  key={key}
+                                  onClick={() => handleMudarStatus(tarefa.id, key as StatusRoadmap)}
+                                  disabled={key === tarefa.status}
+                                >
+                                  {val.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {tarefa.data_conclusao
+                            ? new Date(tarefa.data_conclusao + "T00:00:00").toLocaleDateString("pt-BR")
+                            : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleExcluir(tarefa.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
         ))}
 
         {tarefasFiltradas.length === 0 && (

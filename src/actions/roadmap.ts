@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { getOpenAI } from "@/lib/openai"
-import type { TarefaRoadmap, AnaliseRoadmap, ResumoRoadmap, DadosTarefaRoadmap, StatusRoadmap } from "@/types/roadmap"
+import type { TarefaRoadmap, AnaliseRoadmap, ResumoRoadmap, DadosTarefaRoadmap, StatusRoadmap, ItemChecklist, PrioridadeRoadmap } from "@/types/roadmap"
 
 // ============================================================
 // Helpers
@@ -66,6 +66,57 @@ export async function buscarResumoRoadmap(): Promise<ResumoRoadmap> {
 }
 
 // ============================================================
+// Buscar tarefa por ID
+// ============================================================
+
+export async function buscarTarefaRoadmap(id: string): Promise<TarefaRoadmap | null> {
+  const { erro, supabase } = await verificarSuperAdmin()
+  if (erro || !supabase) return null
+
+  const { data } = await supabase
+    .from("tarefas_roadmap")
+    .select("*")
+    .eq("id", id)
+    .single()
+
+  return data as TarefaRoadmap | null
+}
+
+// ============================================================
+// Atualizar tarefa (edição completa)
+// ============================================================
+
+export async function atualizarTarefaRoadmap(
+  id: string,
+  dados: {
+    titulo?: string
+    descricao?: string | null
+    status?: StatusRoadmap
+    prioridade?: PrioridadeRoadmap
+    checklist?: ItemChecklist[]
+  }
+) {
+  const { erro, supabase } = await verificarSuperAdmin()
+  if (erro) return { erro }
+  if (!supabase) return { erro: "Erro interno." }
+
+  const atualizacao: Record<string, unknown> = { ...dados }
+  if (dados.status === "concluido") {
+    atualizacao.data_conclusao = new Date().toISOString().split("T")[0]
+  }
+
+  const { error } = await supabase
+    .from("tarefas_roadmap")
+    .update(atualizacao)
+    .eq("id", id)
+
+  if (error) return { erro: error.message }
+  revalidatePath("/admin/roadmap")
+  revalidatePath(`/admin/roadmap/${id}`)
+  return { sucesso: "Tarefa atualizada." }
+}
+
+// ============================================================
 // Criar tarefa
 // ============================================================
 
@@ -78,6 +129,8 @@ export async function criarTarefaRoadmap(dados: DadosTarefaRoadmap) {
     titulo: dados.titulo,
     descricao: dados.descricao || null,
     status: dados.status,
+    prioridade: dados.prioridade || "media",
+    checklist: dados.checklist || [],
     data_conclusao: dados.data_conclusao || null,
     ordem: dados.ordem,
   })
