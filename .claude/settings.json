@@ -517,7 +517,8 @@
       "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/roadmap/[id]/)",
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/roadmap -type f -name *.tsx)",
       "Bash(wc -l /c/Users/Lynedesk/Desktop/Tech/LyneImob/tests/e2e/specs/*.ts)",
-      "Bash(grep -l \"super_admin\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)"
+      "Bash(grep -l \"super_admin\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -iname *nova*tarefa* -o -iname *criar*tarefa*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

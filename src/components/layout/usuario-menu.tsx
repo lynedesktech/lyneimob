@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { LogOut, User, ChevronsUpDown, CreditCard } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { sair } from "@/actions/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -37,6 +38,17 @@ function obterIniciais(nome: string): string {
     .toUpperCase()
 }
 
+function AvatarUsuario({ usuario, className }: { usuario: UsuarioMenuProps["usuario"]; className?: string }) {
+  return (
+    <Avatar className="h-8 w-8 rounded-lg">
+      <AvatarImage src={usuario.avatar_url ?? undefined} alt={usuario.nome} />
+      <AvatarFallback className={cn("rounded-lg text-xs", className)}>
+        {obterIniciais(usuario.nome)}
+      </AvatarFallback>
+    </Avatar>
+  )
+}
+
 export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
   const router = useRouter()
 
@@ -52,15 +64,7 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
               />
             }
           >
-            <Avatar className="h-8 w-8 rounded-lg">
-              <AvatarImage
-                src={usuario.avatar_url ?? undefined}
-                alt={usuario.nome}
-              />
-              <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                {obterIniciais(usuario.nome)}
-              </AvatarFallback>
-            </Avatar>
+            <AvatarUsuario usuario={usuario} className="bg-sidebar-primary text-sidebar-primary-foreground" />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium text-sidebar-foreground">
                 {usuario.nome}
@@ -81,15 +85,7 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
             <DropdownMenuGroup>
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage
-                      src={usuario.avatar_url ?? undefined}
-                      alt={usuario.nome}
-                    />
-                    <AvatarFallback className="rounded-lg text-xs">
-                      {obterIniciais(usuario.nome)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <AvatarUsuario usuario={usuario} />
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">{usuario.nome}</span>
                     <span className="truncate text-xs text-muted-foreground">

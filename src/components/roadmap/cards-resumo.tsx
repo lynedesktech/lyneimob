@@ -53,11 +53,11 @@ export function CardsResumo({ resumo }: CardsResumoProps) {
         const Icone = card.icone
         return (
           <Card key={card.chave}>
-            <CardContent className="flex items-center gap-4 pt-6">
-              <div className={`rounded-lg p-2.5 ${card.bg}`}>
-                <Icone className={`h-5 w-5 ${card.cor}`} />
+            <CardContent className="flex flex-col items-center justify-center gap-2 py-5">
+              <div className={`rounded-lg p-2 ${card.bg}`}>
+                <Icone className={`h-4 w-4 ${card.cor}`} />
               </div>
-              <div>
+              <div className="text-center">
                 <p className="text-2xl font-bold">{resumo[card.chave]}</p>
                 <p className="text-xs text-muted-foreground">{card.titulo}</p>
               </div>

@@ -12,7 +12,6 @@ import {
   Settings,
   Building,
   MapPin,
-  CreditCard,
   HelpCircle,
   ClipboardList,
 } from "lucide-react"
@@ -57,15 +56,6 @@ const gruposNavegacao: GrupoNavegacao[] = [
       { titulo: "Atividades", href: "/atividades", icone: CalendarCheck },
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "ver_configuracoes" },
       { titulo: "Ajuda", href: "/ajuda", icone: HelpCircle },
-    ],
-  },
-]
-
-const gruposPlataforma: GrupoNavegacao[] = [
-  {
-    itens: [
-      { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
-      { titulo: "Roadmap", href: "/admin/roadmap", icone: ClipboardList },
     ],
   },
 ]
@@ -133,7 +123,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
           if (itensVisiveis.length === 0) return null
 
           return (
-            <React.Fragment key={indice}>
+            <React.Fragment key={grupo.titulo ?? `grupo-${indice}`}>
               <SidebarGroup>
                 {grupo.titulo && (
                   <SidebarGroupLabel className="text-sidebar-foreground/60 text-[11px] uppercase tracking-wider">

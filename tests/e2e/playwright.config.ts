@@ -19,29 +19,10 @@ export default defineConfig({
   },
 
   projects: [
-    // --- Setup: autenticacao dos 4 perfis (arquivo unico) ---
+    // --- Setup: autenticacao dos 4 perfis ---
     {
-      name: 'setup:super-admin',
+      name: 'setup:auth',
       testMatch: /setup\/auth\.setup\.ts/,
-      testNamePattern: /superAdmin/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'setup:admin',
-      testMatch: /setup\/auth\.setup\.ts/,
-      testNamePattern: /\badmin\b/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'setup:gerente',
-      testMatch: /setup\/auth\.setup\.ts/,
-      testNamePattern: /gerente/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'setup:corretor',
-      testMatch: /setup\/auth\.setup\.ts/,
-      testNamePattern: /corretor/,
       use: { ...devices['Desktop Chrome'] },
     },
 
@@ -49,43 +30,43 @@ export default defineConfig({
     {
       name: 'sprint1-auth',
       testMatch: /specs\/auth\.spec\.ts/,
-      dependencies: ['setup:admin'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'sprint2-imoveis',
       testMatch: /specs\/imoveis\.spec\.ts/,
-      dependencies: ['setup:admin', 'setup:gerente', 'setup:corretor'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'sprint3-clientes',
       testMatch: /specs\/clientes\.spec\.ts/,
-      dependencies: ['setup:admin', 'setup:gerente', 'setup:corretor'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'sprint4-negocios',
       testMatch: /specs\/negocios\.spec\.ts/,
-      dependencies: ['setup:admin', 'setup:gerente', 'setup:corretor'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'sprint5-atividades',
       testMatch: /specs\/atividades\.spec\.ts/,
-      dependencies: ['setup:admin', 'setup:gerente', 'setup:corretor'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'sprint6-loteamentos',
       testMatch: /specs\/loteamentos\.spec\.ts/,
-      dependencies: ['setup:admin', 'setup:gerente', 'setup:corretor'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'sprint7-configuracoes',
       testMatch: /specs\/configuracoes\.spec\.ts/,
-      dependencies: ['setup:admin', 'setup:gerente', 'setup:corretor'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -96,7 +77,7 @@ export default defineConfig({
     {
       name: 'sprint9-admin',
       testMatch: /specs\/admin\.spec\.ts/,
-      dependencies: ['setup:super-admin', 'setup:admin', 'setup:gerente', 'setup:corretor'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -109,7 +90,7 @@ export default defineConfig({
     {
       name: 'mobile',
       testMatch: /specs\/auth\.spec\.ts/,
-      dependencies: ['setup:admin'],
+      dependencies: ['setup:auth'],
       use: { ...devices['Pixel 7'] },
     },
   ],
