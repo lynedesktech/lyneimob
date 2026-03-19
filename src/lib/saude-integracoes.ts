@@ -3,8 +3,6 @@
 // Testa conexão real com cada API externa
 // ============================================================
 
-import { testarConexaoUazapi } from "@/lib/whatsapp/uazapi"
-
 export type StatusIntegracao = "conectado" | "desconectado" | "nao_configurado"
 
 export type ItemSaude = {
@@ -121,16 +119,23 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
   if (!url || !token) return { status: "nao_configurado" }
 
   try {
-    const conectado = await comTimeout(
-      testarConexaoUazapi(url, token),
-      TIMEOUT_MS
+    const urlLimpa = url.replace(/\/$/, "")
+    const resp = await comTimeout(
+      fetch(`${urlLimpa}/instance/list`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", admintoken: token },
+      }),
+      10000 // 10s — servidores próprios podem demorar mais
     )
-    return conectado
-      ? { status: "conectado" }
-      : { status: "desconectado", mensagem: "Credenciais inválidas" }
+
+    if (resp.ok) return { status: "conectado" }
+    if (resp.status === 401 || resp.status === 403) {
+      return { status: "desconectado", mensagem: "Token inválido ou sem permissão" }
+    }
+    return { status: "desconectado", mensagem: `Erro ${resp.status}` }
   } catch (erro) {
     const mensagem = erro instanceof Error && erro.message === "Timeout"
-      ? "Timeout ao conectar"
+      ? "Timeout ao conectar (10s)"
       : "Erro de conexão"
     return { status: "desconectado", mensagem }
   }
