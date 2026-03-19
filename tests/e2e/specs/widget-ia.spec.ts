@@ -110,6 +110,13 @@ test.describe('Widget IA — Painel lateral', () => {
     await page.waitForLoadState('networkidle')
     await fecharTourSeVisivel(page)
 
+    // Esperar a pagina de detalhe carregar (h1 com titulo do imovel)
+    await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15_000 })
+
+    // Esperar o badge do widget aparecer (indica que o DefinirContextoIA montou)
+    const badge = page.locator(SELETOR_BADGE_WIDGET)
+    await expect(badge).toBeVisible({ timeout: 10_000 })
+
     // Clicar no botao flutuante
     const botaoWidget = page.locator(SELETOR_BOTAO_WIDGET)
     await botaoWidget.click()

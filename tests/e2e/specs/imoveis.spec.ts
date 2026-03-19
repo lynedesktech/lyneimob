@@ -95,9 +95,11 @@ test.describe('Admin — Imoveis', () => {
     const dados = await criarImovel(page, 'admin')
     imovelTitulo = dados.titulo
 
-    // Server action faz redirect() → Next.js navega via client-side (pushState)
-    // Usar toHaveURL que faz polling, nao waitForURL que espera evento de navegacao
-    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
+    // Server action no Vercel pode demorar >30s — esperar ate 55s
+    // Primeiro: aguardar sair da pagina /novo (redirect aconteceu)
+    await expect(page).not.toHaveURL(/\/imoveis\/novo/, { timeout: 55_000 })
+    // Depois: confirmar que chegou na pagina de detalhe (UUID na URL)
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 10_000 })
 
     imovelUrl = page.url()
   })
@@ -130,7 +132,8 @@ test.describe('Admin — Imoveis', () => {
     await page.locator('#onborda-imovel-salvar').click()
 
     // Espera redirecionamento para detalhe
-    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
+    await expect(page).not.toHaveURL(/\/editar/, { timeout: 55_000 })
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 10_000 })
   })
 
   test('excluir imovel', async ({ page }) => {
@@ -162,7 +165,8 @@ test.describe('Gerente — Imoveis', () => {
   test('criar imovel', async ({ page }) => {
     const dados = await criarImovel(page, 'gerente')
 
-    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
+    await expect(page).not.toHaveURL(/\/imoveis\/novo/, { timeout: 55_000 })
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 10_000 })
 
     imovelUrl = page.url()
   })
@@ -195,7 +199,8 @@ test.describe('Corretor — Imoveis', () => {
   test('criar imovel', async ({ page }) => {
     await criarImovel(page, 'corretor')
 
-    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
+    await expect(page).not.toHaveURL(/\/imoveis\/novo/, { timeout: 55_000 })
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 10_000 })
   })
 
   test('listar imoveis — ve apenas os proprios', async ({ page }) => {
