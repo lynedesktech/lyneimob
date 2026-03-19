@@ -1,6 +1,7 @@
 import { listarTarefasRoadmap, buscarResumoRoadmap } from "@/actions/roadmap"
 import { CardsResumo } from "@/components/roadmap/cards-resumo"
 import { ListaTarefas } from "@/components/roadmap/lista-tarefas"
+import { DialogNovaTarefa } from "@/components/roadmap/dialog-nova-tarefa"
 
 export default async function RoadmapPage() {
   const [tarefas, resumo] = await Promise.all([
@@ -11,11 +12,14 @@ export default async function RoadmapPage() {
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Roadmap</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Acompanhe o progresso do desenvolvimento do LyneImob
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Roadmap</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Acompanhe o progresso do desenvolvimento do LyneImob
+          </p>
+        </div>
+        <DialogNovaTarefa />
       </div>
 
       {/* Cards de resumo */}
