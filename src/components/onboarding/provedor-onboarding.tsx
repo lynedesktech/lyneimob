@@ -691,7 +691,7 @@ export function ProvedorOnboarding({ children }: { children: React.ReactNode }) 
 
   // Super admin não precisa de onboarding, mas precisa do provider
   // porque componentes filhos (ChecklistOnboarding) usam useOnborda()
-  if (usuario?.super_admin) {
+  if (usuario?.perfil_plataforma || usuario?.super_admin) {
     return (
       <OnbordaProvider>
         <Onborda steps={[]} shadowRgb="0,0,0" shadowOpacity="0.6" cardComponent={CardOnboarding}>

@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
+import { temPermissao } from "@/lib/permissoes"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -40,6 +42,10 @@ export default async function DetalheImovelPage({
 }) {
   const { id } = await params
   const supabase = await criarClienteServer()
+  const usuario = await buscarUsuarioLogado()
+  const podeExcluir = usuario
+    ? temPermissao(usuario.cargo as "admin" | "corretor" | "gerente", "excluir_registros", usuario.perfil_plataforma ?? usuario.super_admin)
+    : false
 
   const { data: imovel } = await supabase
     .from("imoveis")
@@ -85,11 +91,13 @@ export default async function DetalheImovelPage({
             <Pencil className="mr-2 h-4 w-4" />
             Editar
           </Button>
-          <ConfirmacaoExclusao
+          {podeExcluir && (
+            <ConfirmacaoExclusao
               titulo="Excluir imóvel"
               descricao="Tem certeza que deseja excluir este imóvel? Todas as fotos e dados serão removidos permanentemente. Esta ação não pode ser desfeita."
               onConfirmar={excluirImovel.bind(null, id)}
             />
+          )}
         </div>
       </div>
 

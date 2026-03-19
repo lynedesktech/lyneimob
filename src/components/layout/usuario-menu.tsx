@@ -26,6 +26,8 @@ interface UsuarioMenuProps {
     email: string
     avatar_url?: string | null
     cargo?: string | null
+    perfil_plataforma?: string | null
+    super_admin?: boolean | null
   }
 }
 
@@ -51,6 +53,8 @@ function AvatarUsuario({ usuario, className }: { usuario: UsuarioMenuProps["usua
 
 export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
   const router = useRouter()
+  const perfilPlataforma = usuario.perfil_plataforma ?? (usuario.super_admin ? "super_admin" : null)
+  const mostrarFinanceiro = !perfilPlataforma || perfilPlataforma === "super_admin"
 
   return (
     <SidebarMenu>
@@ -103,10 +107,12 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
                 <User className="mr-2 h-4 w-4" />
                 <span>Meu perfil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/financeiro")}>
-                <CreditCard className="mr-2 h-4 w-4" />
-                <span>Financeiro</span>
-              </DropdownMenuItem>
+              {mostrarFinanceiro && (
+                <DropdownMenuItem onClick={() => router.push("/financeiro")}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Financeiro</span>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
 
             <DropdownMenuSeparator />

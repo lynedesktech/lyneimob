@@ -58,12 +58,16 @@ const LABELS_STATUS: Record<StatusIntegracao, { texto: string; variante: "succes
   nao_configurado: { texto: "Não configurado", variante: "secondary" },
 }
 
-export function CardsPlataforma() {
+export function CardsPlataforma({ esconderStripe = false }: { esconderStripe?: boolean } = {}) {
   const { saude, carregando } = useSaudeIntegracoes(60000)
+
+  const cardsFiltrados = esconderStripe
+    ? cardsPlataforma.filter((c) => c.chaveSaude !== "stripe")
+    : cardsPlataforma
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {cardsPlataforma.map((card) => {
+      {cardsFiltrados.map((card) => {
         const statusItem = card.chaveSaude && saude ? saude[card.chaveSaude] : null
         const label = statusItem ? LABELS_STATUS[statusItem.status] : null
 

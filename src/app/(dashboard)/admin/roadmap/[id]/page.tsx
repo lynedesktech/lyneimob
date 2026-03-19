@@ -2,7 +2,10 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { buscarTarefaRoadmap, buscarHistoricoTarefa } from "@/actions/roadmap"
+import { criarClienteServer } from "@/lib/supabase/server"
+import { ehInvestidor } from "@/lib/permissoes"
+import type { PerfilPlataforma } from "@/lib/permissoes"
+import { buscarTarefaRoadmap, buscarHistoricoTarefa, buscarUsuariosSuperAdmin } from "@/actions/roadmap"
 import { DetalheTarefaCliente } from "@/components/roadmap/detalhe-tarefa-cliente"
 
 type Params = Promise<{ id: string }>
@@ -12,10 +15,25 @@ export default async function DetalheTarefaPage({
 }: {
   params: Params
 }) {
+  const supabase = await criarClienteServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/login")
+
+  const { data: usuario } = await supabase
+    .from("usuarios")
+    .select("perfil_plataforma")
+    .eq("id", user.id)
+    .single()
+
+  if (ehInvestidor(usuario as { perfil_plataforma?: PerfilPlataforma } | null)) {
+    redirect("/painel")
+  }
+
   const { id } = await params
-  const [tarefa, historico] = await Promise.all([
+  const [tarefa, historico, superAdmins] = await Promise.all([
     buscarTarefaRoadmap(id),
     buscarHistoricoTarefa(id),
+    buscarUsuariosSuperAdmin(),
   ])
 
   if (!tarefa) redirect("/admin/roadmap")
@@ -29,7 +47,7 @@ export default async function DetalheTarefaPage({
       </Button>
 
       {/* Conteúdo interativo (client component) */}
-      <DetalheTarefaCliente tarefa={tarefa} historicoInicial={historico} />
+      <DetalheTarefaCliente tarefa={tarefa} historicoInicial={historico} superAdmins={superAdmins} />
     </div>
   )
 }

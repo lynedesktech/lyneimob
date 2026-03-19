@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatarData } from "@/lib/formatadores"
+import { ehPerfilPlataforma, temAcessoFinanceiro } from "@/lib/permissoes"
 import {
   ArrowLeft,
   Building2,
@@ -65,11 +66,13 @@ export default async function DetalheOrganizacaoPage({
 
   const { data: usuarioLogado } = await supabase
     .from("usuarios")
-    .select("super_admin")
+    .select("super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
-  if (!usuarioLogado?.super_admin) redirect("/painel")
+  if (!ehPerfilPlataforma(usuarioLogado)) redirect("/painel")
+
+  const mostraFinanceiro = temAcessoFinanceiro(usuarioLogado)
 
   // Buscar dados da organização
   const admin = criarClienteAdmin()
@@ -128,10 +131,12 @@ export default async function DetalheOrganizacaoPage({
           <h1 className="text-2xl font-bold">{org.nome}</h1>
           <p className="text-sm text-muted-foreground font-mono">{org.slug}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={badgePlano.variant}>{badgePlano.label}</Badge>
-          <Badge variant={badgeStatus.variant}>{badgeStatus.label}</Badge>
-        </div>
+        {mostraFinanceiro && (
+          <div className="flex items-center gap-2">
+            <Badge variant={badgePlano.variant}>{badgePlano.label}</Badge>
+            <Badge variant={badgeStatus.variant}>{badgeStatus.label}</Badge>
+          </div>
+        )}
       </div>
 
       {/* Cards de métricas */}
@@ -227,53 +232,55 @@ export default async function DetalheOrganizacaoPage({
           </CardContent>
         </Card>
 
-        {/* Informações financeiras */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Financeiro
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Plano</dt>
-                <dd><Badge variant={badgePlano.variant}>{badgePlano.label}</Badge></dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Status</dt>
-                <dd><Badge variant={badgeStatus.variant}>{badgeStatus.label}</Badge></dd>
-              </div>
-              {org.trial_fim_em && (
+        {/* Informações financeiras — visível apenas para super admin */}
+        {mostraFinanceiro && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Financeiro
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Trial até</dt>
-                  <dd>{formatarData(org.trial_fim_em)}</dd>
+                  <dt className="text-muted-foreground">Plano</dt>
+                  <dd><Badge variant={badgePlano.variant}>{badgePlano.label}</Badge></dd>
                 </div>
-              )}
-              {org.stripe_customer_id && (
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Stripe Customer</dt>
-                  <dd className="font-mono text-xs">{org.stripe_customer_id}</dd>
+                  <dt className="text-muted-foreground">Status</dt>
+                  <dd><Badge variant={badgeStatus.variant}>{badgeStatus.label}</Badge></dd>
                 </div>
-              )}
-              {org.stripe_subscription_id && (
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Stripe Subscription</dt>
-                  <dd className="font-mono text-xs">{org.stripe_subscription_id}</dd>
-                </div>
-              )}
-              {org.limites && (
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Limites</dt>
-                  <dd className="text-right text-xs">
-                    {org.limites.max_imoveis} imóveis · {org.limites.max_corretores} corretores · {org.limites.max_loteamentos ?? "∞"} loteamentos
-                  </dd>
-                </div>
-              )}
-            </dl>
-          </CardContent>
-        </Card>
+                {org.trial_fim_em && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Trial até</dt>
+                    <dd>{formatarData(org.trial_fim_em)}</dd>
+                  </div>
+                )}
+                {org.stripe_customer_id && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Stripe Customer</dt>
+                    <dd className="font-mono text-xs">{org.stripe_customer_id}</dd>
+                  </div>
+                )}
+                {org.stripe_subscription_id && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Stripe Subscription</dt>
+                    <dd className="font-mono text-xs">{org.stripe_subscription_id}</dd>
+                  </div>
+                )}
+                {org.limites && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Limites</dt>
+                    <dd className="text-right text-xs">
+                      {org.limites.max_imoveis} imóveis · {org.limites.max_corretores} corretores · {org.limites.max_loteamentos ?? "∞"} loteamentos
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Lista de usuários */}

@@ -11,7 +11,7 @@ export async function buscarUsuarioLogado() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, organizacao_id, cargo, super_admin")
+    .select("id, organizacao_id, cargo, super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 

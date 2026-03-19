@@ -25,7 +25,7 @@ export function ChecklistOnboarding() {
   const router = useRouter()
 
   // Super admin não faz onboarding
-  if (usuario?.super_admin) return null
+  if (usuario?.perfil_plataforma || usuario?.super_admin) return null
 
   const cargo = (usuario?.cargo as "admin" | "gerente" | "corretor") ?? "corretor"
   const chavesDoCargoAtual = ITENS_POR_CARGO[cargo] ?? ITENS_POR_CARGO.corretor

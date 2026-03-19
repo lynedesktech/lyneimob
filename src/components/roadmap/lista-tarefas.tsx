@@ -2,17 +2,18 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search, Trash2, ChevronDown, ChevronRight } from "lucide-react"
+import { Search, Trash2, ChevronDown, ChevronRight, X } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -27,12 +28,13 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible"
-import { STATUS_ROADMAP } from "@/types/roadmap"
-import type { TarefaRoadmap, StatusRoadmap } from "@/types/roadmap"
+import { STATUS_ROADMAP, PRIORIDADE_ROADMAP } from "@/types/roadmap"
+import type { TarefaRoadmap, StatusRoadmap, PrioridadeRoadmap } from "@/types/roadmap"
 import { atualizarStatusTarefa, excluirTarefaRoadmap } from "@/actions/roadmap"
 
 interface ListaTarefasProps {
   tarefas: TarefaRoadmap[]
+  superAdmins?: { id: string; nome: string }[]
 }
 
 const COR_BORDA: Record<StatusRoadmap, string> = {
@@ -43,18 +45,12 @@ const COR_BORDA: Record<StatusRoadmap, string> = {
   sugestao: "border-l-accent-blue",
 }
 
-function BadgeStatus({ status }: { status: StatusRoadmap }) {
-  const config = STATUS_ROADMAP[status]
-  return (
-    <Badge variant={config.cor as "success" | "info" | "warning" | "secondary" | "outline"}>
-      {config.label}
-    </Badge>
-  )
-}
-
-export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
+export function ListaTarefas({ tarefas: tarefasIniciais, superAdmins = [] }: ListaTarefasProps) {
   const [busca, setBusca] = useState("")
   const [filtroStatus, setFiltroStatus] = useState<StatusRoadmap | "todos">("todos")
+  const [filtroPrioridade, setFiltroPrioridade] = useState<PrioridadeRoadmap | "todos">("todos")
+  const [filtroResponsavel, setFiltroResponsavel] = useState<string>("todos")
+  const [filtroVencimento, setFiltroVencimento] = useState<string>("todos")
   const [tarefas, setTarefas] = useState(tarefasIniciais)
   const [processando, setProcessando] = useState<string | null>(null)
   const [abertos, setAbertos] = useState<Record<string, boolean>>({
@@ -65,12 +61,40 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
     sugestao: true,
   })
 
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+
   const tarefasFiltradas = tarefas.filter((t) => {
     const matchBusca = t.titulo.toLowerCase().includes(busca.toLowerCase()) ||
       (t.descricao?.toLowerCase().includes(busca.toLowerCase()) ?? false)
     const matchStatus = filtroStatus === "todos" || t.status === filtroStatus
-    return matchBusca && matchStatus
+    const matchPrioridade = filtroPrioridade === "todos" || t.prioridade === filtroPrioridade
+    const matchResponsavel = filtroResponsavel === "todos" ||
+      (filtroResponsavel === "__sem__" ? !t.responsavel_id : t.responsavel_id === filtroResponsavel)
+
+    let matchVencimento = true
+    if (filtroVencimento === "atrasadas") {
+      matchVencimento = !!t.data_vencimento && t.status !== "concluido" &&
+        new Date(t.data_vencimento + "T23:59:59") < hoje
+    } else if (filtroVencimento === "sem_data") {
+      matchVencimento = !t.data_vencimento
+    } else if (filtroVencimento === "com_data") {
+      matchVencimento = !!t.data_vencimento
+    }
+
+    return matchBusca && matchStatus && matchPrioridade && matchResponsavel && matchVencimento
   })
+
+  const temFiltros = filtroStatus !== "todos" || filtroPrioridade !== "todos" ||
+    filtroResponsavel !== "todos" || filtroVencimento !== "todos" || busca !== ""
+
+  function limparFiltros() {
+    setBusca("")
+    setFiltroStatus("todos")
+    setFiltroPrioridade("todos")
+    setFiltroResponsavel("todos")
+    setFiltroVencimento("todos")
+  }
 
   const grupos: { status: StatusRoadmap; label: string; tarefas: TarefaRoadmap[] }[] = [
     { status: "fazendo", label: "Fazendo", tarefas: [] },
@@ -129,43 +153,93 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <CardTitle className="text-base">
-            Tarefas ({tarefasFiltradas.length})
-          </CardTitle>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">
+              Sprints ({tarefasFiltradas.length})
+            </CardTitle>
+            {temFiltros && (
+              <Button variant="ghost" size="sm" onClick={limparFiltros}>
+                <X className="mr-1 h-4 w-4" />
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar tarefa..."
+                placeholder="Buscar sprint..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                className="pl-8 w-[250px]"
+                className="pl-8 w-[200px]"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button variant="outline" size="sm">
-                    {filtroStatus === "todos" ? "Todos" : STATUS_ROADMAP[filtroStatus].label}
-                    <ChevronDown className="ml-1 h-3.5 w-3.5" />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setFiltroStatus("todos")}>
-                  Todos
-                </DropdownMenuItem>
+            <Select
+              value={filtroStatus}
+              onValueChange={(v) => setFiltroStatus(v as StatusRoadmap | "todos")}
+            >
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os status</SelectItem>
                 {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
-                  <DropdownMenuItem
-                    key={key}
-                    onClick={() => setFiltroStatus(key as StatusRoadmap)}
-                  >
+                  <SelectItem key={key} value={key}>
                     {val.label}
-                  </DropdownMenuItem>
+                  </SelectItem>
                 ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </SelectContent>
+            </Select>
+            <Select
+              value={filtroPrioridade}
+              onValueChange={(v) => setFiltroPrioridade(v as PrioridadeRoadmap | "todos")}
+            >
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas as prioridades</SelectItem>
+                {Object.entries(PRIORIDADE_ROADMAP).map(([key, val]) => (
+                  <SelectItem key={key} value={key}>
+                    {val.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {superAdmins.length > 0 && (
+              <Select
+                value={filtroResponsavel}
+                onValueChange={(v) => v && setFiltroResponsavel(v)}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="__sem__">Sem responsável</SelectItem>
+                  {superAdmins.map((admin) => (
+                    <SelectItem key={admin.id} value={admin.id}>
+                      {admin.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Select
+              value={filtroVencimento}
+              onValueChange={(v) => v && setFiltroVencimento(v)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Vencimento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Qualquer data</SelectItem>
+                <SelectItem value="atrasadas">Atrasadas</SelectItem>
+                <SelectItem value="com_data">Com vencimento</SelectItem>
+                <SelectItem value="sem_data">Sem vencimento</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>
@@ -194,8 +268,8 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
                 <Table className="table-fixed w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tarefa</TableHead>
-                      <TableHead className="w-[100px]">Status</TableHead>
+                      <TableHead>Sprint</TableHead>
+                      <TableHead className="w-[130px]">Status</TableHead>
                       <TableHead className="w-[100px]">Data</TableHead>
                       <TableHead className="w-[60px]">Ações</TableHead>
                     </TableRow>
@@ -217,26 +291,25 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
                           )}
                         </TableCell>
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <button className="cursor-pointer">
-                                  <BadgeStatus status={tarefa.status} />
-                                </button>
-                              }
-                            />
-                            <DropdownMenuContent>
+                          <Select
+                            value={tarefa.status}
+                            onValueChange={(v) => handleMudarStatus(tarefa.id, v as StatusRoadmap)}
+                            disabled={!!processando}
+                          >
+                            <SelectTrigger
+                              size="sm"
+                              className={processando === tarefa.id ? "opacity-50" : ""}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
                               {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
-                                <DropdownMenuItem
-                                  key={key}
-                                  onClick={() => handleMudarStatus(tarefa.id, key as StatusRoadmap)}
-                                  disabled={key === tarefa.status}
-                                >
+                                <SelectItem key={key} value={key}>
                                   {val.label}
-                                </DropdownMenuItem>
+                                </SelectItem>
                               ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           {tarefa.data_conclusao
@@ -248,7 +321,8 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleExcluir(tarefa.id)}
-                            className="text-destructive hover:text-destructive"
+                            disabled={!!processando}
+                            className={`text-destructive hover:text-destructive ${processando === tarefa.id ? "opacity-50" : ""}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -264,7 +338,7 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
 
         {tarefasFiltradas.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Nenhuma tarefa encontrada.
+            Nenhuma sprint encontrada.
           </p>
         )}
       </CardContent>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { ehSuperAdmin, ehDesenvolvedor } from "@/lib/permissoes"
 import { Button } from "@/components/ui/button"
 import { FormularioConfiguracoesIntegracoes } from "@/components/configuracoes/formulario-configuracoes-integracoes"
 import { extrairIntegracoesMascaradas } from "@/types/configuracoes-integracoes"
@@ -17,11 +18,11 @@ export default async function AdminConfiguracoesOpenAIPage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("organizacao_id, super_admin")
+    .select("organizacao_id, super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
-  if (!usuario?.super_admin) redirect("/configuracoes")
+  if (!usuario || (!ehSuperAdmin(usuario) && !ehDesenvolvedor(usuario))) redirect("/configuracoes")
 
   const { data: organizacao } = await supabase
     .from("organizacoes")

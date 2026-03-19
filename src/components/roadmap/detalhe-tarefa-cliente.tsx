@@ -7,17 +7,17 @@ import {
   Trash2, Plus, CheckCircle2, Circle, FileText, ListChecks,
   Pencil, History, CalendarDays, User, ArrowRight,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { STATUS_ROADMAP, PRIORIDADE_ROADMAP } from "@/types/roadmap"
 import type { TarefaRoadmap, StatusRoadmap, PrioridadeRoadmap, HistoricoTarefaRoadmap } from "@/types/roadmap"
@@ -45,9 +45,10 @@ const ICONE_HISTORICO: Record<string, string> = {
 interface DetalheTarefaClienteProps {
   tarefa: TarefaRoadmap
   historicoInicial?: HistoricoTarefaRoadmap[]
+  superAdmins?: { id: string; nome: string }[]
 }
 
-export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial = [] }: DetalheTarefaClienteProps) {
+export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial = [], superAdmins = [] }: DetalheTarefaClienteProps) {
   const router = useRouter()
   const [tarefa, setTarefa] = useState(tarefaInicial)
   const [historico, setHistorico] = useState(historicoInicial)
@@ -161,6 +162,19 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial =
     }
   }
 
+  async function handleMudarResponsavel(id: string | null) {
+    setSalvando(true)
+    const resultado = await atualizarTarefaRoadmap(tarefa.id, { responsavel_id: id })
+    setSalvando(false)
+    if (resultado.erro) {
+      toast.error(resultado.erro)
+    } else {
+      toast.success(id ? "Responsável definido." : "Responsável removido.")
+      setTarefa((prev) => ({ ...prev, responsavel_id: id }))
+      router.refresh()
+    }
+  }
+
   async function handleToggleItem(index: number) {
     const novaChecklist = [...tarefa.checklist]
     novaChecklist[index] = { ...novaChecklist[index], concluido: !novaChecklist[index].concluido }
@@ -219,8 +233,6 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial =
 
   const totalChecklist = tarefa.checklist.length
   const concluidosChecklist = tarefa.checklist.filter((i) => i.concluido).length
-  const statusConfig = STATUS_ROADMAP[tarefa.status]
-  const prioridadeConfig = PRIORIDADE_ROADMAP[tarefa.prioridade] ?? PRIORIDADE_ROADMAP.media
 
   // Verificar se está atrasada
   const atrasada = tarefa.data_vencimento && tarefa.status !== "concluido" &&
@@ -260,12 +272,6 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial =
               <Pencil className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
-          <Badge variant={statusConfig.cor as "success" | "info" | "warning" | "secondary" | "outline"}>
-            {statusConfig.label}
-          </Badge>
-          <Badge variant={prioridadeConfig.cor as "secondary" | "info" | "warning" | "destructive"}>
-            {prioridadeConfig.label}
-          </Badge>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
           Criada em{" "}
@@ -499,55 +505,43 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial =
               {/* Status */}
               <div>
                 <p className="text-xs text-muted-foreground mb-1.5">Status</p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <button className="cursor-pointer">
-                        <Badge variant={statusConfig.cor as "success" | "info" | "warning" | "secondary" | "outline"}>
-                          {statusConfig.label}
-                        </Badge>
-                      </button>
-                    }
-                  />
-                  <DropdownMenuContent>
+                <Select
+                  value={tarefa.status}
+                  onValueChange={(v) => handleMudarStatus(v as StatusRoadmap)}
+                  disabled={salvando}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
-                      <DropdownMenuItem
-                        key={key}
-                        onClick={() => handleMudarStatus(key as StatusRoadmap)}
-                        disabled={key === tarefa.status}
-                      >
+                      <SelectItem key={key} value={key}>
                         {val.label}
-                      </DropdownMenuItem>
+                      </SelectItem>
                     ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Prioridade */}
               <div>
                 <p className="text-xs text-muted-foreground mb-1.5">Prioridade</p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <button className="cursor-pointer">
-                        <Badge variant={prioridadeConfig.cor as "secondary" | "info" | "warning" | "destructive"}>
-                          {prioridadeConfig.label}
-                        </Badge>
-                      </button>
-                    }
-                  />
-                  <DropdownMenuContent>
+                <Select
+                  value={tarefa.prioridade}
+                  onValueChange={(v) => handleMudarPrioridade(v as PrioridadeRoadmap)}
+                  disabled={salvando}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Prioridade" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {Object.entries(PRIORIDADE_ROADMAP).map(([key, val]) => (
-                      <DropdownMenuItem
-                        key={key}
-                        onClick={() => handleMudarPrioridade(key as PrioridadeRoadmap)}
-                        disabled={key === tarefa.prioridade}
-                      >
+                      <SelectItem key={key} value={key}>
                         {val.label}
-                      </DropdownMenuItem>
+                      </SelectItem>
                     ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Vencimento */}
@@ -571,9 +565,23 @@ export function DetalheTarefaCliente({ tarefa: tarefaInicial, historicoInicial =
                   <User className="h-3 w-3" />
                   Responsável
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {tarefa.responsavel_id ? "Definido" : "Não definido"}
-                </p>
+                <Select
+                  value={tarefa.responsavel_id || "__nenhum__"}
+                  onValueChange={(v) => handleMudarResponsavel(v === "__nenhum__" ? null : v)}
+                  disabled={salvando}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Não definido" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__nenhum__">Não definido</SelectItem>
+                    {superAdmins.map((admin) => (
+                      <SelectItem key={admin.id} value={admin.id}>
+                        {admin.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Excluir */}

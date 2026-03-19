@@ -1,12 +1,29 @@
-import { listarTarefasRoadmap, buscarResumoRoadmap } from "@/actions/roadmap"
-import { CardsResumo } from "@/components/roadmap/cards-resumo"
+import { redirect } from "next/navigation"
+import { criarClienteServer } from "@/lib/supabase/server"
+import { ehInvestidor } from "@/lib/permissoes"
+import type { PerfilPlataforma } from "@/lib/permissoes"
+import { listarTarefasRoadmap, buscarUsuariosSuperAdmin } from "@/actions/roadmap"
 import { ListaTarefas } from "@/components/roadmap/lista-tarefas"
 import { DialogNovaTarefa } from "@/components/roadmap/dialog-nova-tarefa"
 
 export default async function RoadmapPage() {
-  const [tarefas, resumo] = await Promise.all([
+  const supabase = await criarClienteServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/login")
+
+  const { data: usuario } = await supabase
+    .from("usuarios")
+    .select("perfil_plataforma")
+    .eq("id", user.id)
+    .single()
+
+  if (ehInvestidor(usuario as { perfil_plataforma?: PerfilPlataforma } | null)) {
+    redirect("/painel")
+  }
+
+  const [tarefas, superAdmins] = await Promise.all([
     listarTarefasRoadmap(),
-    buscarResumoRoadmap(),
+    buscarUsuariosSuperAdmin(),
   ])
 
   return (
@@ -22,26 +39,8 @@ export default async function RoadmapPage() {
         <DialogNovaTarefa />
       </div>
 
-      {/* Cards de resumo */}
-      <CardsResumo resumo={resumo} />
-
-      {/* Barra com total geral */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">{resumo.total_geral}</span>
-        tarefas no total
-        {resumo.total_geral > 0 && resumo.total_concluido > 0 && (
-          <>
-            {" · "}
-            <span className="text-success font-medium">
-              {Math.round((resumo.total_concluido / resumo.total_geral) * 100)}%
-            </span>
-            concluído
-          </>
-        )}
-      </div>
-
       {/* Lista de tarefas */}
-      <ListaTarefas tarefas={tarefas} />
+      <ListaTarefas tarefas={tarefas} superAdmins={superAdmins} />
     </div>
   )
 }

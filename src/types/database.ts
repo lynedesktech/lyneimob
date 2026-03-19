@@ -46,6 +46,8 @@ export type Organizacao = {
   updated_at: string
 }
 
+export type PerfilPlataforma = "super_admin" | "desenvolvedor" | "investidor" | null
+
 export type Usuario = {
   id: string
   organizacao_id: string
@@ -58,6 +60,7 @@ export type Usuario = {
   bio: string | null
   ativo: boolean
   super_admin: boolean
+  perfil_plataforma: PerfilPlataforma
   created_at: string
 }
 

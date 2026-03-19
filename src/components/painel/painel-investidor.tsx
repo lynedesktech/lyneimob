@@ -10,24 +10,21 @@ import {
   Users,
   Building2,
   Handshake,
-  CreditCard,
-  AlertTriangle,
+  TrendingUp,
+  ArrowUpRight,
 } from "lucide-react"
-import { CardSaudeIntegracoes } from "@/components/painel/card-saude-integracoes"
 
-interface MetricasPlataforma {
+interface MetricasInvestidor {
   totalOrgs: number
   totalUsuarios: number
   totalImoveis: number
   totalNegocios: number
-  trialsExpirados: number
-  assinaturasAtivas: number
-  planosBreakdown: {
-    trial: number
-    crm_ia: number
-    crm_ia_sdr: number
-  }
-  esconderFinanceiro?: boolean
+  taxaConversao: number
+  crescimentoMensal: {
+    mes: string
+    orgs: number
+    usuarios: number
+  }[]
 }
 
 const CORES_CARDS = [
@@ -35,79 +32,60 @@ const CORES_CARDS = [
   "bg-info/10 text-info dark:bg-info/15",
   "bg-success/10 text-success dark:bg-success/15",
   "bg-warning/10 text-warning dark:bg-warning/15",
-  "bg-destructive/10 text-destructive dark:bg-destructive/15",
   "bg-accent text-muted-foreground",
+  "bg-primary/10 text-primary dark:bg-primary/15",
 ] as const
 
-export function PainelSuperAdmin({
+export function PainelInvestidor({
   totalOrgs,
   totalUsuarios,
   totalImoveis,
   totalNegocios,
-  trialsExpirados,
-  assinaturasAtivas,
-  planosBreakdown,
-  esconderFinanceiro = false,
-}: MetricasPlataforma) {
-  const todosCards = [
+  taxaConversao,
+  crescimentoMensal,
+}: MetricasInvestidor) {
+  const cards = [
     {
       titulo: "Organizações",
       valor: String(totalOrgs),
-      descricao: esconderFinanceiro
-        ? `${totalOrgs} organizações cadastradas`
-        : `${planosBreakdown.trial} trial · ${planosBreakdown.crm_ia} profissional · ${planosBreakdown.crm_ia_sdr} completo`,
+      descricao: "Imobiliárias cadastradas",
       icone: Building,
-      financeiro: false,
     },
     {
       titulo: "Usuários totais",
       valor: String(totalUsuarios),
       descricao: "Em todas as organizações",
       icone: Users,
-      financeiro: false,
     },
     {
       titulo: "Imóveis totais",
       valor: String(totalImoveis),
       descricao: "Cadastrados na plataforma",
       icone: Building2,
-      financeiro: false,
     },
     {
       titulo: "Negócios totais",
       valor: String(totalNegocios),
       descricao: "Em todas as organizações",
       icone: Handshake,
-      financeiro: false,
     },
     {
-      titulo: "Trials expirados",
-      valor: String(trialsExpirados),
-      descricao: "Orgs com trial vencido",
-      icone: AlertTriangle,
-      financeiro: true,
-    },
-    {
-      titulo: "Assinaturas ativas",
-      valor: String(assinaturasAtivas),
-      descricao: "Planos pagos ativos",
-      icone: CreditCard,
-      financeiro: true,
+      titulo: "Taxa de conversão",
+      valor: `${taxaConversao}%`,
+      descricao: "Trial → Plano pago",
+      icone: TrendingUp,
     },
   ]
 
-  const cards = esconderFinanceiro
-    ? todosCards.filter((c) => !c.financeiro)
-    : todosCards
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">Visão da Plataforma</h2>
+        <h2 className="text-lg font-semibold">Visão do Investidor</h2>
         <p className="text-sm text-muted-foreground">
-          Métricas globais de todas as organizações
+          Métricas de crescimento e adoção da plataforma
         </p>
       </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, i) => (
           <Card key={card.titulo}>
@@ -127,7 +105,31 @@ export function PainelSuperAdmin({
         ))}
       </div>
 
-      <CardSaudeIntegracoes />
+      {/* Crescimento mensal */}
+      {crescimentoMensal.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ArrowUpRight className="h-5 w-5 text-success" />
+              Crescimento mensal
+            </CardTitle>
+            <CardDescription>Novas organizações e usuários por mês</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {crescimentoMensal.map((item) => (
+                <div key={item.mes} className="flex items-center justify-between text-sm">
+                  <span className="font-medium">{item.mes}</span>
+                  <div className="flex gap-4 text-muted-foreground">
+                    <span>{item.orgs} org{item.orgs !== 1 ? "s" : ""}</span>
+                    <span>{item.usuarios} usuário{item.usuarios !== 1 ? "s" : ""}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

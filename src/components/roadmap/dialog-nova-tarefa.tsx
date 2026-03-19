@@ -18,12 +18,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { STATUS_ROADMAP, PRIORIDADE_ROADMAP } from "@/types/roadmap"
 import type { StatusRoadmap, PrioridadeRoadmap } from "@/types/roadmap"
 import { criarTarefaRoadmap } from "@/actions/roadmap"
@@ -75,9 +75,6 @@ export function DialogNovaTarefa() {
     }
   }
 
-  const statusConfig = STATUS_ROADMAP[status]
-  const prioridadeConfig = PRIORIDADE_ROADMAP[prioridade]
-
   return (
     <Dialog open={aberto} onOpenChange={(open) => { if (!open) limpar(); setAberto(open) }}>
       <DialogTrigger
@@ -123,54 +120,36 @@ export function DialogNovaTarefa() {
 
           {/* Status e Prioridade */}
           <div className="flex items-center gap-4">
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 flex-1">
               <Label>Status</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <button className="cursor-pointer">
-                      <Badge variant={statusConfig.cor as "success" | "info" | "warning" | "secondary" | "outline"}>
-                        {statusConfig.label}
-                      </Badge>
-                    </button>
-                  }
-                />
-                <DropdownMenuContent>
+              <Select value={status} onValueChange={(v) => setStatus(v as StatusRoadmap)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
                   {Object.entries(STATUS_ROADMAP).map(([key, val]) => (
-                    <DropdownMenuItem
-                      key={key}
-                      onClick={() => setStatus(key as StatusRoadmap)}
-                    >
+                    <SelectItem key={key} value={key}>
                       {val.label}
-                    </DropdownMenuItem>
+                    </SelectItem>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 flex-1">
               <Label>Prioridade</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <button className="cursor-pointer">
-                      <Badge variant={prioridadeConfig.cor as "secondary" | "info" | "warning" | "destructive"}>
-                        {prioridadeConfig.label}
-                      </Badge>
-                    </button>
-                  }
-                />
-                <DropdownMenuContent>
+              <Select value={prioridade} onValueChange={(v) => setPrioridade(v as PrioridadeRoadmap)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Prioridade" />
+                </SelectTrigger>
+                <SelectContent>
                   {Object.entries(PRIORIDADE_ROADMAP).map(([key, val]) => (
-                    <DropdownMenuItem
-                      key={key}
-                      onClick={() => setPrioridade(key as PrioridadeRoadmap)}
-                    >
+                    <SelectItem key={key} value={key}>
                       {val.label}
-                    </DropdownMenuItem>
+                    </SelectItem>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

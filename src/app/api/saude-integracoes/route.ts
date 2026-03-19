@@ -19,11 +19,11 @@ export async function GET() {
   // Verificar se é super_admin
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("organizacao_id, super_admin")
+    .select("organizacao_id, super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
-  if (!usuario?.super_admin) {
+  if (!usuario || (!["super_admin", "desenvolvedor"].includes(usuario.perfil_plataforma ?? "") && !usuario.super_admin)) {
     return NextResponse.json(
       { erro: "Sem permissão para verificar saúde das integrações." },
       { status: 403 }

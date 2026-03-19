@@ -31,12 +31,19 @@ type DadosPerfil = {
   bio: string | null
   created_at: string
   super_admin?: boolean | null
+  perfil_plataforma?: "super_admin" | "desenvolvedor" | "investidor" | null
 }
 
 const labelsCargo: Record<string, string> = {
   admin: "Administrador",
   gerente: "Gerente",
   corretor: "Corretor",
+}
+
+const labelsPerfilPlataforma: Record<string, string> = {
+  super_admin: "Super Admin",
+  desenvolvedor: "Desenvolvedor",
+  investidor: "Investidor",
 }
 
 function obterIniciais(nome: string): string {
@@ -123,7 +130,7 @@ export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
             <h2 className="text-xl font-semibold">{perfil.nome}</h2>
             <p className="text-sm text-muted-foreground">{perfil.email}</p>
             <Badge variant="secondary">
-              {perfil.super_admin ? "Super Admin" : (labelsCargo[perfil.cargo] || perfil.cargo)}
+              {perfil.perfil_plataforma ? (labelsPerfilPlataforma[perfil.perfil_plataforma] ?? perfil.perfil_plataforma) : (labelsCargo[perfil.cargo] || perfil.cargo)}
             </Badge>
             <p className="text-xs text-muted-foreground pt-0.5">
               Clique na foto para alterar
@@ -226,12 +233,12 @@ export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
             <div className="space-y-2">
               <Label>Cargo</Label>
               <Input
-                value={perfil.super_admin ? "Super Admin" : (labelsCargo[perfil.cargo] || perfil.cargo)}
+                value={perfil.perfil_plataforma ? (labelsPerfilPlataforma[perfil.perfil_plataforma] ?? perfil.perfil_plataforma) : (labelsCargo[perfil.cargo] || perfil.cargo)}
                 disabled
                 className="max-w-xs opacity-60"
               />
               <p className="text-xs text-muted-foreground">
-                {perfil.super_admin ? "Dono da plataforma" : "Apenas o administrador pode alterar seu cargo"}
+                {perfil.perfil_plataforma ? "Perfil de plataforma" : "Apenas o administrador pode alterar seu cargo"}
               </p>
             </div>
 

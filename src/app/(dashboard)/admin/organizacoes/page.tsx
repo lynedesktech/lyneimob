@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatarData } from "@/lib/formatadores"
+import { ehPerfilPlataforma, temAcessoFinanceiro } from "@/lib/permissoes"
 
 const BADGES_PLANO: Record<string, { label: string; variant: "default" | "secondary" | "success" | "warning" | "destructive" }> = {
   trial: { label: "Essencial", variant: "secondary" },
@@ -43,11 +44,13 @@ export default async function AdminOrganizacoesPage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("super_admin")
+    .select("super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
-  if (!usuario?.super_admin) redirect("/painel")
+  if (!ehPerfilPlataforma(usuario)) redirect("/painel")
+
+  const mostraFinanceiro = temAcessoFinanceiro(usuario)
 
   // Buscar todas as organizações com contagens
   const admin = criarClienteAdmin()
@@ -90,11 +93,11 @@ export default async function AdminOrganizacoesPage() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Slug</TableHead>
-                <TableHead>Plano</TableHead>
-                <TableHead>Status</TableHead>
+                {mostraFinanceiro && <TableHead>Plano</TableHead>}
+                {mostraFinanceiro && <TableHead>Status</TableHead>}
                 <TableHead className="text-center">Usuários</TableHead>
                 <TableHead className="text-center">Imóveis</TableHead>
-                <TableHead>Trial até</TableHead>
+                {mostraFinanceiro && <TableHead>Trial até</TableHead>}
                 <TableHead>Criada em</TableHead>
               </TableRow>
             </TableHeader>
@@ -115,17 +118,23 @@ export default async function AdminOrganizacoesPage() {
                     <TableCell className="text-muted-foreground font-mono text-xs">
                       {org.slug}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={badgePlano.variant}>{badgePlano.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={badgeStatus.variant}>{badgeStatus.label}</Badge>
-                    </TableCell>
+                    {mostraFinanceiro && (
+                      <TableCell>
+                        <Badge variant={badgePlano.variant}>{badgePlano.label}</Badge>
+                      </TableCell>
+                    )}
+                    {mostraFinanceiro && (
+                      <TableCell>
+                        <Badge variant={badgeStatus.variant}>{badgeStatus.label}</Badge>
+                      </TableCell>
+                    )}
                     <TableCell className="text-center">{qtdUsuarios}</TableCell>
                     <TableCell className="text-center">{qtdImoveis}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {org.trial_fim_em ? formatarData(org.trial_fim_em) : "—"}
-                    </TableCell>
+                    {mostraFinanceiro && (
+                      <TableCell className="text-muted-foreground text-sm">
+                        {org.trial_fim_em ? formatarData(org.trial_fim_em) : "—"}
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground text-sm">
                       {formatarData(org.created_at)}
                     </TableCell>
@@ -134,7 +143,7 @@ export default async function AdminOrganizacoesPage() {
               })}
               {(!organizacoes || organizacoes.length === 0) && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={mostraFinanceiro ? 8 : 5} className="text-center text-muted-foreground py-8">
                     Nenhuma organização encontrada.
                   </TableCell>
                 </TableRow>

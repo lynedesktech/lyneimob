@@ -16,12 +16,12 @@ export default async function ConfiguracoesEquipePage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, organizacao_id, cargo, super_admin")
+    .select("id, organizacao_id, cargo, super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
   if (!usuario) redirect("/login")
-  if (usuario.super_admin) redirect("/admin/configuracoes")
+  if (usuario.perfil_plataforma) redirect("/admin/configuracoes")
 
   return (
     <div className="space-y-6 p-4 sm:p-6">

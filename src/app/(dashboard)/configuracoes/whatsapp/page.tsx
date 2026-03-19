@@ -16,12 +16,12 @@ export default async function ConfiguracoesWhatsappPage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("organizacao_id, cargo, super_admin")
+    .select("organizacao_id, cargo, super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
   if (!usuario) redirect("/login")
-  if (usuario.super_admin) redirect("/admin/configuracoes")
+  if (usuario.perfil_plataforma) redirect("/admin/configuracoes")
   if (usuario.cargo !== "admin") redirect("/configuracoes")
 
   return (

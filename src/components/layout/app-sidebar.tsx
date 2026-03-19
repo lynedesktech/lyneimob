@@ -14,6 +14,7 @@ import {
   MapPin,
   HelpCircle,
   ClipboardList,
+  UsersRound,
 } from "lucide-react"
 import {
   Sidebar,
@@ -28,7 +29,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar"
 import { UsuarioMenu } from "@/components/layout/usuario-menu"
-import type { Acao } from "@/lib/permissoes"
+import type { Acao, PerfilPlataforma } from "@/lib/permissoes"
 import { temPermissao } from "@/lib/permissoes"
 
 type Cargo = "admin" | "corretor" | "gerente"
@@ -65,11 +66,39 @@ const gruposSuperAdmin: GrupoNavegacao[] = [
     itens: [
       { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
       { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
+      { titulo: "Usuários", href: "/admin/usuarios", icone: UsersRound },
       { titulo: "Roadmap", href: "/admin/roadmap", icone: ClipboardList },
       { titulo: "Configurações", href: "/configuracoes", icone: Settings },
     ],
   },
 ]
+
+const gruposDesenvolvedor: GrupoNavegacao[] = [
+  {
+    itens: [
+      { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
+      { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
+      { titulo: "Usuários", href: "/admin/usuarios", icone: UsersRound },
+      { titulo: "Roadmap", href: "/admin/roadmap", icone: ClipboardList },
+      { titulo: "Configurações", href: "/configuracoes", icone: Settings },
+    ],
+  },
+]
+
+const gruposInvestidor: GrupoNavegacao[] = [
+  {
+    itens: [
+      { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
+      { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
+    ],
+  },
+]
+
+const LABELS_PERFIL: Record<string, string> = {
+  super_admin: "Super Admin",
+  desenvolvedor: "Desenvolvedor",
+  investidor: "Investidor",
+}
 
 interface AppSidebarProps {
   usuario: {
@@ -78,6 +107,7 @@ interface AppSidebarProps {
     avatar_url?: string | null
     cargo?: string | null
     super_admin?: boolean | null
+    perfil_plataforma?: PerfilPlataforma
   }
   organizacao: {
     nome: string
@@ -87,12 +117,23 @@ interface AppSidebarProps {
 export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
   const pathname = usePathname()
   const cargo = (usuario.cargo as Cargo) || "corretor"
-  const superAdmin = usuario.super_admin === true
+  const perfilPlataforma = usuario.perfil_plataforma ?? (usuario.super_admin ? "super_admin" : null)
 
-  // Super Admin tem sidebar própria, enxuta
-  const todosGrupos = superAdmin
-    ? gruposSuperAdmin
-    : gruposNavegacao
+  // Selecionar sidebar baseada no perfil de plataforma
+  let todosGrupos: GrupoNavegacao[]
+  if (perfilPlataforma === "super_admin") {
+    todosGrupos = gruposSuperAdmin
+  } else if (perfilPlataforma === "desenvolvedor") {
+    todosGrupos = gruposDesenvolvedor
+  } else if (perfilPlataforma === "investidor") {
+    todosGrupos = gruposInvestidor
+  } else {
+    todosGrupos = gruposNavegacao
+  }
+
+  const labelPerfil = perfilPlataforma
+    ? LABELS_PERFIL[perfilPlataforma] ?? perfilPlataforma
+    : "Gestão Imobiliária"
 
   return (
     <Sidebar className="border-r-0">
@@ -107,7 +148,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
               {organizacao.nome}
             </span>
             <span className="text-xs text-sidebar-foreground/60">
-              {superAdmin ? "Super Admin" : "Gestão Imobiliária"}
+              {labelPerfil}
             </span>
           </div>
         </div>
@@ -117,7 +158,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
       <SidebarContent>
         {todosGrupos.map((grupo, indice) => {
           const itensVisiveis = grupo.itens.filter(
-            (item) => !item.permissao || temPermissao(cargo, item.permissao, superAdmin)
+            (item) => !item.permissao || temPermissao(cargo, item.permissao, perfilPlataforma)
           )
 
           if (itensVisiveis.length === 0) return null

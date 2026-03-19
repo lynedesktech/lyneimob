@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { criarClienteServer } from "@/lib/supabase/server"
-import { ehSuperAdmin } from "@/lib/permissoes"
+import { ehPerfilPlataforma } from "@/lib/permissoes"
 
 export default async function AdminLayout({
   children,
@@ -17,11 +17,11 @@ export default async function AdminLayout({
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("super_admin")
+    .select("super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
-  if (!ehSuperAdmin(usuario)) redirect("/painel")
+  if (!ehPerfilPlataforma(usuario)) redirect("/painel")
 
   return <>{children}</>
 }

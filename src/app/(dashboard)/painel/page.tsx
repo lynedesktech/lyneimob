@@ -3,9 +3,11 @@ import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { PainelAdmin } from "@/components/dashboard/painel-admin"
 import { PainelCorretor } from "@/components/dashboard/painel-corretor"
 import { PainelSuperAdmin } from "@/components/painel/painel-super-admin"
+import { PainelInvestidor } from "@/components/painel/painel-investidor"
 import type { AtividadeHojeItem } from "@/components/dashboard/lista-atividades-hoje"
 import type { EtapaFunil } from "@/components/dashboard/grafico-funil"
 import type { PontoMensal } from "@/components/dashboard/grafico-evolucao"
+import type { PerfilPlataforma } from "@/lib/permissoes"
 
 export default async function DashboardPage() {
   const supabase = await criarClienteServer()
@@ -16,14 +18,33 @@ export default async function DashboardPage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("nome, cargo, super_admin")
+    .select("nome, cargo, super_admin, perfil_plataforma")
     .eq("id", user?.id)
     .single()
 
   const nomeUsuario = usuario?.nome ?? "Usuário"
   const cargo = usuario?.cargo ?? "corretor"
-  const isSuperAdmin = !!usuario?.super_admin
-  const isCorretor = cargo === "corretor"
+  const perfilPlataforma = (usuario?.perfil_plataforma ?? (usuario?.super_admin ? "super_admin" : null)) as PerfilPlataforma
+  const isCorretor = cargo === "corretor" && !perfilPlataforma
+
+  // Perfis de plataforma veem painel específico
+  if (perfilPlataforma === "investidor") {
+    const metricas = await buscarMetricasInvestidor()
+    return (
+      <div className="space-y-10">
+        <PainelInvestidor {...metricas} />
+      </div>
+    )
+  }
+
+  if (perfilPlataforma === "desenvolvedor") {
+    const metricas = await buscarMetricasPlataforma()
+    return (
+      <div className="space-y-10">
+        <PainelSuperAdmin {...metricas} esconderFinanceiro />
+      </div>
+    )
+  }
 
   // Datas de hoje
   const hoje = new Date()
@@ -85,7 +106,7 @@ export default async function DashboardPage() {
         (a.clientes as unknown as { nome: string } | null)?.nome ?? null,
     }))
 
-    const metricasPlataforma = isSuperAdmin
+    const metricasPlataforma = perfilPlataforma === "super_admin"
       ? await buscarMetricasPlataforma()
       : null
 
@@ -240,7 +261,7 @@ export default async function DashboardPage() {
     return { mes: MESES_PT[parseInt(mes) - 1], criados }
   })
 
-  const metricasPlataforma = isSuperAdmin
+  const metricasPlataforma = perfilPlataforma === "super_admin"
     ? await buscarMetricasPlataforma()
     : null
 
@@ -304,5 +325,88 @@ async function buscarMetricasPlataforma() {
     trialsExpirados: orgsTrialExpirado?.length ?? 0,
     assinaturasAtivas: planosBreakdown.crm_ia + planosBreakdown.crm_ia_sdr,
     planosBreakdown,
+  }
+}
+
+async function buscarMetricasInvestidor() {
+  const admin = criarClienteAdmin()
+  const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+
+  const hoje = new Date()
+  const seiseMesesAtras = new Date(hoje)
+  seiseMesesAtras.setMonth(seiseMesesAtras.getMonth() - 6)
+
+  const [
+    { count: totalOrgs },
+    { count: totalUsuarios },
+    { count: totalImoveis },
+    { count: totalNegocios },
+    { data: orgsPorPlano },
+    { data: orgsRecentes },
+    { data: usuariosRecentes },
+  ] = await Promise.all([
+    admin.from("organizacoes").select("id", { count: "exact", head: true }),
+    admin.from("usuarios").select("id", { count: "exact", head: true }),
+    admin.from("imoveis").select("id", { count: "exact", head: true }),
+    admin.from("negocios").select("id", { count: "exact", head: true }),
+    admin.from("organizacoes").select("plano"),
+    admin
+      .from("organizacoes")
+      .select("created_at")
+      .gte("created_at", seiseMesesAtras.toISOString()),
+    admin
+      .from("usuarios")
+      .select("created_at")
+      .gte("created_at", seiseMesesAtras.toISOString()),
+  ])
+
+  // Taxa de conversão: orgs com plano pago / total de orgs
+  let totalOrgsPagas = 0
+  const totalOrgsNum = totalOrgs ?? 0
+  orgsPorPlano?.forEach((org: { plano: string }) => {
+    if (org.plano === "crm_ia" || org.plano === "crm_ia_sdr") totalOrgsPagas++
+  })
+  const taxaConversao = totalOrgsNum > 0
+    ? Math.round((totalOrgsPagas / totalOrgsNum) * 100)
+    : 0
+
+  // Crescimento mensal
+  const crescimentoMap: Record<string, { orgs: number; usuarios: number }> = {}
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    crescimentoMap[chave] = { orgs: 0, usuarios: 0 }
+  }
+
+  for (const org of orgsRecentes ?? []) {
+    if (!org.created_at) continue
+    const d = new Date(org.created_at)
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    if (chave in crescimentoMap) crescimentoMap[chave].orgs++
+  }
+
+  for (const usr of usuariosRecentes ?? []) {
+    if (!usr.created_at) continue
+    const d = new Date(usr.created_at)
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    if (chave in crescimentoMap) crescimentoMap[chave].usuarios++
+  }
+
+  const crescimentoMensal = Object.entries(crescimentoMap).map(([chave, dados]) => {
+    const [, mes] = chave.split("-")
+    return {
+      mes: MESES_PT[parseInt(mes) - 1],
+      orgs: dados.orgs,
+      usuarios: dados.usuarios,
+    }
+  })
+
+  return {
+    totalOrgs: totalOrgsNum,
+    totalUsuarios: totalUsuarios ?? 0,
+    totalImoveis: totalImoveis ?? 0,
+    totalNegocios: totalNegocios ?? 0,
+    taxaConversao,
+    crescimentoMensal,
   }
 }

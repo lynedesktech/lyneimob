@@ -15,8 +15,8 @@ import {
   ListTodo,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { Acao } from "@/lib/permissoes"
-import { temPermissao } from "@/lib/permissoes"
+import type { Acao, PerfilPlataforma } from "@/lib/permissoes"
+import { temPermissao, ehInvestidor, ehDesenvolvedor, ehPerfilPlataforma } from "@/lib/permissoes"
 import { CardsPlataforma } from "@/components/configuracoes/cards-plataforma"
 
 type Cargo = "admin" | "corretor" | "gerente"
@@ -98,16 +98,24 @@ export default async function ConfiguracoesPage() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("organizacao_id, cargo, super_admin")
+    .select("organizacao_id, cargo, super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
   if (!usuario) redirect("/login")
 
+  // Investidor nao acessa configuracoes
+  if (ehInvestidor(usuario as { perfil_plataforma?: PerfilPlataforma })) {
+    redirect("/painel")
+  }
+
+  const perfilPlataforma = (usuario.perfil_plataforma as PerfilPlataforma) ?? (usuario.super_admin ? "super_admin" : null)
   const isSuperAdmin = !!usuario.super_admin
   const cargo = (usuario.cargo as Cargo) || "corretor"
+  const mostraPlataforma = ehPerfilPlataforma(usuario as { perfil_plataforma?: PerfilPlataforma; super_admin?: boolean })
+  const devSemStripe = ehDesenvolvedor(usuario as { perfil_plataforma?: PerfilPlataforma })
 
-  if (!temPermissao(cargo, "ver_configuracoes", isSuperAdmin)) {
+  if (!temPermissao(cargo, "ver_configuracoes", perfilPlataforma || isSuperAdmin)) {
     return (
       <div className="mx-auto max-w-md py-12 text-center">
         <ShieldAlert className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
@@ -126,8 +134,8 @@ export default async function ConfiguracoesPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 p-4 sm:p-6">
-      {/* Seção da imobiliária — escondida do super admin */}
-      {!isSuperAdmin && (
+      {/* Seção da imobiliária — escondida de perfis de plataforma */}
+      {!mostraPlataforma && (
         <div className="space-y-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
@@ -167,8 +175,8 @@ export default async function ConfiguracoesPage() {
         </div>
       )}
 
-      {/* Seção da plataforma — só para super_admin */}
-      {isSuperAdmin && (
+      {/* Seção da plataforma — super_admin e desenvolvedor */}
+      {mostraPlataforma && (
         <div className="space-y-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Configurações da Plataforma</h1>
@@ -177,7 +185,7 @@ export default async function ConfiguracoesPage() {
             </p>
           </div>
 
-          <CardsPlataforma />
+          <CardsPlataforma esconderStripe={devSemStripe} />
         </div>
       )}
     </div>

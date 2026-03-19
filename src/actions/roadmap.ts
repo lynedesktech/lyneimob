@@ -8,6 +8,7 @@ import type {
   HistoricoTarefaRoadmap, TipoMudancaRoadmap,
 } from "@/types/roadmap"
 import { STATUS_ROADMAP, PRIORIDADE_ROADMAP } from "@/types/roadmap"
+import { ehSuperAdmin, ehDesenvolvedor } from "@/lib/permissoes"
 
 // ============================================================
 // Helpers
@@ -22,11 +23,11 @@ async function verificarSuperAdmin() {
 
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("id, super_admin")
+    .select("id, super_admin, perfil_plataforma")
     .eq("id", user.id)
     .single()
 
-  if (!usuario?.super_admin) return { erro: "Acesso negado.", supabase: null, usuarioId: null }
+  if (!usuario || (!ehSuperAdmin(usuario) && !ehDesenvolvedor(usuario))) return { erro: "Acesso negado.", supabase: null, usuarioId: null }
   return { erro: null, supabase, usuarioId: usuario.id as string }
 }
 

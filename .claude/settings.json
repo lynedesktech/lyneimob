@@ -519,7 +519,19 @@
       "Bash(wc -l /c/Users/Lynedesk/Desktop/Tech/LyneImob/tests/e2e/specs/*.ts)",
       "Bash(grep -l \"super_admin\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -iname *nova*tarefa* -o -iname *criar*tarefa*)",
-      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -name *super*admin* -o -name *painel-super*)"
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src -name *super*admin* -o -name *painel-super*)",
+      "Bash(grep -l \"cargo\\\\|admin\\\\|gerente\\\\|corretor\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js\\)$\")",
+      "Bash(find \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/admin\" -type f -name \"*.tsx\")",
+      "Bash(find \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/configuracoes\" -type f -name \"*.tsx\")",
+      "Bash(head -80 \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/admin/configuracoes/stripe/page.tsx\")",
+      "Bash(head -50 \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/admin/configuracoes/openai/page.tsx\")",
+      "Bash(head -100 \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/layout.tsx\")",
+      "Bash(grep -n \"Select\\\\|Combobox\\\\|DropdownMenu\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/ui/*.tsx)",
+      "Bash(findstr \":3000\")",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(BASE_URL=http://localhost:3000 npx playwright test --config=tests/e2e/playwright.config.ts --project=setup:auth --project=sprint2-imoveis --reporter=list)",
+      "Bash(BASE_URL=http://localhost:3000 npx playwright test --config=tests/e2e/playwright.config.ts --project=setup:auth --reporter=list)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
