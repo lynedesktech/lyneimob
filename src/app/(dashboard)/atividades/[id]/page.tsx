@@ -19,7 +19,7 @@ import {
 import { AcoesAtividade } from "@/components/atividades/acoes-atividade"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { excluirAtividade } from "@/actions/atividades"
-import { IAAtividade } from "@/components/atividades/ia-atividade"
+import { DefinirContextoIA } from "@/components/ia/definir-contexto-ia"
 import { labelsTipoAtividade, labelsPrioridade, iconesTipoAtividade } from "@/lib/constantes"
 import { formatarData, formatarDataHora } from "@/lib/formatadores"
 import { StatusBadge } from "@/components/ui/status-badge"
@@ -54,6 +54,11 @@ export default async function DetalheAtividadePage({ params }: Props) {
 
   return (
     <div className="space-y-6">
+      <DefinirContextoIA
+        modulo="atividade"
+        entidadeId={id}
+        dados={{ status: a.status, briefing_ia: a.briefing_ia, sugestao_ia: a.sugestao_ia }}
+      />
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
@@ -110,7 +115,6 @@ export default async function DetalheAtividadePage({ params }: Props) {
       <Tabs defaultValue="informacoes">
         <TabsList>
           <TabsTrigger value="informacoes">Informações</TabsTrigger>
-          <TabsTrigger value="ia">IA</TabsTrigger>
         </TabsList>
 
         <TabsContent value="informacoes" className="space-y-4">
@@ -252,9 +256,6 @@ export default async function DetalheAtividadePage({ params }: Props) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="ia">
-          <IAAtividade atividade={a} />
-        </TabsContent>
       </Tabs>
     </div>
   )

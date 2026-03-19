@@ -13,6 +13,14 @@ export const SIGLAS_ESTADOS_BR = [
 export type SiglaEstado = (typeof SIGLAS_ESTADOS_BR)[number]
 
 // ============================================================
+// Helper: campos numéricos opcionais em formulários HTML
+// Inputs vazios enviam "" que z.coerce.number() converte para 0.
+// Precisamos tratar "" como undefined antes da conversão.
+// ============================================================
+const vazioParaUndefined = (val: unknown) =>
+  val === "" || val === undefined || val === null ? undefined : val
+
+// ============================================================
 // Schema de criação de imóvel
 // ============================================================
 export const schemaCriarImovel = z.object({
@@ -31,26 +39,17 @@ export const schemaCriarImovel = z.object({
     (v) => (SIGLAS_ESTADOS_BR as readonly string[]).includes(v),
     "Sigla de estado inválida"
   ),
-  preco_venda: z.coerce.number().positive("Preço deve ser positivo").optional(),
-  preco_aluguel: z.coerce
-    .number()
-    .positive("Preço deve ser positivo")
-    .optional(),
-  iptu: z.coerce.number().min(0, "IPTU não pode ser negativo").optional(),
-  condominio: z.coerce
-    .number()
-    .min(0, "Condomínio não pode ser negativo")
-    .optional(),
-  area_total: z.coerce.number().positive("Área deve ser positiva").optional(),
-  area_construida: z.coerce
-    .number()
-    .positive("Área deve ser positiva")
-    .optional(),
+  preco_venda: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Preço deve ser positivo").optional()),
+  preco_aluguel: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Preço deve ser positivo").optional()),
+  iptu: z.preprocess(vazioParaUndefined, z.coerce.number().min(0, "IPTU não pode ser negativo").optional()),
+  condominio: z.preprocess(vazioParaUndefined, z.coerce.number().min(0, "Condomínio não pode ser negativo").optional()),
+  area_total: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Área deve ser positiva").optional()),
+  area_construida: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Área deve ser positiva").optional()),
   quartos: z.coerce.number().int().min(0).default(0),
   suites: z.coerce.number().int().min(0).default(0),
   banheiros: z.coerce.number().int().min(0).default(0),
   vagas_garagem: z.coerce.number().int().min(0).default(0),
-  andares: z.coerce.number().int().positive().optional(),
+  andares: z.preprocess(vazioParaUndefined, z.coerce.number().int().positive().optional()),
   observacoes_internas: z.string().optional(),
   publicar_site: z.coerce.boolean().default(true),
   publicar_portais: z.coerce.boolean().default(true),

@@ -25,7 +25,7 @@ import { configStatusNegocio } from "@/lib/constantes/status-configs"
 import { AcoesNegocio } from "@/components/negocios/acoes-negocio"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { excluirNegocio } from "@/actions/negocios"
-import { IANegocio } from "@/components/negocios/ia-negocio"
+import { DefinirContextoIA } from "@/components/ia/definir-contexto-ia"
 import { CardSugestaoAcao } from "@/components/negocios/card-sugestao-acao"
 import { ConversaNegocio } from "@/components/negocios/conversa-negocio"
 import { buscarConversaPorNegocio } from "@/actions/whatsapp"
@@ -56,6 +56,11 @@ export default async function DetalheNegocioPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
+      <DefinirContextoIA
+        modulo="negocio"
+        entidadeId={id}
+        dados={{ status: n.status, analise_ia: n.analise_ia, sugestao_ia: n.sugestao_ia }}
+      />
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
@@ -99,7 +104,6 @@ export default async function DetalheNegocioPage({ params }: Props) {
         <TabsList>
           <TabsTrigger value="informacoes">Informações</TabsTrigger>
           <TabsTrigger value="conversas">Conversas</TabsTrigger>
-          <TabsTrigger value="ia">IA</TabsTrigger>
         </TabsList>
 
         {/* Tab Informações — layout 2 colunas */}
@@ -302,9 +306,6 @@ export default async function DetalheNegocioPage({ params }: Props) {
           )}
         </TabsContent>
 
-        <TabsContent value="ia">
-          <IANegocio negocio={n} />
-        </TabsContent>
       </Tabs>
     </div>
   )

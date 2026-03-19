@@ -1,3 +1,4 @@
+import { DefinirContextoIA } from "@/components/ia/definir-contexto-ia"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { PainelAdmin } from "@/components/dashboard/painel-admin"
@@ -112,6 +113,7 @@ export default async function DashboardPage() {
 
     return (
       <div className="space-y-10">
+        <DefinirContextoIA modulo="painel" entidadeId="painel" />
         <PainelCorretor
           nomeUsuario={nomeUsuario}
           negociosAbertos={negociosAbertos ?? 0}
@@ -267,6 +269,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-10">
+      <DefinirContextoIA modulo="painel" entidadeId="painel" />
       <PainelAdmin
         nomeUsuario={nomeUsuario}
         cargo={cargo as "admin" | "gerente"}

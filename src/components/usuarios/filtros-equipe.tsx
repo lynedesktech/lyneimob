@@ -51,7 +51,7 @@ export function FiltrosEquipe({ filtros, onMudarFiltro, onLimpar }: FiltrosEquip
 
       <Select
         value={filtros.cargo || undefined}
-        onValueChange={(valor) => onMudarFiltro("cargo", valor)}
+        onValueChange={(valor) => onMudarFiltro("cargo", valor ?? "")}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Cargo" />
@@ -67,7 +67,7 @@ export function FiltrosEquipe({ filtros, onMudarFiltro, onLimpar }: FiltrosEquip
 
       <Select
         value={filtros.status || undefined}
-        onValueChange={(valor) => onMudarFiltro("status", valor)}
+        onValueChange={(valor) => onMudarFiltro("status", valor ?? "")}
       >
         <SelectTrigger className="w-[130px]">
           <SelectValue placeholder="Status" />

@@ -556,7 +556,12 @@
       "Bash(grep -l \"CREATE POLICY.*usuarios_veem_propria_org\\\\|CREATE POLICY.*perfil_plataforma\\\\|CREATE POLICY.*usuario_atualiza_proprio_onboarding\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
       "Bash(grep -r \"CREATE POLICY\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
       "Bash(grep -B 2 -A 8 \"ON usuarios FOR SELECT\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
-      "Bash(grep -B 1 \"ON usuarios\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)"
+      "Bash(grep -B 1 \"ON usuarios\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/tests -type f -name *.ts -o -name *.js -o -name *.json)",
+      "Bash(grep -r UserPlus src --include=*.tsx --include=*.ts)",
+      "Bash(grep -r \"usuarios\\\\|gestao_usuarios\\\\|user_management\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/planejamento --include=*.md)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -name *.md -path */planejamento/*)",
+      "Bash(npx shadcn@latest add scroll-area -y)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

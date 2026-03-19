@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -220,20 +221,22 @@ export function TabelaEquipe({
                             }
                           />
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={() => onAlterarCargo(u)}>
-                              Alterar cargo
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => onAlternarStatus(u)}>
-                              {u.ativo ? "Desativar" : "Ativar"}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onSelect={() => onRemover(u)}
-                            >
-                              Remover
-                            </DropdownMenuItem>
+                            <DropdownMenuGroup>
+                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                              <DropdownMenuItem onSelect={() => onAlterarCargo(u)}>
+                                Alterar cargo
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => onAlternarStatus(u)}>
+                                {u.ativo ? "Desativar" : "Ativar"}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onSelect={() => onRemover(u)}
+                              >
+                                Remover
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}

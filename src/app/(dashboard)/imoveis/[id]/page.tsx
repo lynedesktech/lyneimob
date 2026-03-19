@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusImovel } from "@/lib/constantes/status-configs"
 import { GaleriaFotos } from "@/components/imoveis/galeria-fotos"
-import { IAImovel } from "@/components/imoveis/ia-imovel"
+import { DefinirContextoIA } from "@/components/ia/definir-contexto-ia"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { excluirImovel } from "@/actions/imoveis"
 import {
@@ -59,6 +59,11 @@ export default async function DetalheImovelPage({
 
   return (
     <div className="space-y-6">
+      <DefinirContextoIA
+        modulo="imovel"
+        entidadeId={id}
+        dados={{ descricao_ia: imovel.descricao_ia, titulo_ia: imovel.titulo_ia }}
+      />
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
@@ -108,7 +113,6 @@ export default async function DetalheImovelPage({
           <TabsTrigger value="fotos">
             Fotos ({imovel.imovel_fotos?.length ?? 0})
           </TabsTrigger>
-          <TabsTrigger value="ia">IA</TabsTrigger>
         </TabsList>
 
         {/* Tab Informações */}
@@ -336,14 +340,6 @@ export default async function DetalheImovelPage({
           />
         </TabsContent>
 
-        {/* Tab IA */}
-        <TabsContent value="ia">
-          <IAImovel
-            imovelId={id}
-            tituloIA={imovel.titulo_ia}
-            descricaoIA={imovel.descricao_ia}
-          />
-        </TabsContent>
       </Tabs>
     </div>
   )

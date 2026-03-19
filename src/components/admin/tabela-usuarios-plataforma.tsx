@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { MoreHorizontal, Columns3 } from "lucide-react"
 import {
@@ -14,15 +15,25 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -31,7 +42,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { formatarData } from "@/lib/formatadores"
-import { atualizarPerfilPlataforma, type UsuarioPlataforma } from "@/actions/usuarios-plataforma"
+import {
+  atualizarPerfilPlataforma,
+  alterarCargoAdmin,
+  alternarStatusAdmin,
+  removerUsuarioAdmin,
+  moverOrganizacaoAdmin,
+  type UsuarioPlataforma,
+} from "@/actions/usuarios-plataforma"
 import type { PerfilPlataforma } from "@/lib/permissoes"
 
 const LABELS_CARGO: Record<string, string> = {
@@ -68,6 +86,7 @@ interface TabelaUsuariosPlataformaProps {
   usuarios: UsuarioPlataforma[]
   total?: number
   podeMudarPerfil: boolean
+  organizacoes?: { id: string; nome: string }[]
   filtros?: React.ReactNode
   paginacao?: React.ReactNode
 }
@@ -76,12 +95,19 @@ export function TabelaUsuariosPlataforma({
   usuarios,
   total = 0,
   podeMudarPerfil,
+  organizacoes = [],
   filtros,
   paginacao,
 }: TabelaUsuariosPlataformaProps) {
+  const router = useRouter()
   const [colunas, setColunas] = useState<ColunasVisiveis>(colunasPadrao)
   const [pendente, iniciarTransicao] = useTransition()
   const [editandoId, setEditandoId] = useState<string | null>(null)
+
+  // Dialogs state
+  const [dialogCargo, setDialogCargo] = useState<UsuarioPlataforma | null>(null)
+  const [dialogOrg, setDialogOrg] = useState<UsuarioPlataforma | null>(null)
+  const [dialogRemover, setDialogRemover] = useState<UsuarioPlataforma | null>(null)
 
   function toggleColuna(col: keyof ColunasVisiveis) {
     setColunas((prev) => ({ ...prev, [col]: !prev[col] }))
@@ -97,6 +123,18 @@ export function TabelaUsuariosPlataforma({
         toast.success(resultado.sucesso)
       }
       setEditandoId(null)
+    })
+  }
+
+  function aoAlternarStatus(usuario: UsuarioPlataforma) {
+    iniciarTransicao(async () => {
+      const resultado = await alternarStatusAdmin(usuario.id)
+      if (resultado.erro) {
+        toast.error(resultado.erro)
+      } else {
+        toast.success(resultado.sucesso)
+        router.refresh()
+      }
     })
   }
 
@@ -190,7 +228,16 @@ export function TabelaUsuariosPlataforma({
                   )}
                   {colunas.organizacao && (
                     <TableCell className="text-sm">
-                      {u.organizacao_nome ?? <span className="text-muted-foreground">—</span>}
+                      {u.organizacao_nome ? (
+                        <Link
+                          href={`/admin/organizacoes/${u.organizacao_id}`}
+                          className="hover:underline text-primary"
+                        >
+                          {u.organizacao_nome}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                   )}
                   {colunas.cargo && (
@@ -254,21 +301,48 @@ export function TabelaUsuariosPlataforma({
                         }
                       />
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        {podeMudarPerfil && (
-                          <DropdownMenuItem
-                            onSelect={() => setEditandoId(u.id)}
-                          >
-                            Alterar perfil
-                          </DropdownMenuItem>
-                        )}
-                        {u.organizacao_nome && (
-                          <DropdownMenuItem
-                            render={<Link href={`/admin/organizacoes/${u.organizacao_id ?? ""}`} />}
-                          >
-                            Ver organização
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          {podeMudarPerfil && (
+                            <DropdownMenuItem onSelect={() => setEditandoId(u.id)}>
+                              Alterar perfil plataforma
+                            </DropdownMenuItem>
+                          )}
+                          {podeMudarPerfil && (
+                            <DropdownMenuItem onSelect={() => setDialogCargo(u)}>
+                              Alterar cargo
+                            </DropdownMenuItem>
+                          )}
+                          {podeMudarPerfil && (
+                            <DropdownMenuItem onSelect={() => setDialogOrg(u)}>
+                              Mover organização
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          {podeMudarPerfil && (
+                            <DropdownMenuItem onSelect={() => aoAlternarStatus(u)}>
+                              {u.ativo ? "Desativar" : "Ativar"}
+                            </DropdownMenuItem>
+                          )}
+                          {u.organizacao_nome && (
+                            <DropdownMenuItem
+                              render={<Link href={`/admin/organizacoes/${u.organizacao_id ?? ""}`} />}
+                            >
+                              Ver organização
+                            </DropdownMenuItem>
+                          )}
+                          {podeMudarPerfil && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onSelect={() => setDialogRemover(u)}
+                              >
+                                Remover
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -297,6 +371,241 @@ export function TabelaUsuariosPlataforma({
           {paginacao}
         </div>
       )}
+
+      {/* Dialog: Alterar cargo */}
+      {dialogCargo && (
+        <DialogAlterarCargoAdmin
+          usuario={dialogCargo}
+          aberto={!!dialogCargo}
+          onFechar={() => setDialogCargo(null)}
+        />
+      )}
+
+      {/* Dialog: Mover organizacao */}
+      {dialogOrg && (
+        <DialogMoverOrgAdmin
+          usuario={dialogOrg}
+          organizacoes={organizacoes}
+          aberto={!!dialogOrg}
+          onFechar={() => setDialogOrg(null)}
+        />
+      )}
+
+      {/* Dialog: Remover usuario */}
+      {dialogRemover && (
+        <DialogRemoverAdmin
+          usuario={dialogRemover}
+          aberto={!!dialogRemover}
+          onFechar={() => setDialogRemover(null)}
+        />
+      )}
     </div>
+  )
+}
+
+// ============================================================
+// Dialog: Alterar cargo (admin)
+// ============================================================
+
+function DialogAlterarCargoAdmin({
+  usuario,
+  aberto,
+  onFechar,
+}: {
+  usuario: UsuarioPlataforma
+  aberto: boolean
+  onFechar: () => void
+}) {
+  const router = useRouter()
+  const [novoCargo, setNovoCargo] = useState(usuario.cargo)
+  const [alterando, setAlterando] = useState(false)
+
+  async function handleAlterar() {
+    if (novoCargo === usuario.cargo) {
+      onFechar()
+      return
+    }
+    setAlterando(true)
+    const resultado = await alterarCargoAdmin(usuario.id, novoCargo)
+    if (resultado.erro) {
+      toast.error(resultado.erro)
+    } else {
+      toast.success(resultado.sucesso)
+      router.refresh()
+    }
+    setAlterando(false)
+    onFechar()
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(open) => { if (!open) onFechar() }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Alterar cargo</DialogTitle>
+          <DialogDescription>
+            Alterar o cargo de {usuario.nome}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Label className="mb-2 block">Cargo</Label>
+          <Select value={novoCargo} onValueChange={(val) => val && setNovoCargo(val)}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="corretor">Corretor</SelectItem>
+              <SelectItem value="gerente">Gerente</SelectItem>
+              <SelectItem value="admin">Administrador</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>Cancelar</Button>
+          <Button onClick={handleAlterar} disabled={alterando}>
+            {alterando ? "Alterando..." : "Confirmar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ============================================================
+// Dialog: Mover organizacao (admin)
+// ============================================================
+
+function DialogMoverOrgAdmin({
+  usuario,
+  organizacoes,
+  aberto,
+  onFechar,
+}: {
+  usuario: UsuarioPlataforma
+  organizacoes: { id: string; nome: string }[]
+  aberto: boolean
+  onFechar: () => void
+}) {
+  const router = useRouter()
+  const [novaOrgId, setNovaOrgId] = useState(usuario.organizacao_id ?? "")
+  const [novoCargo, setNovoCargo] = useState(usuario.cargo)
+  const [movendo, setMovendo] = useState(false)
+
+  async function handleMover() {
+    if (!novaOrgId) {
+      toast.error("Selecione uma organização.")
+      return
+    }
+    setMovendo(true)
+    const resultado = await moverOrganizacaoAdmin(usuario.id, novaOrgId, novoCargo)
+    if (resultado.erro) {
+      toast.error(resultado.erro)
+    } else {
+      toast.success(resultado.sucesso)
+      router.refresh()
+    }
+    setMovendo(false)
+    onFechar()
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(open) => { if (!open) onFechar() }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Mover organização</DialogTitle>
+          <DialogDescription>
+            Mover {usuario.nome} para outra organização.
+            {usuario.organizacao_nome && (
+              <> Atualmente em: <strong>{usuario.organizacao_nome}</strong></>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Nova organização</Label>
+            <Select value={novaOrgId} onValueChange={(val) => val && setNovaOrgId(val)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione a organização" />
+              </SelectTrigger>
+              <SelectContent>
+                {organizacoes.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Cargo na nova organização</Label>
+            <Select value={novoCargo} onValueChange={(val) => val && setNovoCargo(val)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="corretor">Corretor</SelectItem>
+                <SelectItem value="gerente">Gerente</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>Cancelar</Button>
+          <Button onClick={handleMover} disabled={movendo}>
+            {movendo ? "Movendo..." : "Mover"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ============================================================
+// Dialog: Remover usuario (admin)
+// ============================================================
+
+function DialogRemoverAdmin({
+  usuario,
+  aberto,
+  onFechar,
+}: {
+  usuario: UsuarioPlataforma
+  aberto: boolean
+  onFechar: () => void
+}) {
+  const router = useRouter()
+  const [removendo, setRemovendo] = useState(false)
+
+  async function handleRemover() {
+    setRemovendo(true)
+    const resultado = await removerUsuarioAdmin(usuario.id)
+    if (resultado.erro) {
+      toast.error(resultado.erro)
+    } else {
+      toast.success(resultado.sucesso)
+      router.refresh()
+    }
+    setRemovendo(false)
+    onFechar()
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(open) => { if (!open) onFechar() }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Remover usuário</DialogTitle>
+          <DialogDescription>
+            Tem certeza que deseja remover <strong>{usuario.nome}</strong> ({usuario.email})?
+            Esta ação não pode ser desfeita — a conta será excluída permanentemente.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar}>Cancelar</Button>
+          <Button variant="destructive" onClick={handleRemover} disabled={removendo}>
+            {removendo ? "Removendo..." : "Remover"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

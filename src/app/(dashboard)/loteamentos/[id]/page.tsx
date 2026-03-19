@@ -15,7 +15,7 @@ import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { ResumoLoteamento } from "@/components/loteamentos/resumo-loteamento"
 import { TabelaLotes } from "@/components/loteamentos/tabela-lotes"
 import { GaleriaFotosLoteamento } from "@/components/loteamentos/galeria-fotos-loteamento"
-import { IALoteamento } from "@/components/loteamentos/ia-loteamento"
+import { DefinirContextoIA } from "@/components/ia/definir-contexto-ia"
 import { excluirLoteamento } from "@/actions/loteamentos"
 import { ArrowLeft, Pencil, MapPin, Globe, FileSpreadsheet } from "lucide-react"
 
@@ -41,6 +41,11 @@ export default async function DetalheLoteamentoPage({
 
   return (
     <div className="space-y-6">
+      <DefinirContextoIA
+        modulo="loteamento"
+        entidadeId={id}
+        dados={{ descricao_ia: loteamento.descricao_ia }}
+      />
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
@@ -100,7 +105,6 @@ export default async function DetalheLoteamentoPage({
           <TabsTrigger value="fotos">
             Fotos ({loteamento.loteamento_fotos?.length ?? 0})
           </TabsTrigger>
-          <TabsTrigger value="ia">IA</TabsTrigger>
           <TabsTrigger value="informacoes">Informações</TabsTrigger>
         </TabsList>
 
@@ -117,14 +121,6 @@ export default async function DetalheLoteamentoPage({
           <GaleriaFotosLoteamento
             loteamentoId={id}
             fotos={loteamento.loteamento_fotos ?? []}
-          />
-        </TabsContent>
-
-        {/* Tab IA */}
-        <TabsContent value="ia">
-          <IALoteamento
-            loteamentoId={id}
-            descricaoIA={loteamento.descricao_ia}
           />
         </TabsContent>
 

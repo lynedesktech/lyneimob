@@ -7,20 +7,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { formatarData } from "@/lib/formatadores"
-import { ehPerfilPlataforma, temAcessoFinanceiro } from "@/lib/permissoes"
+import { ehPerfilPlataforma, ehSuperAdmin, temAcessoFinanceiro } from "@/lib/permissoes"
+import { TabelaUsuariosOrg } from "@/components/admin/tabela-usuarios-org"
+import { DialogNovoUsuario } from "@/components/admin/dialog-novo-usuario"
 import {
   ArrowLeft,
   Building2,
@@ -41,12 +34,6 @@ const BADGES_STATUS: Record<string, { label: string; variant: "default" | "secon
   trialing: { label: "Trial", variant: "secondary" },
   past_due: { label: "Atrasado", variant: "warning" },
   canceled: { label: "Cancelado", variant: "destructive" },
-}
-
-const BADGES_CARGO: Record<string, { label: string; variant: "default" | "secondary" | "success" }> = {
-  admin: { label: "Admin", variant: "default" },
-  gerente: { label: "Gerente", variant: "secondary" },
-  corretor: { label: "Corretor", variant: "secondary" },
 }
 
 export default async function DetalheOrganizacaoPage({
@@ -73,6 +60,7 @@ export default async function DetalheOrganizacaoPage({
   if (!ehPerfilPlataforma(usuarioLogado)) redirect("/painel")
 
   const mostraFinanceiro = temAcessoFinanceiro(usuarioLogado)
+  const podeMudarUsuarios = ehSuperAdmin(usuarioLogado)
 
   // Buscar dados da organização
   const admin = criarClienteAdmin()
@@ -284,58 +272,24 @@ export default async function DetalheOrganizacaoPage({
       </div>
 
       {/* Lista de usuários */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Usuários ({usuarios?.length ?? 0})
-          </CardTitle>
-          <CardDescription>Todos os membros desta organização</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Desde</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {usuarios?.map((u) => {
-                const badgeCargo = BADGES_CARGO[u.cargo] ?? { label: u.cargo, variant: "secondary" as const }
-
-                return (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.nome}</TableCell>
-                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={badgeCargo.variant}>{badgeCargo.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={u.ativo ? "success" : "destructive"}>
-                        {u.ativo ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatarData(u.created_at)}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-              {(!usuarios || usuarios.length === 0) && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    Nenhum usuário encontrado.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            <h2 className="text-lg font-semibold">Usuários ({usuarios?.length ?? 0})</h2>
+          </div>
+          {podeMudarUsuarios && (
+            <DialogNovoUsuario
+              organizacoes={[{ id: org.id, nome: org.nome }]}
+              organizacaoFixa={{ id: org.id, nome: org.nome }}
+            />
+          )}
+        </div>
+        <TabelaUsuariosOrg
+          usuarios={usuarios ?? []}
+          ehSuperAdmin={podeMudarUsuarios}
+        />
+      </div>
     </div>
   )
 }

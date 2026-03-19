@@ -6,6 +6,7 @@ import { listarUsuariosPlataforma } from "@/actions/usuarios-plataforma"
 import { TabelaUsuariosPlataforma } from "@/components/admin/tabela-usuarios-plataforma"
 import { FiltrosUsuariosPlataforma } from "@/components/admin/filtros-usuarios-plataforma"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
+import { DialogNovoUsuario } from "@/components/admin/dialog-novo-usuario"
 import { calcularTotalPaginas } from "@/lib/paginacao"
 
 type SearchParams = Promise<{
@@ -59,17 +60,23 @@ export default async function AdminUsuariosPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
-        <p className="text-muted-foreground">
-          Todos os usuários cadastrados na plataforma.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+          <p className="text-muted-foreground">
+            Todos os usuários cadastrados na plataforma.
+          </p>
+        </div>
+        {podeMudarPerfil && (
+          <DialogNovoUsuario organizacoes={organizacoes} />
+        )}
       </div>
 
       <TabelaUsuariosPlataforma
         usuarios={usuarios}
         total={total}
         podeMudarPerfil={podeMudarPerfil}
+        organizacoes={organizacoes}
         filtros={
           <Suspense fallback={<div />}>
             <FiltrosUsuariosPlataforma organizacoes={organizacoes} />

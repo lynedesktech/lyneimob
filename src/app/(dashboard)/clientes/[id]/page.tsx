@@ -14,7 +14,7 @@ import { ScoreBadge } from "@/components/clientes/score-badge"
 import { InteressesCliente } from "@/components/clientes/interesses-cliente"
 import { TimelineInteracoes } from "@/components/clientes/timeline-interacoes"
 import { MatchImoveis } from "@/components/clientes/match-imoveis"
-import { IACliente } from "@/components/clientes/ia-cliente"
+import { DefinirContextoIA } from "@/components/ia/definir-contexto-ia"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { excluirCliente } from "@/actions/clientes"
 import {
@@ -56,6 +56,11 @@ export default async function DetalheClientePage({
 
   return (
     <div className="space-y-6">
+      <DefinirContextoIA
+        modulo="cliente"
+        entidadeId={id}
+        dados={{ score_lead: cliente.score_lead, resumo_ia: cliente.resumo_ia }}
+      />
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
@@ -228,15 +233,8 @@ export default async function DetalheClientePage({
           </Card>
         </div>
 
-        {/* Coluna direita — IA + negócios */}
+        {/* Coluna direita — negócios */}
         <div className="space-y-6 lg:col-span-2">
-          {/* IA */}
-          <IACliente
-            clienteId={id}
-            scoreAtual={cliente.score_lead}
-            resumoAtual={cliente.resumo_ia}
-          />
-
           {/* Negócios */}
           <Card>
             <CardHeader>

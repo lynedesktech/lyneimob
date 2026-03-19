@@ -7,6 +7,8 @@ import { Header } from "@/components/layout/header"
 import { BannerTrialLayout } from "@/components/planos/banner-trial-layout"
 import { ProvedorBuscaGlobal, DialogBuscaGlobal } from "@/components/layout/busca-global"
 import { ProvedorOnboarding } from "@/components/onboarding/provedor-onboarding"
+import { ProvedorContextoIA } from "@/components/ia/contexto-ia"
+import { WidgetIA } from "@/components/ia/widget-ia"
 import { Providers } from "./providers"
 
 export default async function DashboardLayout({
@@ -51,20 +53,23 @@ export default async function DashboardLayout({
     <Providers>
       <ProvedorOnboarding>
         <ProvedorBuscaGlobal superAdmin={!!usuario.perfil_plataforma}>
-          <TooltipProvider>
-            <SidebarProvider>
-              <AppSidebar usuario={usuario} organizacao={organizacao} />
-              <SidebarInset>
-                <Header organizacao={organizacao} />
-                <BannerTrialLayout
-                  plano={organizacao.plano}
-                  trialFimEm={organizacao.trial_fim_em}
-                />
-                <main className="flex-1 overflow-auto p-6">{children}</main>
-              </SidebarInset>
-            </SidebarProvider>
-          </TooltipProvider>
-          <DialogBuscaGlobal />
+          <ProvedorContextoIA>
+            <TooltipProvider>
+              <SidebarProvider>
+                <AppSidebar usuario={usuario} organizacao={organizacao} />
+                <SidebarInset>
+                  <Header organizacao={organizacao} />
+                  <BannerTrialLayout
+                    plano={organizacao.plano}
+                    trialFimEm={organizacao.trial_fim_em}
+                  />
+                  <main className="flex-1 overflow-auto p-6">{children}</main>
+                </SidebarInset>
+              </SidebarProvider>
+              <WidgetIA />
+            </TooltipProvider>
+            <DialogBuscaGlobal />
+          </ProvedorContextoIA>
         </ProvedorBuscaGlobal>
       </ProvedorOnboarding>
     </Providers>

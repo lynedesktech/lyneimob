@@ -23,6 +23,9 @@ export default async function ConfiguracoesEquipePage() {
   if (!usuario) redirect("/login")
   if (usuario.perfil_plataforma) redirect("/admin/configuracoes")
 
+  // Apenas admin pode acessar a pagina de equipe
+  if (usuario.cargo !== "admin") redirect("/configuracoes")
+
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <Button variant="ghost" size="sm" render={<Link href="/configuracoes" />}>
