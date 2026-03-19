@@ -70,6 +70,17 @@ const gruposPlataforma: GrupoNavegacao[] = [
   },
 ]
 
+const gruposSuperAdmin: GrupoNavegacao[] = [
+  {
+    itens: [
+      { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
+      { titulo: "Configurações", href: "/configuracoes", icone: Settings },
+      { titulo: "Organizações", href: "/admin/organizacoes", icone: Building },
+      { titulo: "Roadmap", href: "/admin/roadmap", icone: ClipboardList },
+    ],
+  },
+]
+
 interface AppSidebarProps {
   usuario: {
     nome: string
@@ -88,9 +99,9 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
   const cargo = (usuario.cargo as Cargo) || "corretor"
   const superAdmin = usuario.super_admin === true
 
-  // Combinar grupos normais + plataforma (se super_admin)
+  // Super Admin tem sidebar própria, enxuta
   const todosGrupos = superAdmin
-    ? [...gruposNavegacao, ...gruposPlataforma]
+    ? gruposSuperAdmin
     : gruposNavegacao
 
   return (

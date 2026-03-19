@@ -507,7 +507,17 @@
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -type f \\\\\\(-name *seed* -o -name *fixture* -o -name *mock* \\\\\\))",
       "Read(//tmp/**)",
       "Bash(npx tsx:*)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(find \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)\" -name \"page.tsx\" -type f)",
+      "Bash(ls \"c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\(dashboard\\)/admin/roadmap/\")",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/roadmap/)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/roadmap/[id]/ -type f)",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/roadmap/[id\\\\\\)/)",
+      "Bash(grep -n \"import.*atualizarTarefaRoadmap\\\\|from ''@/actions/roadmap''\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/roadmap/detalhe-tarefa-cliente.tsx)",
+      "Bash(ls -la /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/app/\\\\\\(dashboard\\\\\\)/admin/roadmap/[id]/)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/roadmap -type f -name *.tsx)",
+      "Bash(wc -l /c/Users/Lynedesk/Desktop/Tech/LyneImob/tests/e2e/specs/*.ts)",
+      "Bash(grep -l \"super_admin\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
@@ -523,7 +533,8 @@
       "C:\\Users\\Lynedesk\\Desktop\\Tech",
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\loteamentos\\[id]",
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\[slug]\\loteamentos",
-      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\organizacoes"
+      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\organizacoes",
+      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\roadmap"
     ]
   }
 }

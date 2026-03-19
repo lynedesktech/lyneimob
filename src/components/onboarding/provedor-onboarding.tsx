@@ -689,9 +689,16 @@ export function ProvedorOnboarding({ children }: { children: React.ReactNode }) 
   const { tourCompleto, carregando } = useOnboarding()
   const { usuario, carregando: carregandoUsuario } = useUsuario()
 
-  // Super admin não precisa de onboarding
+  // Super admin não precisa de onboarding, mas precisa do provider
+  // porque componentes filhos (ChecklistOnboarding) usam useOnborda()
   if (usuario?.super_admin) {
-    return <>{children}</>
+    return (
+      <OnbordaProvider>
+        <Onborda steps={[]} shadowRgb="0,0,0" shadowOpacity="0.6" cardComponent={CardOnboarding}>
+          {children}
+        </Onborda>
+      </OnbordaProvider>
+    )
   }
 
   const cargo = (usuario?.cargo as "admin" | "gerente" | "corretor") ?? "corretor"
