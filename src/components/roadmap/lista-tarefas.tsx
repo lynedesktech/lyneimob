@@ -152,10 +152,10 @@ export function ListaTarefas({ tarefas: tarefasIniciais }: ListaTarefasProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50%]">Tarefa</TableHead>
+                  <TableHead>Tarefa</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead className="w-[80px]">Ações</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -11,7 +11,7 @@ export default async function RoadmapPage() {
   ])
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="space-y-6">
       {/* Cabeçalho */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Roadmap</h1>
