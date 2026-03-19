@@ -537,7 +537,8 @@
       "Bash(grep -r \"super_admin\\\\|superadmin\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/actions --include=*.ts)",
       "Bash(grep -l \"ativo\\\\|usuario.*delete\\\\|super_admin\\\\|perfil_plataforma\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -type f \\\\\\(-name *.html -o -name *email* -o -name *template* \\\\\\))",
-      "Bash(ls src/app/\\\\\\(auth\\\\\\)/redefinir-senha/)"
+      "Bash(ls src/app/\\\\\\(auth\\\\\\)/redefinir-senha/)",
+      "Bash(gh release:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

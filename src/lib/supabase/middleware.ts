@@ -105,19 +105,29 @@ export async function atualizarSessao(request: NextRequest) {
   )
 
   if (user && ehRotaProtegida && !ehRotaLivreTrial) {
-    // Buscar plano e trial da organização
-    const { data: org } = await supabase
-      .from("organizacoes")
-      .select("plano, trial_fim_em")
+    // Buscar organizacao_id do usuário logado
+    const { data: usuarioMw } = await supabase
+      .from("usuarios")
+      .select("organizacao_id")
+      .eq("id", user.id)
       .single()
 
-    if (org?.plano === "trial" && org.trial_fim_em) {
-      const trialFim = new Date(org.trial_fim_em)
-      if (trialFim < new Date()) {
-        const url = request.nextUrl.clone()
-        url.pathname = "/financeiro"
-        url.searchParams.set("trial_expirado", "true")
-        return redirecionarComCookies(url)
+    if (usuarioMw) {
+      // Buscar plano e trial da organização específica do usuário
+      const { data: org } = await supabase
+        .from("organizacoes")
+        .select("plano, trial_fim_em")
+        .eq("id", usuarioMw.organizacao_id)
+        .single()
+
+      if (org?.plano === "trial" && org.trial_fim_em) {
+        const trialFim = new Date(org.trial_fim_em)
+        if (trialFim < new Date()) {
+          const url = request.nextUrl.clone()
+          url.pathname = "/financeiro"
+          url.searchParams.set("trial_expirado", "true")
+          return redirecionarComCookies(url)
+        }
       }
     }
   }

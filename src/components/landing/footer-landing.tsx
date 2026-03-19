@@ -15,7 +15,14 @@ export function FooterLanding() {
               alt="LyneImob"
               width={100}
               height={25}
-              className="h-6 w-auto dark:invert"
+              className="h-6 w-auto dark:hidden"
+            />
+            <Image
+              src="/logo-branco.png"
+              alt="LyneImob"
+              width={100}
+              height={25}
+              className="hidden h-6 w-auto dark:block"
             />
             <span className="text-sm text-muted-foreground">
               &copy; {anoAtual} LyneImob. Todos os direitos reservados.

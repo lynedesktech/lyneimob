@@ -190,6 +190,8 @@ MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados 
 - **busca-no-yt** — buscar videos no YouTube
 - **commit-inteligente** — analisa mudancas, cria mensagem de commit estruturada, commita e faz push automaticamente. Resolve tudo de uma vez.
 - **publicar** — analisa commits, organiza por topicos, gera release notes em linguagem simples, e publica release oficial no GitHub via `gh release create`
+- **changelog** — gera resumo organizado de tudo que mudou no projeto (commits e releases) em linguagem simples, direto no chat
+- **retornar** — volta o projeto a uma versao ou commit anterior de forma segura, sem apagar historico (usa git revert)
 
 ---
 

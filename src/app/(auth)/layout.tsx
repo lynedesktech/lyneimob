@@ -44,14 +44,21 @@ export default function AuthLayout({
       {/* Painel direito — formulário */}
       <div className="flex w-full flex-col items-center justify-center bg-background px-4 py-12 lg:w-1/2">
         <div className="w-full max-w-md">
-          {/* Logo mobile */}
+          {/* Logo mobile — troca entre preto (claro) e branco (escuro) */}
           <div className="mb-8 flex flex-col items-center gap-3 lg:hidden">
             <Image
               src="/logo-preto.png"
               alt="LyneImob"
               width={160}
               height={40}
-              className="h-10 w-auto dark:invert"
+              className="h-10 w-auto dark:hidden"
+            />
+            <Image
+              src="/logo-branco.png"
+              alt="LyneImob"
+              width={160}
+              height={40}
+              className="hidden h-10 w-auto dark:block"
             />
             <p className="text-sm text-muted-foreground">
               Gestão Imobiliária Inteligente
