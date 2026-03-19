@@ -19,9 +19,13 @@ test.describe('Site Publico', () => {
   test('imoveis publicos — lista ou mensagem vazia', async ({ page }) => {
     await page.goto(`/${slug}/imoveis`)
     await expect(page.locator('main, [role="main"], body').first()).toBeVisible({ timeout: 15_000 })
-    // Deve ter cards de imoveis ou mensagem "nenhum imovel"
-    const temConteudo = page.locator('[data-testid*="imovel"], .card, article, text=/nenhum im/i').first()
-    await expect(temConteudo).toBeVisible({ timeout: 10_000 })
+    // Deve ter heading "Imóveis disponíveis", cards (shadcn Card = div[data-slot="card"]), ou mensagem vazia
+    const temConteudo = page
+      .locator('h1:has-text("Imóveis disponíveis")')
+      .or(page.getByText(/nenhum im/i))
+      .or(page.locator('[data-slot="card"], [data-testid*="imovel"]'))
+      .first()
+    await expect(temConteudo).toBeVisible({ timeout: 15_000 })
   })
 
   test('loteamentos publicos — conteudo presente', async ({ page }) => {

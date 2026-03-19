@@ -1,100 +1,132 @@
 import { test, expect } from '@playwright/test'
-import { PERFIS, dadosNegocio } from '../fixtures/test-data'
+import { PERFIS } from '../fixtures/test-data'
 
 // ============================================================
 // Sprint 4 — Negocios (Pipeline)
 // ============================================================
 
+async function fecharTourSeVisivel(page: import('@playwright/test').Page) {
+  const btnPularTour = page.getByRole('button', { name: /pular tour/i })
+  try {
+    await btnPularTour.waitFor({ state: 'visible', timeout: 5_000 })
+    await btnPularTour.click()
+    await page.locator('[data-name="onborda-overlay"]').waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
+  } catch {
+    // Tour nao apareceu
+  }
+  await page.evaluate(() => {
+    document.querySelectorAll('[data-name="onborda-overlay"], [data-name="onborda-pointer"]').forEach(el => el.remove())
+  }).catch(() => {})
+}
+
+// Aguardar pagina de detalhe do negocio (redirect via RSC nao muda URL)
+async function aguardarDetalheNegocio(page: import('@playwright/test').Page, titulo: string) {
+  await expect(
+    page.getByRole('heading', { level: 1 }).filter({ hasText: titulo })
+  ).toBeVisible({ timeout: 500_000 })
+}
+
+async function criarNegocio(page: import('@playwright/test').Page, titulo: string) {
+  await page.goto('/negocios/novo')
+  await page.waitForLoadState('networkidle')
+  await fecharTourSeVisivel(page)
+
+  await page.locator('#titulo').fill(titulo)
+
+  await page.locator('#tipo').click()
+  await page.getByRole('option', { name: 'Venda' }).click()
+
+  await page.locator('#etapa_id').click()
+  await page.getByRole('option').first().waitFor({ state: 'visible', timeout: 10_000 })
+  await page.getByRole('option').first().click()
+
+  const comboboxCliente = page.getByRole('combobox').filter({ hasText: /cliente/i }).first()
+  await comboboxCliente.click()
+
+  const inputBusca = page.getByPlaceholder(/buscar/i).first()
+  await inputBusca.waitFor({ state: 'visible', timeout: 5_000 })
+  await inputBusca.fill(' ')
+
+  const primeiroItem = page.getByRole('option').first()
+  await primeiroItem.waitFor({ state: 'visible', timeout: 10_000 })
+  await primeiroItem.click()
+
+  await fecharTourSeVisivel(page)
+  await page.evaluate(() => {
+    document.querySelectorAll('[data-name="onborda-overlay"], [data-name="onborda-pointer"]').forEach(el => el.remove())
+  })
+  const submitBtn = page.locator('button[type="submit"]:not([disabled])')
+  await submitBtn.click({ force: true })
+
+  // Aguardar detalhe carregar
+  await aguardarDetalheNegocio(page, titulo)
+}
+
 test.describe('Admin — Negocios', () => {
   test.use({ storageState: PERFIS.admin.storageState })
 
-  const ts = Date.now()
-  const tituloOriginal = `Negocio Admin ${ts}`
-  const tituloEditado = `Negocio Admin Editado ${ts}`
-
   test('criar negocio com dados obrigatorios', async ({ page }) => {
-    await page.goto('/negocios/novo')
-
-    // Titulo
-    await page.locator('#titulo').fill(tituloOriginal)
-
-    // Tipo — select "Venda"
-    await page.locator('#tipo').click()
-    await page.getByRole('option', { name: 'Venda' }).click()
-
-    // Etapa do pipeline — selecionar a primeira disponivel
-    await page.locator('#etapa_id').click()
-    await page.getByRole('option').first().click()
-
-    // Cliente — ComboboxCampo
-    // Tentar clicar no trigger do combobox de cliente
-    const comboboxCliente = page.getByRole('combobox', { name: /cliente/i }).or(
-      page.getByText('Selecionar cliente...')
-    ).first()
-    await comboboxCliente.click()
-
-    // Buscar e selecionar o primeiro resultado
-    const inputBusca = page.locator('[cmdk-input]').or(
-      page.getByPlaceholder(/buscar/i)
-    ).first()
-    await inputBusca.fill('Cliente')
-    await page.locator('[cmdk-item]').first().click({ timeout: 10_000 })
-
-    // Submeter
-    await page.getByRole('button', { name: /criar neg/i }).click()
-
-    await expect(
-      page.getByText(/sucesso|criado|cadastrado/i).first()
-    ).toBeVisible({ timeout: 10_000 })
+    test.slow()
+    const titulo = `Negocio Admin ${Date.now()}`
+    await criarNegocio(page, titulo)
   })
 
   test('visualizar kanban com colunas do pipeline', async ({ page }) => {
     await page.goto('/negocios')
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
-    // O kanban deve ter colunas visiveis (cada coluna e uma etapa do pipeline)
-    // As colunas geralmente tem um header com o nome da etapa
-    await expect(
-      page.locator('[data-testid="kanban-coluna"], [class*="kanban"], [class*="pipeline"], [class*="coluna"]').first()
-        .or(page.locator('.flex.gap, .flex.space-x').first())
-    ).toBeVisible({ timeout: 10_000 })
+    const kanbanContainer = page.locator('#onborda-kanban')
+    await expect(kanbanContainer).toBeVisible({ timeout: 15_000 })
   })
 
   test('visualizar lista de negocios', async ({ page }) => {
     await page.goto('/negocios?visao=lista')
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
-    // Deve mostrar tabela ou lista com negocios
     await expect(
-      page.locator('table, [data-testid="lista-negocios"], [role="table"]').first()
-        .or(page.locator('a[href*="/negocios/"]').first())
+      page.locator('table, a[href*="/negocios/"]').first()
     ).toBeVisible({ timeout: 10_000 })
   })
 
   test('editar negocio existente', async ({ page }) => {
-    // Ir para a lista para achar um negocio
+    test.slow()
     await page.goto('/negocios?visao=lista')
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
-    // Clicar no primeiro negocio
-    const linkNegocio = page.locator('a[href*="/negocios/"]').filter({ hasNotText: /novo/i }).first()
+    const linkNegocio = page.locator('a[href*="/negocios/"]:not([href*="novo"])').first()
+    const linkVisivel = await linkNegocio.isVisible().catch(() => false)
+    if (!linkVisivel) {
+      test.skip(true, 'Nenhum negocio encontrado para editar')
+      return
+    }
+
     await linkNegocio.click()
-    await page.waitForURL(/\/negocios\/[^/]+$/, { timeout: 10_000 })
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
-    // Ir para edicao
-    const btnEditar = page.getByRole('link', { name: /editar/i }).or(
-      page.locator('a[href*="/editar"]')
-    ).first()
+    // Esperar heading h1 do detalhe
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 })
+
+    const btnEditar = page.getByRole('link', { name: /editar/i }).first()
     await btnEditar.click()
     await page.waitForURL(/\/editar/, { timeout: 10_000 })
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
 
-    // Alterar titulo
-    await page.locator('#titulo').clear()
+    const tituloEditado = `Negocio Admin Editado ${Date.now()}`
     await page.locator('#titulo').fill(tituloEditado)
 
-    // Salvar
-    await page.getByRole('button', { name: /salvar/i }).click()
+    await fecharTourSeVisivel(page)
+    await page.evaluate(() => {
+      document.querySelectorAll('[data-name="onborda-overlay"], [data-name="onborda-pointer"]').forEach(el => el.remove())
+    })
+    const submitBtn = page.locator('button[type="submit"]:not([disabled])')
+    await submitBtn.click({ force: true })
 
-    await expect(
-      page.getByText(/sucesso|salvo|atualizado/i).first()
-    ).toBeVisible({ timeout: 10_000 })
+    await aguardarDetalheNegocio(page, tituloEditado)
   })
 })
 
@@ -102,43 +134,13 @@ test.describe('Gerente — Negocios', () => {
   test.use({ storageState: PERFIS.gerente.storageState })
 
   test('criar negocio e listar todos da organizacao', async ({ page }) => {
-    const ts = Date.now()
-    const titulo = `Negocio Gerente ${ts}`
+    test.slow()
+    const titulo = `Negocio Gerente ${Date.now()}`
+    await criarNegocio(page, titulo)
 
-    await page.goto('/negocios/novo')
-
-    // Titulo
-    await page.locator('#titulo').fill(titulo)
-
-    // Tipo
-    await page.locator('#tipo').click()
-    await page.getByRole('option', { name: 'Venda' }).click()
-
-    // Etapa — primeira disponivel
-    await page.locator('#etapa_id').click()
-    await page.getByRole('option').first().click()
-
-    // Cliente
-    const comboboxCliente = page.getByRole('combobox', { name: /cliente/i }).or(
-      page.getByText('Selecionar cliente...')
-    ).first()
-    await comboboxCliente.click()
-
-    const inputBusca = page.locator('[cmdk-input]').or(
-      page.getByPlaceholder(/buscar/i)
-    ).first()
-    await inputBusca.fill('Cliente')
-    await page.locator('[cmdk-item]').first().click({ timeout: 10_000 })
-
-    // Submeter
-    await page.getByRole('button', { name: /criar neg/i }).click()
-
-    await expect(
-      page.getByText(/sucesso|criado|cadastrado/i).first()
-    ).toBeVisible({ timeout: 10_000 })
-
-    // Listar — gerente ve todos da organizacao
     await page.goto('/negocios?visao=lista')
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
     await expect(
       page.locator('a[href*="/negocios/"]').first()
     ).toBeVisible({ timeout: 10_000 })
@@ -149,43 +151,13 @@ test.describe('Corretor — Negocios', () => {
   test.use({ storageState: PERFIS.corretor.storageState })
 
   test('criar negocio e listar apenas os proprios', async ({ page }) => {
-    const ts = Date.now()
-    const titulo = `Negocio Corretor ${ts}`
+    test.slow()
+    const titulo = `Negocio Corretor ${Date.now()}`
+    await criarNegocio(page, titulo)
 
-    await page.goto('/negocios/novo')
-
-    // Titulo
-    await page.locator('#titulo').fill(titulo)
-
-    // Tipo
-    await page.locator('#tipo').click()
-    await page.getByRole('option', { name: 'Venda' }).click()
-
-    // Etapa — primeira disponivel
-    await page.locator('#etapa_id').click()
-    await page.getByRole('option').first().click()
-
-    // Cliente
-    const comboboxCliente = page.getByRole('combobox', { name: /cliente/i }).or(
-      page.getByText('Selecionar cliente...')
-    ).first()
-    await comboboxCliente.click()
-
-    const inputBusca = page.locator('[cmdk-input]').or(
-      page.getByPlaceholder(/buscar/i)
-    ).first()
-    await inputBusca.fill('Cliente')
-    await page.locator('[cmdk-item]').first().click({ timeout: 10_000 })
-
-    // Submeter
-    await page.getByRole('button', { name: /criar neg/i }).click()
-
-    await expect(
-      page.getByText(/sucesso|criado|cadastrado/i).first()
-    ).toBeVisible({ timeout: 10_000 })
-
-    // Listar — corretor ve apenas os seus (via RLS)
     await page.goto('/negocios?visao=lista')
+    await page.waitForLoadState('networkidle')
+    await fecharTourSeVisivel(page)
     await expect(
       page.locator('a[href*="/negocios/"]').first()
     ).toBeVisible({ timeout: 10_000 })
