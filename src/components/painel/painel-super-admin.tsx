@@ -13,6 +13,7 @@ import {
   CreditCard,
   AlertTriangle,
 } from "lucide-react"
+import { CardSaudeIntegracoes } from "@/components/painel/card-saude-integracoes"
 
 interface MetricasPlataforma {
   totalOrgs: number
@@ -111,6 +112,8 @@ export function PainelSuperAdmin({
           </Card>
         ))}
       </div>
+
+      <CardSaudeIntegracoes />
     </div>
   )
 }
