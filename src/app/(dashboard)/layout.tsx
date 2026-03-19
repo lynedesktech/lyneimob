@@ -28,7 +28,7 @@ export default async function DashboardLayout({
   // Buscar dados do usuário na tabela usuarios
   const { data: usuario } = await supabase
     .from("usuarios")
-    .select("nome, email, avatar_url, cargo, super_admin, perfil_plataforma")
+    .select("nome, email, avatar_url, cargo, super_admin, perfil_plataforma, organizacao_id")
     .eq("id", user.id)
     .single()
 
@@ -36,10 +36,11 @@ export default async function DashboardLayout({
     redirect("/login?erro=usuario-nao-encontrado")
   }
 
-  // Buscar dados da organização
+  // Buscar dados da organização do usuário logado
   const { data: organizacao } = await supabase
     .from("organizacoes")
     .select("nome, slug, plano, trial_fim_em")
+    .eq("id", usuario.organizacao_id)
     .single()
 
   if (!organizacao) {

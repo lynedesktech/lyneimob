@@ -62,7 +62,7 @@ export async function atualizarSessao(request: NextRequest) {
     rotasProtegidas.some((rota) => pathname.startsWith(rota))
 
   // Rotas de autenticação (login, cadastro, etc.)
-  const rotasAuth = ["/login", "/cadastro", "/esqueci-senha", "/auth/callback"]
+  const rotasAuth = ["/login", "/cadastro", "/esqueci-senha", "/redefinir-senha", "/auth/callback"]
   const ehRotaAuth = rotasAuth.some((rota) => pathname.startsWith(rota))
 
   // Usuário autenticado acessando a landing page → redirecionar para o painel
@@ -85,9 +85,12 @@ export async function atualizarSessao(request: NextRequest) {
   }
 
   // Se está autenticado e tenta acessar rota de auth → redireciona para painel
-  // Exceção: se veio com ?erro= do layout (sessão inválida), deixar passar para evitar loop
+  // Exceções:
+  // - ?erro= do layout (sessão inválida) → deixar passar para evitar loop
+  // - /redefinir-senha → usuário está no meio do fluxo de recuperação de senha
   if (user && ehRotaAuth) {
-    if (!request.nextUrl.searchParams.has("erro")) {
+    const ehRedefinirSenha = pathname.startsWith("/redefinir-senha")
+    if (!request.nextUrl.searchParams.has("erro") && !ehRedefinirSenha) {
       const url = request.nextUrl.clone()
       url.pathname = "/painel"
       return redirecionarComCookies(url)

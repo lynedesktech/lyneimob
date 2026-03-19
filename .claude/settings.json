@@ -531,7 +531,13 @@
       "Bash(findstr \":3000\")",
       "Bash(findstr \"LISTENING\")",
       "Bash(BASE_URL=http://localhost:3000 npx playwright test --config=tests/e2e/playwright.config.ts --project=setup:auth --project=sprint2-imoveis --reporter=list)",
-      "Bash(BASE_URL=http://localhost:3000 npx playwright test --config=tests/e2e/playwright.config.ts --project=setup:auth --reporter=list)"
+      "Bash(BASE_URL=http://localhost:3000 npx playwright test --config=tests/e2e/playwright.config.ts --project=setup:auth --reporter=list)",
+      "Bash(ls -la \"c:\\\\Users\\\\Lynedesk\\\\Desktop\\\\Tech\\\\LyneImob\\\\.claude\"\" 2>/dev/null || echo \"Directory not found \")",
+      "Bash(git config:*)",
+      "Bash(grep -r \"super_admin\\\\|superadmin\" c:/Users/Lynedesk/Desktop/Tech/LyneImob/src/actions --include=*.ts)",
+      "Bash(grep -l \"ativo\\\\|usuario.*delete\\\\|super_admin\\\\|perfil_plataforma\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/supabase/migrations/*.sql)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -type f \\\\\\(-name *.html -o -name *email* -o -name *template* \\\\\\))",
+      "Bash(ls src/app/\\\\\\(auth\\\\\\)/redefinir-senha/)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",
@@ -549,7 +555,8 @@
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\[slug]\\loteamentos",
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\organizacoes",
       "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\src\\app\\(dashboard)\\admin\\roadmap",
-      "C:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob"
+      "C:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob",
+      "c:\\Users\\Lynedesk\\Desktop\\Tech\\LyneImob\\.claude\\skills"
     ]
   }
 }

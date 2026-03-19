@@ -51,7 +51,7 @@ export default function AuthLayout({
               alt="LyneImob"
               width={160}
               height={40}
-              className="h-10 w-auto"
+              className="h-10 w-auto dark:invert"
             />
             <p className="text-sm text-muted-foreground">
               Gestão Imobiliária Inteligente

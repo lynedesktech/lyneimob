@@ -188,6 +188,8 @@ MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados 
 - **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Quando conclui, gera tarefas no banco (tabela `tarefas_roadmap`). Nao implementa nada, nao altera codigo — produto final sao as tarefas no roadmap
 - **frontend-design** — OBRIGATORIO para qualquer alteracao visual (layout, componentes, CSS, paginas). Contem o design system completo do projeto.
 - **busca-no-yt** — buscar videos no YouTube
+- **commit-inteligente** — analisa mudancas, cria mensagem de commit estruturada, commita e faz push automaticamente. Resolve tudo de uma vez.
+- **publicar** — analisa commits, organiza por topicos, gera release notes em linguagem simples, e publica release oficial no GitHub via `gh release create`
 
 ---
 

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
-import { schemaLogin, schemaCadastro, schemaEsqueciSenha } from "@/types/auth"
+import { schemaLogin, schemaCadastro, schemaEsqueciSenha, schemaRedefinirSenha } from "@/types/auth"
 import type { EstadoFormulario } from "@/types/formulario"
 
 export async function login(
@@ -112,6 +112,33 @@ export async function recuperarSenha(
   }
 
   return { sucesso: "Email de recuperação enviado! Verifique sua caixa de entrada." }
+}
+
+export async function redefinirSenha(
+  _estado: EstadoFormulario,
+  formData: FormData
+): Promise<EstadoFormulario> {
+  const dados = schemaRedefinirSenha.safeParse({
+    senha: formData.get("senha"),
+    confirmarSenha: formData.get("confirmarSenha"),
+  })
+
+  if (!dados.success) {
+    return { erro: dados.error.issues[0].message }
+  }
+
+  const supabase = await criarClienteServer()
+
+  const { error } = await supabase.auth.updateUser({
+    password: dados.data.senha,
+  })
+
+  if (error) {
+    return { erro: "Erro ao redefinir senha. Tente solicitar um novo link de recuperação." }
+  }
+
+  await supabase.auth.signOut()
+  redirect("/login?senha-redefinida=true")
 }
 
 export async function sair() {

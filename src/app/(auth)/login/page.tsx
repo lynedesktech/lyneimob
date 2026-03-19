@@ -25,13 +25,21 @@ const mensagensErro: Record<string, string> = {
   "organizacao-nao-encontrada": "Organização não encontrada. Entre em contato com o suporte.",
 }
 
-function AlertaErroSessao() {
+function AlertasSessao() {
   const searchParams = useSearchParams()
   const erroSessao = searchParams.get("erro")
+  const senhaRedefinida = searchParams.has("senha-redefinida")
 
-  if (!erroSessao || !mensagensErro[erroSessao]) return null
-
-  return <AlertaFormulario tipo="erro" mensagem={mensagensErro[erroSessao]} />
+  return (
+    <>
+      {erroSessao && mensagensErro[erroSessao] && (
+        <AlertaFormulario tipo="erro" mensagem={mensagensErro[erroSessao]} />
+      )}
+      {senhaRedefinida && (
+        <AlertaFormulario tipo="sucesso" mensagem="Senha redefinida com sucesso! Faça login com sua nova senha." />
+      )}
+    </>
+  )
 }
 
 export default function LoginPage() {
@@ -52,7 +60,7 @@ export default function LoginPage() {
       <form action={formAction}>
         <CardContent className="space-y-5">
           <Suspense>
-            <AlertaErroSessao />
+            <AlertasSessao />
           </Suspense>
 
           {estado.erro && (

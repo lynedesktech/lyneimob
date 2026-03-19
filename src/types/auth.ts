@@ -16,3 +16,11 @@ export const schemaEsqueciSenha = z.object({
   email: z.string().email("Email inválido"),
 })
 
+export const schemaRedefinirSenha = z.object({
+  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  confirmarSenha: z.string().min(6, "Confirme sua senha"),
+}).refine((dados) => dados.senha === dados.confirmarSenha, {
+  message: "As senhas não coincidem",
+  path: ["confirmarSenha"],
+})
+
