@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback } from "react"
-import { LayoutGrid, LayoutDashboard, List, type LucideIcon } from "lucide-react"
+import { LayoutGrid, LayoutDashboard, List, CalendarDays, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface OpcaoVisualizacao {
@@ -28,7 +28,12 @@ const opcoesKanbanLista: OpcaoVisualizacao[] = [
   { valor: "lista", titulo: "Visão Lista", icone: List },
 ]
 
-export { opcoesCardLista, opcoesKanbanLista }
+const opcoesListaCalendario: OpcaoVisualizacao[] = [
+  { valor: "lista", titulo: "Visão Lista", icone: List },
+  { valor: "calendario", titulo: "Visão Calendário", icone: CalendarDays },
+]
+
+export { opcoesCardLista, opcoesKanbanLista, opcoesListaCalendario }
 
 export function ToggleVisualizacao({
   rota,

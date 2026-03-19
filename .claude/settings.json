@@ -561,7 +561,16 @@
       "Bash(grep -r UserPlus src --include=*.tsx --include=*.ts)",
       "Bash(grep -r \"usuarios\\\\|gestao_usuarios\\\\|user_management\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/planejamento --include=*.md)",
       "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -name *.md -path */planejamento/*)",
-      "Bash(npx shadcn@latest add scroll-area -y)"
+      "Bash(npx shadcn@latest add scroll-area -y)",
+      "Bash(grep -r \"onborda-acoes-rapidas\\\\|onborda-btn-nova-atividade\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src --include=*.tsx --include=*.ts)",
+      "Bash(grep -n \"UserPlus\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/admin/tabela-usuarios-*.tsx /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/usuarios/tabela-equipe.tsx)",
+      "Bash(grep -r \"ia-imovel\\\\|ia-cliente\\\\|ia-atividade\\\\|ia-negocio\\\\|ia-loteamento\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src --include=*.tsx --include=*.ts)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -name *.gitignore -type f)",
+      "Bash(xargs cat:*)",
+      "Bash(find /c/Users/Lynedesk/Desktop/Tech/LyneImob -type f \\\\\\(-name *.png -o -name *.jpg -o -name *.jpeg -o -name *.gif \\\\\\))",
+      "Bash(grep -n \"onborda-acoes-rapidas\" /c/Users/Lynedesk/Desktop/Tech/LyneImob/src/components/dashboard/*.tsx)",
+      "Bash(grep -E \"failed|passed$\")",
+      "Bash(BASE_URL=http://localhost:3000 npx playwright test tests/e2e/specs/widget-ia.spec.ts --config=tests/e2e/playwright.config.ts --project=sprint11-widget-ia --no-deps --reporter=line)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Lynedesk\\.claude\\projects\\c--Users-Lynedesk-Desktop-Tech-LyneImob",

@@ -85,6 +85,12 @@ export default defineConfig({
       testMatch: /specs\/agente-whatsapp\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'sprint11-widget-ia',
+      testMatch: /specs\/widget-ia\.spec\.ts/,
+      dependencies: ['setup:auth'],
+      use: { ...devices['Desktop Chrome'] },
+    },
 
     // --- Mobile ---
     {

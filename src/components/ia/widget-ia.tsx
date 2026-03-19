@@ -81,7 +81,7 @@ export function WidgetIA() {
           setResultado(null)
         } else {
           if (res.sucesso) toast.success(res.sucesso)
-          setResultado(res.texto ?? res.resumo ?? JSON.stringify(res.dados, null, 2) ?? null)
+          setResultado(res.texto ?? res.resumo ?? (res.dados ? JSON.stringify(res.dados, null, 2) : null))
 
           // Notificar a página para atualizar dados se necessário
           if (entidade.dados.onAtualizar && typeof entidade.dados.onAtualizar === "function") {
@@ -104,6 +104,7 @@ export function WidgetIA() {
         <TooltipTrigger
           render={
             <Button
+              data-testid="widget-ia-botao"
               size="icon"
               className={`fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 ${
                 desabilitado
@@ -124,7 +125,7 @@ export function WidgetIA() {
         >
           <Bot className="h-5 w-5" />
           {temAcoes && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent-blue text-[10px] font-bold text-white">
+            <span data-testid="widget-ia-badge" className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent-blue text-[10px] font-bold text-white">
               {acoes.length}
             </span>
           )}
@@ -132,7 +133,9 @@ export function WidgetIA() {
         <TooltipContent side="left">
           {desabilitado
             ? "Abra um registro para usar a IA"
-            : `${acoes.length} ação${acoes.length > 1 ? "ões" : ""} de IA disponível${acoes.length > 1 ? "eis" : ""}`}
+            : acoes.length === 1
+              ? "1 ação de IA disponível"
+              : `${acoes.length} ações de IA disponíveis`}
         </TooltipContent>
       </Tooltip>
 
@@ -141,6 +144,7 @@ export function WidgetIA() {
         <SheetContent
           side="right"
           className="flex w-[400px] flex-col sm:max-w-[400px]"
+          data-testid="widget-ia-painel"
         >
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">

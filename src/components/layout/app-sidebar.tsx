@@ -48,7 +48,6 @@ type GrupoNavegacao = {
 
 const gruposNavegacao: GrupoNavegacao[] = [
   {
-    titulo: "Gestão",
     itens: [
       { titulo: "Dashboard", href: "/painel", icone: LayoutDashboard },
       { titulo: "Negócios", href: "/negocios", icone: Handshake },
@@ -57,14 +56,12 @@ const gruposNavegacao: GrupoNavegacao[] = [
     ],
   },
   {
-    titulo: "Portfólio",
     itens: [
       { titulo: "Imóveis", href: "/imoveis", icone: Building2 },
       { titulo: "Loteamentos", href: "/loteamentos", icone: MapPin },
     ],
   },
   {
-    titulo: "Sistema",
     itens: [
       { titulo: "Configurações", href: "/configuracoes", icone: Settings, permissao: "ver_configuracoes" },
       { titulo: "Ajuda", href: "/ajuda", icone: HelpCircle },

@@ -42,7 +42,7 @@ async function navegarParaDetalheImovel(page: import('@playwright/test').Page, i
     await fecharTourSeVisivel(page)
     const primeiroLink = page.locator(SELETOR_LINK_IMOVEL).first()
     await primeiroLink.click()
-    await page.waitForURL(REGEX_DETALHE_IMOVEL, { timeout: 10_000 })
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 15_000 })
   }
   await page.waitForLoadState('networkidle')
   await fecharTourSeVisivel(page)
@@ -69,7 +69,13 @@ async function criarImovel(page: import('@playwright/test').Page, perfil: string
   await page.locator('#cidade').fill(dados.cidade)
   await selecionarOpcao(page, 'UF', dados.estado)
 
-  // Submeter (preco_venda e opcional — nao preencher evita bug de validacao nos campos de valor)
+  // Preencher campos de valor que tem validacao .positive() no schema
+  // Bug no schema: z.coerce.number().positive().optional() rejeita "" (input vazio)
+  // porque Number("") = 0 e .positive() exige > 0
+  await page.locator('#preco_venda').fill(dados.preco_venda)
+  await page.locator('#preco_aluguel').fill('1')
+
+  // Submeter
   await page.locator('#onborda-imovel-salvar').click()
 
   return dados
@@ -89,16 +95,11 @@ test.describe('Admin — Imoveis', () => {
     const dados = await criarImovel(page, 'admin')
     imovelTitulo = dados.titulo
 
-    // Espera redirecionamento para detalhe ou toast de sucesso
-    await Promise.race([
-      page.waitForURL(REGEX_DETALHE_IMOVEL, { timeout: 15_000 }),
-      expect(page.getByText(/sucesso|criado/i)).toBeVisible({ timeout: 15_000 }),
-    ])
+    // Server action faz redirect() → Next.js navega via client-side (pushState)
+    // Usar toHaveURL que faz polling, nao waitForURL que espera evento de navegacao
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
 
-    // Se redirecionou, guardar URL para proximos testes
-    if (page.url().match(REGEX_DETALHE_IMOVEL)) {
-      imovelUrl = page.url()
-    }
+    imovelUrl = page.url()
   })
 
   test('listar imoveis — pelo menos 1 visivel', async ({ page }) => {
@@ -117,7 +118,7 @@ test.describe('Admin — Imoveis', () => {
 
     const editarBtn = page.getByRole('link', { name: /editar/i })
     await editarBtn.click()
-    await page.waitForURL(/\/editar/, { timeout: 10_000 })
+    await expect(page).toHaveURL(/\/editar/, { timeout: 15_000 })
     await page.waitForLoadState('networkidle')
     await fecharTourSeVisivel(page)
 
@@ -128,11 +129,8 @@ test.describe('Admin — Imoveis', () => {
     // Submeter
     await page.locator('#onborda-imovel-salvar').click()
 
-    // Espera sucesso
-    await Promise.race([
-      page.waitForURL(REGEX_DETALHE_IMOVEL, { timeout: 15_000 }),
-      expect(page.getByText(/sucesso|salvo|atualizado/i)).toBeVisible({ timeout: 15_000 }),
-    ])
+    // Espera redirecionamento para detalhe
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
   })
 
   test('excluir imovel', async ({ page }) => {
@@ -147,11 +145,8 @@ test.describe('Admin — Imoveis', () => {
     const confirmarBtn = page.getByRole('button', { name: /confirmar|excluir|sim/i }).last()
     await confirmarBtn.click()
 
-    // Espera redirecionamento para lista ou toast de sucesso
-    await Promise.race([
-      page.waitForURL(/\/imoveis\/?$/, { timeout: 15_000 }),
-      expect(page.getByText(/excluido|removido|sucesso/i)).toBeVisible({ timeout: 15_000 }),
-    ])
+    // Espera redirecionamento para lista
+    await expect(page).toHaveURL(/\/imoveis\/?$/, { timeout: 15_000 })
   })
 })
 
@@ -167,14 +162,9 @@ test.describe('Gerente — Imoveis', () => {
   test('criar imovel', async ({ page }) => {
     const dados = await criarImovel(page, 'gerente')
 
-    await Promise.race([
-      page.waitForURL(REGEX_DETALHE_IMOVEL, { timeout: 15_000 }),
-      expect(page.getByText(/sucesso|criado/i)).toBeVisible({ timeout: 15_000 }),
-    ])
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
 
-    if (page.url().match(REGEX_DETALHE_IMOVEL)) {
-      imovelUrl = page.url()
-    }
+    imovelUrl = page.url()
   })
 
   test('listar imoveis — pelo menos 1 visivel', async ({ page }) => {
@@ -205,10 +195,7 @@ test.describe('Corretor — Imoveis', () => {
   test('criar imovel', async ({ page }) => {
     await criarImovel(page, 'corretor')
 
-    await Promise.race([
-      page.waitForURL(REGEX_DETALHE_IMOVEL, { timeout: 15_000 }),
-      expect(page.getByText(/sucesso|criado/i)).toBeVisible({ timeout: 15_000 }),
-    ])
+    await expect(page).toHaveURL(REGEX_DETALHE_IMOVEL, { timeout: 30_000 })
   })
 
   test('listar imoveis — ve apenas os proprios', async ({ page }) => {

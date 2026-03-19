@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/ui/page-header"
 import { KanbanContainer } from "@/components/negocios/kanban-container"
 import { ListaNegocios } from "@/components/negocios/lista-negocios"
+import { ResumoNegocios } from "@/components/negocios/resumo-negocios"
 import { ToggleVisualizacao, opcoesKanbanLista } from "@/components/ui/toggle-visualizacao"
 
 type SearchParams = Promise<{ visao?: string }>
@@ -41,6 +42,8 @@ export default async function NegociosPage({
           </>
         }
       />
+
+      <ResumoNegocios />
 
       <div id="onborda-kanban">
         {visao === "lista" ? <ListaNegocios /> : <KanbanContainer />}
