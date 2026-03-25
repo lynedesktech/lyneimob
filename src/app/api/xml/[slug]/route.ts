@@ -14,28 +14,27 @@ export async function GET(
 
   const supabase = criarClienteAdmin()
 
-  // Buscar organização pelo slug
-  const { data: organizacao, error: erroOrg } = await supabase
-    .from("organizacoes")
+  // Buscar empresa pelo slug
+  const { data: empresa, error: erroEmpresa } = await supabase
+    .from("empresas")
     .select("id, nome, email, telefone, slug")
     .eq("slug", slug)
     .single()
 
-  if (erroOrg || !organizacao) {
+  if (erroEmpresa || !empresa) {
     return NextResponse.json(
       { erro: "Organização não encontrada" },
       { status: 404 }
     )
   }
 
-  // Buscar imóveis publicáveis com fotos
+  // Buscar imóveis disponíveis (sem filtro publicar_portais — não existe no banco)
   const { data: imoveis, error: erroImoveis } = await supabase
     .from("imoveis")
-    .select("*, imovel_fotos(*)")
-    .eq("organizacao_id", organizacao.id)
+    .select("*")
+    .eq("empresa_id", empresa.id)
     .eq("status", "disponivel")
-    .eq("publicar_portais", true)
-    .order("created_at", { ascending: false })
+    .order("criado_em", { ascending: false })
 
   if (erroImoveis) {
     return NextResponse.json(
@@ -46,19 +45,10 @@ export async function GET(
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
-  // Buscar domínio customizado verificado (se existir)
-  const { data: dominio } = await supabase
-    .from("dominios_customizados")
-    .select("dominio")
-    .eq("organizacao_id", organizacao.id)
-    .eq("status", "verificado")
-    .single()
-
   const resultado = gerarFeedXml(
     imoveis || [],
-    organizacao,
-    appUrl,
-    dominio?.dominio
+    empresa,
+    appUrl
   )
 
   return new Response(resultado.xml, {

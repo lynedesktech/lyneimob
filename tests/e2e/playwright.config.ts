@@ -91,6 +91,11 @@ export default defineConfig({
       dependencies: ['setup:auth'],
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'sprint12-portais',
+      testMatch: /specs\/portais\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
 
     // --- Mobile ---
     {

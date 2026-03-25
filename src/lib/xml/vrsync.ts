@@ -1,11 +1,43 @@
-import type { Imovel, ImovelFoto, TipoImovel, FinalidadeImovel } from "@/types/database"
-import { SIGLAS_ESTADOS_BR } from "@/types/imoveis"
+// ============================================================
+// Gerador de Feed XML VRSync para portais imobiliários
+// Adaptado para o schema real do banco (tabela imoveis)
+// ============================================================
+
+// Tipo do imóvel conforme banco real
+interface ImovelBanco {
+  id: string
+  empresa_id: string
+  titulo: string
+  descricao: string | null
+  tipo: string
+  finalidade: string
+  status: string
+  valor: number | null
+  valor_condominio: number | null
+  valor_iptu: number | null
+  area_total: number | null
+  area_construida: number | null
+  quartos: number | null
+  suites: number | null
+  banheiros: number | null
+  vagas: number | null
+  cep: string | null
+  logradouro: string | null
+  numero: string | null
+  complemento: string | null
+  bairro: string | null
+  cidade: string | null
+  estado: string | null
+  codigo_interno: string | null
+  destaque: boolean
+  criado_em: string
+}
 
 // ============================================================
 // Mapeamento de tipos do banco para VRSync
 // ============================================================
 
-const MAPA_TIPO_IMOVEL: Record<TipoImovel, string> = {
+const MAPA_TIPO_IMOVEL: Record<string, string> = {
   apartamento: "Residential / Apartment",
   casa: "Residential / Home",
   terreno: "Residential / Land Lot",
@@ -19,6 +51,12 @@ const MAPA_TIPO_IMOVEL: Record<TipoImovel, string> = {
   outro: "Residential / Home",
 }
 
+const SIGLAS_ESTADOS_BR = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+  "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+]
+
 const MAPA_ESTADO_SIGLA: Record<string, string> = {
   "Acre": "AC", "Alagoas": "AL", "Amapá": "AP", "Amazonas": "AM",
   "Bahia": "BA", "Ceará": "CE", "Distrito Federal": "DF", "Espírito Santo": "ES",
@@ -27,7 +65,6 @@ const MAPA_ESTADO_SIGLA: Record<string, string> = {
   "Pernambuco": "PE", "Piauí": "PI", "Rio de Janeiro": "RJ", "Rio Grande do Norte": "RN",
   "Rio Grande do Sul": "RS", "Rondônia": "RO", "Roraima": "RR", "Santa Catarina": "SC",
   "São Paulo": "SP", "Sergipe": "SE", "Tocantins": "TO",
-  // Aceitar siglas diretamente
   "AC": "AC", "AL": "AL", "AP": "AP", "AM": "AM", "BA": "BA", "CE": "CE",
   "DF": "DF", "ES": "ES", "GO": "GO", "MA": "MA", "MT": "MT", "MS": "MS",
   "MG": "MG", "PA": "PA", "PB": "PB", "PR": "PR", "PE": "PE", "PI": "PI",
@@ -53,50 +90,37 @@ function escapeXml(texto: string | null | undefined): string {
 // Tipo de transação
 // ============================================================
 
-function obterTransactionType(finalidade: FinalidadeImovel): string {
+function obterTransactionType(finalidade: string): string {
   if (finalidade === "aluguel") return "For Rent"
   if (finalidade === "venda_e_aluguel") return "For Sale/Rent"
   return "For Sale"
 }
 
 // ============================================================
-// Validação de elegibilidade para portais (VRSync spec)
+// Validação de elegibilidade para portais
 // ============================================================
 
-type ImovelComFotos = Imovel & { imovel_fotos: ImovelFoto[] }
-
 export function imovelElegivelParaPortal(
-  imovel: ImovelComFotos
+  imovel: ImovelBanco
 ): { elegivel: boolean; motivos: string[] } {
   const motivos: string[] = []
 
   // Estado válido
-  const sigla = MAPA_ESTADO_SIGLA[imovel.estado] || imovel.estado?.toUpperCase()
-  if (!(SIGLAS_ESTADOS_BR as readonly string[]).includes(sigla)) {
+  const sigla = MAPA_ESTADO_SIGLA[imovel.estado || ""] || imovel.estado?.toUpperCase() || ""
+  if (!SIGLAS_ESTADOS_BR.includes(sigla)) {
     motivos.push("Estado inválido ou não preenchido")
   }
 
-  // Pelo menos 1 foto
-  if (!imovel.imovel_fotos || imovel.imovel_fotos.length === 0) {
-    motivos.push("Sem foto (mínimo 1 exigido)")
-  }
-
   // Descrição com mínimo 20 caracteres
-  const descricao = imovel.descricao_ia || imovel.descricao || imovel.titulo || ""
+  const descricao = imovel.descricao || imovel.titulo || ""
   if (descricao.length < 20) {
     motivos.push("Descrição com menos de 20 caracteres")
   }
 
-  // Pelo menos um preço válido conforme finalidade
-  const temPrecoVenda = (imovel.preco_venda ?? 0) > 0
-  const temPrecoAluguel = (imovel.preco_aluguel ?? 0) > 0
-
-  if (imovel.finalidade === "venda" && !temPrecoVenda) {
-    motivos.push("Sem preço de venda")
-  } else if (imovel.finalidade === "aluguel" && !temPrecoAluguel) {
-    motivos.push("Sem preço de aluguel")
-  } else if (imovel.finalidade === "venda_e_aluguel" && !temPrecoVenda && !temPrecoAluguel) {
-    motivos.push("Sem preço de venda nem de aluguel")
+  // Preço válido
+  const temPreco = (imovel.valor ?? 0) > 0
+  if (!temPreco) {
+    motivos.push("Sem preço definido")
   }
 
   // Cidade preenchida
@@ -108,7 +132,7 @@ export function imovelElegivelParaPortal(
 }
 
 // ============================================================
-// Sanitização de campos (limites VRSync)
+// Sanitização
 // ============================================================
 
 function formatarCep(cep: string | null | undefined): string | null {
@@ -126,54 +150,36 @@ function truncar(texto: string, limite: number): string {
 // ============================================================
 
 function gerarListingXml(
-  imovel: ImovelComFotos,
+  imovel: ImovelBanco,
   appUrl: string,
   slug: string,
   contato: { nome: string; email: string; telefone: string },
-  dominioCustomizado?: string
 ): string {
-  const estadoNormalizado = MAPA_ESTADO_SIGLA[imovel.estado] || imovel.estado?.toUpperCase()
-  const siglaEstado = (SIGLAS_ESTADOS_BR as readonly string[]).includes(estadoNormalizado)
+  const estadoNormalizado = MAPA_ESTADO_SIGLA[imovel.estado || ""] || imovel.estado?.toUpperCase() || ""
+  const siglaEstado = SIGLAS_ESTADOS_BR.includes(estadoNormalizado)
     ? estadoNormalizado
     : ""
   const tipoVrsync = MAPA_TIPO_IMOVEL[imovel.tipo] || "Residential / Home"
   const transactionType = obterTransactionType(imovel.finalidade)
 
-  const fotos = imovel.imovel_fotos
-    .sort((a, b) => {
-      if (a.eh_capa && !b.eh_capa) return -1
-      if (!a.eh_capa && b.eh_capa) return 1
-      return a.ordem - b.ordem
-    })
-
-  const fotosXml = fotos
-    .map((foto, i) => {
-      const primary = i === 0 ? ' primary="true"' : ""
-      const caption = foto.descricao ? ` caption="${escapeXml(foto.descricao)}"` : ""
-      return `        <Item medium="image"${primary}${caption}>${escapeXml(foto.url)}</Item>`
-    })
-    .join("\n")
-
-  const descricaoRaw = imovel.descricao_ia || imovel.descricao || imovel.titulo || ""
+  const descricaoRaw = imovel.descricao || imovel.titulo || ""
   const descricao = truncar(descricaoRaw, 5000)
-  const titulo = truncar(escapeXml(imovel.titulo_ia || imovel.titulo), 100)
+  const titulo = truncar(escapeXml(imovel.titulo), 100)
   const cepFormatado = formatarCep(imovel.cep)
+  const codigoId = imovel.codigo_interno || imovel.id
 
-  // Preços condicionais — só emitir tags com valor > 0
-  const precoVenda = imovel.preco_venda ?? 0
-  const precoAluguel = imovel.preco_aluguel ?? 0
-  const tagPrecoVenda = precoVenda > 0
-    ? `        <ListPrice currency="BRL">${precoVenda}</ListPrice>`
-    : ""
-  const tagPrecoAluguel = precoAluguel > 0
-    ? `        <RentalPrice currency="BRL" period="Monthly">${precoAluguel}</RentalPrice>`
+  // Preço — o banco tem um campo `valor` único
+  const tagPreco = (imovel.valor ?? 0) > 0
+    ? (imovel.finalidade === "aluguel"
+        ? `        <RentalPrice currency="BRL" period="Monthly">${imovel.valor}</RentalPrice>`
+        : `        <ListPrice currency="BRL">${imovel.valor}</ListPrice>`)
     : ""
 
   return `    <Listing>
-      <ListingID>${escapeXml(imovel.codigo)}</ListingID>
+      <ListingID>${escapeXml(codigoId)}</ListingID>
       <TransactionType>${transactionType}</TransactionType>
       <Title>${titulo}</Title>
-      <DetailViewUrl>${dominioCustomizado ? `https://${escapeXml(dominioCustomizado)}` : `${escapeXml(appUrl)}/${escapeXml(slug)}`}/imoveis/${imovel.id}</DetailViewUrl>
+      <DetailViewUrl>${escapeXml(appUrl)}/${escapeXml(slug)}/imoveis/${imovel.id}</DetailViewUrl>
 
       <Location>
         <Country abbreviation="BR">Brasil</Country>
@@ -187,20 +193,16 @@ function gerarListingXml(
       <Details>
         <PropertyType>${tipoVrsync}</PropertyType>
         <Description><![CDATA[${descricao}]]></Description>
-${tagPrecoVenda}${tagPrecoVenda && tagPrecoAluguel ? "\n" : ""}${tagPrecoAluguel}
-        <PropertyAdministrationFee currency="BRL">${imovel.condominio || 0}</PropertyAdministrationFee>
-        <YearlyTax currency="BRL">${imovel.iptu || 0}</YearlyTax>
+${tagPreco}
+        <PropertyAdministrationFee currency="BRL">${imovel.valor_condominio || 0}</PropertyAdministrationFee>
+        <YearlyTax currency="BRL">${imovel.valor_iptu || 0}</YearlyTax>
         <LivingArea unit="square metres">${imovel.area_construida || imovel.area_total || 0}</LivingArea>
         <LotArea unit="square metres">${imovel.area_total || 0}</LotArea>
-        <Bedrooms>${imovel.quartos}</Bedrooms>
-        <Bathrooms>${imovel.banheiros}</Bathrooms>
-        <Suites>${imovel.suites}</Suites>
-        <Garage type="Parking Space">${imovel.vagas_garagem}</Garage>
+        <Bedrooms>${imovel.quartos || 0}</Bedrooms>
+        <Bathrooms>${imovel.banheiros || 0}</Bathrooms>
+        <Suites>${imovel.suites || 0}</Suites>
+        <Garage type="Parking Space">${imovel.vagas || 0}</Garage>
       </Details>
-
-      <Media>
-${fotosXml}
-      </Media>
 
       <ContactInfo>
         <Name>${escapeXml(contato.nome)}</Name>
@@ -231,21 +233,20 @@ export interface ResultadoFeedXml {
 // ============================================================
 
 export function gerarFeedXml(
-  imoveis: ImovelComFotos[],
-  organizacao: { nome: string; email: string | null; telefone: string | null; slug: string },
+  imoveis: ImovelBanco[],
+  empresa: { nome: string; email: string | null; telefone: string | null; slug: string },
   appUrl: string,
-  dominioCustomizado?: string
 ): ResultadoFeedXml {
   const dataPublicacao = new Date().toISOString()
 
   const contato = {
-    nome: organizacao.nome,
-    email: organizacao.email || "",
-    telefone: organizacao.telefone || "",
+    nome: empresa.nome,
+    email: empresa.email || "",
+    telefone: empresa.telefone || "",
   }
 
   // Filtrar imóveis elegíveis para portais
-  const elegiveis: ImovelComFotos[] = []
+  const elegiveis: ImovelBanco[] = []
   const excluidos: ImovelExcluidoFeed[] = []
 
   for (const imovel of imoveis) {
@@ -254,7 +255,7 @@ export function gerarFeedXml(
       elegiveis.push(imovel)
     } else {
       excluidos.push({
-        codigo: imovel.codigo,
+        codigo: imovel.codigo_interno || imovel.id,
         titulo: imovel.titulo,
         motivos: resultado.motivos,
       })
@@ -262,7 +263,7 @@ export function gerarFeedXml(
   }
 
   const listingsXml = elegiveis
-    .map((imovel) => gerarListingXml(imovel, appUrl, organizacao.slug, contato, dominioCustomizado))
+    .map((imovel) => gerarListingXml(imovel, appUrl, empresa.slug, contato))
     .join("\n")
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -272,9 +273,9 @@ export function gerarFeedXml(
 
   <Header>
     <Provider>LyneImob</Provider>
-    <Email>${escapeXml(organizacao.email)}</Email>
-    <ContactName>${escapeXml(organizacao.nome)}</ContactName>
-    <Telephone>${escapeXml(organizacao.telefone)}</Telephone>
+    <Email>${escapeXml(empresa.email)}</Email>
+    <ContactName>${escapeXml(empresa.nome)}</ContactName>
+    <Telephone>${escapeXml(empresa.telefone)}</Telephone>
     <PublishDate>${dataPublicacao}</PublishDate>
   </Header>
 

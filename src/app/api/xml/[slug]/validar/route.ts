@@ -14,13 +14,13 @@ export async function GET(
 
   const supabase = criarClienteAdmin()
 
-  const { data: organizacao, error: erroOrg } = await supabase
-    .from("organizacoes")
+  const { data: empresa, error: erroEmpresa } = await supabase
+    .from("empresas")
     .select("id, nome, email, telefone, slug")
     .eq("slug", slug)
     .single()
 
-  if (erroOrg || !organizacao) {
+  if (erroEmpresa || !empresa) {
     return NextResponse.json(
       { erro: "Organização não encontrada" },
       { status: 404 }
@@ -29,11 +29,10 @@ export async function GET(
 
   const { data: imoveis, error: erroImoveis } = await supabase
     .from("imoveis")
-    .select("*, imovel_fotos(*)")
-    .eq("organizacao_id", organizacao.id)
+    .select("*")
+    .eq("empresa_id", empresa.id)
     .eq("status", "disponivel")
-    .eq("publicar_portais", true)
-    .order("created_at", { ascending: false })
+    .order("criado_em", { ascending: false })
 
   if (erroImoveis) {
     return NextResponse.json(
@@ -46,7 +45,7 @@ export async function GET(
 
   const resultado = gerarFeedXml(
     imoveis || [],
-    organizacao,
+    empresa,
     appUrl
   )
 
