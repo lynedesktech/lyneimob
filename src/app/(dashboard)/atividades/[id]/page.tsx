@@ -39,7 +39,7 @@ export default async function DetalheAtividadePage({ params }: Props) {
   const { data: atividade, error } = await supabase
     .from("atividades")
     .select(
-      "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status), usuarios(id, nome)"
+      "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status)"
     )
     .eq("id", id)
     .single()
@@ -50,14 +50,14 @@ export default async function DetalheAtividadePage({ params }: Props) {
   const Icone = iconesTipo[a.tipo] || MoreHorizontal
 
   const estaAtrasada =
-    a.status === "pendente" && new Date(a.data_inicio) < new Date()
+    a.status === "pendente" && a.data_fim && new Date(a.data_fim) < new Date()
 
   return (
     <div className="space-y-6">
       <DefinirContextoIA
         modulo="atividade"
         entidadeId={id}
-        dados={{ status: a.status, briefing_ia: a.briefing_ia, sugestao_ia: a.sugestao_ia }}
+        dados={{ status: a.status }}
       />
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -126,13 +126,8 @@ export default async function DetalheAtividadePage({ params }: Props) {
                 <div>
                   <p className="text-xs text-muted-foreground">Data/Hora</p>
                   <p className="text-sm font-medium">
-                    {formatarDataHora(a.data_inicio)}
+                    {a.data_inicio ? formatarDataHora(a.data_inicio) : "—"}
                   </p>
-                  {a.data_fim && (
-                    <p className="text-xs text-muted-foreground">
-                      até {formatarDataHora(a.data_fim)}
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -202,11 +197,6 @@ export default async function DetalheAtividadePage({ params }: Props) {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Responsável</span>
-                <span>{a.usuarios?.nome || "—"}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
                 <span className="text-muted-foreground">Criado em</span>
                 <span>{formatarData(a.created_at)}</span>
               </div>
@@ -221,34 +211,12 @@ export default async function DetalheAtividadePage({ params }: Props) {
                   </div>
                 </>
               )}
-              {a.lembrete && (
-                <>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Lembrete</span>
-                    <span>{formatarDataHora(a.lembrete)}</span>
-                  </div>
-                </>
-              )}
               {a.descricao && (
                 <>
                   <Separator />
                   <div>
                     <span className="text-muted-foreground">Descrição</span>
                     <p className="mt-1 whitespace-pre-wrap">{a.descricao}</p>
-                  </div>
-                </>
-              )}
-              {a.notas_pos_atividade && (
-                <>
-                  <Separator />
-                  <div>
-                    <span className="text-muted-foreground">
-                      Notas pós-atividade
-                    </span>
-                    <p className="mt-1 whitespace-pre-wrap">
-                      {a.notas_pos_atividade}
-                    </p>
                   </div>
                 </>
               )}

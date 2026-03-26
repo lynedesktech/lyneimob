@@ -20,7 +20,7 @@ import {
   configStatusAtividade,
 } from "@/lib/constantes/status-configs"
 import { useBuscaGlobal } from "@/hooks/use-busca-global"
-import { formatarPreco, formatarDataCurta } from "@/lib/formatadores"
+import { formatarPreco, formatarDataCurta, formatarTelefone } from "@/lib/formatadores"
 import { labelsTipoImovel } from "@/lib/constantes/imoveis"
 import {
   Search,
@@ -311,7 +311,7 @@ export function DialogBuscaGlobal() {
                         <span className="block truncate font-medium">{cliente.nome}</span>
                         {(cliente.email || cliente.telefone) && (
                           <span className="block truncate text-xs text-muted-foreground">
-                            {cliente.email || cliente.telefone}
+                            {cliente.email || formatarTelefone(cliente.telefone)}
                           </span>
                         )}
                       </span>

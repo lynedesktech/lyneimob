@@ -42,11 +42,11 @@ export default async function ImoveisPage({
 
   let query = supabase
     .from("imoveis")
-    .select("*, imovel_fotos(url, eh_capa)", { count: "exact" })
+    .select("*", { count: "exact" })
 
   if (params.busca) {
     query = query.or(
-      `titulo.ilike.%${params.busca}%,codigo.ilike.%${params.busca}%,bairro.ilike.%${params.busca}%`
+      `titulo.ilike.%${params.busca}%,codigo_interno.ilike.%${params.busca}%,bairro.ilike.%${params.busca}%`
     )
   }
   if (params.tipo) query = query.eq("tipo", params.tipo)
@@ -59,7 +59,7 @@ export default async function ImoveisPage({
   if (params.canal === "nenhum") query = query.eq("publicar_site", false).eq("publicar_portais", false)
 
   const { data: imoveis, count } = await query
-    .order("created_at", { ascending: false })
+    .order("criado_em", { ascending: false })
     .range(inicio, fim)
 
   const total = count ?? 0

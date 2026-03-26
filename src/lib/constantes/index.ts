@@ -7,6 +7,7 @@ export {
   STATUS_CLIENTE,
   TIPOS_INTERACAO,
   TIPOS_NEGOCIO,
+  ETAPAS_NEGOCIO,
   STATUS_NEGOCIO,
   STATUS_ATIVIDADE,
   PRIORIDADES_ATIVIDADE,
@@ -41,6 +42,7 @@ export {
 export {
   labelsTipoNegocio,
   labelsStatusNegocio,
+  labelsEtapaNegocio,
 } from "./negocios"
 
 export {

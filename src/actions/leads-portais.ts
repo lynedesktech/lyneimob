@@ -38,7 +38,7 @@ export async function processarLead(leadId: string): Promise<EstadoFormulario> {
     return { erro: "Este lead já foi processado" }
   }
 
-  const empresaId = usuario.organizacao_id || lead.empresa_id
+  const orgId = usuario.organizacao_id
   const nomePortal = lead.integracoes_portais?.nome_portal || "Portal"
 
   // 2. Verificar duplicidade por email ou telefone
@@ -75,15 +75,16 @@ export async function processarLead(leadId: string): Promise<EstadoFormulario> {
     const { data: novoCliente, error: erroCliente } = await supabase
       .from("clientes")
       .insert({
-        empresa_id: empresaId,
+        organizacao_id: orgId,
+        corretor_id: usuario.id,
         nome: lead.nome || "Lead sem nome",
         email: lead.email,
         telefone: lead.telefone,
         whatsapp: lead.telefone,
         origem: "portal",
-        interesse: "compra",
+        tipo: "comprador",
         status: "ativo",
-        notas: lead.mensagem
+        observacoes: lead.mensagem
           ? `Lead do ${nomePortal}: ${lead.mensagem}`
           : `Lead recebido do ${nomePortal}`,
       })
@@ -102,16 +103,31 @@ export async function processarLead(leadId: string): Promise<EstadoFormulario> {
     ? `Lead ${nomePortal} — ${lead.nome}`
     : `Lead ${nomePortal}`
 
+  // Buscar primeira etapa normal do pipeline
+  const { data: primeiraEtapa } = await supabase
+    .from("pipeline_etapas")
+    .select("id")
+    .eq("organizacao_id", orgId)
+    .eq("tipo", "normal")
+    .order("ordem", { ascending: true })
+    .limit(1)
+    .single()
+
+  if (!primeiraEtapa) {
+    return { erro: "Nenhuma etapa encontrada no pipeline" }
+  }
+
   const { data: negocio, error: erroNegocio } = await supabase
     .from("negocios")
     .insert({
-      empresa_id: empresaId,
-      responsavel_id: usuario.id,
+      organizacao_id: orgId,
+      corretor_id: usuario.id,
       cliente_id: clienteId,
       titulo: tituloNegocio,
       tipo: "venda",
-      etapa: "novo",
-      notas: lead.mensagem || null,
+      etapa_id: primeiraEtapa.id,
+      status: "aberto",
+      observacoes: lead.mensagem || null,
     })
     .select("id")
     .single()

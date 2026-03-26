@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { InputTelefone } from "@/components/ui/input-telefone"
 import {
   Card,
   CardContent,
@@ -178,7 +179,7 @@ export function FormularioMeuPerfil({ perfil }: { perfil: DadosPerfil }) {
               {/* Telefone */}
               <div className="space-y-2">
                 <Label htmlFor="telefone">Telefone</Label>
-                <Input
+                <InputTelefone
                   id="telefone"
                   name="telefone"
                   defaultValue={perfil.telefone ?? ""}

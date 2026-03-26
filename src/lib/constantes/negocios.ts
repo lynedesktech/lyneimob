@@ -8,3 +8,13 @@ export const labelsStatusNegocio: Record<string, string> = {
   ganho: "Ganho",
   perdido: "Perdido",
 }
+
+export const labelsEtapaNegocio: Record<string, string> = {
+  novo: "Novo",
+  contato: "Contato",
+  visita: "Visita",
+  proposta: "Proposta",
+  negociacao: "Negociação",
+  ganho: "Ganho",
+  perdido: "Perdido",
+}

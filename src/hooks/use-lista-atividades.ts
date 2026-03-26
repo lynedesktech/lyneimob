@@ -18,7 +18,7 @@ export function useListaAtividades(filtros: FiltrosAtividadesInput) {
       let query = supabase
         .from("atividades")
         .select(
-          "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status), usuarios(id, nome)",
+          "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status)",
           { count: "exact" }
         )
 
@@ -32,14 +32,14 @@ export function useListaAtividades(filtros: FiltrosAtividadesInput) {
       if (filtros.prioridade) {
         query = query.eq("prioridade", filtros.prioridade)
       }
-      if (filtros.usuario_id) {
-        query = query.eq("usuario_id", filtros.usuario_id)
+      if (filtros.responsavel_id) {
+        query = query.eq("usuario_id", filtros.responsavel_id)
       }
-      if (filtros.data_inicio) {
-        query = query.gte("data_inicio", filtros.data_inicio)
+      if (filtros.data_vencimento_inicio) {
+        query = query.gte("data_inicio", filtros.data_vencimento_inicio)
       }
-      if (filtros.data_fim) {
-        query = query.lte("data_inicio", filtros.data_fim)
+      if (filtros.data_vencimento_fim) {
+        query = query.lte("data_inicio", filtros.data_vencimento_fim)
       }
 
       // Paginação

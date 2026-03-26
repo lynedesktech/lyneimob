@@ -10,7 +10,7 @@ interface FiltrosCalendario {
   tipo?: string
   status?: string
   prioridade?: string
-  usuario_id?: string
+  responsavel_id?: string
 }
 
 export function useAtividadesCalendario(filtros: FiltrosCalendario) {
@@ -22,7 +22,7 @@ export function useAtividadesCalendario(filtros: FiltrosCalendario) {
       let query = supabase
         .from("atividades")
         .select(
-          "*, clientes(id, nome), imoveis(id, titulo), negocios(id, titulo), usuarios(id, nome)"
+          "*, clientes(id, nome), imoveis(id, titulo), negocios(id, titulo)"
         )
         .gte("data_inicio", filtros.dataInicio)
         .lte("data_inicio", filtros.dataFim)
@@ -36,8 +36,8 @@ export function useAtividadesCalendario(filtros: FiltrosCalendario) {
       if (filtros.prioridade) {
         query = query.eq("prioridade", filtros.prioridade)
       }
-      if (filtros.usuario_id) {
-        query = query.eq("usuario_id", filtros.usuario_id)
+      if (filtros.responsavel_id) {
+        query = query.eq("usuario_id", filtros.responsavel_id)
       }
 
       query = query.order("data_inicio", { ascending: true })

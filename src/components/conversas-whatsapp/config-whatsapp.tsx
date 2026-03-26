@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect, useState, useTransition } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -70,10 +70,12 @@ export function ConfigWhatsapp() {
   const [horario, setHorario] = useState<Record<string, ConfigDia>>(HORARIO_VAZIO)
   const [corretorId, setCorretorId] = useState("")
 
-  const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
+  const [estado, formAction] = useActionState<EstadoFormulario, FormData>(
     actionWrapper,
     {}
   )
+  const [transitando, iniciarTransicao] = useTransition()
+  const pendente = transitando
 
   // Sincroniza estado com config carregada
   useEffect(() => {
@@ -134,7 +136,9 @@ export function ConfigWhatsapp() {
             formData.set("horario_atendimento", serializarHorario())
             formData.set("ativo", String(ativo))
             if (corretorId) formData.set("corretor_padrao_id", corretorId)
-            return formAction(formData)
+            iniciarTransicao(() => {
+              formAction(formData)
+            })
           }}
           className="space-y-6"
         >

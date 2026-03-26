@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect, useState, useTransition } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -71,7 +71,9 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
   })
 
   const [statusValue, setStatusValue] = useState(loteamento?.status ?? "em_vendas")
-  const [retorno, formAction, pendente] = useActionState(action, {})
+  const [retorno, formAction] = useActionState(action, {})
+  const [transitando, iniciarTransicao] = useTransition()
+  const pendente = transitando
 
   useEffect(() => {
     if (retorno.erro) toast.error(retorno.erro)
@@ -92,7 +94,9 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
     if (dados.observacoes_internas) formData.set("observacoes_internas", dados.observacoes_internas)
     formData.set("publicar_site", dados.publicar_site ? "on" : "")
     if (editando) formData.set("status", statusValue)
-    formAction(formData)
+    iniciarTransicao(() => {
+      formAction(formData)
+    })
   }
 
   return (

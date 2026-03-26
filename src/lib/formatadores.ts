@@ -57,3 +57,29 @@ export function formatarDataHoraCurta(data: string): string {
     minute: "2-digit",
   }).format(new Date(data))
 }
+
+/** Formata dígitos como CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00). */
+export function formatarCpfCnpj(valor: string | null | undefined): string {
+  if (!valor) return ""
+  const digitos = valor.replace(/\D/g, "")
+  if (digitos.length === 11) {
+    return digitos.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+  }
+  if (digitos.length === 14) {
+    return digitos.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")
+  }
+  return valor
+}
+
+/** Formata dígitos como telefone brasileiro: (00) 0000-0000 ou (00) 00000-0000. */
+export function formatarTelefone(valor: string | null | undefined): string {
+  if (!valor) return ""
+  const digitos = valor.replace(/\D/g, "")
+  if (digitos.length === 10) {
+    return digitos.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3")
+  }
+  if (digitos.length === 11) {
+    return digitos.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
+  }
+  return valor
+}

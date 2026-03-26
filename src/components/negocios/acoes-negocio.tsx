@@ -4,9 +4,9 @@ import { useActionState, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { ganharNegocio, perderNegocio, reabrirNegocio } from "@/actions/negocios"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { InputMonetario } from "@/components/ui/input-monetario"
 import {
   Dialog,
   DialogContent,
@@ -56,14 +56,14 @@ function BotaoGanhar({
   valorAtual: number | null
 }) {
   const [aberto, setAberto] = useState(false)
-  const [valor, setValor] = useState(valorAtual?.toString() || "")
+  const [valor, setValor] = useState<number | null>(valorAtual)
   const [salvando, setSalvando] = useState(false)
 
   async function handleGanhar() {
     setSalvando(true)
     const resultado = await ganharNegocio(
       negocioId,
-      valor ? Number(valor) : undefined
+      valor ?? undefined
     )
     setSalvando(false)
     if (resultado.erro) {
@@ -92,14 +92,11 @@ function BotaoGanhar({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="valor-final">Valor Final (R$)</Label>
-          <Input
+          <Label htmlFor="valor-final">Valor Final</Label>
+          <InputMonetario
             id="valor-final"
-            type="number"
-            step="0.01"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            placeholder="Valor do negócio fechado"
+            valor={valor}
+            onValorChange={setValor}
           />
         </div>
         <DialogFooter>

@@ -20,12 +20,12 @@ export function useListaImoveis(filtros: FiltrosImoveisInput) {
     queryFn: async () => {
       let query = supabase
         .from("imoveis")
-        .select("*, imovel_fotos(url, eh_capa)", { count: "exact" })
+        .select("*", { count: "exact" })
 
       // Filtros dinâmicos
       if (filtros.busca) {
         query = query.or(
-          `titulo.ilike.%${filtros.busca}%,codigo.ilike.%${filtros.busca}%,bairro.ilike.%${filtros.busca}%`
+          `titulo.ilike.%${filtros.busca}%,codigo_interno.ilike.%${filtros.busca}%,bairro.ilike.%${filtros.busca}%`
         )
       }
       if (filtros.tipo) {
@@ -44,10 +44,10 @@ export function useListaImoveis(filtros: FiltrosImoveisInput) {
         query = query.ilike("bairro", `%${filtros.bairro}%`)
       }
       if (filtros.preco_min) {
-        query = query.gte("preco_venda", filtros.preco_min)
+        query = query.gte("valor", filtros.preco_min)
       }
       if (filtros.preco_max) {
-        query = query.lte("preco_venda", filtros.preco_max)
+        query = query.lte("valor", filtros.preco_max)
       }
       if (filtros.quartos_min) {
         query = query.gte("quartos", filtros.quartos_min)
@@ -58,7 +58,7 @@ export function useListaImoveis(filtros: FiltrosImoveisInput) {
       const fim = inicio + filtros.por_pagina - 1
 
       query = query
-        .order("created_at", { ascending: false })
+        .order("criado_em", { ascending: false })
         .range(inicio, fim)
 
       const { data, error, count } = await query

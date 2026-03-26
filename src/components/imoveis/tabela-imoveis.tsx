@@ -26,11 +26,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { labelsTipoImovel } from "@/lib/constantes"
 import { formatarPreco } from "@/lib/formatadores"
-import type { Imovel, ImovelFoto } from "@/types/database"
-
-type ImovelComCapa = Imovel & {
-  imovel_fotos: Pick<ImovelFoto, "url" | "eh_capa">[]
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ImovelRow = Record<string, any>
 
 type ColunasVisiveis = {
   finalidade: boolean
@@ -52,7 +49,7 @@ const labelsFinalidade: Record<string, string> = {
   venda_aluguel: "Venda e Aluguel",
 }
 
-export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelComCapa[]; total?: number }) {
+export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelRow[]; total?: number }) {
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [colunas, setColunas] = useState<ColunasVisiveis>(colunasPadrao)
 
@@ -154,8 +151,7 @@ export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelComCapa[]
           <TableBody>
             {imoveis.map((imovel) => {
               const selecionado = selecionados.has(imovel.id)
-              const preco =
-                imovel.finalidade === "aluguel" ? imovel.preco_aluguel : imovel.preco_venda
+              const preco = imovel.valor as number | null
 
               return (
                 <TableRow
@@ -171,7 +167,7 @@ export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelComCapa[]
                     />
                   </TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs">
-                    {imovel.codigo}
+                    {imovel.codigo_interno}
                   </TableCell>
                   <TableCell>
                     <Link

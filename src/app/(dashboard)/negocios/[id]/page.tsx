@@ -10,7 +10,6 @@ import {
   Pencil,
   User,
   Building2,
-  MapPin,
   Calendar,
   DollarSign,
   ArrowLeft,
@@ -20,8 +19,6 @@ import {
 } from "lucide-react"
 import { labelsTipoNegocio } from "@/lib/constantes"
 import { formatarPreco, formatarData } from "@/lib/formatadores"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { configStatusNegocio } from "@/lib/constantes/status-configs"
 import { AcoesNegocio } from "@/components/negocios/acoes-negocio"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { excluirNegocio } from "@/actions/negocios"
@@ -42,7 +39,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
   const { data: negocio, error } = await supabase
     .from("negocios")
     .select(
-      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), lotes(id, quadra, numero_lote, unidade, valor, loteamento_id, loteamentos(id, nome)), usuarios(id, nome), pipeline_etapas(*)"
+      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), usuarios(id, nome), pipeline_etapas(id, nome, cor, icone, tipo, ordem)"
     )
     .eq("id", id)
     .single()
@@ -59,7 +56,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
       <DefinirContextoIA
         modulo="negocio"
         entidadeId={id}
-        dados={{ status: n.status, analise_ia: n.analise_ia, sugestao_ia: n.sugestao_ia }}
+        dados={{ etapa: n.pipeline_etapas?.nome ?? "—" }}
       />
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -72,9 +69,12 @@ export default async function DetalheNegocioPage({ params }: Props) {
           </div>
           <h1 className="text-2xl font-bold tracking-tight">{n.titulo}</h1>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={n.status} config={configStatusNegocio} />
             {n.pipeline_etapas && (
-              <Badge variant="outline" style={{ borderColor: n.pipeline_etapas.cor }}>
+              <Badge variant="outline" className="gap-1.5">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: n.pipeline_etapas.cor }}
+                />
                 {n.pipeline_etapas.nome}
               </Badge>
             )}
@@ -113,12 +113,12 @@ export default async function DetalheNegocioPage({ params }: Props) {
             {/* Coluna principal (esquerda) */}
             <div className="space-y-4 lg:col-span-2">
 
-              {/* Sugestão de próxima ação (apenas negócios abertos) */}
+              {/* Sugestão de próxima ação (apenas negócios em andamento) */}
               {n.status === "aberto" && (
                 <CardSugestaoAcao
                   negocioId={n.id}
-                  sugestaoIA={n.sugestao_ia}
-                  sugestaoResumo={n.sugestao_ia_resumo}
+                  sugestaoIA={null}
+                  sugestaoResumo={null}
                 />
               )}
 
@@ -203,7 +203,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
                     <p className="text-xs text-muted-foreground">Corretor</p>
                     <div className="flex items-center gap-1.5">
                       <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="font-medium">{n.usuarios?.nome || "—"}</span>
+                      <span className="font-medium">{n.usuarios?.nome ?? "—"}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -229,29 +229,6 @@ export default async function DetalheNegocioPage({ params }: Props) {
                 </Card>
               )}
 
-              {/* Card Lote */}
-              {n.lotes && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                      <MapPin className="h-4 w-4" />
-                      Lote vinculado
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1 text-sm">
-                    <Link
-                      href={`/loteamentos/${n.lotes.loteamento_id}`}
-                      className="font-medium hover:underline"
-                    >
-                      {n.lotes.loteamentos?.nome}
-                    </Link>
-                    <p className="text-muted-foreground">
-                      Quadra {n.lotes.quadra}, Lote {n.lotes.numero_lote}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* Card Datas */}
               <Card>
                 <CardHeader className="pb-2">
@@ -271,24 +248,6 @@ export default async function DetalheNegocioPage({ params }: Props) {
                     <p className="text-xs text-muted-foreground">Criado em</p>
                     <p className="font-medium">{formatarData(n.created_at)}</p>
                   </div>
-                  {n.data_ganho && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Data do ganho</p>
-                        <p className="font-medium text-success">{formatarData(n.data_ganho)}</p>
-                      </div>
-                    </>
-                  )}
-                  {n.data_perda && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Data da perda</p>
-                        <p className="font-medium text-destructive">{formatarData(n.data_perda)}</p>
-                      </div>
-                    </>
-                  )}
                 </CardContent>
               </Card>
             </div>

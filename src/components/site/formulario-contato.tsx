@@ -5,6 +5,7 @@ import { enviarContatoSite } from "@/actions/site-contato"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { InputTelefone } from "@/components/ui/input-telefone"
 import { Button } from "@/components/ui/button"
 import { Send, CheckCircle2, AlertCircle } from "lucide-react"
 import type { EstadoFormulario } from "@/types/formulario"
@@ -71,10 +72,9 @@ export function FormularioContato({ organizacaoSlug, imovelCodigo }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="telefone">Telefone</Label>
-          <Input
+          <InputTelefone
             id="telefone"
             name="telefone"
-            type="tel"
             placeholder="(11) 99999-9999"
           />
         </div>

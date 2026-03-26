@@ -9,9 +9,9 @@ import { GripVertical, User, Building2, MapPin, Calendar, Lightbulb, ExternalLin
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { InputMonetario } from "@/components/ui/input-monetario"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -253,12 +253,12 @@ function DialogGanho({
   open: boolean
   onOpenChange: (v: boolean) => void
 }) {
-  const [valor, setValor] = useState(valorAtual?.toString() ?? "")
+  const [valor, setValor] = useState<number | null>(valorAtual)
   const [salvando, setSalvando] = useState(false)
 
   async function handleGanhar() {
     setSalvando(true)
-    const resultado = await ganharNegocio(negocioId, valor ? Number(valor) : undefined)
+    const resultado = await ganharNegocio(negocioId, valor ?? undefined)
     setSalvando(false)
     if (resultado.erro) {
       toast.error(resultado.erro)
@@ -276,14 +276,11 @@ function DialogGanho({
           <DialogDescription>Confirme o valor final do negócio.</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="valor-final-ctx">Valor Final (R$)</Label>
-          <Input
+          <Label htmlFor="valor-final-ctx">Valor Final</Label>
+          <InputMonetario
             id="valor-final-ctx"
-            type="number"
-            step="0.01"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            placeholder="Valor do negócio fechado"
+            valor={valor}
+            onValorChange={setValor}
           />
         </div>
         <DialogFooter>

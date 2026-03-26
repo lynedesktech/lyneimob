@@ -1,7 +1,7 @@
 "use client"
 
-import { useActionState, useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { useActionState, useEffect, useTransition } from "react"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Save, Building2, Phone, Mail, MapPin, FileText } from "lucide-react"
@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { InputTelefone } from "@/components/ui/input-telefone"
 import { salvarConfiguracoesOrganizacao } from "@/actions/configuracoes-organizacao"
 import { toast } from "sonner"
 
@@ -64,6 +65,7 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<FormConfigOrg>({
     resolver: zodResolver(schemaConfigOrg),
@@ -82,10 +84,12 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
     },
   })
 
-  const [estado, formAction, pendente] = useActionState(
+  const [estado, formAction] = useActionState(
     salvarConfiguracoesOrganizacao,
     {}
   )
+  const [transitando, iniciarTransicao] = useTransition()
+  const pendente = transitando
 
   useEffect(() => {
     if (estado.sucesso) toast.success(estado.sucesso)
@@ -95,7 +99,9 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
   function onSubmit(dados: FormConfigOrg) {
     const formData = new FormData()
     formData.set("dados", JSON.stringify(dados))
-    formAction(formData)
+    iniciarTransicao(() => {
+      formAction(formData)
+    })
   }
 
   return (
@@ -133,7 +139,18 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
                   <Phone className="mr-1.5 inline h-3.5 w-3.5" />
                   Telefone
                 </FieldLabel>
-                <Input id="telefone" {...register("telefone")} placeholder="(11) 99999-9999" />
+                <Controller
+                  name="telefone"
+                  control={control}
+                  render={({ field }) => (
+                    <InputTelefone
+                      id="telefone"
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="(11) 99999-9999"
+                    />
+                  )}
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="email">

@@ -204,6 +204,10 @@ export type PipelineEtapa = {
   updated_at: string
 }
 
+export type EtapaComNegocios = PipelineEtapa & {
+  negocios: NegocioComRelacoes[]
+}
+
 export type Negocio = {
   id: string
   organizacao_id: string
@@ -221,10 +225,8 @@ export type Negocio = {
   motivo_perda: string | null
   posicao: number
   observacoes: string | null
-  lote_id: string | null
   analise_ia: string | null
   sugestao_ia: string | null
-  sugestao_ia_resumo: string | null
   created_at: string
   updated_at: string
 }
@@ -232,13 +234,10 @@ export type Negocio = {
 export type NegocioComRelacoes = Negocio & {
   clientes: { id: string; nome: string; telefone: string | null; email: string | null } | null
   imoveis: { id: string; titulo: string; codigo: string; tipo: TipoImovel } | null
-  lotes: { id: string; quadra: string; numero_lote: string; unidade: string; valor: number; loteamento_id: string; loteamentos?: { id: string; nome: string } | null } | null
+  lotes?: { id: string; quadra: string; numero_lote: string; unidade: string | null; valor: number | null; loteamento_id: string; loteamentos: { id: string; nome: string } | null } | null
   usuarios: { id: string; nome: string } | null
-  pipeline_etapas?: PipelineEtapa | null
-}
-
-export type EtapaComNegocios = PipelineEtapa & {
-  negocios: NegocioComRelacoes[]
+  pipeline_etapas: { id: string; nome: string; cor: string; icone: string; tipo: TipoEtapa; ordem: number } | null
+  sugestao_ia_resumo?: string | null
 }
 
 // ============================================================

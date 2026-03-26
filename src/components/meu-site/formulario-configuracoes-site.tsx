@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState, useEffect } from "react"
+import { useActionState, useState, useEffect, useTransition } from "react"
 import { ExternalLink, Globe, Palette, Type, Info, Save, RotateCcw, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +33,9 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
   const [logoUrl, setLogoUrl] = useState<string | null>(organizacao.logo_url || null)
 
   // Action para salvar
-  const [estado, formAction, pendente] = useActionState(salvarConfiguracoesSite, {})
+  const [estado, formAction] = useActionState(salvarConfiguracoesSite, {})
+  const [transitando, iniciarTransicao] = useTransition()
+  const pendente = transitando
 
   // Mostrar toast quando a action retornar
   useEffect(() => {
@@ -73,7 +75,9 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
       action={(formData) => {
         formData.set("configuracoes", JSON.stringify(configs))
         formData.set("logo_url", logoUrl || "")
-        formAction(formData)
+        iniciarTransicao(() => {
+          formAction(formData)
+        })
       }}
     >
       {/* Header com ações */}

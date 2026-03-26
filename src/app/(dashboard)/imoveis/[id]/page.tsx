@@ -49,7 +49,7 @@ export default async function DetalheImovelPage({
 
   const { data: imovel } = await supabase
     .from("imoveis")
-    .select("*, imovel_fotos(*)")
+    .select("*")
     .eq("id", id)
     .single()
 
@@ -82,7 +82,7 @@ export default async function DetalheImovelPage({
               <StatusBadge status={imovel.status} config={configStatusImovel} />
             </div>
             <p className="text-sm text-muted-foreground">
-              Código: {imovel.codigo} • {labelsTipoImovel[imovel.tipo]} •{" "}
+              Código: {imovel.codigo_interno} • {labelsTipoImovel[imovel.tipo]} •{" "}
               {labelsFinalidade[imovel.finalidade]}
             </p>
           </div>
@@ -111,7 +111,7 @@ export default async function DetalheImovelPage({
         <TabsList>
           <TabsTrigger value="informacoes">Informações</TabsTrigger>
           <TabsTrigger value="fotos">
-            Fotos ({imovel.imovel_fotos?.length ?? 0})
+            Fotos
           </TabsTrigger>
         </TabsList>
 
@@ -127,14 +127,14 @@ export default async function DetalheImovelPage({
                 <div>
                   <p className="text-sm text-muted-foreground">Preço de venda</p>
                   <p className="text-lg font-bold">
-                    {formatarPreco(imovel.preco_venda)}
+                    {formatarPreco(imovel.valor)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Aluguel</p>
                   <p className="text-lg font-bold">
-                    {formatarPreco(imovel.preco_aluguel)}
-                    {imovel.preco_aluguel ? (
+                    {formatarPreco(imovel.valor_aluguel)}
+                    {imovel.valor_aluguel ? (
                       <span className="text-sm font-normal text-muted-foreground">
                         /mês
                       </span>
@@ -144,8 +144,8 @@ export default async function DetalheImovelPage({
                 <div>
                   <p className="text-sm text-muted-foreground">IPTU</p>
                   <p className="font-medium">
-                    {formatarPreco(imovel.iptu)}
-                    {imovel.iptu ? (
+                    {formatarPreco(imovel.valor_iptu)}
+                    {imovel.valor_iptu ? (
                       <span className="text-sm font-normal text-muted-foreground">
                         /ano
                       </span>
@@ -155,8 +155,8 @@ export default async function DetalheImovelPage({
                 <div>
                   <p className="text-sm text-muted-foreground">Condomínio</p>
                   <p className="font-medium">
-                    {formatarPreco(imovel.condominio)}
-                    {imovel.condominio ? (
+                    {formatarPreco(imovel.valor_condominio)}
+                    {imovel.valor_condominio ? (
                       <span className="text-sm font-normal text-muted-foreground">
                         /mês
                       </span>
@@ -246,14 +246,14 @@ export default async function DetalheImovelPage({
                       </div>
                     </div>
                   )}
-                  {imovel.vagas_garagem > 0 && (
+                  {imovel.vagas > 0 && (
                     <div className="flex items-center gap-2">
                       <Car className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <p className="text-sm text-muted-foreground">
                           Vagas de garagem
                         </p>
-                        <p className="font-medium">{imovel.vagas_garagem}</p>
+                        <p className="font-medium">{imovel.vagas}</p>
                       </div>
                     </div>
                   )}
@@ -336,7 +336,7 @@ export default async function DetalheImovelPage({
         <TabsContent value="fotos">
           <GaleriaFotos
             imovelId={id}
-            fotos={imovel.imovel_fotos ?? []}
+            fotos={[]}
           />
         </TabsContent>
 

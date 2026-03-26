@@ -14,7 +14,7 @@ export function KanbanContainer() {
     valor_max?: number
   }>({})
 
-  const { etapas, carregando, recarregar } = usePipeline(filtros)
+  const { etapas, carregando, erro, recarregar } = usePipeline(filtros)
 
   return (
     <div className="space-y-4">
@@ -31,6 +31,24 @@ export function KanbanContainer() {
               <Skeleton className="h-32 w-full rounded-lg" />
             </div>
           ))}
+        </div>
+      ) : erro ? (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-6 text-center">
+          <p className="text-sm text-destructive">
+            Erro ao carregar pipeline: {erro instanceof Error ? erro.message : "Erro desconhecido"}
+          </p>
+          <button
+            onClick={() => recarregar()}
+            className="mt-2 text-xs text-muted-foreground underline hover:text-foreground"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : etapas.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Nenhuma etapa configurada no pipeline. Vá em Configurações &gt; Pipeline para criar as etapas.
+          </p>
         </div>
       ) : (
         <KanbanBoard etapas={etapas} onAtualizar={recarregar} />

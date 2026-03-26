@@ -8,13 +8,11 @@ export const schemaCriarAtividade = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   tipo: z.string().min(1, "Selecione o tipo de atividade"),
   prioridade: z.enum(PRIORIDADES_ATIVIDADE),
-  data_inicio: z.string().min(1, "Data de início é obrigatória"),
-  data_fim: z.string().optional(),
+  data_vencimento: z.string().min(1, "Data de vencimento é obrigatória"),
   descricao: z.string().optional(),
   cliente_id: z.string().uuid("Selecione um cliente").optional().or(z.literal("")),
   negocio_id: z.string().uuid("Selecione um negócio").optional().or(z.literal("")),
   imovel_id: z.string().uuid("Selecione um imóvel").optional().or(z.literal("")),
-  lembrete: z.string().optional(),
 })
 
 // ============================================================
@@ -29,7 +27,6 @@ export const schemaAtualizarAtividade = schemaCriarAtividade.extend({
 // ============================================================
 export const schemaMarcarConcluida = z.object({
   id: z.string().uuid(),
-  notas_pos_atividade: z.string().optional(),
 })
 
 // ============================================================
@@ -37,8 +34,7 @@ export const schemaMarcarConcluida = z.object({
 // ============================================================
 export const schemaReagendarAtividade = z.object({
   id: z.string().uuid(),
-  data_inicio: z.string().min(1, "Nova data é obrigatória"),
-  data_fim: z.string().optional(),
+  data_vencimento: z.string().min(1, "Nova data é obrigatória"),
 })
 
 // ============================================================
@@ -48,9 +44,9 @@ export const schemaFiltrosAtividades = z.object({
   tipo: z.string().optional(),
   status: z.string().optional(),
   prioridade: z.string().optional(),
-  usuario_id: z.string().optional(),
-  data_inicio: z.string().optional(),
-  data_fim: z.string().optional(),
+  responsavel_id: z.string().optional(),
+  data_vencimento_inicio: z.string().optional(),
+  data_vencimento_fim: z.string().optional(),
   pagina: z.number().int().min(1).default(1),
   por_pagina: z.number().int().min(1).default(20),
 })

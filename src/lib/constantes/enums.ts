@@ -39,6 +39,10 @@ export const TIPOS_INTERACAO = [
 
 export const TIPOS_NEGOCIO = ["venda", "aluguel"] as const
 
+export const ETAPAS_NEGOCIO = [
+  "novo", "contato", "visita", "proposta", "negociacao", "ganho", "perdido",
+] as const
+
 export const STATUS_NEGOCIO = ["aberto", "ganho", "perdido"] as const
 
 // --- Atividades ---

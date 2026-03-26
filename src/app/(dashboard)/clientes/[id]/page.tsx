@@ -29,7 +29,7 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { labelsTipoCliente, labelsOrigem, labelsTipoNegocio } from "@/lib/constantes"
-import { formatarPreco } from "@/lib/formatadores"
+import { formatarPreco, formatarCpfCnpj, formatarTelefone } from "@/lib/formatadores"
 
 type Params = Promise<{ id: string }>
 
@@ -41,18 +41,53 @@ export default async function DetalheClientePage({
   const { id } = await params
   const supabase = await criarClienteServer()
 
-  const { data: cliente } = await supabase
+  const { data: cliente, error: erroCliente } = await supabase
     .from("clientes")
-    .select("*, cliente_interesses(*), cliente_interacoes(*, usuarios(nome)), negocios(id, titulo, valor, status, tipo, created_at)")
+    .select("*")
     .eq("id", id)
-    .order("data", { referencedTable: "cliente_interacoes", ascending: false })
     .single()
+
+  // Buscar interesses e interações separadamente
+  const { data: interessesData } = cliente ? await supabase
+    .from("cliente_interesses")
+    .select("*")
+    .eq("cliente_id", id) : { data: null }
+
+  const { data: interacoesData } = cliente ? await supabase
+    .from("cliente_interacoes")
+    .select("*")
+    .eq("cliente_id", id)
+    .order("created_at", { ascending: false }) : { data: null }
+
+  if (erroCliente) {
+    console.error("Erro ao buscar cliente:", erroCliente)
+  }
+
+  // Buscar negócios separadamente para evitar problemas de join
+  const { data: negociosData } = cliente ? await supabase
+    .from("negocios")
+    .select("id, titulo, valor, status, tipo, created_at")
+    .eq("cliente_id", id)
+    .order("created_at", { ascending: false }) : { data: null }
+
+  // Buscar nomes dos usuários das interações
+  const interacoesComUsuario: Array<Record<string, unknown>> = []
+  if (interacoesData?.length) {
+    for (const interacao of interacoesData) {
+      const { data: usuario } = await supabase
+        .from("usuarios")
+        .select("nome")
+        .eq("id", (interacao as Record<string, unknown>).usuario_id)
+        .single()
+      interacoesComUsuario.push({ ...interacao, usuarios: usuario })
+    }
+  }
 
   if (!cliente) {
     redirect("/clientes")
   }
 
-  const negocios = (cliente as { negocios?: { id: string; titulo: string; valor: number | null; status: string; tipo: string }[] }).negocios ?? []
+  const negocios = negociosData ?? []
 
   return (
     <div className="space-y-6">
@@ -125,7 +160,7 @@ export default async function DetalheClientePage({
                 {cliente.cpf_cnpj && (
                   <div>
                     <p className="text-sm text-muted-foreground">CPF / CNPJ</p>
-                    <p className="font-medium">{cliente.cpf_cnpj}</p>
+                    <p className="font-medium">{formatarCpfCnpj(cliente.cpf_cnpj)}</p>
                   </div>
                 )}
                 <div>
@@ -174,7 +209,7 @@ export default async function DetalheClientePage({
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Telefone</p>
-                      <p className="font-medium">{cliente.telefone}</p>
+                      <p className="font-medium">{formatarTelefone(cliente.telefone)}</p>
                     </div>
                   </div>
                 ) : (
@@ -186,7 +221,7 @@ export default async function DetalheClientePage({
                     <MessageCircle className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">WhatsApp</p>
-                      <p className="font-medium">{cliente.whatsapp}</p>
+                      <p className="font-medium">{formatarTelefone(cliente.whatsapp)}</p>
                     </div>
                   </div>
                 ) : (
@@ -216,7 +251,7 @@ export default async function DetalheClientePage({
           {/* Preferências */}
           <InteressesCliente
             clienteId={id}
-            interesses={cliente.cliente_interesses ?? []}
+            interesses={interessesData ?? []}
           />
 
           {/* Match automático */}
@@ -227,7 +262,7 @@ export default async function DetalheClientePage({
             <CardContent>
               <MatchImoveis
                 organizacaoId={cliente.organizacao_id}
-                interesses={cliente.cliente_interesses ?? []}
+                interesses={interessesData ?? []}
               />
             </CardContent>
           </Card>
@@ -290,7 +325,7 @@ export default async function DetalheClientePage({
       {/* Timeline — largura total */}
       <TimelineInteracoes
         clienteId={id}
-        interacoes={cliente.cliente_interacoes ?? []}
+        interacoes={interacoesComUsuario.length > 0 ? interacoesComUsuario : (interacoesData ?? [])}
       />
     </div>
   )

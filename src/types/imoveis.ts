@@ -24,7 +24,7 @@ const vazioParaUndefined = (val: unknown) =>
 // Schema de criação de imóvel
 // ============================================================
 export const schemaCriarImovel = z.object({
-  codigo: z.string().min(1, "Código é obrigatório"),
+  codigo_interno: z.string().min(1, "Código é obrigatório"),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
   tipo: z.enum(TIPOS_IMOVEL, { message: "Selecione o tipo do imóvel" }),
@@ -39,20 +39,18 @@ export const schemaCriarImovel = z.object({
     (v) => (SIGLAS_ESTADOS_BR as readonly string[]).includes(v),
     "Sigla de estado inválida"
   ),
-  preco_venda: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Preço deve ser positivo").optional()),
-  preco_aluguel: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Preço deve ser positivo").optional()),
-  iptu: z.preprocess(vazioParaUndefined, z.coerce.number().min(0, "IPTU não pode ser negativo").optional()),
-  condominio: z.preprocess(vazioParaUndefined, z.coerce.number().min(0, "Condomínio não pode ser negativo").optional()),
+  valor: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Valor deve ser positivo").optional()),
+  valor_condominio: z.preprocess(vazioParaUndefined, z.coerce.number().min(0, "Condomínio não pode ser negativo").optional()),
+  valor_iptu: z.preprocess(vazioParaUndefined, z.coerce.number().min(0, "IPTU não pode ser negativo").optional()),
   area_total: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Área deve ser positiva").optional()),
   area_construida: z.preprocess(vazioParaUndefined, z.coerce.number().positive("Área deve ser positiva").optional()),
   quartos: z.coerce.number().int().min(0).default(0),
   suites: z.coerce.number().int().min(0).default(0),
   banheiros: z.coerce.number().int().min(0).default(0),
-  vagas_garagem: z.coerce.number().int().min(0).default(0),
-  andares: z.preprocess(vazioParaUndefined, z.coerce.number().int().positive().optional()),
-  observacoes_internas: z.string().optional(),
-  publicar_site: z.coerce.boolean().default(true),
-  publicar_portais: z.coerce.boolean().default(true),
+  vagas: z.coerce.number().int().min(0).default(0),
+  destaque: z.coerce.boolean().default(false),
+  latitude: z.preprocess(vazioParaUndefined, z.coerce.number().optional()),
+  longitude: z.preprocess(vazioParaUndefined, z.coerce.number().optional()),
 })
 
 // ============================================================

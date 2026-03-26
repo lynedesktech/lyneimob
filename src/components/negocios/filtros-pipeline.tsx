@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { InputMonetario } from "@/components/ui/input-monetario"
 import {
   Select,
   SelectContent,
@@ -96,34 +96,22 @@ export function FiltrosPipeline({ filtros, onChange }: FiltrosPipelineProps) {
         </Select>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1 w-[160px]">
         <Label className="text-xs">Valor mín.</Label>
-        <Input
-          type="number"
-          placeholder="R$ 0"
-          className="w-[130px]"
-          value={filtros.valor_min || ""}
-          onChange={(e) =>
-            onChange({
-              ...filtros,
-              valor_min: e.target.value ? Number(e.target.value) : undefined,
-            })
+        <InputMonetario
+          valor={filtros.valor_min ?? null}
+          onValorChange={(v) =>
+            onChange({ ...filtros, valor_min: v ?? undefined })
           }
         />
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1 w-[160px]">
         <Label className="text-xs">Valor máx.</Label>
-        <Input
-          type="number"
-          placeholder="R$ ∞"
-          className="w-[130px]"
-          value={filtros.valor_max || ""}
-          onChange={(e) =>
-            onChange({
-              ...filtros,
-              valor_max: e.target.value ? Number(e.target.value) : undefined,
-            })
+        <InputMonetario
+          valor={filtros.valor_max ?? null}
+          onValorChange={(v) =>
+            onChange({ ...filtros, valor_max: v ?? undefined })
           }
         />
       </div>

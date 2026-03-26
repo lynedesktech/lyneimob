@@ -18,7 +18,7 @@ export async function criarImovel(
   formData: FormData
 ): Promise<EstadoFormulario> {
   const dados = schemaCriarImovel.safeParse({
-    codigo: formData.get("codigo"),
+    codigo_interno: formData.get("codigo_interno"),
     titulo: formData.get("titulo"),
     descricao: formData.get("descricao") || undefined,
     tipo: formData.get("tipo"),
@@ -30,20 +30,18 @@ export async function criarImovel(
     bairro: formData.get("bairro") || undefined,
     cidade: formData.get("cidade"),
     estado: formData.get("estado"),
-    preco_venda: formData.get("preco_venda") || undefined,
-    preco_aluguel: formData.get("preco_aluguel") || undefined,
-    iptu: formData.get("iptu") || undefined,
-    condominio: formData.get("condominio") || undefined,
+    valor: formData.get("valor") || undefined,
+    valor_condominio: formData.get("valor_condominio") || undefined,
+    valor_iptu: formData.get("valor_iptu") || undefined,
     area_total: formData.get("area_total") || undefined,
     area_construida: formData.get("area_construida") || undefined,
     quartos: formData.get("quartos") || 0,
     suites: formData.get("suites") || 0,
     banheiros: formData.get("banheiros") || 0,
-    vagas_garagem: formData.get("vagas_garagem") || 0,
-    andares: formData.get("andares") || undefined,
-    observacoes_internas: formData.get("observacoes_internas") || undefined,
-    publicar_site: formData.get("publicar_site") === "on" || formData.get("publicar_site") === "true",
-    publicar_portais: formData.get("publicar_portais") === "on" || formData.get("publicar_portais") === "true",
+    vagas: formData.get("vagas") || 0,
+    destaque: formData.get("destaque") === "on" || formData.get("destaque") === "true",
+    latitude: formData.get("latitude") || undefined,
+    longitude: formData.get("longitude") || undefined,
   })
 
   if (!dados.success) {
@@ -63,6 +61,7 @@ export async function criarImovel(
 
   const supabase = await criarClienteServer()
 
+  // Campos do Zod schema correspondem 1:1 às colunas do banco live
   const { data: imovel, error } = await supabase
     .from("imoveis")
     .insert({
@@ -95,7 +94,7 @@ export async function atualizarImovel(
 ): Promise<EstadoFormulario> {
   const dados = schemaAtualizarImovel.safeParse({
     id: formData.get("id"),
-    codigo: formData.get("codigo"),
+    codigo_interno: formData.get("codigo_interno"),
     titulo: formData.get("titulo"),
     descricao: formData.get("descricao") || undefined,
     tipo: formData.get("tipo"),
@@ -108,20 +107,18 @@ export async function atualizarImovel(
     bairro: formData.get("bairro") || undefined,
     cidade: formData.get("cidade"),
     estado: formData.get("estado"),
-    preco_venda: formData.get("preco_venda") || undefined,
-    preco_aluguel: formData.get("preco_aluguel") || undefined,
-    iptu: formData.get("iptu") || undefined,
-    condominio: formData.get("condominio") || undefined,
+    valor: formData.get("valor") || undefined,
+    valor_condominio: formData.get("valor_condominio") || undefined,
+    valor_iptu: formData.get("valor_iptu") || undefined,
     area_total: formData.get("area_total") || undefined,
     area_construida: formData.get("area_construida") || undefined,
     quartos: formData.get("quartos") || 0,
     suites: formData.get("suites") || 0,
     banheiros: formData.get("banheiros") || 0,
-    vagas_garagem: formData.get("vagas_garagem") || 0,
-    andares: formData.get("andares") || undefined,
-    observacoes_internas: formData.get("observacoes_internas") || undefined,
-    publicar_site: formData.get("publicar_site") === "on" || formData.get("publicar_site") === "true",
-    publicar_portais: formData.get("publicar_portais") === "on" || formData.get("publicar_portais") === "true",
+    vagas: formData.get("vagas") || 0,
+    destaque: formData.get("destaque") === "on" || formData.get("destaque") === "true",
+    latitude: formData.get("latitude") || undefined,
+    longitude: formData.get("longitude") || undefined,
   })
 
   if (!dados.success) {

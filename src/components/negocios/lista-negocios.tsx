@@ -35,9 +35,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { InputMonetario } from "@/components/ui/input-monetario"
 import { FiltrosListaNegocios } from "./filtros-lista-negocios"
 import { BarraAcoesMassa } from "./barra-acoes-massa"
 import { useListaNegocios } from "@/hooks/use-lista-negocios"
@@ -74,13 +74,13 @@ function MenuAcoes({
 }) {
   const [dialogGanhar, setDialogGanhar] = useState(false)
   const [dialogPerder, setDialogPerder] = useState(false)
-  const [valor, setValor] = useState(negocio.valor?.toString() || "")
+  const [valor, setValor] = useState<number | null>(negocio.valor)
   const [motivoPerda, setMotivoPerda] = useState("")
   const [salvando, setSalvando] = useState(false)
 
   async function handleGanhar() {
     setSalvando(true)
-    const resultado = await ganharNegocio(negocio.id, valor ? Number(valor) : undefined)
+    const resultado = await ganharNegocio(negocio.id, valor ?? undefined)
     setSalvando(false)
     if (resultado.erro) {
       toast.error(resultado.erro)
@@ -187,14 +187,11 @@ function MenuAcoes({
             <DialogDescription>Confirme o valor final do negócio.</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor={`valor-ganhar-${negocio.id}`}>Valor Final (R$)</Label>
-            <Input
+            <Label htmlFor={`valor-ganhar-${negocio.id}`}>Valor Final</Label>
+            <InputMonetario
               id={`valor-ganhar-${negocio.id}`}
-              type="number"
-              step="0.01"
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              placeholder="Valor do negócio fechado"
+              valor={valor}
+              onValorChange={setValor}
             />
           </div>
           <DialogFooter>

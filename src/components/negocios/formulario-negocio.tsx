@@ -1,8 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
 import { criarNegocio, atualizarNegocio } from "@/actions/negocios"
@@ -17,14 +15,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldLabel, FieldError } from "@/components/ui/field"
-import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/input-group"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { InputMonetario } from "@/components/ui/input-monetario"
 import { ComboboxCampo } from "@/components/ui/combobox-campo"
 import { labelsTipoNegocio } from "@/lib/constantes"
 import { criarClienteBrowser } from "@/lib/supabase/client"
-import { schemaCriarNegocio } from "@/types/negocios"
-import type { CriarNegocioInput } from "@/types/negocios"
-import type { NegocioComRelacoes, PipelineEtapa } from "@/types/database"
+import type { NegocioComRelacoes } from "@/types/database"
 
 interface FormularioNegocioProps {
   negocio?: NegocioComRelacoes | null
@@ -32,55 +28,32 @@ interface FormularioNegocioProps {
 
 type ClienteSimples = { id: string; nome: string }
 type ImovelSimples = { id: string; titulo: string; codigo: string }
-type LoteamentoSimples = { id: string; nome: string }
-type LoteSimples = { id: string; quadra: string; numero_lote: string; unidade: string; valor: number; loteamento_id: string }
+type EtapaSimples = { id: string; nome: string; cor: string; tipo: string; ordem: number }
 
 export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const editando = !!negocio
   const action = editando ? atualizarNegocio : criarNegocio
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    setValue,
-    formState: { errors },
-  } = useForm<CriarNegocioInput>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(schemaCriarNegocio) as any,
-    defaultValues: {
-      titulo: negocio?.titulo || "",
-      tipo: (negocio?.tipo || "") as CriarNegocioInput["tipo"],
-      valor: negocio?.valor ?? undefined,
-      etapa_id: negocio?.etapa_id || "",
-      cliente_id: negocio?.cliente_id || "",
-      imovel_id: negocio?.imovel_id || "",
-      lote_id: negocio?.lote_id || "",
-      previsao_fechamento: negocio?.previsao_fechamento || "",
-      observacoes: negocio?.observacoes || "",
-    },
-  })
-
-  const [estado, formAction, pendente] = useActionState(action, {})
+  const [tipoValue, setTipoValue] = useState(negocio?.tipo ?? "")
+  const [etapaId, setEtapaId] = useState(negocio?.etapa_id ?? "")
+  const [clienteId, setClienteId] = useState(negocio?.cliente_id ?? "")
+  const [imovelId, setImovelId] = useState(negocio?.imovel_id ?? "")
+  const [valorMonetario, setValorMonetario] = useState<number | null>(negocio?.valor ?? null)
+  const [pendente, setPendente] = useState(false)
   const [clientes, setClientes] = useState<ClienteSimples[]>([])
   const [imoveis, setImoveis] = useState<ImovelSimples[]>([])
-  const [etapas, setEtapas] = useState<PipelineEtapa[]>([])
-  const [loteamentos, setLoteamentos] = useState<LoteamentoSimples[]>([])
-  const [lotes, setLotes] = useState<LoteSimples[]>([])
-  const [loteamentoSelecionado, setLoteamentoSelecionado] = useState(
-    negocio?.lotes?.loteamento_id || ""
-  )
+  const [etapas, setEtapas] = useState<EtapaSimples[]>([])
 
   // Carregar dados para os selects
   useEffect(() => {
     const supabase = criarClienteBrowser()
 
     async function carregar() {
-      const [resClientes, resImoveis, resEtapas, resLoteamentos] = await Promise.all([
+      const [resClientes, resImoveis, resEtapas] = await Promise.all([
         supabase
           .from("clientes")
           .select("id, nome")
-          .in("status", ["ativo", "negociando"])
+          .eq("status", "ativo")
           .order("nome"),
         supabase
           .from("imoveis")
@@ -89,69 +62,55 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
           .order("codigo"),
         supabase
           .from("pipeline_etapas")
-          .select("*")
-          .eq("tipo", "normal")
-          .order("ordem"),
-        supabase
-          .from("loteamentos")
-          .select("id, nome")
-          .order("nome"),
+          .select("id, nome, cor, tipo, ordem")
+          .order("ordem", { ascending: true }),
       ])
 
       setClientes((resClientes.data as ClienteSimples[]) || [])
       setImoveis((resImoveis.data as ImovelSimples[]) || [])
-      setEtapas((resEtapas.data as PipelineEtapa[]) || [])
-      setLoteamentos((resLoteamentos.data as LoteamentoSimples[]) || [])
+
+      const etapasCarregadas = (resEtapas.data as EtapaSimples[]) || []
+      setEtapas(etapasCarregadas)
+
+      // Se não está editando e não tem etapa selecionada, selecionar a primeira etapa normal
+      if (!editando && !etapaId && etapasCarregadas.length > 0) {
+        const primeiraNormal = etapasCarregadas.find((e) => e.tipo === "normal")
+        if (primeiraNormal) {
+          setEtapaId(primeiraNormal.id)
+        }
+      }
     }
 
     carregar()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Carregar lotes quando loteamento mudar
-  useEffect(() => {
-    if (!loteamentoSelecionado) {
-      setLotes([])
-      return
-    }
-
-    const supabase = criarClienteBrowser()
-
-    async function carregarLotes() {
-      const { data } = await supabase
-        .from("lotes")
-        .select("id, quadra, numero_lote, unidade, valor, loteamento_id")
-        .eq("loteamento_id", loteamentoSelecionado)
-        .in("status", ["disponivel", "reservado"])
-        .order("quadra")
-        .order("numero_lote")
-
-      setLotes((data as LoteSimples[]) || [])
-    }
-
-    carregarLotes()
-  }, [loteamentoSelecionado])
-
-  useEffect(() => {
-    if (estado.erro) toast.error(estado.erro)
-  }, [estado])
-
-  function onSubmit(dados: CriarNegocioInput) {
-    const formData = new FormData()
+  async function handleAction(formData: FormData) {
+    // Adicionar campos de Select e Combobox (não são inputs nativos)
+    formData.set("tipo", tipoValue)
+    formData.set("etapa_id", etapaId)
+    formData.set("cliente_id", clienteId)
+    if (imovelId) formData.set("imovel_id", imovelId)
     if (editando) formData.set("id", negocio.id)
-    formData.set("titulo", dados.titulo)
-    formData.set("tipo", dados.tipo)
-    formData.set("cliente_id", dados.cliente_id)
-    formData.set("etapa_id", dados.etapa_id)
-    if (dados.imovel_id) formData.set("imovel_id", dados.imovel_id)
-    if (dados.lote_id) formData.set("lote_id", dados.lote_id)
-    if (dados.valor !== undefined) formData.set("valor", String(dados.valor))
-    if (dados.previsao_fechamento) formData.set("previsao_fechamento", dados.previsao_fechamento)
-    if (dados.observacoes) formData.set("observacoes", dados.observacoes)
-    formAction(formData)
+    // O valor já vem do hidden input do InputMonetario via name="valor"
+
+    setPendente(true)
+    try {
+      const resultado = await action({}, formData)
+      if (resultado?.erro) toast.error(resultado.erro)
+      if (resultado?.sucesso) toast.success(resultado.sucesso)
+    } catch {
+      // redirect() lança um erro especial que o Next.js intercepta
+    } finally {
+      setPendente(false)
+    }
   }
 
+  // Filtrar etapas normais para o select (não mostrar ganho/perdido na criação)
+  const etapasNormais = etapas.filter((e) => e.tipo === "normal")
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form action={handleAction} className="space-y-6">
       {/* Dados do negócio */}
       <Card>
         <CardHeader>
@@ -163,83 +122,67 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
               <FieldLabel htmlFor="titulo">Título *</FieldLabel>
               <Input
                 id="titulo"
+                name="titulo"
                 placeholder="Ex: Venda apto 3Q - João Silva"
-                {...register("titulo")}
-                aria-invalid={!!errors.titulo}
+                defaultValue={negocio?.titulo ?? ""}
               />
-              <FieldError errors={[errors.titulo]} />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
-              <Controller
-                name="tipo"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                    <SelectTrigger id="tipo" aria-invalid={!!errors.tipo}>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(labelsTipoNegocio).map(([valor, label]) => (
-                        <SelectItem key={valor} value={valor}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError errors={[errors.tipo]} />
+              <Select value={tipoValue} onValueChange={(v) => v && setTipoValue(v)}>
+                <SelectTrigger id="tipo">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(labelsTipoNegocio).map(([valor, label]) => (
+                    <SelectItem key={valor} value={valor}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="valor">Valor</FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>R$</InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="valor"
-                  type="number"
-                  step="0.01"
-                  placeholder="0,00"
-                  {...register("valor")}
-                  aria-invalid={!!errors.valor}
-                />
-              </InputGroup>
-              <FieldError errors={[errors.valor]} />
+              <InputMonetario
+                id="valor"
+                name="valor"
+                valor={valorMonetario}
+                onValorChange={setValorMonetario}
+              />
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="etapa_id">Etapa do Pipeline *</FieldLabel>
-              <Controller
-                name="etapa_id"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                    <SelectTrigger id="etapa_id" aria-invalid={!!errors.etapa_id}>
-                      <SelectValue placeholder="Selecione a etapa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {etapas.map((etapa) => (
-                        <SelectItem key={etapa.id} value={etapa.id}>
-                          {etapa.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError errors={[errors.etapa_id]} />
+              <FieldLabel htmlFor="etapa_id">Etapa *</FieldLabel>
+              <Select value={etapaId} onValueChange={(v) => v && setEtapaId(v)}>
+                <SelectTrigger id="etapa_id">
+                  <SelectValue placeholder="Selecione a etapa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {etapasNormais.map((etapa) => (
+                    <SelectItem key={etapa.id} value={etapa.id}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: etapa.cor }}
+                        />
+                        {etapa.nome}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="previsao_fechamento">Previsão de Fechamento</FieldLabel>
               <Input
                 id="previsao_fechamento"
+                name="previsao_fechamento"
                 type="date"
-                {...register("previsao_fechamento")}
+                defaultValue={negocio?.previsao_fechamento ?? ""}
               />
             </Field>
           </div>
@@ -255,93 +198,43 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel>Cliente *</FieldLabel>
-              <Controller
-                name="cliente_id"
-                control={control}
-                render={({ field }) => (
-                  <ComboboxCampo
-                    opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Selecionar cliente..."
-                    placeholderBusca="Buscar por nome..."
-                  />
-                )}
+              <ComboboxCampo
+                opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))}
+                value={clienteId}
+                onChange={setClienteId}
+                placeholder="Selecionar cliente..."
+                placeholderBusca="Buscar por nome..."
               />
-              <FieldError errors={[errors.cliente_id]} />
             </Field>
 
             <Field>
               <FieldLabel>Imóvel (opcional)</FieldLabel>
-              <Controller
-                name="imovel_id"
-                control={control}
-                render={({ field }) => (
-                  <ComboboxCampo
-                    opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo} — ${i.titulo}` }))}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Selecionar imóvel..."
-                    placeholderBusca="Buscar por código ou título..."
-                    permitirVazio
-                    labelVazio="Nenhum"
-                  />
-                )}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel>Loteamento (opcional)</FieldLabel>
               <ComboboxCampo
-                opcoes={loteamentos.map((l) => ({ value: l.id, label: l.nome }))}
-                value={loteamentoSelecionado}
-                onChange={(v) => {
-                  setLoteamentoSelecionado(v)
-                  setValue("lote_id", "")
-                }}
-                placeholder="Selecionar loteamento..."
-                placeholderBusca="Buscar por nome..."
+                opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo} — ${i.titulo}` }))}
+                value={imovelId}
+                onChange={setImovelId}
+                placeholder="Selecionar imóvel..."
+                placeholderBusca="Buscar por código ou título..."
                 permitirVazio
                 labelVazio="Nenhum"
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel>Lote (opcional)</FieldLabel>
-              <Controller
-                name="lote_id"
-                control={control}
-                render={({ field }) => (
-                  <ComboboxCampo
-                    opcoes={lotes.map((l) => ({
-                      value: l.id,
-                      label: `Quadra ${l.quadra}, Lote ${l.numero_lote}${l.unidade !== `${l.quadra}-${l.numero_lote}` ? ` (${l.unidade})` : ""}`,
-                    }))}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder={loteamentoSelecionado ? "Selecionar lote..." : "Selecione um loteamento primeiro"}
-                    placeholderBusca="Buscar por quadra ou lote..."
-                    permitirVazio
-                    labelVazio="Nenhum"
-                    disabled={!loteamentoSelecionado}
-                  />
-                )}
               />
             </Field>
           </div>
         </CardContent>
       </Card>
 
-      {/* Observações */}
+      {/* Notas */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Observações</CardTitle>
+          <CardTitle className="text-lg">Notas</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
+            id="observacoes"
+            name="observacoes"
             placeholder="Anotações internas sobre o negócio..."
             rows={4}
-            {...register("observacoes")}
+            defaultValue={negocio?.observacoes ?? ""}
           />
         </CardContent>
       </Card>

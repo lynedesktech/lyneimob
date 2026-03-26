@@ -72,7 +72,7 @@ export async function gerarBriefingVisita(
 ATIVIDADE:
 - Tipo: ${labelsTipoAtividade[atividade.tipo] || atividade.tipo}
 - Título: ${atividade.titulo}
-- Data: ${new Date(atividade.data_inicio).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+- Data: ${new Date(atividade.data_vencimento).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
 - Descrição: ${atividade.descricao || "Sem descrição"}
 
 CLIENTE:
@@ -188,7 +188,7 @@ export async function gerarSugestaoPosAtividade(
 ATIVIDADE CONCLUÍDA:
 - Tipo: ${labelsTipoAtividade[atividade.tipo] || atividade.tipo}
 - Título: ${atividade.titulo}
-- Data: ${new Date(atividade.data_inicio).toLocaleDateString("pt-BR")}
+- Data: ${new Date(atividade.data_vencimento).toLocaleDateString("pt-BR")}
 - Concluída em: ${atividade.data_conclusao ? new Date(atividade.data_conclusao).toLocaleDateString("pt-BR") : "N/A"}
 - Notas do corretor: ${atividade.notas_pos_atividade || "Nenhuma nota registrada"}
 

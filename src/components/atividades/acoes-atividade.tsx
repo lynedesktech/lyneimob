@@ -44,7 +44,6 @@ export function AcoesAtividade({ atividade }: AcoesAtividadeProps) {
       <BotaoReagendar
         atividadeId={atividade.id}
         dataAtual={atividade.data_inicio}
-        dataFimAtual={atividade.data_fim}
       />
       <BotaoCancelar atividadeId={atividade.id} />
     </div>
@@ -62,7 +61,7 @@ function BotaoConcluir({ atividadeId }: { atividadeId: string }) {
 
   async function handleConcluir() {
     setSalvando(true)
-    const resultado = await marcarConcluida(atividadeId, notas || undefined)
+    const resultado = await marcarConcluida(atividadeId)
     setSalvando(false)
     if (resultado.erro) {
       toast.error(resultado.erro)
@@ -123,18 +122,13 @@ function BotaoConcluir({ atividadeId }: { atividadeId: string }) {
 function BotaoReagendar({
   atividadeId,
   dataAtual,
-  dataFimAtual,
 }: {
   atividadeId: string
   dataAtual: string
-  dataFimAtual: string | null
 }) {
   const [aberto, setAberto] = useState(false)
   const [novaData, setNovaData] = useState(
     new Date(dataAtual).toISOString().slice(0, 16)
-  )
-  const [novaDataFim, setNovaDataFim] = useState(
-    dataFimAtual ? new Date(dataFimAtual).toISOString().slice(0, 16) : ""
   )
   const [salvando, setSalvando] = useState(false)
 
@@ -142,8 +136,7 @@ function BotaoReagendar({
     setSalvando(true)
     const resultado = await reagendarAtividade(
       atividadeId,
-      new Date(novaData).toISOString(),
-      novaDataFim ? new Date(novaDataFim).toISOString() : undefined
+      new Date(novaData).toISOString()
     )
     setSalvando(false)
     if (resultado.erro) {
@@ -179,15 +172,6 @@ function BotaoReagendar({
               type="datetime-local"
               value={novaData}
               onChange={(e) => setNovaData(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="nova-data-fim">Término (opcional)</Label>
-            <Input
-              id="nova-data-fim"
-              type="datetime-local"
-              value={novaDataFim}
-              onChange={(e) => setNovaDataFim(e.target.value)}
             />
           </div>
         </div>

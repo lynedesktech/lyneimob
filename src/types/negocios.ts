@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { TIPOS_NEGOCIO, STATUS_NEGOCIO } from "@/lib/constantes/enums"
+import { TIPOS_NEGOCIO } from "@/lib/constantes/enums"
 
 // ============================================================
 // Schema de criação de negócio
@@ -8,7 +8,6 @@ export const schemaCriarNegocio = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   cliente_id: z.string().uuid("Selecione um cliente"),
   imovel_id: z.string().uuid("Selecione um imóvel").optional().or(z.literal("")),
-  lote_id: z.string().uuid("Selecione um lote").optional().or(z.literal("")),
   etapa_id: z.string().uuid("Selecione uma etapa"),
   valor: z.coerce.number().nonnegative("Valor não pode ser negativo").optional(),
   tipo: z.enum(TIPOS_NEGOCIO, { message: "Selecione o tipo" }),
@@ -17,11 +16,10 @@ export const schemaCriarNegocio = z.object({
 })
 
 // ============================================================
-// Schema de atualização (inclui id e status)
+// Schema de atualização (inclui id)
 // ============================================================
 export const schemaAtualizarNegocio = schemaCriarNegocio.extend({
   id: z.string().uuid(),
-  status: z.enum(STATUS_NEGOCIO).optional(),
 })
 
 // ============================================================
@@ -30,7 +28,6 @@ export const schemaAtualizarNegocio = schemaCriarNegocio.extend({
 export const schemaMoverNegocio = z.object({
   negocio_id: z.string().uuid(),
   etapa_id: z.string().uuid(),
-  posicao: z.number().int().min(0),
 })
 
 // ============================================================
@@ -57,7 +54,7 @@ export const schemaFiltrosNegocios = z.object({
   tipo: z.string().optional(),
   valor_min: z.coerce.number().optional(),
   valor_max: z.coerce.number().optional(),
-  status: z.string().optional(),
+  etapa_id: z.string().optional(),
 })
 
 export type CriarNegocioInput = z.infer<typeof schemaCriarNegocio>

@@ -26,6 +26,7 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu"
 import { labelsTipoCliente, labelsOrigem } from "@/lib/constantes"
+import { formatarTelefone } from "@/lib/formatadores"
 import type { Cliente } from "@/types/database"
 
 type ColunasVisiveis = {
@@ -190,7 +191,7 @@ export function TabelaClientes({ clientes, total = 0, filtros, paginacao }: { cl
                   </TableCell>
                   {colunas.telefone && (
                     <TableCell className="text-muted-foreground">
-                      {cliente.telefone ?? "—"}
+                      {cliente.telefone ? formatarTelefone(cliente.telefone) : "—"}
                     </TableCell>
                   )}
                   {colunas.email && (

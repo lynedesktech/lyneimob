@@ -16,7 +16,7 @@ interface CalendarioAtividadesProps {
     tipo?: string
     status?: string
     prioridade?: string
-    usuario_id?: string
+    responsavel_id?: string
   }
 }
 

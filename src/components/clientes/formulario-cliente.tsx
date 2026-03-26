@@ -1,18 +1,17 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useState } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
 import { criarCliente, atualizarCliente } from "@/actions/clientes"
 import { schemaCriarCliente } from "@/types/clientes"
-import type { CriarClienteInput } from "@/types/clientes"
 import type { Cliente } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { InputCpfCnpj } from "@/components/ui/input-cpf-cnpj"
+import { InputTelefone } from "@/components/ui/input-telefone"
+import { Field, FieldLabel } from "@/components/ui/field"
 import {
   Select,
   SelectContent,
@@ -41,47 +40,35 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
   const editando = !!cliente
   const action = editando ? atualizarCliente : criarCliente
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<CriarClienteInput>({
-    resolver: zodResolver(schemaCriarCliente),
-    defaultValues: {
-      nome: cliente?.nome ?? "",
-      email: cliente?.email ?? "",
-      telefone: cliente?.telefone ?? "",
-      whatsapp: cliente?.whatsapp ?? "",
-      cpf_cnpj: cliente?.cpf_cnpj ?? "",
-      tipo: (cliente?.tipo ?? "") as CriarClienteInput["tipo"],
-      origem: (cliente?.origem ?? "outro") as CriarClienteInput["origem"],
-      observacoes: cliente?.observacoes ?? "",
-    },
-  })
-
-  // Status é controlado separadamente (só existe em edição)
+  const [tipoValue, setTipoValue] = useState(cliente?.tipo ?? "")
+  const [origemValue, setOrigemValue] = useState(cliente?.origem ?? "outro")
   const [statusValue, setStatusValue] = useState(cliente?.status ?? "ativo")
+  const [pendente, setPendente] = useState(false)
 
-  const [estado, formAction, pendente] = useActionState(action, {})
+  async function handleAction(formData: FormData) {
+    // Adicionar campos do Select (que não são inputs nativos)
+    formData.set("tipo", tipoValue)
+    formData.set("origem", origemValue)
+    if (editando) {
+      formData.set("id", cliente.id)
+      formData.set("status", statusValue)
+    }
 
-  useEffect(() => {
-    if (estado.erro) toast.error(estado.erro)
-  }, [estado])
-
-  function onSubmit(dados: CriarClienteInput) {
-    const formData = new FormData()
-    if (editando) formData.set("id", cliente.id)
-    formData.set("nome", dados.nome)
-    formData.set("tipo", dados.tipo)
-    formData.set("origem", dados.origem)
-    if (dados.email) formData.set("email", dados.email)
-    if (dados.telefone) formData.set("telefone", dados.telefone)
-    if (dados.whatsapp) formData.set("whatsapp", dados.whatsapp)
-    if (dados.cpf_cnpj) formData.set("cpf_cnpj", dados.cpf_cnpj)
-    if (dados.observacoes) formData.set("observacoes", dados.observacoes)
-    if (editando) formData.set("status", statusValue)
-    formAction(formData)
+    setPendente(true)
+    try {
+      const resultado = await action({}, formData)
+      if (resultado?.erro) toast.error(resultado.erro)
+      if (resultado?.sucesso) toast.success(resultado.sucesso)
+    } catch (err) {
+      // redirect() lança um erro especial que o Next.js intercepta
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error("[FORM CLIENTE] catch:", msg, err)
+      if (!msg.includes("NEXT_REDIRECT")) {
+        toast.error("Erro inesperado: " + msg)
+      }
+    } finally {
+      setPendente(false)
+    }
   }
 
   return (
@@ -102,7 +89,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form action={handleAction} className="space-y-6">
         {/* Dados Pessoais */}
         <Card id="onborda-cliente-dados">
           <CardHeader>
@@ -113,19 +100,19 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
               <FieldLabel htmlFor="nome">Nome completo *</FieldLabel>
               <Input
                 id="nome"
+                name="nome"
                 placeholder="Ex: João da Silva"
-                {...register("nome")}
-                aria-invalid={!!errors.nome}
+                defaultValue={cliente?.nome ?? ""}
               />
-              <FieldError errors={[errors.nome]} />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="cpf_cnpj">CPF / CNPJ</FieldLabel>
-              <Input
+              <InputCpfCnpj
                 id="cpf_cnpj"
+                name="cpf_cnpj"
                 placeholder="000.000.000-00"
-                {...register("cpf_cnpj")}
+                defaultValue={cliente?.cpf_cnpj ?? ""}
               />
             </Field>
           </CardContent>
@@ -141,29 +128,30 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="joao@email.com"
-                {...register("email")}
-                aria-invalid={!!errors.email}
+                defaultValue={cliente?.email ?? ""}
               />
-              <FieldError errors={[errors.email]} />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="telefone">Telefone</FieldLabel>
-              <Input
+              <InputTelefone
                 id="telefone"
+                name="telefone"
                 placeholder="(11) 99999-9999"
-                {...register("telefone")}
+                defaultValue={cliente?.telefone ?? ""}
               />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="whatsapp">WhatsApp</FieldLabel>
-              <Input
+              <InputTelefone
                 id="whatsapp"
+                name="whatsapp"
                 placeholder="(11) 99999-9999"
-                {...register("whatsapp")}
+                defaultValue={cliente?.whatsapp ?? ""}
               />
             </Field>
           </CardContent>
@@ -177,47 +165,40 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
-              <Controller
-                name="tipo"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full" aria-invalid={!!errors.tipo}>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {opcoesTipo.map((opcao) => (
-                        <SelectItem key={opcao.value} value={opcao.value}>
-                          {opcao.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError errors={[errors.tipo]} />
+              <Select
+                value={tipoValue}
+                onValueChange={(v) => v && setTipoValue(v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {opcoesTipo.map((opcao) => (
+                    <SelectItem key={opcao.value} value={opcao.value}>
+                      {opcao.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="origem">Origem</FieldLabel>
-              <Controller
-                name="origem"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione a origem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {opcoesOrigem.map((opcao) => (
-                        <SelectItem key={opcao.value} value={opcao.value}>
-                          {opcao.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Select
+                value={origemValue}
+                onValueChange={(v) => v && setOrigemValue(v)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione a origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  {opcoesOrigem.map((opcao) => (
+                    <SelectItem key={opcao.value} value={opcao.value}>
+                      {opcao.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             {editando && (
@@ -242,9 +223,10 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
               <FieldLabel htmlFor="observacoes">Observações</FieldLabel>
               <Textarea
                 id="observacoes"
+                name="observacoes"
                 placeholder="Notas sobre o cliente..."
                 rows={3}
-                {...register("observacoes")}
+                defaultValue={cliente?.observacoes ?? ""}
               />
             </Field>
           </CardContent>

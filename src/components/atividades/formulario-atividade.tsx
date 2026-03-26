@@ -1,8 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import { useForm, Controller } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { criarAtividade, atualizarAtividade } from "@/actions/atividades"
 import { Button } from "@/components/ui/button"
@@ -16,12 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { ComboboxCampo } from "@/components/ui/combobox-campo"
 import { criarClienteBrowser } from "@/lib/supabase/client"
-import { useTiposAtividade } from "@/hooks/use-tipos-atividade"
-import { schemaCriarAtividade } from "@/types/atividades"
-import type { CriarAtividadeInput } from "@/types/atividades"
 import type { AtividadeComRelacoes } from "@/types/database"
 
 interface ValoresIniciais {
@@ -37,10 +32,21 @@ interface FormularioAtividadeProps {
 
 type ClienteSimples = { id: string; nome: string }
 type NegocioSimples = { id: string; titulo: string }
-type ImovelSimples = { id: string; titulo: string; codigo: string }
+type ImovelSimples = { id: string; titulo: string; codigo_interno: string }
+
+// Tipos de atividade padrão (usado quando a tabela tipos_atividade não existe no banco)
+const TIPOS_ATIVIDADE_PADRAO = [
+  { slug: "visita", nome: "Visita", cor: "#3b82f6" },
+  { slug: "ligacao", nome: "Ligação", cor: "#22c55e" },
+  { slug: "email", nome: "Email", cor: "#f59e0b" },
+  { slug: "reuniao", nome: "Reunião", cor: "#8b5cf6" },
+  { slug: "follow_up", nome: "Follow-up", cor: "#ec4899" },
+  { slug: "proposta", nome: "Proposta", cor: "#06b6d4" },
+  { slug: "outro", nome: "Outro", cor: "#6b7280" },
+]
 
 // Formatar data para input datetime-local
-function formatarParaInput(data: string | null) {
+function formatarParaInput(data: string | null | undefined) {
   if (!data) return ""
   return new Date(data).toISOString().slice(0, 16)
 }
@@ -48,54 +54,55 @@ function formatarParaInput(data: string | null) {
 export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAtividadeProps) {
   const editando = !!atividade
   const action = editando ? atualizarAtividade : criarAtividade
-  const { tipos, carregando: carregandoTipos } = useTiposAtividade()
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<CriarAtividadeInput>({
-    resolver: zodResolver(schemaCriarAtividade),
-    defaultValues: {
-      titulo: atividade?.titulo || valoresIniciais?.titulo || "",
-      tipo: atividade?.tipo || valoresIniciais?.tipo || "",
-      prioridade: (atividade?.prioridade || "media") as CriarAtividadeInput["prioridade"],
-      data_inicio: formatarParaInput(atividade?.data_inicio ?? null),
-      data_fim: formatarParaInput(atividade?.data_fim ?? null),
-      lembrete: formatarParaInput(atividade?.lembrete ?? null),
-      descricao: atividade?.descricao || "",
-      cliente_id: atividade?.cliente_id || "",
-      negocio_id: atividade?.negocio_id || valoresIniciais?.negocio_id || "",
-      imovel_id: atividade?.imovel_id || "",
-    },
-  })
+  // Acessar data_vencimento com fallback para data_inicio (DB pode ter nomes diferentes)
+  const atv = atividade as (AtividadeComRelacoes & Record<string, unknown>) | null | undefined
 
-  const [estado, formAction, pendente] = useActionState(action, {})
+  const [tipoValue, setTipoValue] = useState(atividade?.tipo ?? valoresIniciais?.tipo ?? "")
+  const [prioridadeValue, setPrioridadeValue] = useState(atividade?.prioridade ?? "media")
+  const [clienteId, setClienteId] = useState(atividade?.cliente_id ?? "")
+  const [negocioId, setNegocioId] = useState(atividade?.negocio_id ?? valoresIniciais?.negocio_id ?? "")
+  const [imovelId, setImovelId] = useState(atividade?.imovel_id ?? "")
+  const [pendente, setPendente] = useState(false)
   const [clientes, setClientes] = useState<ClienteSimples[]>([])
   const [negocios, setNegocios] = useState<NegocioSimples[]>([])
   const [imoveis, setImoveis] = useState<ImovelSimples[]>([])
+
+  // Tipos de atividade — carrega do banco ou usa fallback
+  const [tipos, setTipos] = useState(TIPOS_ATIVIDADE_PADRAO)
 
   useEffect(() => {
     const supabase = criarClienteBrowser()
 
     async function carregar() {
+      // Tentar carregar tipos de atividade do banco (pode não existir)
+      const resTipos = await supabase
+        .from("tipos_atividade")
+        .select("slug, nome, cor")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true })
+
+      if (resTipos.data?.length) {
+        setTipos(resTipos.data as typeof TIPOS_ATIVIDADE_PADRAO)
+      }
+
+      // Carregar dados para os combobox
       const [resClientes, resNegocios, resImoveis] = await Promise.all([
         supabase
           .from("clientes")
           .select("id, nome")
-          .in("status", ["ativo", "negociando"])
+          .eq("status", "ativo")
           .order("nome"),
         supabase
           .from("negocios")
           .select("id, titulo")
-          .eq("status", "aberto")
+          .not("etapa", "in", '("fechado_ganho","fechado_perdido")')
           .order("titulo"),
         supabase
           .from("imoveis")
-          .select("id, titulo, codigo")
+          .select("id, titulo, codigo_interno")
           .in("status", ["disponivel", "reservado"])
-          .order("codigo"),
+          .order("codigo_interno"),
       ])
 
       setClientes((resClientes.data as ClienteSimples[]) || [])
@@ -106,28 +113,29 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
     carregar()
   }, [])
 
-  useEffect(() => {
-    if (estado.erro) toast.error(estado.erro)
-  }, [estado])
-
-  function onSubmit(dados: CriarAtividadeInput) {
-    const formData = new FormData()
+  async function handleAction(formData: FormData) {
+    // Adicionar campos de Select e Combobox (não são inputs nativos)
+    formData.set("tipo", tipoValue)
+    formData.set("prioridade", prioridadeValue)
+    if (clienteId) formData.set("cliente_id", clienteId)
+    if (negocioId) formData.set("negocio_id", negocioId)
+    if (imovelId) formData.set("imovel_id", imovelId)
     if (editando) formData.set("id", atividade.id)
-    formData.set("titulo", dados.titulo)
-    formData.set("tipo", dados.tipo)
-    formData.set("prioridade", dados.prioridade)
-    formData.set("data_inicio", dados.data_inicio)
-    if (dados.data_fim) formData.set("data_fim", dados.data_fim)
-    if (dados.descricao) formData.set("descricao", dados.descricao)
-    if (dados.cliente_id) formData.set("cliente_id", dados.cliente_id)
-    if (dados.negocio_id) formData.set("negocio_id", dados.negocio_id)
-    if (dados.imovel_id) formData.set("imovel_id", dados.imovel_id)
-    if (dados.lembrete) formData.set("lembrete", dados.lembrete)
-    formAction(formData)
+
+    setPendente(true)
+    try {
+      const resultado = await action({}, formData)
+      if (resultado?.erro) toast.error(resultado.erro)
+      if (resultado?.sucesso) toast.success(resultado.sucesso)
+    } catch {
+      // redirect() lança um erro especial que o Next.js intercepta
+    } finally {
+      setPendente(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form action={handleAction} className="space-y-6">
       {/* Dados da atividade */}
       <Card>
         <CardHeader>
@@ -139,89 +147,57 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
               <FieldLabel htmlFor="titulo">Título *</FieldLabel>
               <Input
                 id="titulo"
+                name="titulo"
                 placeholder="Ex: Visita ao apto 3Q com João"
-                {...register("titulo")}
-                aria-invalid={!!errors.titulo}
+                defaultValue={atividade?.titulo ?? valoresIniciais?.titulo ?? ""}
               />
-              <FieldError errors={[errors.titulo]} />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
-              <Controller
-                name="tipo"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="tipo" aria-invalid={!!errors.tipo}>
-                      <SelectValue placeholder={carregandoTipos ? "Carregando..." : "Selecione"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tipos.map((tipo) => (
-                        <SelectItem key={tipo.id} value={tipo.slug}>
-                          <span className="flex items-center gap-2">
-                            <span
-                              className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: tipo.cor }}
-                            />
-                            {tipo.nome}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError errors={[errors.tipo]} />
+              <Select value={tipoValue} onValueChange={(v) => v && setTipoValue(v)}>
+                <SelectTrigger id="tipo">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tipos.map((tipo) => (
+                    <SelectItem key={tipo.slug} value={tipo.slug}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: tipo.cor }}
+                        />
+                        {tipo.nome}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="prioridade">Prioridade</FieldLabel>
-              <Controller
-                name="prioridade"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="prioridade" aria-invalid={!!errors.prioridade}>
-                      <SelectValue placeholder="Média" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="baixa">Baixa</SelectItem>
-                      <SelectItem value="media">Média</SelectItem>
-                      <SelectItem value="alta">Alta</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <Select value={prioridadeValue} onValueChange={(v) => v && setPrioridadeValue(v)}>
+                <SelectTrigger id="prioridade">
+                  <SelectValue placeholder="Média" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="baixa">Baixa</SelectItem>
+                  <SelectItem value="media">Média</SelectItem>
+                  <SelectItem value="alta">Alta</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="data_vencimento">Data e Hora *</FieldLabel>
+              <Input
+                id="data_vencimento"
+                name="data_vencimento"
+                type="datetime-local"
+                defaultValue={formatarParaInput(
+                  (atv?.data_vencimento as string) ?? (atv?.data_inicio as string) ?? null
                 )}
-              />
-              <FieldError errors={[errors.prioridade]} />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="data_inicio">Data e Hora *</FieldLabel>
-              <Input
-                id="data_inicio"
-                type="datetime-local"
-                {...register("data_inicio")}
-                aria-invalid={!!errors.data_inicio}
-              />
-              <FieldError errors={[errors.data_inicio]} />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="data_fim">Término (opcional)</FieldLabel>
-              <Input
-                id="data_fim"
-                type="datetime-local"
-                {...register("data_fim")}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="lembrete">Lembrete por email (opcional)</FieldLabel>
-              <Input
-                id="lembrete"
-                type="datetime-local"
-                {...register("lembrete")}
               />
             </Field>
           </div>
@@ -237,58 +213,40 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
           <div className="grid gap-4 sm:grid-cols-3">
             <Field>
               <FieldLabel>Cliente</FieldLabel>
-              <Controller
-                name="cliente_id"
-                control={control}
-                render={({ field }) => (
-                  <ComboboxCampo
-                    opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Selecionar cliente..."
-                    placeholderBusca="Buscar por nome..."
-                    permitirVazio
-                    labelVazio="Nenhum"
-                  />
-                )}
+              <ComboboxCampo
+                opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))}
+                value={clienteId}
+                onChange={setClienteId}
+                placeholder="Selecionar cliente..."
+                placeholderBusca="Buscar por nome..."
+                permitirVazio
+                labelVazio="Nenhum"
               />
             </Field>
 
             <Field>
               <FieldLabel>Negócio</FieldLabel>
-              <Controller
-                name="negocio_id"
-                control={control}
-                render={({ field }) => (
-                  <ComboboxCampo
-                    opcoes={negocios.map((n) => ({ value: n.id, label: n.titulo }))}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Selecionar negócio..."
-                    placeholderBusca="Buscar por título..."
-                    permitirVazio
-                    labelVazio="Nenhum"
-                  />
-                )}
+              <ComboboxCampo
+                opcoes={negocios.map((n) => ({ value: n.id, label: n.titulo }))}
+                value={negocioId}
+                onChange={setNegocioId}
+                placeholder="Selecionar negócio..."
+                placeholderBusca="Buscar por título..."
+                permitirVazio
+                labelVazio="Nenhum"
               />
             </Field>
 
             <Field>
               <FieldLabel>Imóvel</FieldLabel>
-              <Controller
-                name="imovel_id"
-                control={control}
-                render={({ field }) => (
-                  <ComboboxCampo
-                    opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo} — ${i.titulo}` }))}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Selecionar imóvel..."
-                    placeholderBusca="Buscar por código ou título..."
-                    permitirVazio
-                    labelVazio="Nenhum"
-                  />
-                )}
+              <ComboboxCampo
+                opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo_interno} — ${i.titulo}` }))}
+                value={imovelId}
+                onChange={setImovelId}
+                placeholder="Selecionar imóvel..."
+                placeholderBusca="Buscar por código ou título..."
+                permitirVazio
+                labelVazio="Nenhum"
               />
             </Field>
           </div>
@@ -302,9 +260,11 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
         </CardHeader>
         <CardContent>
           <Textarea
+            id="descricao"
+            name="descricao"
             placeholder="Detalhes sobre a atividade..."
             rows={4}
-            {...register("descricao")}
+            defaultValue={atividade?.descricao ?? ""}
           />
         </CardContent>
       </Card>

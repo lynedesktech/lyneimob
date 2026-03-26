@@ -40,7 +40,7 @@ export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps)
   }, [])
 
   const temFiltros =
-    filtros.tipo || filtros.status || filtros.prioridade || filtros.usuario_id || filtros.data_inicio || filtros.data_fim
+    filtros.tipo || filtros.status || filtros.prioridade || filtros.responsavel_id || filtros.data_vencimento_inicio || filtros.data_vencimento_fim
 
   return (
     <div className="flex flex-wrap items-end gap-3">
@@ -115,9 +115,9 @@ export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps)
       <div className="space-y-1">
         <Label className="text-xs">Responsável</Label>
         <Select
-          value={filtros.usuario_id || "todos"}
+          value={filtros.responsavel_id || "todos"}
           onValueChange={(v) =>
-            onChange({ ...filtros, usuario_id: !v || v === "todos" ? undefined : v, pagina: 1 })
+            onChange({ ...filtros, responsavel_id: !v || v === "todos" ? undefined : v, pagina: 1 })
           }
         >
           <SelectTrigger className="w-[180px]">
@@ -139,9 +139,9 @@ export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps)
         <Input
           type="date"
           className="w-[150px]"
-          value={filtros.data_inicio || ""}
+          value={filtros.data_vencimento_inicio || ""}
           onChange={(e) =>
-            onChange({ ...filtros, data_inicio: e.target.value || undefined, pagina: 1 })
+            onChange({ ...filtros, data_vencimento_inicio: e.target.value || undefined, pagina: 1 })
           }
         />
       </div>
@@ -151,9 +151,9 @@ export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps)
         <Input
           type="date"
           className="w-[150px]"
-          value={filtros.data_fim || ""}
+          value={filtros.data_vencimento_fim || ""}
           onChange={(e) =>
-            onChange({ ...filtros, data_fim: e.target.value || undefined, pagina: 1 })
+            onChange({ ...filtros, data_vencimento_fim: e.target.value || undefined, pagina: 1 })
           }
         />
       </div>

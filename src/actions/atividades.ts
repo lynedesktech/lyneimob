@@ -33,13 +33,11 @@ export async function criarAtividade(
     titulo: formData.get("titulo"),
     tipo: formData.get("tipo"),
     prioridade: formData.get("prioridade") || "media",
-    data_inicio: formData.get("data_inicio"),
-    data_fim: formData.get("data_fim") || undefined,
+    data_vencimento: formData.get("data_vencimento"),
     descricao: formData.get("descricao") || undefined,
     cliente_id: formData.get("cliente_id") || undefined,
     negocio_id: formData.get("negocio_id") || undefined,
     imovel_id: formData.get("imovel_id") || undefined,
-    lembrete: formData.get("lembrete") || undefined,
   })
 
   if (!dados.success) {
@@ -56,16 +54,10 @@ export async function criarAtividade(
   const { data: atividade, error } = await supabase
     .from("atividades")
     .insert({
-      titulo: dados.data.titulo,
-      tipo: dados.data.tipo,
-      prioridade: dados.data.prioridade,
-      data_inicio: dados.data.data_inicio,
-      data_fim: dados.data.data_fim || null,
-      descricao: dados.data.descricao || null,
+      ...dados.data,
       cliente_id: dados.data.cliente_id || null,
       negocio_id: dados.data.negocio_id || null,
       imovel_id: dados.data.imovel_id || null,
-      lembrete: dados.data.lembrete || null,
       organizacao_id: usuario.organizacao_id,
       usuario_id: usuario.id,
     })
@@ -93,13 +85,11 @@ export async function atualizarAtividade(
     titulo: formData.get("titulo"),
     tipo: formData.get("tipo"),
     prioridade: formData.get("prioridade") || "media",
-    data_inicio: formData.get("data_inicio"),
-    data_fim: formData.get("data_fim") || undefined,
+    data_vencimento: formData.get("data_vencimento"),
     descricao: formData.get("descricao") || undefined,
     cliente_id: formData.get("cliente_id") || undefined,
     negocio_id: formData.get("negocio_id") || undefined,
     imovel_id: formData.get("imovel_id") || undefined,
-    lembrete: formData.get("lembrete") || undefined,
   })
 
   if (!dados.success) {
@@ -121,8 +111,6 @@ export async function atualizarAtividade(
       cliente_id: camposAtualizar.cliente_id || null,
       negocio_id: camposAtualizar.negocio_id || null,
       imovel_id: camposAtualizar.imovel_id || null,
-      data_fim: camposAtualizar.data_fim || null,
-      lembrete: camposAtualizar.lembrete || null,
     })
     .eq("id", id)
 
@@ -165,8 +153,7 @@ export async function excluirAtividade(id: string): Promise<EstadoFormulario> {
 // ============================================================
 
 export async function marcarConcluida(
-  id: string,
-  notas?: string
+  id: string
 ): Promise<EstadoFormulario> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) {
@@ -175,18 +162,12 @@ export async function marcarConcluida(
 
   const supabase = await criarClienteServer()
 
-  const atualizacao: Record<string, unknown> = {
-    status: "concluida",
-    data_conclusao: new Date().toISOString(),
-  }
-
-  if (notas) {
-    atualizacao.notas_pos_atividade = notas
-  }
-
   const { error } = await supabase
     .from("atividades")
-    .update(atualizacao)
+    .update({
+      status: "concluida",
+      data_conclusao: new Date().toISOString(),
+    })
     .eq("id", id)
 
   if (error) {
@@ -203,8 +184,7 @@ export async function marcarConcluida(
 
 export async function reagendarAtividade(
   id: string,
-  dataInicio: string,
-  dataFim?: string
+  dataVencimento: string
 ): Promise<EstadoFormulario> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) {
@@ -216,8 +196,7 @@ export async function reagendarAtividade(
   const { error } = await supabase
     .from("atividades")
     .update({
-      data_inicio: dataInicio,
-      data_fim: dataFim || null,
+      data_vencimento: dataVencimento,
     })
     .eq("id", id)
 

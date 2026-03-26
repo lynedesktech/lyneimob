@@ -47,12 +47,12 @@ export default async function ClientesPage({
       `nome.ilike.%${params.busca}%,email.ilike.%${params.busca}%,telefone.ilike.%${params.busca}%,cpf_cnpj.ilike.%${params.busca}%`
     )
   }
-  if (params.tipo) query = query.eq("tipo", params.tipo)
+  if (params.tipo) query = query.eq("interesse", params.tipo)
   if (params.origem) query = query.eq("origem", params.origem)
   if (params.status) query = query.eq("status", params.status)
 
   const { data: clientes, count } = await query
-    .order("created_at", { ascending: false })
+    .order("criado_em", { ascending: false })
     .range(inicio, fim)
 
   const total = count ?? 0

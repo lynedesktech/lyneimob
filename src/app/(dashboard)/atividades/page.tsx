@@ -48,9 +48,9 @@ export default function AtividadesPage() {
                   tipo: filtros.tipo,
                   status: filtros.status,
                   prioridade: filtros.prioridade,
-                  usuario_id: filtros.usuario_id,
-                  data_inicio: filtros.data_inicio,
-                  data_fim: filtros.data_fim,
+                  usuario_id: filtros.responsavel_id,
+                  data_inicio: filtros.data_vencimento_inicio,
+                  data_fim: filtros.data_vencimento_fim,
                 }}
                 total={total}
               />
@@ -75,7 +75,7 @@ export default function AtividadesPage() {
             tipo: filtros.tipo,
             status: filtros.status,
             prioridade: filtros.prioridade,
-            usuario_id: filtros.usuario_id,
+            responsavel_id: filtros.responsavel_id,
           }}
         />
       ) : (

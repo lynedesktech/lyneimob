@@ -24,7 +24,6 @@ export async function criarNegocio(
     titulo: formData.get("titulo"),
     cliente_id: formData.get("cliente_id"),
     imovel_id: formData.get("imovel_id") || undefined,
-    lote_id: formData.get("lote_id") || undefined,
     etapa_id: formData.get("etapa_id"),
     valor: formData.get("valor") || undefined,
     tipo: formData.get("tipo"),
@@ -43,31 +42,26 @@ export async function criarNegocio(
 
   const supabase = await criarClienteServer()
 
-  // Buscar maior posicao na etapa para adicionar no final
-  const { data: ultimoNegocio } = await supabase
-    .from("negocios")
-    .select("posicao")
-    .eq("etapa_id", dados.data.etapa_id)
-    .order("posicao", { ascending: false })
-    .limit(1)
-    .single()
-
-  const posicao = ultimoNegocio ? ultimoNegocio.posicao + 1 : 0
-
   const { data: negocio, error } = await supabase
     .from("negocios")
     .insert({
-      ...dados.data,
-      imovel_id: dados.data.imovel_id || null,
-      lote_id: dados.data.lote_id || null,
       organizacao_id: usuario.organizacao_id,
       corretor_id: usuario.id,
-      posicao,
+      titulo: dados.data.titulo,
+      cliente_id: dados.data.cliente_id,
+      imovel_id: dados.data.imovel_id || null,
+      etapa_id: dados.data.etapa_id,
+      valor: dados.data.valor ?? null,
+      tipo: dados.data.tipo,
+      status: "aberto",
+      previsao_fechamento: dados.data.previsao_fechamento || null,
+      observacoes: dados.data.observacoes || null,
     })
     .select("id")
     .single()
 
   if (error) {
+    console.error("Erro ao criar negócio:", error)
     return { erro: "Erro ao criar negócio. Tente novamente." }
   }
 
@@ -94,13 +88,11 @@ export async function atualizarNegocio(
     titulo: formData.get("titulo"),
     cliente_id: formData.get("cliente_id"),
     imovel_id: formData.get("imovel_id") || undefined,
-    lote_id: formData.get("lote_id") || undefined,
     etapa_id: formData.get("etapa_id"),
     valor: formData.get("valor") || undefined,
     tipo: formData.get("tipo"),
     previsao_fechamento: formData.get("previsao_fechamento") || undefined,
     observacoes: formData.get("observacoes") || undefined,
-    status: formData.get("status") || undefined,
   })
 
   if (!dados.success) {
@@ -113,24 +105,29 @@ export async function atualizarNegocio(
   }
 
   const supabase = await criarClienteServer()
-  const { id, ...camposAtualizar } = dados.data
 
   const { error } = await supabase
     .from("negocios")
     .update({
-      ...camposAtualizar,
-      imovel_id: camposAtualizar.imovel_id || null,
-      lote_id: camposAtualizar.lote_id || null,
+      titulo: dados.data.titulo,
+      cliente_id: dados.data.cliente_id,
+      imovel_id: dados.data.imovel_id || null,
+      etapa_id: dados.data.etapa_id,
+      valor: dados.data.valor ?? null,
+      tipo: dados.data.tipo,
+      previsao_fechamento: dados.data.previsao_fechamento || null,
+      observacoes: dados.data.observacoes || null,
     })
-    .eq("id", id)
+    .eq("id", dados.data.id)
 
   if (error) {
+    console.error("Erro ao atualizar negócio:", error)
     return { erro: "Erro ao atualizar negócio. Tente novamente." }
   }
 
   revalidatePath("/negocios")
-  revalidatePath(`/negocios/${id}`)
-  redirect(`/negocios/${id}`)
+  revalidatePath(`/negocios/${dados.data.id}`)
+  redirect(`/negocios/${dados.data.id}`)
 }
 
 // ============================================================
@@ -166,7 +163,7 @@ export async function excluirNegocio(id: string): Promise<EstadoFormulario> {
 export async function moverNegocio(
   negocioId: string,
   etapaId: string,
-  posicao: number
+  posicao?: number
 ): Promise<EstadoFormulario> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) {
@@ -175,9 +172,14 @@ export async function moverNegocio(
 
   const supabase = await criarClienteServer()
 
+  const atualizacao: Record<string, unknown> = { etapa_id: etapaId }
+  if (posicao !== undefined) {
+    atualizacao.posicao = posicao
+  }
+
   const { error } = await supabase
     .from("negocios")
-    .update({ etapa_id: etapaId, posicao })
+    .update(atualizacao)
     .eq("id", negocioId)
 
   if (error) {
@@ -208,22 +210,22 @@ export async function ganharNegocio(
 
   const supabase = await criarClienteServer()
 
-  // Buscar etapa do tipo "ganho"
+  // Buscar etapa do tipo "ganho" da organização
   const { data: etapaGanho } = await supabase
     .from("pipeline_etapas")
     .select("id")
     .eq("organizacao_id", usuario.organizacao_id)
     .eq("tipo", "ganho")
+    .limit(1)
     .single()
-
-  if (!etapaGanho) {
-    return { erro: "Etapa 'Ganho' não encontrada no pipeline" }
-  }
 
   const atualizacao: Record<string, unknown> = {
     status: "ganho",
-    etapa_id: etapaGanho.id,
     data_ganho: new Date().toISOString(),
+  }
+
+  if (etapaGanho) {
+    atualizacao.etapa_id = etapaGanho.id
   }
 
   if (valorFinal) {
@@ -239,27 +241,7 @@ export async function ganharNegocio(
     return { erro: "Erro ao marcar como ganho. Tente novamente." }
   }
 
-  // Se tem lote vinculado, marcar como vendido
-  const { data: negocioGanho } = await supabase
-    .from("negocios")
-    .select("lote_id, clientes(nome)")
-    .eq("id", id)
-    .single()
-
-  if (negocioGanho?.lote_id) {
-    const cliente = negocioGanho.clientes as unknown as { nome: string } | null
-    await supabase
-      .from("lotes")
-      .update({
-        status: "vendido",
-        data_venda: new Date().toISOString().split("T")[0],
-        comprador: cliente?.nome || null,
-      })
-      .eq("id", negocioGanho.lote_id)
-  }
-
   // Arquivar conversa WhatsApp associada, se houver
-  // Quando o negócio é ganho, a IA para de atender e o lead é encerrado
   await supabase
     .from("conversas_whatsapp")
     .update({ status: "arquivado" })
@@ -295,26 +277,28 @@ export async function perderNegocio(
 
   const supabase = await criarClienteServer()
 
-  // Buscar etapa do tipo "perdido"
+  // Buscar etapa do tipo "perdido" da organização
   const { data: etapaPerdido } = await supabase
     .from("pipeline_etapas")
     .select("id")
     .eq("organizacao_id", usuario.organizacao_id)
     .eq("tipo", "perdido")
+    .limit(1)
     .single()
 
-  if (!etapaPerdido) {
-    return { erro: "Etapa 'Perdido' não encontrada no pipeline" }
+  const atualizacao: Record<string, unknown> = {
+    status: "perdido",
+    motivo_perda: dados.data.motivo_perda,
+    data_perda: new Date().toISOString(),
+  }
+
+  if (etapaPerdido) {
+    atualizacao.etapa_id = etapaPerdido.id
   }
 
   const { error } = await supabase
     .from("negocios")
-    .update({
-      status: "perdido",
-      etapa_id: etapaPerdido.id,
-      motivo_perda: dados.data.motivo_perda,
-      data_perda: new Date().toISOString(),
-    })
+    .update(atualizacao)
     .eq("id", dados.data.id)
 
   if (error) {
@@ -325,10 +309,6 @@ export async function perderNegocio(
   revalidatePath(`/negocios/${dados.data.id}`)
   return { sucesso: "Negócio marcado como perdido" }
 }
-
-// ============================================================
-// Reabrir negócio (perdido → aberto)
-// ============================================================
 
 // ============================================================
 // Ações em Massa
@@ -386,22 +366,24 @@ export async function ganharNegociosEmMassa(ids: string[]): Promise<EstadoFormul
 
   const supabase = await criarClienteServer()
 
+  // Buscar etapa do tipo "ganho"
   const { data: etapaGanho } = await supabase
     .from("pipeline_etapas")
     .select("id")
     .eq("organizacao_id", usuario.organizacao_id)
     .eq("tipo", "ganho")
+    .limit(1)
     .single()
 
-  if (!etapaGanho) return { erro: "Etapa 'Ganho' não encontrada no pipeline" }
+  const atualizacao: Record<string, unknown> = {
+    status: "ganho",
+    data_ganho: new Date().toISOString(),
+  }
+  if (etapaGanho) atualizacao.etapa_id = etapaGanho.id
 
   const { error } = await supabase
     .from("negocios")
-    .update({
-      status: "ganho",
-      etapa_id: etapaGanho.id,
-      data_ganho: new Date().toISOString(),
-    })
+    .update(atualizacao)
     .in("id", ids)
 
   if (error) return { erro: "Erro ao marcar negócios como ganhos. Tente novamente." }
@@ -422,23 +404,25 @@ export async function perderNegociosEmMassa(
 
   const supabase = await criarClienteServer()
 
+  // Buscar etapa do tipo "perdido"
   const { data: etapaPerdido } = await supabase
     .from("pipeline_etapas")
     .select("id")
     .eq("organizacao_id", usuario.organizacao_id)
     .eq("tipo", "perdido")
+    .limit(1)
     .single()
 
-  if (!etapaPerdido) return { erro: "Etapa 'Perdido' não encontrada no pipeline" }
+  const atualizacao: Record<string, unknown> = {
+    status: "perdido",
+    motivo_perda: motivo,
+    data_perda: new Date().toISOString(),
+  }
+  if (etapaPerdido) atualizacao.etapa_id = etapaPerdido.id
 
   const { error } = await supabase
     .from("negocios")
-    .update({
-      status: "perdido",
-      etapa_id: etapaPerdido.id,
-      motivo_perda: motivo,
-      data_perda: new Date().toISOString(),
-    })
+    .update(atualizacao)
     .in("id", ids)
 
   if (error) return { erro: "Erro ao marcar negócios como perdidos. Tente novamente." }
@@ -451,7 +435,7 @@ export async function perderNegociosEmMassa(
 }
 
 // ============================================================
-// Reabrir negócio (perdido → aberto)
+// Reabrir negócio (perdido → primeira etapa normal)
 // ============================================================
 
 export async function reabrirNegocio(id: string): Promise<EstadoFormulario> {
@@ -462,7 +446,7 @@ export async function reabrirNegocio(id: string): Promise<EstadoFormulario> {
 
   const supabase = await criarClienteServer()
 
-  // Buscar primeira etapa normal
+  // Buscar primeira etapa normal da organização
   const { data: primeiraEtapa } = await supabase
     .from("pipeline_etapas")
     .select("id")
@@ -473,7 +457,7 @@ export async function reabrirNegocio(id: string): Promise<EstadoFormulario> {
     .single()
 
   if (!primeiraEtapa) {
-    return { erro: "Nenhuma etapa disponível no pipeline" }
+    return { erro: "Nenhuma etapa encontrada no pipeline" }
   }
 
   const { error } = await supabase
@@ -481,9 +465,8 @@ export async function reabrirNegocio(id: string): Promise<EstadoFormulario> {
     .update({
       status: "aberto",
       etapa_id: primeiraEtapa.id,
-      data_ganho: null,
-      data_perda: null,
       motivo_perda: null,
+      data_perda: null,
     })
     .eq("id", id)
 
