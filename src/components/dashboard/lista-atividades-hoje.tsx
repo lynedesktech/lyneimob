@@ -6,7 +6,7 @@ export type AtividadeHojeItem = {
   id: string
   titulo: string
   tipo: string
-  data_inicio: string
+  data_vencimento: string
   cliente_nome: string | null
 }
 
@@ -40,7 +40,7 @@ export function ListaAtividadesHoje({ atividades }: ListaAtividadesHojeProps) {
   return (
     <div className="space-y-2">
       {atividades.map((atividade) => {
-        const hora = new Date(atividade.data_inicio).toLocaleTimeString("pt-BR", {
+        const hora = new Date(atividade.data_vencimento).toLocaleTimeString("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
         })

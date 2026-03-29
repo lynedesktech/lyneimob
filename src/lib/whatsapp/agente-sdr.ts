@@ -194,15 +194,15 @@ export async function processarComAgente(
     if (conversa.imovel_interesse_id) {
       const { data: imovelInteresse } = await supabase
         .from("imoveis")
-        .select("titulo, tipo, bairro, preco_venda, preco_aluguel")
+        .select("titulo, tipo, bairro, valor, valor_aluguel")
         .eq("id", conversa.imovel_interesse_id as string)
         .single()
 
       if (imovelInteresse) {
-        const preco = imovelInteresse.preco_venda
-          ? `R$ ${Number(imovelInteresse.preco_venda).toLocaleString("pt-BR")}`
-          : imovelInteresse.preco_aluguel
-            ? `R$ ${Number(imovelInteresse.preco_aluguel).toLocaleString("pt-BR")}/mês`
+        const preco = imovelInteresse.valor
+          ? `R$ ${Number(imovelInteresse.valor).toLocaleString("pt-BR")}`
+          : imovelInteresse.valor_aluguel
+            ? `R$ ${Number(imovelInteresse.valor_aluguel).toLocaleString("pt-BR")}/mês`
             : "preço sob consulta"
         contextoExtra += `\n- Imóvel de interesse: ${imovelInteresse.titulo} | ${imovelInteresse.tipo} | ${imovelInteresse.bairro} | ${preco}`
       }

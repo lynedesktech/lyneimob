@@ -55,10 +55,10 @@ export function MatchImoveis({ organizacaoId, interesses }: MatchImoveisProps) {
         query = query.ilike("cidade", `%${interesse.cidade}%`)
       }
       if (interesse.preco_min) {
-        query = query.or(`preco_venda.gte.${interesse.preco_min},preco_aluguel.gte.${interesse.preco_min}`)
+        query = query.or(`valor.gte.${interesse.preco_min},valor_aluguel.gte.${interesse.preco_min}`)
       }
       if (interesse.preco_max) {
-        query = query.or(`preco_venda.lte.${interesse.preco_max},preco_aluguel.lte.${interesse.preco_max}`)
+        query = query.or(`valor.lte.${interesse.preco_max},valor_aluguel.lte.${interesse.preco_max}`)
       }
       if (interesse.quartos_min) {
         query = query.gte("quartos", interesse.quartos_min)
@@ -137,7 +137,7 @@ export function MatchImoveis({ organizacaoId, interesses }: MatchImoveisProps) {
               <CardContent className="space-y-1.5">
                 <div className="flex items-center gap-1 text-sm font-semibold text-primary">
                   <DollarSign className="h-3.5 w-3.5" />
-                  {formatarPreco(imovel.preco_venda ?? imovel.preco_aluguel)}
+                  {formatarPreco(imovel.valor ?? imovel.valor_aluguel)}
                 </div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" />

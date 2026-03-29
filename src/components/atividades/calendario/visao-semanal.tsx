@@ -35,7 +35,7 @@ export function VisaoSemanal({ atividades, dataAtual }: VisaoSemanalProps) {
   const atividadesPorDia = useMemo(() => {
     const mapa = new Map<string, AtividadeComRelacoes[]>()
     for (const a of atividades) {
-      const chave = new Date(a.data_inicio).toDateString()
+      const chave = new Date(a.data_vencimento).toDateString()
       if (!mapa.has(chave)) mapa.set(chave, [])
       mapa.get(chave)!.push(a)
     }
@@ -128,7 +128,7 @@ export function VisaoSemanal({ atividades, dataAtual }: VisaoSemanalProps) {
 
               {/* Atividades posicionadas */}
               {atividadesDoDia.map((a) => {
-                const inicio = new Date(a.data_inicio)
+                const inicio = new Date(a.data_vencimento)
                 const horaInicio = inicio.getHours() + inicio.getMinutes() / 60
                 const fim = a.data_fim ? new Date(a.data_fim) : null
                 const horaFim = fim

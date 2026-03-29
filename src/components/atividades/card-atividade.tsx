@@ -23,7 +23,7 @@ export function CardAtividade({ atividade }: CardAtividadeProps) {
 
   const estaAtrasada =
     atividade.status === "pendente" &&
-    new Date(atividade.data_inicio) < new Date()
+    new Date(atividade.data_vencimento) < new Date()
 
   return (
     <Link href={`/atividades/${atividade.id}`}>
@@ -54,7 +54,7 @@ export function CardAtividade({ atividade }: CardAtividadeProps) {
             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                {formatarDataHoraCurta(atividade.data_inicio)}
+                {formatarDataHoraCurta(atividade.data_vencimento)}
               </span>
               {atividade.clientes && (
                 <span className="flex items-center gap-1">

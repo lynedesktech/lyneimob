@@ -27,8 +27,8 @@ export function CardImovelPublico({ imovel, slug }: Props) {
 
   const preco =
     imovel.finalidade === "aluguel"
-      ? imovel.preco_aluguel
-      : imovel.preco_venda
+      ? imovel.valor_aluguel
+      : imovel.valor
 
   return (
     <Link href={`/${slug}/imoveis/${imovel.id}`}>
@@ -63,7 +63,7 @@ export function CardImovelPublico({ imovel, slug }: Props) {
             {imovel.titulo_ia || imovel.titulo}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            {labelsTipoImovel[imovel.tipo] ?? imovel.tipo} • Cód. {imovel.codigo}
+            {labelsTipoImovel[imovel.tipo] ?? imovel.tipo} • Cód. {imovel.codigo_interno}
           </p>
         </CardHeader>
 
@@ -98,10 +98,10 @@ export function CardImovelPublico({ imovel, slug }: Props) {
                 {imovel.banheiros}
               </span>
             )}
-            {imovel.vagas_garagem > 0 && (
+            {imovel.vagas > 0 && (
               <span className="flex items-center gap-1">
                 <Car className="h-3.5 w-3.5" />
-                {imovel.vagas_garagem}
+                {imovel.vagas}
               </span>
             )}
             {imovel.area_total && (

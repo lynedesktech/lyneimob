@@ -139,11 +139,11 @@ export async function buscarAtividadesParaExportacao(
   if (filtros.status) query = query.eq("status", filtros.status)
   if (filtros.prioridade) query = query.eq("prioridade", filtros.prioridade)
   if (filtros.usuario_id) query = query.eq("usuario_id", filtros.usuario_id)
-  if (filtros.data_inicio) query = query.gte("data_inicio", filtros.data_inicio)
-  if (filtros.data_fim) query = query.lte("data_inicio", filtros.data_fim)
+  if (filtros.data_vencimento) query = query.gte("data_vencimento", filtros.data_vencimento)
+  if (filtros.data_fim) query = query.lte("data_vencimento", filtros.data_fim)
 
   const { data, error } = await query
-    .order("data_inicio", { ascending: false })
+    .order("data_vencimento", { ascending: false })
     .limit(LIMITE_EXPORTACAO)
 
   if (error) return { erro: "Erro ao buscar atividades." }

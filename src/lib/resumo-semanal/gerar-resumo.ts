@@ -120,14 +120,14 @@ export async function coletarMetricasSemanais(
     .gte("data_conclusao", inicioISO)
     .lte("data_conclusao", fimISO)
 
-  // Atividades vencidas (pendentes com data_inicio no passado)
+  // Atividades vencidas (pendentes com data_vencimento no passado)
   const agora = new Date().toISOString()
   const { count: atividadesVencidas } = await supabase
     .from("atividades")
     .select("id", { count: "exact", head: true })
     .eq("organizacao_id", organizacaoId)
     .eq("status", "pendente")
-    .lt("data_inicio", agora)
+    .lt("data_vencimento", agora)
 
   // Atividades pendentes totais
   const { count: atividadesPendentes } = await supabase

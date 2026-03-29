@@ -36,7 +36,7 @@ export function VisaoDiaria({ atividades, dataAtual }: VisaoDiariaProps) {
   const atividadesPorHora = useMemo(() => {
     const mapa = new Map<number, AtividadeComRelacoes[]>()
     for (const a of atividades) {
-      const hora = new Date(a.data_inicio).getHours()
+      const hora = new Date(a.data_vencimento).getHours()
       const horaSlot = Math.max(Math.min(hora, HORA_FIM - 1), HORA_INICIO)
       if (!mapa.has(horaSlot)) mapa.set(horaSlot, [])
       mapa.get(horaSlot)!.push(a)
@@ -115,7 +115,7 @@ export function VisaoDiaria({ atividades, dataAtual }: VisaoDiariaProps) {
                             </span>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {formatHora(a.data_inicio)}
+                            {formatHora(a.data_vencimento)}
                             {a.data_fim && ` — ${formatHora(a.data_fim)}`}
                             {" · "}
                             {labelsTipoAtividade[a.tipo]}

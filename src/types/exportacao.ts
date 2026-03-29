@@ -54,6 +54,6 @@ export type FiltrosExportacaoAtividades = {
   status?: string
   prioridade?: string
   usuario_id?: string
-  data_inicio?: string
+  data_vencimento?: string
   data_fim?: string
 }

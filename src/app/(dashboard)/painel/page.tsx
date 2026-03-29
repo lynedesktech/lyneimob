@@ -79,8 +79,8 @@ export default async function DashboardPage() {
         .select("id", { count: "exact", head: true })
         .eq("usuario_id", user!.id)
         .eq("status", "pendente")
-        .gte("data_inicio", inicioDia)
-        .lt("data_inicio", fimDia),
+        .gte("data_vencimento", inicioDia)
+        .lt("data_vencimento", fimDia),
 
       supabase
         .from("conversas_whatsapp")
@@ -89,12 +89,12 @@ export default async function DashboardPage() {
 
       supabase
         .from("atividades")
-        .select("id, titulo, tipo, data_inicio, clientes(nome)")
+        .select("id, titulo, tipo, data_vencimento, clientes(nome)")
         .eq("usuario_id", user!.id)
         .eq("status", "pendente")
-        .gte("data_inicio", inicioDia)
-        .lt("data_inicio", fimDia)
-        .order("data_inicio", { ascending: true })
+        .gte("data_vencimento", inicioDia)
+        .lt("data_vencimento", fimDia)
+        .order("data_vencimento", { ascending: true })
         .limit(5),
     ])
 
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
       id: a.id,
       titulo: a.titulo,
       tipo: a.tipo,
-      data_inicio: a.data_inicio,
+      data_vencimento: a.data_vencimento,
       cliente_nome:
         (a.clientes as unknown as { nome: string } | null)?.nome ?? null,
     }))
@@ -174,8 +174,8 @@ export default async function DashboardPage() {
       .from("atividades")
       .select("id", { count: "exact", head: true })
       .eq("status", "pendente")
-      .gte("data_inicio", inicioDia)
-      .lt("data_inicio", fimDia),
+      .gte("data_vencimento", inicioDia)
+      .lt("data_vencimento", fimDia),
 
     supabase
       .from("conversas_whatsapp")
@@ -184,11 +184,11 @@ export default async function DashboardPage() {
 
     supabase
       .from("atividades")
-      .select("id, titulo, tipo, data_inicio, clientes(nome)")
+      .select("id, titulo, tipo, data_vencimento, clientes(nome)")
       .eq("status", "pendente")
-      .gte("data_inicio", inicioDia)
-      .lt("data_inicio", fimDia)
-      .order("data_inicio", { ascending: true })
+      .gte("data_vencimento", inicioDia)
+      .lt("data_vencimento", fimDia)
+      .order("data_vencimento", { ascending: true })
       .limit(5),
 
     // Etapas do pipeline para o funil
@@ -220,7 +220,7 @@ export default async function DashboardPage() {
     id: a.id,
     titulo: a.titulo,
     tipo: a.tipo,
-    data_inicio: a.data_inicio,
+    data_vencimento: a.data_vencimento,
     cliente_nome:
       (a.clientes as unknown as { nome: string } | null)?.nome ?? null,
   }))

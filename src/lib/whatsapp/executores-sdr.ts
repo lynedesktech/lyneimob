@@ -58,7 +58,7 @@ export async function executarBuscarImoveis(
 
   let query = supabase
     .from("imoveis")
-    .select("id, titulo, tipo, finalidade, bairro, cidade, estado, preco_venda, preco_aluguel, quartos, area_total")
+    .select("id, titulo, tipo, finalidade, bairro, cidade, estado, valor, valor_aluguel, quartos, area_total")
     .eq("organizacao_id", contexto.organizacaoId)
     .eq("status", "disponivel")
 
@@ -71,11 +71,11 @@ export async function executarBuscarImoveis(
   if (args.bairro) query = query.ilike("bairro", `%${args.bairro}%`)
   if (args.preco_min) {
     const min = args.preco_min as number
-    query = query.or(`preco_venda.gte.${min},preco_aluguel.gte.${min}`)
+    query = query.or(`valor.gte.${min},valor_aluguel.gte.${min}`)
   }
   if (args.preco_max) {
     const max = args.preco_max as number
-    query = query.or(`preco_venda.lte.${max},preco_aluguel.lte.${max}`)
+    query = query.or(`valor.lte.${max},valor_aluguel.lte.${max}`)
   }
   if (args.quartos_min) query = query.gte("quartos", args.quartos_min as number)
 
@@ -87,10 +87,10 @@ export async function executarBuscarImoveis(
   if (!imoveis || imoveis.length === 0) return "Nenhum imóvel encontrado com esses critérios."
 
   const lista = imoveis.map((i) => {
-    const preco = i.preco_venda
-      ? `Venda: R$ ${Number(i.preco_venda).toLocaleString("pt-BR")}`
-      : i.preco_aluguel
-        ? `Aluguel: R$ ${Number(i.preco_aluguel).toLocaleString("pt-BR")}/mês`
+    const preco = i.valor
+      ? `Venda: R$ ${Number(i.valor).toLocaleString("pt-BR")}`
+      : i.valor_aluguel
+        ? `Aluguel: R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
         : "Preço sob consulta"
     return `- [${i.id}] ${i.titulo} | ${i.tipo} | ${i.bairro || ""}, ${i.cidade}-${i.estado} | ${preco} | ${i.quartos || 0} quartos | ${i.area_total || "?"}m²`
   })
@@ -248,7 +248,7 @@ export async function executarCriarAtividade(
       usuario_id: usuarioId,
       titulo: args.titulo as string,
       tipo: (args.tipo as string) || "follow_up",
-      data_inicio: args.data_inicio as string,
+      data_vencimento: args.data_vencimento as string,
       cliente_id: (args.cliente_id as string) || null,
       negocio_id: (args.negocio_id as string) || null,
       descricao: (args.descricao as string) || null,

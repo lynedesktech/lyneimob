@@ -76,7 +76,7 @@ export type Imovel = {
   id: string
   organizacao_id: string
   corretor_id: string
-  codigo: string
+  codigo_interno: string
   titulo: string
   descricao: string | null
   tipo: TipoImovel
@@ -89,16 +89,16 @@ export type Imovel = {
   bairro: string | null
   cidade: string
   estado: string
-  preco_venda: number | null
-  preco_aluguel: number | null
-  iptu: number | null
-  condominio: number | null
+  valor: number | null
+  valor_aluguel: number | null
+  valor_iptu: number | null
+  valor_condominio: number | null
   area_total: number | null
   area_construida: number | null
   quartos: number
   suites: number
   banheiros: number
-  vagas_garagem: number
+  vagas: number
   andares: number | null
   observacoes_internas: string | null
   publicar_site: boolean
@@ -275,7 +275,7 @@ export type Atividade = {
   tipo: TipoAtividade
   status: StatusAtividade
   prioridade: PrioridadeAtividade
-  data_inicio: string
+  data_vencimento: string
   data_fim: string | null
   data_conclusao: string | null
   lembrete: string | null

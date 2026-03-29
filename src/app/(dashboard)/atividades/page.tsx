@@ -49,7 +49,7 @@ export default function AtividadesPage() {
                   status: filtros.status,
                   prioridade: filtros.prioridade,
                   usuario_id: filtros.responsavel_id,
-                  data_inicio: filtros.data_vencimento_inicio,
+                  data_vencimento: filtros.data_vencimento_inicio,
                   data_fim: filtros.data_vencimento_fim,
                 }}
                 total={total}

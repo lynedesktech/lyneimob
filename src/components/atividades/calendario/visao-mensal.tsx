@@ -48,7 +48,7 @@ export function VisaoMensal({ atividades, dataAtual }: VisaoMensalProps) {
   const atividadesPorDia = useMemo(() => {
     const mapa = new Map<string, AtividadeComRelacoes[]>()
     for (const a of atividades) {
-      const chave = new Date(a.data_inicio).toDateString()
+      const chave = new Date(a.data_vencimento).toDateString()
       if (!mapa.has(chave)) mapa.set(chave, [])
       mapa.get(chave)!.push(a)
     }

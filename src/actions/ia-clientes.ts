@@ -235,7 +235,7 @@ export async function matchInteligente(
   // Buscar imóveis disponíveis da mesma organização (top 30 mais recentes)
   const { data: imoveis } = await supabase
     .from("imoveis")
-    .select("id, titulo, tipo, finalidade, bairro, cidade, estado, preco_venda, preco_aluguel, quartos, area_total")
+    .select("id, titulo, tipo, finalidade, bairro, cidade, estado, valor, valor_aluguel, quartos, area_total")
     .eq("organizacao_id", cliente.organizacao_id)
     .eq("status", "disponivel")
     .order("created_at", { ascending: false })
@@ -248,10 +248,10 @@ export async function matchInteligente(
   // Montar lista resumida de imóveis
   const listaImoveis = imoveis
     .map((i, idx) => {
-      const preco = i.preco_venda
-        ? `Venda: R$ ${Number(i.preco_venda).toLocaleString("pt-BR")}`
-        : i.preco_aluguel
-          ? `Aluguel: R$ ${Number(i.preco_aluguel).toLocaleString("pt-BR")}/mês`
+      const preco = i.valor
+        ? `Venda: R$ ${Number(i.valor).toLocaleString("pt-BR")}`
+        : i.valor_aluguel
+          ? `Aluguel: R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
           : "Preço não informado"
       return `${idx + 1}. [${i.id}] ${i.titulo} — ${labelsTipoImovel[i.tipo] ?? i.tipo}, ${i.bairro || ""} ${i.cidade}-${i.estado}, ${preco}, ${i.quartos || 0} quartos, ${i.area_total || "?"}m²`
     })

@@ -47,7 +47,7 @@ export type ItemBuscaAtividade = {
   titulo: string
   tipo: TipoAtividade
   status: StatusAtividade
-  data_inicio: string
+  data_vencimento: string
 }
 
 export type ResultadoBuscaGlobal = {

@@ -324,7 +324,7 @@ export function ImportadorImoveis() {
                         )}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs">
-                        {v.dados.codigo || "—"}
+                        {v.dados.codigo_interno || "—"}
                       </td>
                       <td className="max-w-[200px] truncate px-3 py-2">
                         {v.dados.titulo || "—"}
@@ -342,8 +342,8 @@ export function ImportadorImoveis() {
                       <td className="px-3 py-2">{v.dados.cidade || "—"}</td>
                       <td className="px-3 py-2">{v.dados.estado || "—"}</td>
                       <td className="px-3 py-2">
-                        {v.dados.preco_venda
-                          ? Number(v.dados.preco_venda).toLocaleString("pt-BR", {
+                        {v.dados.valor
+                          ? Number(v.dados.valor).toLocaleString("pt-BR", {
                               style: "currency",
                               currency: "BRL",
                             })
@@ -476,7 +476,7 @@ export function ImportadorImoveis() {
                   {resultado.erros.map((e, i) => (
                     <tr key={i} className="border-b">
                       <td className="px-3 py-2 text-muted-foreground">{e.linha}</td>
-                      <td className="px-3 py-2 font-mono text-xs">{e.codigo}</td>
+                      <td className="px-3 py-2 font-mono text-xs">{e.codigo_interno}</td>
                       <td className="px-3 py-2 text-destructive">{e.erro}</td>
                     </tr>
                   ))}

@@ -24,8 +24,8 @@ export function useAtividadesCalendario(filtros: FiltrosCalendario) {
         .select(
           "*, clientes(id, nome), imoveis(id, titulo), negocios(id, titulo)"
         )
-        .gte("data_inicio", filtros.dataInicio)
-        .lte("data_inicio", filtros.dataFim)
+        .gte("data_vencimento", filtros.dataInicio)
+        .lte("data_vencimento", filtros.dataFim)
 
       if (filtros.tipo) {
         query = query.eq("tipo", filtros.tipo)
@@ -40,7 +40,7 @@ export function useAtividadesCalendario(filtros: FiltrosCalendario) {
         query = query.eq("usuario_id", filtros.responsavel_id)
       }
 
-      query = query.order("data_inicio", { ascending: true })
+      query = query.order("data_vencimento", { ascending: true })
 
       const { data, error } = await query
 

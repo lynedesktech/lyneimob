@@ -28,7 +28,7 @@ interface ImovelBanco {
   bairro: string | null
   cidade: string | null
   estado: string | null
-  codigo_interno: string | null
+  codigo_interno: string
   destaque: boolean
   created_at: string
 }

@@ -126,7 +126,7 @@ export default async function DetalheAtividadePage({ params }: Props) {
                 <div>
                   <p className="text-xs text-muted-foreground">Data/Hora</p>
                   <p className="text-sm font-medium">
-                    {a.data_inicio ? formatarDataHora(a.data_inicio) : "—"}
+                    {a.data_vencimento ? formatarDataHora(a.data_vencimento) : "—"}
                   </p>
                 </div>
               </CardContent>

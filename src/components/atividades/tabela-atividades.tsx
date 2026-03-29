@@ -197,7 +197,7 @@ export function TabelaAtividades({
                 const selecionado = selecionados.has(atividade.id)
                 const estaAtrasada =
                   atividade.status === "pendente" &&
-                  new Date(atividade.data_inicio) < new Date()
+                  new Date(atividade.data_vencimento) < new Date()
 
                 return (
                   <TableRow
@@ -242,7 +242,7 @@ export function TabelaAtividades({
                     )}
                     {colunas.data && (
                       <TableCell className="text-muted-foreground">
-                        {formatarDataHoraCurta(atividade.data_inicio)}
+                        {formatarDataHoraCurta(atividade.data_vencimento)}
                       </TableCell>
                     )}
                     {colunas.status && (

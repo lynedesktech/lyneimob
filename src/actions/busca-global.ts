@@ -47,9 +47,9 @@ export async function buscarGlobal(termo: string): Promise<ResultadoBuscaGlobal>
 
     supabase
       .from("atividades")
-      .select("id, titulo, tipo, status, data_inicio")
+      .select("id, titulo, tipo, status, data_vencimento")
       .or(`titulo.ilike.${busca},descricao.ilike.${busca}`)
-      .order("data_inicio", { ascending: false })
+      .order("data_vencimento", { ascending: false })
       .limit(5),
   ])
 

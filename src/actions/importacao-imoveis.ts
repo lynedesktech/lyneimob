@@ -56,7 +56,7 @@ export async function importarImoveis(
     } else {
       errosValidacao.push({
         linha: i + 1,
-        codigo: String(linhas[i].codigo || "—"),
+        codigo_interno: String(linhas[i].codigo_interno || "—"),
         erro: resultado.error.issues[0].message,
       })
     }
@@ -114,7 +114,7 @@ export async function importarImoveis(
           const linhaOriginal = i + j + 1
           errosInsercao.push({
             linha: linhaOriginal,
-            codigo: batch[j].codigo,
+            codigo_interno: batch[j].codigo_interno,
             erro:
               erroIndividual.code === "23505"
                 ? "Código já existe"

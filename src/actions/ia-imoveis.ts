@@ -28,14 +28,14 @@ function montarContextoImovel(imovel: Record<string, unknown>): string {
   if ((imovel.quartos as number) > 0) partes.push(`Quartos: ${imovel.quartos}`)
   if ((imovel.suites as number) > 0) partes.push(`Suítes: ${imovel.suites}`)
   if ((imovel.banheiros as number) > 0) partes.push(`Banheiros: ${imovel.banheiros}`)
-  if ((imovel.vagas_garagem as number) > 0) partes.push(`Vagas de garagem: ${imovel.vagas_garagem}`)
+  if ((imovel.vagas as number) > 0) partes.push(`Vagas de garagem: ${imovel.vagas}`)
   if (imovel.andares) partes.push(`Andares: ${imovel.andares}`)
 
-  if (imovel.preco_venda) {
-    partes.push(`Preço de venda: R$ ${Number(imovel.preco_venda).toLocaleString("pt-BR")}`)
+  if (imovel.valor) {
+    partes.push(`Preço de venda: R$ ${Number(imovel.valor).toLocaleString("pt-BR")}`)
   }
-  if (imovel.preco_aluguel) {
-    partes.push(`Aluguel: R$ ${Number(imovel.preco_aluguel).toLocaleString("pt-BR")}/mês`)
+  if (imovel.valor_aluguel) {
+    partes.push(`Aluguel: R$ ${Number(imovel.valor_aluguel).toLocaleString("pt-BR")}/mês`)
   }
   if (imovel.condominio) {
     partes.push(`Condomínio: R$ ${Number(imovel.condominio).toLocaleString("pt-BR")}/mês`)

@@ -27,7 +27,7 @@ export async function gerarBriefingVisita(
   const { data: atividade, error } = await supabase
     .from("atividades")
     .select(
-      "*, clientes(nome, tipo, origem, telefone, whatsapp, observacoes, score_lead), imoveis(titulo, tipo, finalidade, preco_venda, preco_aluguel, bairro, cidade, quartos, area_total), negocios(titulo, tipo, valor, status)"
+      "*, clientes(nome, tipo, origem, telefone, whatsapp, observacoes, score_lead), imoveis(titulo, tipo, finalidade, valor, valor_aluguel, bairro, cidade, quartos, area_total), negocios(titulo, tipo, valor, status)"
     )
     .eq("id", atividadeId)
     .single()
@@ -91,8 +91,8 @@ ${
   atividade.imoveis
     ? `- ${(atividade.imoveis as Record<string, unknown>)?.titulo}
 - Tipo: ${(atividade.imoveis as Record<string, unknown>)?.tipo} | ${(atividade.imoveis as Record<string, unknown>)?.finalidade}
-- Valor venda: ${(atividade.imoveis as Record<string, unknown>)?.preco_venda ? `R$ ${Number((atividade.imoveis as Record<string, unknown>)?.preco_venda).toLocaleString("pt-BR")}` : "N/A"}
-- Valor aluguel: ${(atividade.imoveis as Record<string, unknown>)?.preco_aluguel ? `R$ ${Number((atividade.imoveis as Record<string, unknown>)?.preco_aluguel).toLocaleString("pt-BR")}` : "N/A"}
+- Valor venda: ${(atividade.imoveis as Record<string, unknown>)?.valor ? `R$ ${Number((atividade.imoveis as Record<string, unknown>)?.valor).toLocaleString("pt-BR")}` : "N/A"}
+- Valor aluguel: ${(atividade.imoveis as Record<string, unknown>)?.valor_aluguel ? `R$ ${Number((atividade.imoveis as Record<string, unknown>)?.valor_aluguel).toLocaleString("pt-BR")}` : "N/A"}
 - Local: ${(atividade.imoveis as Record<string, unknown>)?.bairro || ""}, ${(atividade.imoveis as Record<string, unknown>)?.cidade || ""}
 - ${(atividade.imoveis as Record<string, unknown>)?.quartos || 0} quartos, ${(atividade.imoveis as Record<string, unknown>)?.area_total || "N/A"}m²`
     : "Nenhum imóvel vinculado"

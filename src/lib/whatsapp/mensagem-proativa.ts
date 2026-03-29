@@ -87,15 +87,15 @@ export async function enviarMensagemProativaPortal(dados: DadosProativo): Promis
     if (imovelId) {
       const { data: imovel } = await supabase
         .from("imoveis")
-        .select("titulo, tipo, bairro, cidade, preco_venda, preco_aluguel")
+        .select("titulo, tipo, bairro, cidade, valor, valor_aluguel")
         .eq("id", imovelId)
         .single()
 
       if (imovel) {
-        const preco = imovel.preco_venda
-          ? `R$ ${Number(imovel.preco_venda).toLocaleString("pt-BR")}`
-          : imovel.preco_aluguel
-            ? `R$ ${Number(imovel.preco_aluguel).toLocaleString("pt-BR")}/mês`
+        const preco = imovel.valor
+          ? `R$ ${Number(imovel.valor).toLocaleString("pt-BR")}`
+          : imovel.valor_aluguel
+            ? `R$ ${Number(imovel.valor_aluguel).toLocaleString("pt-BR")}/mês`
             : "preço sob consulta"
         infoImovel = `${imovel.titulo} | ${imovel.tipo} | ${imovel.bairro}${imovel.cidade ? `, ${imovel.cidade}` : ""} | ${preco}`
       }

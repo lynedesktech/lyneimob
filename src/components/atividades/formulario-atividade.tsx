@@ -55,7 +55,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
   const editando = !!atividade
   const action = editando ? atualizarAtividade : criarAtividade
 
-  // Acessar data_vencimento com fallback para data_inicio (DB pode ter nomes diferentes)
+  // Acessar data_vencimento com fallback para data_vencimento (DB pode ter nomes diferentes)
   const atv = atividade as (AtividadeComRelacoes & Record<string, unknown>) | null | undefined
 
   const [tipoValue, setTipoValue] = useState(atividade?.tipo ?? valoresIniciais?.tipo ?? "")
@@ -196,7 +196,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
                 name="data_vencimento"
                 type="datetime-local"
                 defaultValue={formatarParaInput(
-                  (atv?.data_vencimento as string) ?? (atv?.data_inicio as string) ?? null
+                  (atv?.data_vencimento as string) ?? (atv?.data_vencimento as string) ?? null
                 )}
               />
             </Field>

@@ -36,10 +36,10 @@ export function useListaAtividades(filtros: FiltrosAtividadesInput) {
         query = query.eq("usuario_id", filtros.responsavel_id)
       }
       if (filtros.data_vencimento_inicio) {
-        query = query.gte("data_inicio", filtros.data_vencimento_inicio)
+        query = query.gte("data_vencimento", filtros.data_vencimento_inicio)
       }
       if (filtros.data_vencimento_fim) {
-        query = query.lte("data_inicio", filtros.data_vencimento_fim)
+        query = query.lte("data_vencimento", filtros.data_vencimento_fim)
       }
 
       // Paginação
@@ -48,7 +48,7 @@ export function useListaAtividades(filtros: FiltrosAtividadesInput) {
       const { inicio, fim } = calcularRange(pagina, porPagina)
 
       query = query
-        .order("data_inicio", { ascending: true })
+        .order("data_vencimento", { ascending: true })
         .range(inicio, fim)
 
       const { data, error, count } = await query

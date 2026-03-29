@@ -147,7 +147,7 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
             enum: ["ligacao", "email", "visita", "reuniao", "follow_up", "proposta", "outro"],
             description: "Tipo da atividade",
           },
-          data_inicio: {
+          data_vencimento: {
             type: "string",
             description: "Data e hora no formato ISO (ex: '2026-03-16T10:00:00')",
           },
@@ -164,7 +164,7 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
             description: "Descrição ou notas para o corretor",
           },
         },
-        required: ["titulo", "tipo", "data_inicio"],
+        required: ["titulo", "tipo", "data_vencimento"],
       },
     },
   },

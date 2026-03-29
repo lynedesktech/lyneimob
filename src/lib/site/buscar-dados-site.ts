@@ -125,7 +125,7 @@ export async function buscarImoveisPublicos(
   }
   if (filtros.preco_min || filtros.preco_max) {
     const campoPreco =
-      filtros.finalidade === "aluguel" ? "preco_aluguel" : "preco_venda"
+      filtros.finalidade === "aluguel" ? "valor_aluguel" : "valor"
 
     if (filtros.preco_min) {
       query = query.gte(campoPreco, filtros.preco_min)

@@ -81,13 +81,13 @@ export default async function DetalheImovelPage({
   const titulo = imovel.titulo_ia || imovel.titulo
   const descricao = imovel.descricao_ia || imovel.descricao
 
-  const precoVenda = imovel.preco_venda
-  const precoAluguel = imovel.preco_aluguel
+  const precoVenda = imovel.valor
+  const precoAluguel = imovel.valor_aluguel
 
   // Link do WhatsApp com mensagem pré-preenchida
   const whatsappNumero = organizacao.whatsapp_numero?.replace(/\D/g, "")
   const whatsappMensagem = encodeURIComponent(
-    `Olá! Tenho interesse no imóvel "${titulo}" (Cód. ${imovel.codigo}). Podemos conversar?`
+    `Olá! Tenho interesse no imóvel "${titulo}" (Cód. ${imovel.codigo_interno}). Podemos conversar?`
   )
   const whatsappUrl = whatsappNumero
     ? `https://wa.me/${whatsappNumero}?text=${whatsappMensagem}`
@@ -117,9 +117,9 @@ export default async function DetalheImovelPage({
       icone: Bath,
       label: `${imovel.banheiros} ${imovel.banheiros === 1 ? "banheiro" : "banheiros"}`,
     },
-    imovel.vagas_garagem > 0 && {
+    imovel.vagas > 0 && {
       icone: Car,
-      label: `${imovel.vagas_garagem} ${imovel.vagas_garagem === 1 ? "vaga" : "vagas"}`,
+      label: `${imovel.vagas} ${imovel.vagas === 1 ? "vaga" : "vagas"}`,
     },
     imovel.area_total && {
       icone: Maximize,
@@ -158,7 +158,7 @@ export default async function DetalheImovelPage({
               <div>
                 <h1 className="text-2xl font-bold">{titulo}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Cód. {imovel.codigo}
+                  Cód. {imovel.codigo_interno}
                 </p>
               </div>
               <div className="text-right">
@@ -251,7 +251,7 @@ export default async function DetalheImovelPage({
               )}
 
               <Link
-                href={`/${slug}/contato?imovel=${imovel.codigo}`}
+                href={`/${slug}/contato?imovel=${imovel.codigo_interno}`}
                 className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--site-primaria)] px-4 py-3 text-sm font-medium text-[var(--site-primaria)] transition-colors hover:bg-[var(--site-primaria)]/5"
               >
                 <Mail className="h-4 w-4" />

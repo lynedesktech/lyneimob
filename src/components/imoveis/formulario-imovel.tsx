@@ -275,7 +275,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                   step="0.01"
                   min="0"
                   placeholder="500000"
-                  defaultValue={campoNum(imovel, "valor", "preco_venda")}
+                  defaultValue={campoNum(imovel, "valor", "valor")}
                 />
               </InputGroup>
             </Field>
@@ -377,7 +377,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
 
             <Field>
               <FieldLabel htmlFor="vagas">Vagas de garagem</FieldLabel>
-              <Input id="vagas" name="vagas" type="number" min="0" placeholder="2" defaultValue={campoNum(imovel, "vagas", "vagas_garagem") || 0} />
+              <Input id="vagas" name="vagas" type="number" min="0" placeholder="2" defaultValue={campoNum(imovel, "vagas", "vagas") || 0} />
             </Field>
           </CardContent>
         </Card>

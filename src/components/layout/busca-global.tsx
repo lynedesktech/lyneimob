@@ -359,9 +359,9 @@ export function DialogBuscaGlobal() {
                       </span>
                       <span className="flex-1 min-w-0">
                         <span className="block truncate font-medium">{atividade.titulo}</span>
-                        {atividade.data_inicio && (
+                        {atividade.data_vencimento && (
                           <span className="block truncate text-xs text-muted-foreground">
-                            {formatarDataCurta(atividade.data_inicio)}
+                            {formatarDataCurta(atividade.data_vencimento)}
                           </span>
                         )}
                       </span>

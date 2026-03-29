@@ -43,7 +43,7 @@ export function AcoesAtividade({ atividade }: AcoesAtividadeProps) {
       <BotaoConcluir atividadeId={atividade.id} />
       <BotaoReagendar
         atividadeId={atividade.id}
-        dataAtual={atividade.data_inicio}
+        dataAtual={atividade.data_vencimento}
       />
       <BotaoCancelar atividadeId={atividade.id} />
     </div>

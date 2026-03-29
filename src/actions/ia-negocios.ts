@@ -26,7 +26,7 @@ export async function analisarNegocio(
   const { data: negocio, error } = await supabase
     .from("negocios")
     .select(
-      "*, clientes(nome, tipo, origem, score_lead, observacoes), imoveis(titulo, tipo, finalidade, preco_venda, preco_aluguel, bairro, cidade, quartos, area_total)"
+      "*, clientes(nome, tipo, origem, score_lead, observacoes), imoveis(titulo, tipo, finalidade, valor, valor_aluguel, bairro, cidade, quartos, area_total)"
     )
     .eq("id", negocioId)
     .single()
@@ -69,8 +69,8 @@ ${
   negocio.imoveis
     ? `- ${(negocio.imoveis as Record<string, unknown>)?.titulo}
 - Tipo: ${(negocio.imoveis as Record<string, unknown>)?.tipo} | ${(negocio.imoveis as Record<string, unknown>)?.finalidade}
-- Valor venda: ${(negocio.imoveis as Record<string, unknown>)?.preco_venda || "N/A"}
-- Valor aluguel: ${(negocio.imoveis as Record<string, unknown>)?.preco_aluguel || "N/A"}
+- Valor venda: ${(negocio.imoveis as Record<string, unknown>)?.valor || "N/A"}
+- Valor aluguel: ${(negocio.imoveis as Record<string, unknown>)?.valor_aluguel || "N/A"}
 - Local: ${(negocio.imoveis as Record<string, unknown>)?.bairro || ""}, ${(negocio.imoveis as Record<string, unknown>)?.cidade || ""}
 - ${(negocio.imoveis as Record<string, unknown>)?.quartos || 0} quartos, ${(negocio.imoveis as Record<string, unknown>)?.area_total || "N/A"}m²`
     : "Nenhum imóvel vinculado"
@@ -153,10 +153,10 @@ export async function sugerirAcao(
   // Buscar atividades pendentes do negócio
   const { data: atividadesPendentes } = await supabase
     .from("atividades")
-    .select("titulo, tipo, data_inicio, prioridade")
+    .select("titulo, tipo, data_vencimento, prioridade")
     .eq("negocio_id", negocioId)
     .eq("status", "pendente")
-    .order("data_inicio", { ascending: true })
+    .order("data_vencimento", { ascending: true })
     .limit(3)
 
   const etapaNome = (negocio.pipeline_etapas as Record<string, unknown>)?.nome || "N/A"
@@ -187,7 +187,7 @@ ${
     ? atividadesPendentes
         .map(
           (a) =>
-            `- [${a.tipo}] ${a.titulo} — ${new Date(a.data_inicio).toLocaleDateString("pt-BR")} (${a.prioridade})`
+            `- [${a.tipo}] ${a.titulo} — ${new Date(a.data_vencimento).toLocaleDateString("pt-BR")} (${a.prioridade})`
         )
         .join("\n")
     : "Nenhuma atividade pendente"
@@ -260,7 +260,7 @@ export async function analisarPerda(
 
   const { data: negocio, error } = await supabase
     .from("negocios")
-    .select("*, clientes(nome, tipo, origem), imoveis(titulo, tipo, preco_venda, preco_aluguel)")
+    .select("*, clientes(nome, tipo, origem), imoveis(titulo, tipo, valor, valor_aluguel)")
     .eq("id", negocioId)
     .single()
 

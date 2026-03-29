@@ -9,7 +9,7 @@ import { TIPOS_IMOVEL, FINALIDADES_IMOVEL } from "@/lib/constantes/enums"
 
 export const schemaLinhaImportacao = z.object({
   // Obrigatórios
-  codigo: z.string().min(1, "Código obrigatório"),
+  codigo_interno: z.string().min(1, "Código obrigatório"),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   tipo: z.enum(TIPOS_IMOVEL, { message: "Tipo inválido" }),
   finalidade: z.enum(FINALIDADES_IMOVEL, { message: "Finalidade inválida" }),
@@ -33,16 +33,16 @@ export const schemaLinhaImportacao = z.object({
   observacoes_internas: z.string().optional(),
 
   // Opcionais — numéricos (coerção de string)
-  preco_venda: z.coerce.number().positive("Preço deve ser positivo").optional(),
-  preco_aluguel: z.coerce.number().positive("Preço deve ser positivo").optional(),
-  iptu: z.coerce.number().min(0, "IPTU não pode ser negativo").optional(),
-  condominio: z.coerce.number().min(0, "Condomínio não pode ser negativo").optional(),
+  valor: z.coerce.number().positive("Preço deve ser positivo").optional(),
+  valor_aluguel: z.coerce.number().positive("Preço deve ser positivo").optional(),
+  valor_iptu: z.coerce.number().min(0, "IPTU não pode ser negativo").optional(),
+  valor_condominio: z.coerce.number().min(0, "Condomínio não pode ser negativo").optional(),
   area_total: z.coerce.number().positive("Área deve ser positiva").optional(),
   area_construida: z.coerce.number().positive("Área deve ser positiva").optional(),
   quartos: z.coerce.number().int().min(0).default(0),
   suites: z.coerce.number().int().min(0).default(0),
   banheiros: z.coerce.number().int().min(0).default(0),
-  vagas_garagem: z.coerce.number().int().min(0).default(0),
+  vagas: z.coerce.number().int().min(0).default(0),
   andares: z.coerce.number().int().positive().optional(),
 })
 
@@ -62,7 +62,7 @@ export type ResultadoValidacao = {
 
 export type ResultadoImportacao = {
   criados: number
-  erros: Array<{ linha: number; codigo: string; erro: string }>
+  erros: Array<{ linha: number; codigo_interno: string; erro: string }>
 }
 
 // ============================================================
@@ -72,9 +72,9 @@ export type ResultadoImportacao = {
 
 export const MAPEAMENTO_COLUNAS: Record<string, string> = {
   // Identificação
-  codigo: "codigo",
-  código: "codigo",
-  cod: "codigo",
+  codigo: "codigo_interno",
+  código: "codigo_interno",
+  cod: "codigo_interno",
   titulo: "titulo",
   título: "titulo",
   nome: "titulo",
@@ -105,19 +105,21 @@ export const MAPEAMENTO_COLUNAS: Record<string, string> = {
   uf: "estado",
 
   // Valores
-  preco_venda: "preco_venda",
-  preço_venda: "preco_venda",
-  preco: "preco_venda",
-  preço: "preco_venda",
-  valor_venda: "preco_venda",
-  valor: "preco_venda",
-  preco_aluguel: "preco_aluguel",
-  preço_aluguel: "preco_aluguel",
-  valor_aluguel: "preco_aluguel",
-  aluguel: "preco_aluguel",
-  iptu: "iptu",
-  condominio: "condominio",
-  condomínio: "condominio",
+  valor: "valor",
+  preco_venda: "valor",
+  preço_venda: "valor",
+  preco: "valor",
+  preço: "valor",
+  valor_venda: "valor",
+  valor_aluguel: "valor_aluguel",
+  preco_aluguel: "valor_aluguel",
+  preço_aluguel: "valor_aluguel",
+  aluguel: "valor_aluguel",
+  iptu: "valor_iptu",
+  valor_iptu: "valor_iptu",
+  condominio: "valor_condominio",
+  condomínio: "valor_condominio",
+  valor_condominio: "valor_condominio",
 
   // Características
   area_total: "area_total",
@@ -132,9 +134,9 @@ export const MAPEAMENTO_COLUNAS: Record<string, string> = {
   suites: "suites",
   suítes: "suites",
   banheiros: "banheiros",
-  vagas_garagem: "vagas_garagem",
-  vagas: "vagas_garagem",
-  garagem: "vagas_garagem",
+  vagas: "vagas",
+  vagas_garagem: "vagas",
+  garagem: "vagas",
   andares: "andares",
 
   // Observações
@@ -146,11 +148,11 @@ export const MAPEAMENTO_COLUNAS: Record<string, string> = {
 }
 
 // Campos obrigatórios para referência
-export const CAMPOS_OBRIGATORIOS = ["codigo", "titulo", "tipo", "finalidade", "cidade", "estado"]
+export const CAMPOS_OBRIGATORIOS = ["codigo_interno", "titulo", "tipo", "finalidade", "cidade", "estado"]
 
 // Colunas do modelo/template na ordem correta
 export const COLUNAS_TEMPLATE = [
-  "codigo",
+  "codigo_interno",
   "titulo",
   "tipo",
   "finalidade",
@@ -161,8 +163,8 @@ export const COLUNAS_TEMPLATE = [
   "numero",
   "complemento",
   "cep",
-  "preco_venda",
-  "preco_aluguel",
+  "valor",
+  "valor_aluguel",
   "iptu",
   "condominio",
   "area_total",
@@ -170,7 +172,7 @@ export const COLUNAS_TEMPLATE = [
   "quartos",
   "suites",
   "banheiros",
-  "vagas_garagem",
+  "vagas",
   "andares",
   "descricao",
   "observacoes_internas",

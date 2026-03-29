@@ -26,8 +26,8 @@ export function baixarModelo() {
     numero: "Número",
     complemento: "Complemento",
     cep: "CEP",
-    preco_venda: "Preço Venda",
-    preco_aluguel: "Preço Aluguel",
+    valor: "Preço Venda",
+    valor_aluguel: "Preço Aluguel",
     iptu: "IPTU",
     condominio: "Condomínio",
     area_total: "Área Total (m²)",
@@ -35,7 +35,7 @@ export function baixarModelo() {
     quartos: "Quartos",
     suites: "Suítes",
     banheiros: "Banheiros",
-    vagas_garagem: "Vagas Garagem",
+    vagas: "Vagas Garagem",
     andares: "Andares",
     descricao: "Descrição",
     observacoes_internas: "Observações Internas",
@@ -53,8 +53,8 @@ export function baixarModelo() {
     numero: "100",
     complemento: "Apto 42",
     cep: "01310-100",
-    preco_venda: 450000,
-    preco_aluguel: "",
+    valor: 450000,
+    valor_aluguel: "",
     iptu: 1200,
     condominio: 800,
     area_total: 85,
@@ -62,7 +62,7 @@ export function baixarModelo() {
     quartos: 3,
     suites: 1,
     banheiros: 2,
-    vagas_garagem: 1,
+    vagas: 1,
     andares: "",
     descricao: "Apartamento reformado no centro",
     observacoes_internas: "",
@@ -112,9 +112,9 @@ export function mapearCabecalhos(cabecalhos: string[]): Record<number, string> {
 
     // Tentar match parcial: se contém "preco" e "venda"
     if (header.includes("preco") && header.includes("venda")) {
-      mapa[i] = "preco_venda"
+      mapa[i] = "valor"
     } else if (header.includes("preco") && header.includes("aluguel")) {
-      mapa[i] = "preco_aluguel"
+      mapa[i] = "valor_aluguel"
     } else if (header.includes("area") && header.includes("total")) {
       mapa[i] = "area_total"
     } else if (header.includes("area") && header.includes("construi")) {
