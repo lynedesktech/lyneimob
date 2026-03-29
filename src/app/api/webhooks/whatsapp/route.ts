@@ -16,8 +16,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    // LOG DIAGNÓSTICO — ver exatamente o que a Uazapi envia
-    console.log("[WhatsApp Webhook] Recebido:", JSON.stringify(body))
+    // Log sem dados sensíveis (apenas tipo de evento)
+    console.log("[WhatsApp Webhook] Evento recebido:", body.EventType || body.event || "desconhecido")
 
     // Checar tipo de evento ANTES de validar com Zod
     // A Uazapi envia "EventType" (com maiúsculas), não "event"

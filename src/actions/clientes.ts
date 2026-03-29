@@ -298,6 +298,11 @@ export async function excluirInteresse(
   interesseId: string,
   clienteId: string
 ): Promise<EstadoFormulario> {
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) {
+    return { erro: "Usuário não autenticado" }
+  }
+
   const supabase = await criarClienteServer()
 
   const { error } = await supabase
@@ -363,6 +368,11 @@ export async function excluirInteracao(
   interacaoId: string,
   clienteId: string
 ): Promise<EstadoFormulario> {
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) {
+    return { erro: "Usuário não autenticado" }
+  }
+
   const supabase = await criarClienteServer()
 
   const { error } = await supabase

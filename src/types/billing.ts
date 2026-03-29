@@ -1,4 +1,4 @@
-import { z } from "zod/v4"
+import { z } from "zod"
 
 // ============================================================
 // Tipos e constantes do módulo de billing

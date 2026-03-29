@@ -67,6 +67,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
   const [clientes, setClientes] = useState<ClienteSimples[]>([])
   const [negocios, setNegocios] = useState<NegocioSimples[]>([])
   const [imoveis, setImoveis] = useState<ImovelSimples[]>([])
+  const [carregandoDados, setCarregandoDados] = useState(true)
 
   // Tipos de atividade — carrega do banco ou usa fallback
   const [tipos, setTipos] = useState(TIPOS_ATIVIDADE_PADRAO)
@@ -108,6 +109,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
       setClientes((resClientes.data as ClienteSimples[]) || [])
       setNegocios((resNegocios.data as NegocioSimples[]) || [])
       setImoveis((resImoveis.data as ImovelSimples[]) || [])
+      setCarregandoDados(false)
     }
 
     carregar()
@@ -271,12 +273,14 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
 
       {/* Botão submit */}
       <div className="flex justify-end">
-        <Button type="submit" disabled={pendente} size="lg">
-          {pendente
-            ? "Salvando..."
-            : editando
-              ? "Salvar Alterações"
-              : "Criar Atividade"}
+        <Button type="submit" disabled={pendente || carregandoDados} size="lg">
+          {carregandoDados
+            ? "Carregando..."
+            : pendente
+              ? "Salvando..."
+              : editando
+                ? "Salvar Alterações"
+                : "Criar Atividade"}
         </Button>
       </div>
     </form>

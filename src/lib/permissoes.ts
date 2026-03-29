@@ -62,7 +62,7 @@ export function verificarPermissao(
   perfilPlataforma?: PerfilPlataforma | boolean
 ): { erro?: string } {
   if (!temPermissao(cargo, acao, perfilPlataforma)) {
-    return { erro: "Voce nao tem permissao para realizar esta acao." }
+    return { erro: "Você não tem permissão para realizar esta ação." }
   }
   return {}
 }

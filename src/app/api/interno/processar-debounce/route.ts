@@ -18,7 +18,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 })
   }
 
-  const { conversaId, organizacaoId, numeroCliente } = await request.json()
+  let corpo: { conversaId?: string; organizacaoId?: string; numeroCliente?: string }
+  try {
+    corpo = await request.json()
+  } catch {
+    return NextResponse.json({ erro: "JSON inválido" }, { status: 400 })
+  }
+
+  const { conversaId, organizacaoId, numeroCliente } = corpo
 
   if (!conversaId || !organizacaoId) {
     return NextResponse.json({ erro: "Dados incompletos" }, { status: 400 })

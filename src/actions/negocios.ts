@@ -65,10 +65,13 @@ export async function criarNegocio(
     return { erro: "Erro ao criar negócio. Tente novamente." }
   }
 
-  // Gerar sugestão de ação automaticamente (fire-and-forget, import dinâmico)
-  import("@/actions/ia-negocios").then(({ sugerirAcao }) =>
-    sugerirAcao(negocio.id).catch(() => {})
-  )
+  // Gerar sugestão de ação automaticamente (import dinâmico para não pesar o bundle)
+  try {
+    const { sugerirAcao } = await import("@/actions/ia-negocios")
+    await sugerirAcao(negocio.id)
+  } catch {
+    // IA é opcional — não bloqueia o fluxo principal
+  }
 
   revalidatePath("/negocios")
   revalidatePath("/")
@@ -186,10 +189,13 @@ export async function moverNegocio(
     return { erro: "Erro ao mover negócio. Tente novamente." }
   }
 
-  // Atualizar sugestão de ação ao mudar de etapa (fire-and-forget, import dinâmico)
-  import("@/actions/ia-negocios").then(({ sugerirAcao }) =>
-    sugerirAcao(negocioId).catch(() => {})
-  )
+  // Atualizar sugestão de ação ao mudar de etapa (import dinâmico para não pesar o bundle)
+  try {
+    const { sugerirAcao } = await import("@/actions/ia-negocios")
+    await sugerirAcao(negocioId)
+  } catch {
+    // IA é opcional — não bloqueia o fluxo principal
+  }
 
   revalidatePath("/negocios")
   return { sucesso: "Negócio movido com sucesso" }

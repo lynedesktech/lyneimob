@@ -43,6 +43,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const [clientes, setClientes] = useState<ClienteSimples[]>([])
   const [imoveis, setImoveis] = useState<ImovelSimples[]>([])
   const [etapas, setEtapas] = useState<EtapaSimples[]>([])
+  const [carregandoDados, setCarregandoDados] = useState(true)
 
   // Carregar dados para os selects
   useEffect(() => {
@@ -79,6 +80,8 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
           setEtapaId(primeiraNormal.id)
         }
       }
+
+      setCarregandoDados(false)
     }
 
     carregar()
@@ -244,12 +247,14 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
         <Button type="button" variant="outline" size="lg" render={<Link href="/negocios" />}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={pendente} size="lg">
-          {pendente
-            ? "Salvando..."
-            : editando
-              ? "Salvar Alterações"
-              : "Criar Negócio"}
+        <Button type="submit" disabled={pendente || carregandoDados} size="lg">
+          {carregandoDados
+            ? "Carregando..."
+            : pendente
+              ? "Salvando..."
+              : editando
+                ? "Salvar Alterações"
+                : "Criar Negócio"}
         </Button>
       </div>
     </form>
