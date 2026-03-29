@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       // Identificar via token do webhook — busca na tabela integracoes_portais
       const { data: integracao, error: erroIntegracao } = await supabase
         .from("integracoes_portais")
-        .select("id, empresa_id, nome_portal")
+        .select("id, organizacao_id, nome_portal")
         .eq("token_webhook", tokenWebhook)
         .eq("ativo", true)
         .single()
@@ -59,13 +59,13 @@ export async function POST(request: Request) {
         )
       }
 
-      empresaId = integracao.empresa_id
+      empresaId = integracao.organizacao_id
       portalId = integracao.id
     } else if (orgId) {
       empresaId = orgId
     } else {
       const { data: org, error: erroOrg } = await supabase
-        .from("empresas")
+        .from("organizacoes")
         .select("id")
         .eq("slug", orgSlug!)
         .single()
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         const { data: integracao } = await supabase
           .from("integracoes_portais")
           .select("id")
-          .eq("empresa_id", empresaId)
+          .eq("organizacao_id", empresaId)
           .ilike("nome_portal", nomeBusca)
           .limit(1)
           .maybeSingle()
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       const { data: integracao } = await supabase
         .from("integracoes_portais")
         .select("id")
-        .eq("empresa_id", empresaId)
+        .eq("organizacao_id", empresaId)
         .eq("ativo", true)
         .limit(1)
         .maybeSingle()
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
 
     // Salvar lead no banco
     const dadosInsercao: Record<string, unknown> = {
-      empresa_id: empresaId,
+      organizacao_id: empresaId,
       nome: leadNormalizado.nome,
       email: leadNormalizado.email,
       telefone: leadNormalizado.telefone,

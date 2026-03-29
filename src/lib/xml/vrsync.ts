@@ -6,7 +6,7 @@
 // Tipo do imóvel conforme banco real
 interface ImovelBanco {
   id: string
-  empresa_id: string
+  organizacao_id: string
   titulo: string
   descricao: string | null
   tipo: string
@@ -30,7 +30,7 @@ interface ImovelBanco {
   estado: string | null
   codigo_interno: string | null
   destaque: boolean
-  criado_em: string
+  created_at: string
 }
 
 // ============================================================

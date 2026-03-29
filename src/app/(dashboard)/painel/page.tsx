@@ -212,8 +212,8 @@ export default async function DashboardPage() {
     // Negócios dos últimos 6 meses (para evolução)
     supabase
       .from("negocios")
-      .select("criado_em")
-      .gte("criado_em", seiseMesesAtras.toISOString()),
+      .select("created_at")
+      .gte("created_at", seiseMesesAtras.toISOString()),
   ])
 
   const atividadesPendentes: AtividadeHojeItem[] = (rawAtividades ?? []).map((a) => ({
@@ -253,8 +253,8 @@ export default async function DashboardPage() {
     evolucaoMap[chave] = 0
   }
   for (const n of rawNegociosRecentes ?? []) {
-    if (!n.criado_em) continue
-    const d = new Date(n.criado_em)
+    if (!n.created_at) continue
+    const d = new Date(n.created_at)
     const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
     if (chave in evolucaoMap) evolucaoMap[chave]++
   }

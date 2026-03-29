@@ -116,21 +116,23 @@ BEGIN
   END IF;
 
   -- Sem convite: criar nova organizacao (comportamento original)
-  nome_org := coalesce(NEW.raw_user_meta_data->>'nome_organizacao', 'Minha Imobiliaria');
+  nome_org := coalesce(NEW.raw_user_meta_data->>'nome_organizacao', 'Minha Imobiliária');
 
-  slug_gerado := lower(regexp_replace(
-    translate(
-      nome_org,
-      'aaaaeeeiiiooooouuucAAAAEEEIIIOOOOUUUC',
-      'aaaaeeeiiiooooouuucAAAAEEEIIIOOOOUUUC'
+  slug_gerado := regexp_replace(
+    lower(
+      translate(
+        nome_org,
+        'áàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ',
+        'aaaaeeeiiioooouuucAAAAEEEIIIOOOOUUUC'
+      )
     ),
     '[^a-z0-9]+', '-', 'g'
-  ));
+  );
   slug_gerado := trim(both '-' from slug_gerado);
   slug_gerado := slug_gerado || '-' || substring(NEW.id::text from 1 for 8);
 
-  INSERT INTO public.organizacoes (nome, slug)
-  VALUES (nome_org, slug_gerado)
+  INSERT INTO public.organizacoes (nome, slug, trial_fim_em)
+  VALUES (nome_org, slug_gerado, now() + interval '14 days')
   RETURNING id INTO nova_org_id;
 
   INSERT INTO public.usuarios (id, organizacao_id, nome, email, cargo)

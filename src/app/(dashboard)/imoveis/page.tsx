@@ -59,7 +59,7 @@ export default async function ImoveisPage({
   if (params.canal === "nenhum") query = query.eq("publicar_site", false).eq("publicar_portais", false)
 
   const { data: imoveis, count } = await query
-    .order("criado_em", { ascending: false })
+    .order("created_at", { ascending: false })
     .range(inicio, fim)
 
   const total = count ?? 0

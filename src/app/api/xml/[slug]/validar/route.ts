@@ -15,7 +15,7 @@ export async function GET(
   const supabase = criarClienteAdmin()
 
   const { data: empresa, error: erroEmpresa } = await supabase
-    .from("empresas")
+    .from("organizacoes")
     .select("id, nome, email, telefone, slug")
     .eq("slug", slug)
     .single()
@@ -30,9 +30,9 @@ export async function GET(
   const { data: imoveis, error: erroImoveis } = await supabase
     .from("imoveis")
     .select("*")
-    .eq("empresa_id", empresa.id)
+    .eq("organizacao_id", empresa.id)
     .eq("status", "disponivel")
-    .order("criado_em", { ascending: false })
+    .order("created_at", { ascending: false })
 
   if (erroImoveis) {
     return NextResponse.json(

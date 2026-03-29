@@ -58,7 +58,7 @@ export function useListaImoveis(filtros: FiltrosImoveisInput) {
       const fim = inicio + filtros.por_pagina - 1
 
       query = query
-        .order("criado_em", { ascending: false })
+        .order("created_at", { ascending: false })
         .range(inicio, fim)
 
       const { data, error, count } = await query

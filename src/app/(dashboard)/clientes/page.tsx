@@ -52,7 +52,7 @@ export default async function ClientesPage({
   if (params.status) query = query.eq("status", params.status)
 
   const { data: clientes, count } = await query
-    .order("criado_em", { ascending: false })
+    .order("created_at", { ascending: false })
     .range(inicio, fim)
 
   const total = count ?? 0

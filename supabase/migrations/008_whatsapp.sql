@@ -35,10 +35,19 @@ CREATE TABLE public.config_whatsapp (
   CONSTRAINT config_whatsapp_org_unique UNIQUE (organizacao_id)
 );
 
--- Trigger updated_at
+-- Funcao auxiliar para tabelas que usam atualizado_em (portugues)
+CREATE OR REPLACE FUNCTION public.atualizar_atualizado_em()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.atualizado_em = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger atualizado_em
 CREATE TRIGGER trigger_config_whatsapp_updated_at
   BEFORE UPDATE ON public.config_whatsapp
-  FOR EACH ROW EXECUTE FUNCTION public.atualizar_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION public.atualizar_atualizado_em();
 
 -- ============================================================
 -- 2. TABELA CONVERSAS_WHATSAPP
@@ -71,10 +80,10 @@ CREATE TABLE public.conversas_whatsapp (
   atualizado_em timestamptz DEFAULT now()
 );
 
--- Trigger updated_at
+-- Trigger atualizado_em
 CREATE TRIGGER trigger_conversas_whatsapp_updated_at
   BEFORE UPDATE ON public.conversas_whatsapp
-  FOR EACH ROW EXECUTE FUNCTION public.atualizar_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION public.atualizar_atualizado_em();
 
 -- ============================================================
 -- 3. TABELA MENSAGENS_WHATSAPP
