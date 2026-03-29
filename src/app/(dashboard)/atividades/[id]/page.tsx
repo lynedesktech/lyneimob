@@ -39,7 +39,7 @@ export default async function DetalheAtividadePage({ params }: Props) {
   const { data: atividade, error } = await supabase
     .from("atividades")
     .select(
-      "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status)"
+      "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo_interno), negocios(id, titulo, status)"
     )
     .eq("id", id)
     .single()
@@ -161,7 +161,7 @@ export default async function DetalheAtividadePage({ params }: Props) {
                       href={`/imoveis/${a.imoveis.id}`}
                       className="text-sm font-medium hover:underline"
                     >
-                      {a.imoveis.codigo}
+                      {a.imoveis.codigo_interno}
                     </Link>
                   ) : (
                     <p className="text-sm">Não vinculado</p>

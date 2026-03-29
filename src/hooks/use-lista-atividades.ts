@@ -18,7 +18,7 @@ export function useListaAtividades(filtros: FiltrosAtividadesInput) {
       let query = supabase
         .from("atividades")
         .select(
-          "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status)",
+          "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo_interno), negocios(id, titulo, status)",
           { count: "exact" }
         )
 

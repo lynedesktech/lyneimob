@@ -13,7 +13,7 @@ export function useAtividade(id: string) {
       const { data, error } = await supabase
         .from("atividades")
         .select(
-          "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo), negocios(id, titulo, status), usuarios(id, nome)"
+          "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo_interno), negocios(id, titulo, status), usuarios(id, nome)"
         )
         .eq("id", id)
         .single()

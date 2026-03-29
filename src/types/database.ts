@@ -233,7 +233,7 @@ export type Negocio = {
 
 export type NegocioComRelacoes = Negocio & {
   clientes: { id: string; nome: string; telefone: string | null; email: string | null } | null
-  imoveis: { id: string; titulo: string; codigo: string; tipo: TipoImovel } | null
+  imoveis: { id: string; titulo: string; codigo_interno: string; tipo: TipoImovel } | null
   lotes?: { id: string; quadra: string; numero_lote: string; unidade: string | null; valor: number | null; loteamento_id: string; loteamentos: { id: string; nome: string } | null } | null
   usuarios: { id: string; nome: string } | null
   pipeline_etapas: { id: string; nome: string; cor: string; icone: string; tipo: TipoEtapa; ordem: number } | null
@@ -288,7 +288,7 @@ export type Atividade = {
 
 export type AtividadeComRelacoes = Atividade & {
   clientes: { id: string; nome: string; telefone: string | null } | null
-  imoveis: { id: string; titulo: string; codigo: string } | null
+  imoveis: { id: string; titulo: string; codigo_interno: string } | null
   negocios: { id: string; titulo: string; status: string } | null
   usuarios: { id: string; nome: string } | null
 }
@@ -322,7 +322,7 @@ export type LeadPortal = {
 
 export type LeadPortalComRelacoes = LeadPortal & {
   clientes: { id: string; nome: string; telefone: string | null; email: string | null } | null
-  imoveis: { id: string; titulo: string; codigo: string } | null
+  imoveis: { id: string; titulo: string; codigo_interno: string } | null
   negocios: { id: string; titulo: string; status: string } | null
 }
 

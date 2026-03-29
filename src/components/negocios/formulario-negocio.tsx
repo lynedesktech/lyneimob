@@ -27,7 +27,7 @@ interface FormularioNegocioProps {
 }
 
 type ClienteSimples = { id: string; nome: string }
-type ImovelSimples = { id: string; titulo: string; codigo: string }
+type ImovelSimples = { id: string; titulo: string; codigo_interno: string }
 type EtapaSimples = { id: string; nome: string; cor: string; tipo: string; ordem: number }
 
 export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
@@ -57,9 +57,9 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
           .order("nome"),
         supabase
           .from("imoveis")
-          .select("id, titulo, codigo")
+          .select("id, titulo, codigo_interno")
           .in("status", ["disponivel", "reservado"])
-          .order("codigo"),
+          .order("codigo_interno"),
         supabase
           .from("pipeline_etapas")
           .select("id, nome, cor, tipo, ordem")
@@ -210,7 +210,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
             <Field>
               <FieldLabel>Imóvel (opcional)</FieldLabel>
               <ComboboxCampo
-                opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo} — ${i.titulo}` }))}
+                opcoes={imoveis.map((i) => ({ value: i.id, label: `${i.codigo_interno} — ${i.titulo}` }))}
                 value={imovelId}
                 onChange={setImovelId}
                 placeholder="Selecionar imóvel..."

@@ -18,7 +18,7 @@ export function useListaLeads(filtros: FiltrosLeadsInput) {
       let query = supabase
         .from("leads_portais")
         .select(
-          "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo), negocios(id, titulo, status)",
+          "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo_interno), negocios(id, titulo, status)",
           { count: "exact" }
         )
 

@@ -97,7 +97,7 @@ export function CardLead({ lead }: CardLeadProps) {
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Building2 className="h-3 w-3" />
                 <Link href={`/imoveis/${lead.imoveis.id}`} className="hover:underline text-primary">
-                  {lead.imoveis.codigo} — {lead.imoveis.titulo}
+                  {lead.imoveis.codigo_interno} — {lead.imoveis.titulo}
                 </Link>
               </div>
             )}

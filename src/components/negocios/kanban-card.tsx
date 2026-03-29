@@ -112,7 +112,7 @@ export function KanbanCard({ negocio, etapas, onMover, overlay }: KanbanCardProp
                       <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                         <Building2 className="h-3 w-3" />
                         <span className="truncate">
-                          {negocio.imoveis.codigo} — {negocio.imoveis.titulo}
+                          {negocio.imoveis.codigo_interno} — {negocio.imoveis.titulo}
                         </span>
                       </div>
                     )}

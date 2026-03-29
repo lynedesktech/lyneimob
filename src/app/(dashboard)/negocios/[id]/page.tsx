@@ -39,7 +39,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
   const { data: negocio, error } = await supabase
     .from("negocios")
     .select(
-      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), usuarios(id, nome), pipeline_etapas(id, nome, cor, icone, tipo, ordem)"
+      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo_interno, tipo), usuarios(id, nome), pipeline_etapas(id, nome, cor, icone, tipo, ordem)"
     )
     .eq("id", id)
     .single()
@@ -223,7 +223,7 @@ export default async function DetalheNegocioPage({ params }: Props) {
                       href={`/imoveis/${n.imoveis.id}`}
                       className="font-medium hover:underline"
                     >
-                      {n.imoveis.codigo} — {n.imoveis.titulo}
+                      {n.imoveis.codigo_interno} — {n.imoveis.titulo}
                     </Link>
                   </CardContent>
                 </Card>

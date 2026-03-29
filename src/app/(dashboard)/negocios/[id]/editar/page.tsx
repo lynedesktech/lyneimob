@@ -17,7 +17,7 @@ export default async function EditarNegocioPage({ params }: Props) {
   const { data: negocio, error } = await supabase
     .from("negocios")
     .select(
-      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), usuarios(id, nome), pipeline_etapas(id, nome, cor, icone, tipo, ordem)"
+      "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo_interno, tipo), usuarios(id, nome), pipeline_etapas(id, nome, cor, icone, tipo, ordem)"
     )
     .eq("id", id)
     .single()

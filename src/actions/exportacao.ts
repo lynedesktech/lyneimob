@@ -102,7 +102,7 @@ export async function buscarNegociosParaExportacao(
 
   let query = supabase
     .from("negocios")
-    .select("*, clientes(nome), imoveis(titulo, codigo), usuarios(nome), pipeline_etapas(nome)")
+    .select("*, clientes(nome), imoveis(titulo, codigo_interno), usuarios(nome), pipeline_etapas(nome)")
 
   if (filtros.corretor_id) query = query.eq("corretor_id", filtros.corretor_id)
   if (filtros.tipo) query = query.eq("tipo", filtros.tipo)

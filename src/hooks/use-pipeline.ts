@@ -27,7 +27,7 @@ export function usePipeline(filtros?: {
       let query = supabase
         .from("negocios")
         .select(
-          "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo, tipo), lotes(id, quadra, numero_lote, unidade, valor, loteamento_id, loteamentos(id, nome)), usuarios(id, nome)"
+          "*, clientes(id, nome, telefone, email), imoveis(id, titulo, codigo_interno, tipo), lotes(id, quadra, numero_lote, unidade, valor, loteamento_id, loteamentos(id, nome)), usuarios(id, nome)"
         )
         .eq("status", "aberto")
         .order("posicao", { ascending: true })
