@@ -58,6 +58,16 @@ export function formatarDataHoraCurta(data: string): string {
   }).format(new Date(data))
 }
 
+/** Formata dígitos como CEP brasileiro: 00000-000. */
+export function formatarCep(valor: string | null | undefined): string {
+  if (!valor) return ""
+  const digitos = valor.replace(/\D/g, "")
+  if (digitos.length === 8) {
+    return digitos.replace(/(\d{5})(\d{3})/, "$1-$2")
+  }
+  return valor
+}
+
 /** Formata dígitos como CPF (000.000.000-00) ou CNPJ (00.000.000/0000-00). */
 export function formatarCpfCnpj(valor: string | null | undefined): string {
   if (!valor) return ""

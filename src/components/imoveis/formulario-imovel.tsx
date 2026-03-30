@@ -7,6 +7,7 @@ import { criarImovel, atualizarImovel } from "@/actions/imoveis"
 import type { Imovel } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { InputCep } from "@/components/ui/input-cep"
 import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/input-group"
@@ -210,7 +211,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field>
               <FieldLabel htmlFor="cep">CEP</FieldLabel>
-              <Input id="cep" name="cep" placeholder="00000-000" defaultValue={campo(imovel, "cep")} />
+              <InputCep id="cep" name="cep" defaultValue={campo(imovel, "cep")} />
             </Field>
 
             <Field className="sm:col-span-2">

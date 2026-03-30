@@ -11,6 +11,7 @@ import type { CriarLoteamentoInput } from "@/types/loteamentos"
 import type { Loteamento } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { InputCep } from "@/components/ui/input-cep"
 import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import {
@@ -173,10 +174,16 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field>
               <FieldLabel htmlFor="cep">CEP</FieldLabel>
-              <Input
-                id="cep"
-                placeholder="00000-000"
-                {...register("cep")}
+              <Controller
+                name="cep"
+                control={control}
+                render={({ field }) => (
+                  <InputCep
+                    id="cep"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
               />
             </Field>
 

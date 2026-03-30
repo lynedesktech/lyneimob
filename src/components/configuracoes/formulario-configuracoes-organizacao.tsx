@@ -7,6 +7,7 @@ import { z } from "zod"
 import { Save, Building2, Phone, Mail, MapPin, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { InputCep } from "@/components/ui/input-cep"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import {
   Card,
@@ -210,7 +211,17 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
             </div>
             <Field className="sm:max-w-[200px]">
               <FieldLabel htmlFor="cep">CEP</FieldLabel>
-              <Input id="cep" {...register("cep")} placeholder="00000-000" />
+              <Controller
+                name="cep"
+                control={control}
+                render={({ field }) => (
+                  <InputCep
+                    id="cep"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
             </Field>
           </CardContent>
         </Card>
@@ -229,13 +240,20 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
           <CardContent>
             <Field className="sm:max-w-[300px]">
               <FieldLabel htmlFor="whatsapp_numero">Número do WhatsApp</FieldLabel>
-              <Input
-                id="whatsapp_numero"
-                {...register("whatsapp_numero")}
-                placeholder="5511999999999"
+              <Controller
+                name="whatsapp_numero"
+                control={control}
+                render={({ field }) => (
+                  <InputTelefone
+                    id="whatsapp_numero"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="(11) 99999-9999"
+                  />
+                )}
               />
               <p className="text-xs text-muted-foreground">
-                Formato: código do país + DDD + número (ex: 5511999999999)
+                DDD + número (ex: 11 99999-9999)
               </p>
             </Field>
           </CardContent>
