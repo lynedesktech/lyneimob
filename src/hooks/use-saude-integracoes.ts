@@ -12,6 +12,10 @@ export function useSaudeIntegracoes(intervalo = 60000) {
     queryKey: ["saude-integracoes"],
     queryFn: async () => {
       const resp = await fetch("/api/saude-integracoes")
+      if (resp.status === 401 || resp.status === 403) {
+        // Sem permissão — retornar null silenciosamente
+        return null
+      }
       if (!resp.ok) {
         throw new Error("Erro ao verificar saúde das integrações")
       }
@@ -19,6 +23,11 @@ export function useSaudeIntegracoes(intervalo = 60000) {
     },
     refetchInterval: intervalo,
     staleTime: 30000,
+    retry: (contagem, erro) => {
+      // Não retentar se for erro de permissão
+      if (erro instanceof Error && erro.message.includes("permissão")) return false
+      return contagem < 2
+    },
   })
 
   return {

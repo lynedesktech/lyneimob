@@ -132,7 +132,10 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
     if (resp.status === 401 || resp.status === 403) {
       return { status: "desconectado", mensagem: "Token inválido ou sem permissão" }
     }
-    return { status: "desconectado", mensagem: `Erro ${resp.status}` }
+    if (resp.status === 404) {
+      return { status: "desconectado", mensagem: "URL inválida — verifique o endereço do servidor" }
+    }
+    return { status: "desconectado", mensagem: `Erro ${resp.status} — servidor indisponível` }
   } catch (erro) {
     const mensagem = erro instanceof Error && erro.message === "Timeout"
       ? "Timeout ao conectar (10s)"
