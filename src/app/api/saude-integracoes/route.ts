@@ -41,20 +41,15 @@ export async function GET() {
   const configBancoCriptografado = (org?.configuracoes_integracoes ?? {}) as Record<string, string>
   const configBanco = descriptografarCredenciais(configBancoCriptografado)
 
-  // Montar credenciais: banco primeiro, fallback para env vars
+  // Usar APENAS credenciais do banco — sem fallback para env vars
+  // Se não está cadastrado no banco, deve aparecer como "Não configurado"
   const credenciais = {
-    stripe_secret_key:
-      configBanco.stripe_secret_key || process.env.STRIPE_SECRET_KEY || undefined,
-    openai_api_key:
-      configBanco.openai_api_key || process.env.OPENAI_API_KEY || undefined,
-    uazapi_url:
-      configBanco.uazapi_url || undefined,
-    uazapi_token:
-      configBanco.uazapi_token || undefined,
-    upstash_redis_url:
-      configBanco.upstash_redis_url || process.env.UPSTASH_REDIS_REST_URL || undefined,
-    upstash_redis_token:
-      configBanco.upstash_redis_token || process.env.UPSTASH_REDIS_REST_TOKEN || undefined,
+    stripe_secret_key: configBanco.stripe_secret_key || undefined,
+    openai_api_key: configBanco.openai_api_key || undefined,
+    uazapi_url: configBanco.uazapi_url || undefined,
+    uazapi_token: configBanco.uazapi_token || undefined,
+    upstash_redis_url: configBanco.upstash_redis_url || undefined,
+    upstash_redis_token: configBanco.upstash_redis_token || undefined,
   }
 
   const saude = await verificarSaudeIntegracoes(credenciais)
