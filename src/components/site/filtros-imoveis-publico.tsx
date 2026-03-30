@@ -41,8 +41,8 @@ export function FiltrosImoveisPublico({ slug }: Props) {
   )
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div className="relative flex-1">
+    <div className="flex flex-wrap gap-3 items-center">
+      <div className="relative flex-1 min-w-[200px]">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Buscar por bairro, cidade..."
@@ -105,6 +105,46 @@ export function FiltrosImoveisPublico({ slug }: Props) {
           <SelectItem value="4">4+ quartos</SelectItem>
         </SelectContent>
       </Select>
+
+      <Select
+        defaultValue={searchParams.get("vagas") ?? "todos"}
+        onValueChange={(valor) => atualizarFiltro("vagas", valor)}
+      >
+        <SelectTrigger className="w-full sm:w-32">
+          <SelectValue placeholder="Vagas" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Vagas</SelectItem>
+          <SelectItem value="1">1+ vaga</SelectItem>
+          <SelectItem value="2">2+ vagas</SelectItem>
+          <SelectItem value="3">3+ vagas</SelectItem>
+          <SelectItem value="4">4+ vagas</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Input
+        type="number"
+        placeholder="R$ min"
+        className="w-full sm:w-28"
+        defaultValue={searchParams.get("preco_min") ?? ""}
+        onChange={(e) => {
+          const valor = e.target.value
+          if (timeoutRef.current) clearTimeout(timeoutRef.current)
+          timeoutRef.current = setTimeout(() => atualizarFiltro("preco_min", valor || null), 800)
+        }}
+      />
+
+      <Input
+        type="number"
+        placeholder="R$ max"
+        className="w-full sm:w-28"
+        defaultValue={searchParams.get("preco_max") ?? ""}
+        onChange={(e) => {
+          const valor = e.target.value
+          if (timeoutRef.current) clearTimeout(timeoutRef.current)
+          timeoutRef.current = setTimeout(() => atualizarFiltro("preco_max", valor || null), 800)
+        }}
+      />
     </div>
   )
 }

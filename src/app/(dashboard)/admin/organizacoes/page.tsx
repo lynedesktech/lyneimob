@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
-import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { ehPerfilPlataforma, temAcessoFinanceiro } from "@/lib/permissoes"
 import { TabelaOrganizacoes } from "@/components/admin/tabela-organizacoes"
@@ -22,19 +22,10 @@ export default async function AdminOrganizacoesPage({
   searchParams: SearchParams
 }) {
   const params = await searchParams
-  const supabase = await criarClienteServer()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
+  const usuario = await obterDadosUsuario(user.id)
   if (!ehPerfilPlataforma(usuario)) redirect("/painel")
 
   const mostraFinanceiro = temAcessoFinanceiro(usuario)

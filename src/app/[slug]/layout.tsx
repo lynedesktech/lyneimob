@@ -25,6 +25,9 @@ export async function generateMetadata({
   }
 
   const logoUrl = org.logo_url || undefined
+  const configs = extrairConfiguracoes(
+    org.configuracoes_site as Record<string, unknown>
+  )
 
   return {
     title: {
@@ -32,6 +35,12 @@ export async function generateMetadata({
       template: `%s | ${org.nome}`,
     },
     description: `Confira os imóveis disponíveis na ${org.nome}. Encontre casas, apartamentos e muito mais.`,
+    ...(configs.favicon_url && {
+      icons: {
+        icon: configs.favicon_url,
+        apple: configs.favicon_url,
+      },
+    }),
     openGraph: {
       type: "website",
       locale: "pt_BR",

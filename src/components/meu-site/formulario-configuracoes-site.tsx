@@ -14,6 +14,7 @@ import { PreviewCores } from "@/components/meu-site/preview-cores"
 import { ConfiguracaoDominio } from "@/components/meu-site/configuracao-dominio"
 import { salvarConfiguracoesSite } from "@/actions/configuracoes-site"
 import { extrairConfiguracoes, configPadrao } from "@/types/configuracoes-site"
+import { extrairCoresDaImagem } from "@/lib/extrair-cores-imagem"
 import type { ConfiguracoesSite } from "@/types/configuracoes-site"
 import type { Organizacao } from "@/types/database"
 import type { DominioCustomizado } from "@/types/dominios"
@@ -31,6 +32,7 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
   )
   const [configs, setConfigs] = useState<ConfiguracoesSite>(configsIniciais)
   const [logoUrl, setLogoUrl] = useState<string | null>(organizacao.logo_url || null)
+  const [faviconUrl, setFaviconUrl] = useState<string | null>(configsIniciais.favicon_url)
 
   // Action para salvar
   const [estado, formAction] = useActionState(salvarConfiguracoesSite, {})
@@ -65,6 +67,33 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
     }))
   }
 
+  async function aoMudarLogo(url: string | null) {
+    setLogoUrl(url)
+
+    if (!url) return
+
+    const cores = await extrairCoresDaImagem(url)
+    if (!cores) return
+
+    toast("Cores detectadas na logo!", {
+      description: "Clique em Aplicar para usar como paleta do site.",
+      action: {
+        label: "Aplicar",
+        onClick: () => {
+          setConfigs((prev) => ({
+            ...prev,
+            cores: {
+              primaria: cores.primaria,
+              destaque: cores.destaque,
+              hero_fundo: cores.heroFundo,
+            },
+          }))
+          toast.success("Paleta de cores atualizada! Salve para aplicar.")
+        },
+      },
+    })
+  }
+
   function restaurarPadrao() {
     setConfigs(configPadrao())
     toast.info("Valores restaurados para o padrão. Salve para aplicar.")
@@ -73,7 +102,7 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
   return (
     <form
       action={(formData) => {
-        formData.set("configuracoes", JSON.stringify(configs))
+        formData.set("configuracoes", JSON.stringify({ ...configs, favicon_url: faviconUrl }))
         formData.set("logo_url", logoUrl || "")
         iniciarTransicao(() => {
           formAction(formData)
@@ -243,16 +272,32 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
                 imagem quadrada (PNG ou JPG) com fundo transparente para melhor resultado.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <UploadImagemSite
-                tipo="logo"
-                urlAtual={logoUrl}
-                onUrlChange={setLogoUrl}
-                aspecto="square"
-              />
-              <p className="mt-2 text-xs text-muted-foreground">
-                Recomendado: imagem quadrada, mínimo 200x200px. Formatos: JPG, PNG ou WebP (até 5MB).
-              </p>
+            <CardContent className="space-y-6">
+              <div>
+                <UploadImagemSite
+                  tipo="logo"
+                  urlAtual={logoUrl}
+                  onUrlChange={aoMudarLogo}
+                  aspecto="square"
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Recomendado: imagem quadrada, mínimo 200x200px. Formatos: JPG, PNG ou WebP (até 5MB).
+                </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <UploadImagemSite
+                  tipo="favicon"
+                  urlAtual={faviconUrl}
+                  onUrlChange={setFaviconUrl}
+                  aspecto="square"
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ícone da aba do navegador do seu site. Recomendado: 32x32px. Formatos: ICO, PNG ou SVG (até 1MB).
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

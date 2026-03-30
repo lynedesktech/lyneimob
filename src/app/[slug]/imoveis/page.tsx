@@ -55,6 +55,9 @@ export default async function ListagemImoveisPage({
       preco_min: filtros.preco_min ? Number(filtros.preco_min) : undefined,
       preco_max: filtros.preco_max ? Number(filtros.preco_max) : undefined,
       quartos: filtros.quartos ? Number(filtros.quartos) : undefined,
+      vagas: filtros.vagas ? Number(filtros.vagas) : undefined,
+      area_min: filtros.area_min ? Number(filtros.area_min) : undefined,
+      area_max: filtros.area_max ? Number(filtros.area_max) : undefined,
       pagina: filtros.pagina ? Number(filtros.pagina) : 1,
     })
 

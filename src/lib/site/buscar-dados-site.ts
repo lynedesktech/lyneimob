@@ -20,6 +20,9 @@ export type FiltrosImoveisPublico = {
   preco_min?: number
   preco_max?: number
   quartos?: number
+  vagas?: number
+  area_min?: number
+  area_max?: number
   pagina?: number
 }
 
@@ -122,6 +125,15 @@ export async function buscarImoveisPublicos(
   }
   if (filtros.quartos) {
     query = query.gte("quartos", filtros.quartos)
+  }
+  if (filtros.vagas) {
+    query = query.gte("vagas", filtros.vagas)
+  }
+  if (filtros.area_min) {
+    query = query.gte("area_total", filtros.area_min)
+  }
+  if (filtros.area_max) {
+    query = query.lte("area_total", filtros.area_max)
   }
   if (filtros.preco_min || filtros.preco_max) {
     const campoPreco =

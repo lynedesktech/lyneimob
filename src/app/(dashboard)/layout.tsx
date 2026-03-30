@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { criarClienteServer } from "@/lib/supabase/server"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AppSidebar } from "@/components/layout/app-sidebar"
@@ -10,44 +10,35 @@ import { ProvedorOnboarding } from "@/components/onboarding/provedor-onboarding"
 import { ProvedorContextoIA } from "@/components/ia/contexto-ia"
 import { WidgetIA } from "@/components/ia/widget-ia"
 import { Providers } from "./providers"
+import {
+  obterUsuarioAutenticado,
+  obterDadosUsuario,
+  obterOrganizacao,
+} from "@/lib/supabase/queries"
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await criarClienteServer()
+  try {
+    const user = await obterUsuarioAutenticado()
 
-  // Buscar usuário autenticado
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    if (!user) {
+      redirect("/login?erro=sessao-invalida")
+    }
 
-  if (!user) {
-    redirect("/login?erro=sessao-invalida")
-  }
+    const usuario = await obterDadosUsuario(user.id)
 
-  // Buscar dados do usuário na tabela usuarios
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("nome, email, avatar_url, cargo, super_admin, perfil_plataforma, organizacao_id")
-    .eq("id", user.id)
-    .single()
+    if (!usuario) {
+      redirect("/login?erro=usuario-nao-encontrado")
+    }
 
-  if (!usuario) {
-    redirect("/login?erro=usuario-nao-encontrado")
-  }
+    const organizacao = await obterOrganizacao(usuario.organizacao_id)
 
-  // Buscar dados da organização do usuário logado
-  const { data: organizacao } = await supabase
-    .from("organizacoes")
-    .select("nome, slug, plano, trial_fim_em")
-    .eq("id", usuario.organizacao_id)
-    .single()
-
-  if (!organizacao) {
-    redirect("/login?erro=organizacao-nao-encontrada")
-  }
+    if (!organizacao) {
+      redirect("/login?erro=organizacao-nao-encontrada")
+    }
 
   return (
     <Providers>
@@ -74,4 +65,8 @@ export default async function DashboardLayout({
       </ProvedorOnboarding>
     </Providers>
   )
+  } catch (erro) {
+    if (isRedirectError(erro)) throw erro
+    redirect("/login?erro=sessao-invalida")
+  }
 }

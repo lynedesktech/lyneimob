@@ -1,33 +1,25 @@
 import { redirect } from "next/navigation"
 import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { criarClienteStripe } from "@/lib/stripe"
 import { PaginaPlanos } from "@/components/planos/pagina-planos"
 import type { InfoAssinatura, TipoPlano, StatusPlano, LimitesPlano, FaturaStripe } from "@/types/billing"
 
 export default async function PlanosPage() {
-  const supabase = await criarClienteServer()
-
-  // Buscar usuário logado
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await obterUsuarioAutenticado()
 
   if (!user) {
     redirect("/login")
   }
 
-  // Buscar dados do usuário
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("id, organizacao_id, cargo")
-    .eq("id", user.id)
-    .single()
+  const usuario = await obterDadosUsuario(user.id)
 
   if (!usuario) {
     redirect("/login")
   }
 
   // Buscar dados da organização
+  const supabase = await criarClienteServer()
   const { data: org } = await supabase
     .from("organizacoes")
     .select(

@@ -1,23 +1,15 @@
-import { criarClienteServer } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { FormularioMeuPerfil } from "@/components/meu-perfil/formulario-meu-perfil"
 
 export default async function PaginaMeuPerfil() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await obterUsuarioAutenticado()
 
   if (!user) {
     redirect("/login")
   }
 
-  const { data: perfil } = await supabase
-    .from("usuarios")
-    .select("id, nome, email, telefone, cargo, avatar_url, creci, bio, created_at, super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
+  const perfil = await obterDadosUsuario(user.id)
 
   if (!perfil) {
     redirect("/painel")

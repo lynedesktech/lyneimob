@@ -2,7 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { ehInvestidor } from "@/lib/permissoes"
 import type { PerfilPlataforma } from "@/lib/permissoes"
 import { buscarTarefaRoadmap, buscarHistoricoTarefa, buscarUsuariosSuperAdmin } from "@/actions/roadmap"
@@ -15,16 +15,10 @@ export default async function DetalheTarefaPage({
 }: {
   params: Params
 }) {
-  const supabase = await criarClienteServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
+  const usuario = await obterDadosUsuario(user.id)
   if (ehInvestidor(usuario as { perfil_plataforma?: PerfilPlataforma } | null)) {
     redirect("/painel")
   }

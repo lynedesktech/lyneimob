@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { ehSuperAdmin, ehDesenvolvedor } from "@/lib/permissoes"
 import { Button } from "@/components/ui/button"
@@ -8,22 +9,13 @@ import { FormularioConfiguracoesIntegracoes } from "@/components/configuracoes/f
 import { extrairIntegracoesMascaradas } from "@/types/configuracoes-integracoes"
 
 export default async function AdminConfiguracoesUazapiPage() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("organizacao_id, super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
+  const usuario = await obterDadosUsuario(user.id)
   if (!usuario || (!ehSuperAdmin(usuario) && !ehDesenvolvedor(usuario))) redirect("/configuracoes")
 
+  const supabase = await criarClienteServer()
   const { data: organizacao } = await supabase
     .from("organizacoes")
     .select("configuracoes_integracoes")

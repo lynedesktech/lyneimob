@@ -9,7 +9,6 @@ import {
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
 import { formatarTelefone } from "@/lib/formatadores"
 import { SecaoHero } from "@/components/site/secao-hero"
-import { SecaoBuscarPorTipo } from "@/components/site/secao-buscar-por-tipo"
 import { CardImovelPublico } from "@/components/site/card-imovel-publico"
 import { CardLoteamentoPublico } from "@/components/site/card-loteamento-publico"
 import { SecaoEstatisticas } from "@/components/site/secao-estatisticas"
@@ -52,15 +51,10 @@ export default async function HomePage({
 
   return (
     <>
-      {/* 1. Hero + Busca rápida */}
-      <SecaoHero organizacao={organizacao} />
+      {/* 1. Hero + Busca moderna */}
+      <SecaoHero organizacao={organizacao} temLoteamentos={loteamentosDestaque.length > 0} />
 
-      {/* 2. Buscar por tipo de imóvel */}
-      <AnimacaoScroll>
-        <SecaoBuscarPorTipo slug={slug} />
-      </AnimacaoScroll>
-
-      {/* 3. Imóveis em destaque */}
+      {/* 2. Imóveis em destaque */}
       <AnimacaoScroll>
         <section className="border-t bg-muted/30 px-4 py-16">
           <div className="mx-auto max-w-6xl">

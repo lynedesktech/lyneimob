@@ -5,23 +5,16 @@ import { PainelAdmin } from "@/components/dashboard/painel-admin"
 import { PainelCorretor } from "@/components/dashboard/painel-corretor"
 import { PainelSuperAdmin } from "@/components/painel/painel-super-admin"
 import { PainelInvestidor } from "@/components/painel/painel-investidor"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import type { AtividadeHojeItem } from "@/components/dashboard/lista-atividades-hoje"
 import type { EtapaFunil } from "@/components/dashboard/grafico-funil"
 import type { PontoMensal } from "@/components/dashboard/grafico-evolucao"
 import type { PerfilPlataforma } from "@/lib/permissoes"
 
 export default async function DashboardPage() {
+  const user = await obterUsuarioAutenticado()
+  const usuario = user ? await obterDadosUsuario(user.id) : null
   const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("nome, cargo, super_admin, perfil_plataforma")
-    .eq("id", user?.id)
-    .single()
 
   const nomeUsuario = usuario?.nome ?? "Usuário"
   const cargo = usuario?.cargo ?? "corretor"

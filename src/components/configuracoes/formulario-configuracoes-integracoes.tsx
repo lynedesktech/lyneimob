@@ -12,6 +12,8 @@ import {
   Trash2,
   ShieldCheck,
   ShieldAlert,
+  Pencil,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -78,6 +80,11 @@ export function FormularioConfiguracoesIntegracoes({
     {}
   )
 
+  // Controle de quais campos estão no modo edição (para campos que já têm chave)
+  const [camposEditando, setCamposEditando] = useState<Record<string, boolean>>(
+    {}
+  )
+
   // Estado mascarado local (atualiza ao remover chave)
   const [mascaradas, setMascaradas] =
     useState<IntegracoesMascaradas>(integracoesMascaradas)
@@ -137,6 +144,20 @@ export function FormularioConfiguracoesIntegracoes({
     formActionRemover(formData)
   }
 
+  function iniciarEdicao(campo: string) {
+    setCamposEditando((prev) => ({ ...prev, [campo]: true }))
+    setCampos((prev) => ({ ...prev, [campo]: "" }))
+  }
+
+  function cancelarEdicao(campo: string) {
+    setCamposEditando((prev) => ({ ...prev, [campo]: false }))
+    setCampos((prev) => {
+      const novo = { ...prev }
+      delete novo[campo]
+      return novo
+    })
+  }
+
   // Verificar se um grupo inteiro está configurado
   function grupoConfigurado(campos: (keyof ConfiguracoesIntegracoes)[]): boolean {
     return campos.every((c) => mascaradas[c]?.temChave)
@@ -169,22 +190,64 @@ export function FormularioConfiguracoesIntegracoes({
       if (!info) return null
       const valorDigitado = campos[campo] ?? ""
       const visivel = camposVisiveis[campo] ?? false
+      const editando = camposEditando[campo] ?? false
 
+      // Campo com chave salva e NÃO está editando → mostra estado visual claro
+      if (info.temChave && !editando) {
+        return (
+          <div key={campo} className="space-y-2">
+            <Label>{nomesChaves[campo]}</Label>
+            <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/5 px-3 py-2.5">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
+              <span className="font-mono text-sm text-foreground">
+                {info.mascarada}
+              </span>
+              <Badge variant="success" className="ml-1 text-[10px]">
+                Configurado
+              </Badge>
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => iniciarEdicao(campo)}
+                >
+                  <Pencil className="mr-1 h-3 w-3" />
+                  Alterar
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                  onClick={() => handleRemover(campo)}
+                  disabled={pendenteRemover}
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />
+                  Remover
+                </Button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      // Campo sem chave OU em modo edição → mostra input
       return (
         <div key={campo} className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor={campo}>{nomesChaves[campo]}</Label>
-            {info.temChave && (
+            {editando && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                onClick={() => handleRemover(campo)}
-                disabled={pendenteRemover}
+                className="h-7 px-2 text-xs"
+                onClick={() => cancelarEdicao(campo)}
               >
-                <Trash2 className="mr-1 h-3 w-3" />
-                Remover
+                <X className="mr-1 h-3 w-3" />
+                Cancelar
               </Button>
             )}
           </div>
@@ -196,11 +259,12 @@ export function FormularioConfiguracoesIntegracoes({
               value={valorDigitado}
               onChange={(e) => atualizarCampo(campo, e.target.value)}
               placeholder={
-                info.temChave
-                  ? `Chave atual: ${info.mascarada} — deixe vazio para manter`
+                editando
+                  ? "Digite a nova chave..."
                   : "Cole a chave aqui..."
               }
               className="pr-10 font-mono text-sm"
+              autoFocus={editando}
             />
             <button
               type="button"
@@ -216,9 +280,9 @@ export function FormularioConfiguracoesIntegracoes({
             </button>
           </div>
 
-          {info.temChave && !valorDigitado && (
+          {editando && (
             <p className="text-xs text-muted-foreground">
-              Chave configurada. Deixe o campo vazio para manter a chave atual.
+              Digite a nova chave para substituir a atual. Deixe vazio e salve para manter.
             </p>
           )}
           {ajudaChaves[campo] && (

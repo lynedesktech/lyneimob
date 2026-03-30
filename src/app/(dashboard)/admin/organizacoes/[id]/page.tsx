@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
-import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import {
   Card,
@@ -45,19 +45,10 @@ export default async function DetalheOrganizacaoPage({
   const { id } = await params
 
   // Guard: verificar se é super_admin
-  const supabase = await criarClienteServer()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuarioLogado } = await supabase
-    .from("usuarios")
-    .select("super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
+  const usuarioLogado = await obterDadosUsuario(user.id)
   if (!ehPerfilPlataforma(usuarioLogado)) redirect("/painel")
 
   const mostraFinanceiro = temAcessoFinanceiro(usuarioLogado)

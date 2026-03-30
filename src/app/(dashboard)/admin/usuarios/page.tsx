@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
-import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { ehSuperAdmin, ehDesenvolvedor } from "@/lib/permissoes"
 import { listarUsuariosPlataforma } from "@/actions/usuarios-plataforma"
 import { TabelaUsuariosPlataforma } from "@/components/admin/tabela-usuarios-plataforma"
@@ -24,15 +24,10 @@ export default async function AdminUsuariosPage({
   searchParams: SearchParams
 }) {
   const params = await searchParams
-  const supabase = await criarClienteServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
+  const usuario = await obterDadosUsuario(user.id)
 
   if (!ehSuperAdmin(usuario) && !ehDesenvolvedor(usuario)) {
     redirect("/painel")

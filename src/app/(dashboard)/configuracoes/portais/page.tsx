@@ -1,4 +1,4 @@
-import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { redirect } from "next/navigation"
 import { temPermissao } from "@/lib/permissoes"
 import Link from "next/link"
@@ -7,20 +7,10 @@ import { Button } from "@/components/ui/button"
 import { ConteudoPortais } from "@/components/configuracoes/conteudo-portais"
 
 export default async function ConfiguracoesPortaisPage() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("organizacao_id, cargo, super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
+  const usuario = await obterDadosUsuario(user.id)
   if (!usuario) redirect("/login")
   if (usuario.perfil_plataforma) redirect("/admin/configuracoes")
 

@@ -10,14 +10,16 @@ import { criarClienteBrowser } from "@/lib/supabase/client"
 import { toast } from "sonner"
 
 type Props = {
-  tipo: "hero-bg" | "logo"
+  tipo: "hero-bg" | "logo" | "favicon"
   urlAtual: string | null
   onUrlChange: (url: string | null) => void
   aspecto?: "video" | "square"
 }
 
-const TIPOS_PERMITIDOS = ["image/jpeg", "image/png", "image/webp"]
-const TAMANHO_MAXIMO = 5 * 1024 * 1024 // 5MB
+const TIPOS_PERMITIDOS_PADRAO = ["image/jpeg", "image/png", "image/webp"]
+const TIPOS_PERMITIDOS_FAVICON = ["image/jpeg", "image/png", "image/webp", "image/x-icon", "image/svg+xml"]
+const TAMANHO_MAXIMO_PADRAO = 5 * 1024 * 1024 // 5MB
+const TAMANHO_MAXIMO_FAVICON = 1 * 1024 * 1024 // 1MB
 
 function uploadComProgresso(
   url: string,
@@ -62,20 +64,34 @@ export function UploadImagemSite({ tipo, urlAtual, onUrlChange, aspecto = "video
   const [progresso, setProgresso] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const label = tipo === "hero-bg" ? "Imagem de fundo do Hero" : "Logo da imobiliária"
+  const ehFavicon = tipo === "favicon"
+  const tiposPermitidos = ehFavicon ? TIPOS_PERMITIDOS_FAVICON : TIPOS_PERMITIDOS_PADRAO
+  const tamanhoMaximo = ehFavicon ? TAMANHO_MAXIMO_FAVICON : TAMANHO_MAXIMO_PADRAO
+  const tamanhoLabel = ehFavicon ? "1MB" : "5MB"
+  const acceptInput = ehFavicon
+    ? "image/x-icon,image/png,image/svg+xml,image/webp"
+    : "image/jpeg,image/png,image/webp"
+
+  const label = tipo === "hero-bg"
+    ? "Imagem de fundo do Hero"
+    : tipo === "favicon"
+      ? "Favicon do site"
+      : "Logo da imobiliária"
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0]
     if (!arquivo) return
 
     // Validações client-side
-    if (!TIPOS_PERMITIDOS.includes(arquivo.type)) {
-      toast.error("Formato não suportado. Use JPG, PNG ou WebP.")
+    if (!tiposPermitidos.includes(arquivo.type)) {
+      toast.error(ehFavicon
+        ? "Formato não suportado. Use ICO, PNG, SVG ou WebP."
+        : "Formato não suportado. Use JPG, PNG ou WebP.")
       return
     }
 
-    if (arquivo.size > TAMANHO_MAXIMO) {
-      toast.error("Imagem muito grande. O limite é 5MB.")
+    if (arquivo.size > tamanhoMaximo) {
+      toast.error(`Imagem muito grande. O limite é ${tamanhoLabel}.`)
       return
     }
 
@@ -185,7 +201,7 @@ export function UploadImagemSite({ tipo, urlAtual, onUrlChange, aspecto = "video
         <div className="relative">
           <div
             className={`relative overflow-hidden rounded-lg border ${
-              aspecto === "video" ? "aspect-video" : "aspect-square w-32"
+              aspecto === "video" ? "aspect-video" : ehFavicon ? "aspect-square w-16" : "aspect-square w-32"
             }`}
           >
             <Image
@@ -226,7 +242,7 @@ export function UploadImagemSite({ tipo, urlAtual, onUrlChange, aspecto = "video
           onClick={() => inputRef.current?.click()}
           disabled={enviando}
           className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 transition-colors hover:border-muted-foreground/50 hover:bg-muted ${
-            aspecto === "video" ? "aspect-video" : "aspect-square w-32"
+            aspecto === "video" ? "aspect-video" : ehFavicon ? "aspect-square w-16" : "aspect-square w-32"
           }`}
         >
           <ImageIcon className="mb-2 h-8 w-8 text-muted-foreground/50" />
@@ -234,7 +250,7 @@ export function UploadImagemSite({ tipo, urlAtual, onUrlChange, aspecto = "video
             {enviando ? "Enviando..." : "Clique para enviar"}
           </span>
           <span className="mt-0.5 text-xs text-muted-foreground/60">
-            JPG, PNG ou WebP (até 5MB)
+            {ehFavicon ? `ICO, PNG ou SVG (até ${tamanhoLabel})` : `JPG, PNG ou WebP (até ${tamanhoLabel})`}
           </span>
         </button>
       )}
@@ -251,7 +267,7 @@ export function UploadImagemSite({ tipo, urlAtual, onUrlChange, aspecto = "video
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={acceptInput}
         onChange={handleUpload}
         className="hidden"
       />

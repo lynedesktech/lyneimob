@@ -55,6 +55,7 @@ export const schemaConfiguracoesSite = z.object({
   cores: schemaCoresSite.default(coresPadrao),
   hero: schemaHeroSite.default(heroPadrao),
   sobre: schemaSobreSite.default(sobrePadrao),
+  favicon_url: z.string().nullable().default(null),
 })
 
 export type ConfiguracoesSite = z.infer<typeof schemaConfiguracoesSite>

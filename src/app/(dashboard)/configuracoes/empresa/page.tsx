@@ -1,4 +1,4 @@
-import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario, obterOrganizacao } from "@/lib/supabase/queries"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -6,30 +6,15 @@ import { Button } from "@/components/ui/button"
 import { FormularioConfiguracoesOrganizacao } from "@/components/configuracoes/formulario-configuracoes-organizacao"
 
 export default async function ConfiguracoesEmpresaPage() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("organizacao_id, cargo, super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
+  const usuario = await obterDadosUsuario(user.id)
   if (!usuario) redirect("/login")
   if (usuario.perfil_plataforma) redirect("/admin/configuracoes")
   if (usuario.cargo !== "admin") redirect("/configuracoes")
 
-  const { data: organizacao } = await supabase
-    .from("organizacoes")
-    .select("id, nome, telefone, email, endereco, creci, whatsapp_numero")
-    .eq("id", usuario.organizacao_id)
-    .single()
-
+  const organizacao = await obterOrganizacao(usuario.organizacao_id)
   if (!organizacao) redirect("/login")
 
   return (

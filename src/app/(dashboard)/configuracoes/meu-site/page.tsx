@@ -1,4 +1,4 @@
-import { criarClienteServer } from "@/lib/supabase/server"
+import { obterUsuarioAutenticado, obterDadosUsuario, obterOrganizacao } from "@/lib/supabase/queries"
 import { redirect } from "next/navigation"
 import { temPermissao } from "@/lib/permissoes"
 import { buscarDominioOrganizacao } from "@/lib/site/buscar-dados-site"
@@ -9,20 +9,10 @@ import { FormularioConfiguracoesSite } from "@/components/meu-site/formulario-co
 import type { Organizacao } from "@/types/database"
 
 export default async function ConfiguracoesMeuSitePage() {
-  const supabase = await criarClienteServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const user = await obterUsuarioAutenticado()
   if (!user) redirect("/login")
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("organizacao_id, cargo, super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
+  const usuario = await obterDadosUsuario(user.id)
   if (!usuario) redirect("/login")
   if (usuario.perfil_plataforma) redirect("/admin/configuracoes")
 
@@ -30,12 +20,7 @@ export default async function ConfiguracoesMeuSitePage() {
     redirect("/configuracoes")
   }
 
-  const { data: organizacao } = await supabase
-    .from("organizacoes")
-    .select("*")
-    .eq("id", usuario.organizacao_id)
-    .single()
-
+  const organizacao = await obterOrganizacao(usuario.organizacao_id)
   if (!organizacao) redirect("/login")
 
   const dominio = await buscarDominioOrganizacao(organizacao.id)

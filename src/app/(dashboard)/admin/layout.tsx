@@ -1,27 +1,23 @@
 import { redirect } from "next/navigation"
-import { criarClienteServer } from "@/lib/supabase/server"
+import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { ehPerfilPlataforma } from "@/lib/permissoes"
+import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await criarClienteServer()
+  try {
+    const user = await obterUsuarioAutenticado()
+    if (!user) redirect("/login")
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const usuario = await obterDadosUsuario(user.id)
+    if (!ehPerfilPlataforma(usuario)) redirect("/painel")
 
-  if (!user) redirect("/login")
-
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("super_admin, perfil_plataforma")
-    .eq("id", user.id)
-    .single()
-
-  if (!ehPerfilPlataforma(usuario)) redirect("/painel")
-
-  return <>{children}</>
+    return <>{children}</>
+  } catch (erro) {
+    if (isRedirectError(erro)) throw erro
+    redirect("/login")
+  }
 }

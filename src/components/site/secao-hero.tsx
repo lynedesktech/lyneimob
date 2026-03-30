@@ -3,13 +3,14 @@ import Image from "next/image"
 import { Search } from "lucide-react"
 import type { OrganizacaoSite } from "@/lib/site/buscar-dados-site"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
-import { BuscaRapidaHero } from "@/components/site/busca-rapida-hero"
+import { BuscaHeroModerna } from "@/components/site/busca-hero-moderna"
 
 type Props = {
   organizacao: OrganizacaoSite
+  temLoteamentos: boolean
 }
 
-export function SecaoHero({ organizacao }: Props) {
+export function SecaoHero({ organizacao, temLoteamentos }: Props) {
   const configs = extrairConfiguracoes(
     organizacao.configuracoes_site as Record<string, unknown>
   )
@@ -70,8 +71,8 @@ export function SecaoHero({ organizacao }: Props) {
           </Link>
         </div>
 
-        {/* Busca rápida */}
-        <BuscaRapidaHero slug={organizacao.slug} />
+        {/* Busca moderna */}
+        <BuscaHeroModerna slug={organizacao.slug} temLoteamentos={temLoteamentos} />
       </div>
     </section>
   )
