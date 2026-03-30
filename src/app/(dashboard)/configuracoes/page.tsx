@@ -44,7 +44,7 @@ const cardsConfiguracoes: {
   },
   {
     titulo: "Equipe",
-    descricao: "Membros, convites e cargos",
+    descricao: "Membros e cargos",
     href: "/configuracoes/equipe",
     icone: UsersRound,
     permissao: "gerenciar_usuarios",

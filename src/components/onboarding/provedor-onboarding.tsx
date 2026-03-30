@@ -285,10 +285,10 @@ const tourEquipe: Tour = {
     },
     {
       icon: <UsersRound className="h-5 w-5" />,
-      title: "Convidar Equipe",
+      title: "Adicionar Equipe",
       content: (
         <>
-          Envie convites por email para seus corretores e gerentes.
+          Adicione corretores e gerentes diretamente na página de equipe.
           Quando tiver pelo menos 2 membros, a etapa será marcada automaticamente!
         </>
       ),

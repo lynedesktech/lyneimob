@@ -327,28 +327,6 @@ export type LeadPortalComRelacoes = LeadPortal & {
 }
 
 // ============================================================
-// Convites
-// ============================================================
-
-export type StatusConvite = "pendente" | "aceito" | "expirado" | "revogado"
-
-export type Convite = {
-  id: string
-  organizacao_id: string
-  convidado_por: string
-  email: string
-  cargo: "admin" | "corretor" | "gerente"
-  token: string
-  status: StatusConvite
-  expires_at: string
-  created_at: string
-}
-
-export type ConviteComRelacoes = Convite & {
-  usuarios: { id: string; nome: string } | null
-}
-
-// ============================================================
 // Loteamentos
 // ============================================================
 

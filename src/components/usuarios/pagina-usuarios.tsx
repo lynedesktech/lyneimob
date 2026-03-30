@@ -3,13 +3,12 @@
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
-import { UserPlus, Mail, Copy, Check } from "lucide-react"
+import { UserPlus } from "lucide-react"
 import { useListaUsuarios } from "@/hooks/use-lista-usuarios"
-import { convidarUsuario, alterarCargo, alternarStatusUsuario, removerUsuario, revogarConvite } from "@/actions/usuarios"
+import { criarUsuario, alterarCargo, alternarStatusUsuario, removerUsuario } from "@/actions/usuarios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
@@ -51,7 +50,7 @@ interface PaginaUsuariosProps {
 }
 
 export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps) {
-  const { usuarios, convites, carregando } = useListaUsuarios()
+  const { usuarios, carregando } = useListaUsuarios()
   const queryClient = useQueryClient()
   const [filtros, setFiltros] = useState<FiltrosEquipeValores>({ busca: "", cargo: "", status: "" })
   const [pagina, setPagina] = useState(1)
@@ -131,57 +130,9 @@ export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps
           </p>
         </div>
         {ehAdmin && (
-          <DialogConvidar onConvidar={invalidar} />
+          <DialogCriarMembro onCriar={invalidar} />
         )}
       </div>
-
-      {/* Convites pendentes */}
-      {ehAdmin && convites.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Convites pendentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {convites.map((convite) => (
-                <div key={convite.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <p className="text-sm font-medium">{convite.email}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Cargo: {CARGOS_LABELS[convite.cargo]?.label} · Expira em{" "}
-                        {new Date(convite.expires_at).toLocaleDateString("pt-BR")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BotaoCopiarLink token={convite.token} />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        const resultado = await revogarConvite(convite.id)
-                        const erro = temErro(resultado)
-                        if (erro) {
-                          toast.error(erro)
-                        } else {
-                          toast.success("Convite revogado.")
-                          invalidar()
-                        }
-                      }}
-                    >
-                      Revogar
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Tabela de equipe */}
       <TabelaEquipe
@@ -232,112 +183,104 @@ export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps
 }
 
 // ============================================================
-// Dialog: Convidar usuario
+// Dialog: Criar membro
 // ============================================================
 
-function DialogConvidar({ onConvidar }: { onConvidar: () => void }) {
+function DialogCriarMembro({ onCriar }: { onCriar: () => void }) {
   const [aberto, setAberto] = useState(false)
-  const [enviando, setEnviando] = useState(false)
-  const [tokenGerado, setTokenGerado] = useState<string | null>(null)
+  const [criando, setCriando] = useState(false)
 
-  async function handleConvidar(e: React.FormEvent<HTMLFormElement>) {
+  async function handleCriar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setEnviando(true)
+    setCriando(true)
 
     const formData = new FormData(e.currentTarget)
-    const resultado = await convidarUsuario(formData)
+    const resultado = await criarUsuario(formData)
     const erro = temErro(resultado)
 
     if (erro) {
       toast.error(erro)
     } else {
-      toast.success(obterSucesso(resultado) ?? "Convite criado!")
-      setTokenGerado(("token" in resultado ? resultado.token : null) as string | null)
-      onConvidar()
+      toast.success(obterSucesso(resultado) ?? "Usuário criado!")
+      setAberto(false)
+      onCriar()
     }
-    setEnviando(false)
-  }
-
-  function handleFechar() {
-    setAberto(false)
-    setTokenGerado(null)
+    setCriando(false)
   }
 
   return (
-    <Dialog open={aberto} onOpenChange={(open) => {
-      if (!open) handleFechar()
-      else setAberto(true)
-    }}>
+    <Dialog open={aberto} onOpenChange={setAberto}>
       <DialogTrigger
         render={
           <Button>
             <UserPlus className="mr-2 h-4 w-4" />
-            Convidar
+            Criar membro
           </Button>
         }
       />
       <DialogContent>
-        {tokenGerado ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Convite criado!</DialogTitle>
-              <DialogDescription>
-                Compartilhe o link abaixo com a pessoa convidada. O convite expira em 7 dias.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="rounded-lg border bg-muted p-3">
-              <p className="text-sm break-all font-mono">
-                {typeof window !== "undefined" ? `${window.location.origin}/convite/${tokenGerado}` : ""}
-              </p>
+        <form onSubmit={handleCriar}>
+          <DialogHeader>
+            <DialogTitle>Criar membro</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do novo membro. Depois, envie o email e a senha para ele.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input
+                id="nome"
+                name="nome"
+                type="text"
+                placeholder="Nome completo"
+                required
+              />
             </div>
-            <DialogFooter>
-              <BotaoCopiarLink token={tokenGerado} label="Copiar link" />
-              <Button onClick={handleFechar}>Fechar</Button>
-            </DialogFooter>
-          </>
-        ) : (
-          <form onSubmit={handleConvidar}>
-            <DialogHeader>
-              <DialogTitle>Convidar membro</DialogTitle>
-              <DialogDescription>
-                Envie um convite para um novo membro entrar na sua organizacao.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cargo">Cargo</Label>
-                <Select name="cargo" defaultValue="corretor">
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="corretor">Corretor</SelectItem>
-                    <SelectItem value="gerente">Gerente</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="email@exemplo.com"
+                required
+              />
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleFechar}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={enviando}>
-                {enviando ? "Enviando..." : "Criar convite"}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+            <div className="space-y-2">
+              <Label htmlFor="senha">Senha</Label>
+              <Input
+                id="senha"
+                name="senha"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                minLength={6}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cargo">Cargo</Label>
+              <Select name="cargo" defaultValue="corretor">
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="corretor">Corretor</SelectItem>
+                  <SelectItem value="gerente">Gerente</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAberto(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={criando}>
+              {criando ? "Criando..." : "Criar membro"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
@@ -467,25 +410,3 @@ function DialogRemoverUsuario({
   )
 }
 
-// ============================================================
-// Botao copiar link do convite
-// ============================================================
-
-function BotaoCopiarLink({ token, label = "Copiar" }: { token: string; label?: string }) {
-  const [copiado, setCopiado] = useState(false)
-
-  async function handleCopiar() {
-    const link = `${window.location.origin}/convite/${token}`
-    await navigator.clipboard.writeText(link)
-    setCopiado(true)
-    toast.success("Link copiado!")
-    setTimeout(() => setCopiado(false), 2000)
-  }
-
-  return (
-    <Button variant="outline" size="sm" onClick={handleCopiar}>
-      {copiado ? <Check className="mr-1 h-3 w-3" /> : <Copy className="mr-1 h-3 w-3" />}
-      {copiado ? "Copiado" : label}
-    </Button>
-  )
-}
