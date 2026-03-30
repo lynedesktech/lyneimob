@@ -17,6 +17,7 @@ import { TabelaLotes } from "@/components/loteamentos/tabela-lotes"
 import { GaleriaFotosLoteamento } from "@/components/loteamentos/galeria-fotos-loteamento"
 import { DefinirContextoIA } from "@/components/ia/definir-contexto-ia"
 import { excluirLoteamento } from "@/actions/loteamentos"
+import { formatarCep } from "@/lib/formatadores"
 import { ArrowLeft, Pencil, MapPin, Globe, FileSpreadsheet } from "lucide-react"
 
 type Params = Promise<{ id: string }>
@@ -148,7 +149,7 @@ export default async function DetalheLoteamentoPage({
                   {loteamento.cidade} - {loteamento.estado}
                 </p>
                 {loteamento.cep && (
-                  <p className="text-muted-foreground">CEP: {loteamento.cep}</p>
+                  <p className="text-muted-foreground">CEP: {formatarCep(loteamento.cep)}</p>
                 )}
               </CardContent>
             </Card>

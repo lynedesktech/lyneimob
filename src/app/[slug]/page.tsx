@@ -7,6 +7,7 @@ import {
   buscarLoteamentosDestaque,
 } from "@/lib/site/buscar-dados-site"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
+import { formatarTelefone } from "@/lib/formatadores"
 import { SecaoHero } from "@/components/site/secao-hero"
 import { SecaoBuscarPorTipo } from "@/components/site/secao-buscar-por-tipo"
 import { CardImovelPublico } from "@/components/site/card-imovel-publico"
@@ -194,7 +195,7 @@ export default async function HomePage({
                     <div>
                       <p className="text-sm font-medium">Telefone</p>
                       <p className="text-sm text-muted-foreground">
-                        {organizacao.telefone}
+                        {formatarTelefone(organizacao.telefone)}
                       </p>
                     </div>
                   </a>

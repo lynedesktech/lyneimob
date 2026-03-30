@@ -6,7 +6,7 @@ import { User, Mail, Phone, Clock, Building2, MessageSquare } from "lucide-react
 import { AcoesLead } from "@/components/integracoes/acoes-lead"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusLead } from "@/lib/constantes/status-configs"
-import { formatarDataHora } from "@/lib/formatadores"
+import { formatarDataHora, formatarTelefone } from "@/lib/formatadores"
 import type { LeadPortalComRelacoes } from "@/types/database"
 
 interface CardLeadProps {
@@ -75,7 +75,7 @@ export function CardLead({ lead }: CardLeadProps) {
               {lead.telefone && (
                 <span className="flex items-center gap-1">
                   <Phone className="h-3 w-3" />
-                  {lead.telefone}
+                  {formatarTelefone(lead.telefone)}
                 </span>
               )}
               <span className="flex items-center gap-1">

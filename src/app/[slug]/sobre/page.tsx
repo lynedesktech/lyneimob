@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { buscarOrganizacaoPorSlug } from "@/lib/site/buscar-dados-site"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
 import { Target, Eye, Heart, BookOpen } from "lucide-react"
+import { formatarTelefone } from "@/lib/formatadores"
 import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import type { Metadata } from "next"
 
@@ -149,7 +150,7 @@ export default async function SobrePage({
                 )}
                 {organizacao.telefone && (
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {organizacao.telefone}
+                    {formatarTelefone(organizacao.telefone)}
                   </p>
                 )}
                 {organizacao.email && (

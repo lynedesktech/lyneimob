@@ -31,7 +31,7 @@ import {
   Rss,
 } from "lucide-react"
 import { labelsTipoImovel, labelsFinalidade } from "@/lib/constantes"
-import { formatarPreco } from "@/lib/formatadores"
+import { formatarPreco, formatarCep } from "@/lib/formatadores"
 
 type Params = Promise<{ id: string }>
 
@@ -187,7 +187,7 @@ export default async function DetalheImovelPage({
                   {imovel.cidade} - {imovel.estado}
                 </p>
                 {imovel.cep && (
-                  <p className="text-muted-foreground">CEP: {imovel.cep}</p>
+                  <p className="text-muted-foreground">CEP: {formatarCep(imovel.cep)}</p>
                 )}
               </CardContent>
             </Card>

@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { Phone, Mail, MapPin, MessageCircle } from "lucide-react"
 import type { OrganizacaoSite } from "@/lib/site/buscar-dados-site"
+import { formatarTelefone } from "@/lib/formatadores"
 
 type Props = {
   organizacao: OrganizacaoSite
@@ -62,7 +63,7 @@ export function FooterSite({ organizacao }: Props) {
                   className="flex items-center gap-2 text-sm text-white/70 transition-colors hover:text-white"
                 >
                   <Phone className="h-4 w-4" />
-                  {organizacao.telefone}
+                  {formatarTelefone(organizacao.telefone)}
                 </a>
               )}
               {organizacao.email && (

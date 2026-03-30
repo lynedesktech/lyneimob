@@ -8,6 +8,7 @@ import {
 } from "@/lib/site/buscar-dados-site"
 import { GaleriaImovel } from "@/components/site/galeria-imovel"
 import { CardImovelPublico } from "@/components/site/card-imovel-publico"
+import { formatarTelefone } from "@/lib/formatadores"
 import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import {
   MapPin,
@@ -264,7 +265,7 @@ export default async function DetalheImovelPage({
               <p className="text-sm font-medium">{organizacao.nome}</p>
               {organizacao.telefone && (
                 <p className="text-sm text-muted-foreground">
-                  Tel: {organizacao.telefone}
+                  Tel: {formatarTelefone(organizacao.telefone)}
                 </p>
               )}
               {organizacao.email && (

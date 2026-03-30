@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { InputMonetario } from "@/components/ui/input-monetario"
 import { Plus, Trash2, Home, MapPin, DollarSign } from "lucide-react"
 import { toast } from "sonner"
 import { labelsTipoImovel } from "@/lib/constantes"
@@ -42,6 +43,8 @@ type InteressesClienteProps = {
 export function InteressesCliente({ clienteId, interesses }: InteressesClienteProps) {
   const [mostrarForm, setMostrarForm] = useState(false)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
+  const [precoMin, setPrecoMin] = useState<number | null>(null)
+  const [precoMax, setPrecoMax] = useState<number | null>(null)
 
   const [estado, formAction, pendente] = useActionState<
     EstadoFormulario,
@@ -216,26 +219,22 @@ export function InteressesCliente({ clienteId, interesses }: InteressesClientePr
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="preco_min">Preço mínimo (R$)</Label>
-                  <Input
+                  <Label htmlFor="preco_min">Preço mínimo</Label>
+                  <InputMonetario
                     id="preco_min"
                     name="preco_min"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="200000"
+                    valor={precoMin}
+                    onValorChange={setPrecoMin}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="preco_max">Preço máximo (R$)</Label>
-                  <Input
+                  <Label htmlFor="preco_max">Preço máximo</Label>
+                  <InputMonetario
                     id="preco_max"
                     name="preco_max"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="500000"
+                    valor={precoMax}
+                    onValorChange={setPrecoMax}
                   />
                 </div>
 

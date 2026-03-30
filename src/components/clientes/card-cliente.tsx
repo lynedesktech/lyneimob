@@ -8,6 +8,7 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusCliente } from "@/lib/constantes/status-configs"
 import { ScoreBadge } from "./score-badge"
+import { formatarTelefone } from "@/lib/formatadores"
 import { Phone, Mail, User } from "lucide-react"
 import { labelsTipoCliente, labelsOrigem } from "@/lib/constantes"
 import type { Cliente } from "@/types/database"
@@ -39,7 +40,7 @@ export function CardCliente({ cliente }: { cliente: Cliente }) {
           {cliente.telefone && (
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Phone className="h-3.5 w-3.5" />
-              <span>{cliente.telefone}</span>
+              <span>{formatarTelefone(cliente.telefone)}</span>
             </div>
           )}
 

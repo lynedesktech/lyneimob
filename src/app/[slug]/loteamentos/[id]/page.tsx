@@ -8,6 +8,7 @@ import {
 } from "@/lib/site/buscar-dados-site"
 import { GaleriaImovel } from "@/components/site/galeria-imovel"
 import { CardLoteamentoPublico } from "@/components/site/card-loteamento-publico"
+import { formatarTelefone } from "@/lib/formatadores"
 import { TabelaLotesPublico } from "@/components/site/tabela-lotes-publico"
 import { ResumoLotesPublico } from "@/components/site/resumo-lotes-publico"
 import { AnimacaoScroll } from "@/components/site/animacao-scroll"
@@ -214,7 +215,7 @@ export default async function DetalheLoteamentoPage({
               <p className="text-sm font-medium">{organizacao.nome}</p>
               {organizacao.telefone && (
                 <p className="text-sm text-muted-foreground">
-                  Tel: {organizacao.telefone}
+                  Tel: {formatarTelefone(organizacao.telefone)}
                 </p>
               )}
               {organizacao.email && (

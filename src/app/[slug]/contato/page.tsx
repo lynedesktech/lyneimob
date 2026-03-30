@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { buscarOrganizacaoPorSlug } from "@/lib/site/buscar-dados-site"
 import { FormularioContato } from "@/components/site/formulario-contato"
 import { Phone, Mail, MapPin, MessageCircle, Clock } from "lucide-react"
+import { formatarTelefone } from "@/lib/formatadores"
 import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import type { Metadata } from "next"
 
@@ -101,7 +102,7 @@ export default async function ContatoPage({
                     <div>
                       <p className="font-medium">Telefone</p>
                       <p className="text-muted-foreground">
-                        {organizacao.telefone}
+                        {formatarTelefone(organizacao.telefone)}
                       </p>
                     </div>
                   </a>

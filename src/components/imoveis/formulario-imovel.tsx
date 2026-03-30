@@ -11,6 +11,7 @@ import { InputCep } from "@/components/ui/input-cep"
 import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/input-group"
+import { InputMonetario } from "@/components/ui/input-monetario"
 import {
   Select,
   SelectContent,
@@ -70,6 +71,9 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const [estadoValue, setEstadoValue] = useState(campo(imovel, "estado"))
   const [statusValue, setStatusValue] = useState(campo(imovel, "status") || "disponivel")
   const [destaqueValue, setDestaqueValue] = useState(Boolean((imovel as Record<string, unknown> | undefined)?.destaque))
+  const [valorValue, setValorValue] = useState<number | null>(campoNum(imovel, "valor", "valor") as number || null)
+  const [valorCondominioValue, setValorCondominioValue] = useState<number | null>(campoNum(imovel, "valor_condominio", "condominio") as number || null)
+  const [valorIptuValue, setValorIptuValue] = useState<number | null>(campoNum(imovel, "valor_iptu", "iptu") as number || null)
   const [pendente, setPendente] = useState(false)
 
   async function handleAction(formData: FormData) {
@@ -265,56 +269,32 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field>
               <FieldLabel htmlFor="valor">Preço</FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>R$</InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="valor"
-                  name="valor"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="500000"
-                  defaultValue={campoNum(imovel, "valor", "valor")}
-                />
-              </InputGroup>
+              <InputMonetario
+                id="valor"
+                name="valor"
+                valor={valorValue}
+                onValorChange={setValorValue}
+              />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="valor_condominio">Condomínio /mês</FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>R$</InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="valor_condominio"
-                  name="valor_condominio"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="800"
-                  defaultValue={campoNum(imovel, "valor_condominio", "condominio")}
-                />
-              </InputGroup>
+              <InputMonetario
+                id="valor_condominio"
+                name="valor_condominio"
+                valor={valorCondominioValue}
+                onValorChange={setValorCondominioValue}
+              />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="valor_iptu">IPTU /ano</FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>R$</InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="valor_iptu"
-                  name="valor_iptu"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="1200"
-                  defaultValue={campoNum(imovel, "valor_iptu", "iptu")}
-                />
-              </InputGroup>
+              <InputMonetario
+                id="valor_iptu"
+                name="valor_iptu"
+                valor={valorIptuValue}
+                onValorChange={setValorIptuValue}
+              />
             </Field>
           </CardContent>
         </Card>

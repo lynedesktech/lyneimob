@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { formatarTelefone } from "@/lib/formatadores"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatarData } from "@/lib/formatadores"
@@ -197,7 +198,7 @@ export default async function DetalheOrganizacaoPage({
               {org.telefone && (
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Telefone</dt>
-                  <dd>{org.telefone}</dd>
+                  <dd>{formatarTelefone(org.telefone)}</dd>
                 </div>
               )}
               {org.email && (
