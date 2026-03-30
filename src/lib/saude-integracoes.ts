@@ -121,22 +121,39 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
   try {
     const urlLimpa = url.replace(/\/$/, "")
 
-    // Verificar se o servidor responde — qualquer resposta HTTP prova que está vivo
+    // Testar criando instância temporária — valida URL + admin token de verdade
+    const nomeInstancia = `lyneimob-health-${Date.now()}`
     const resp = await comTimeout(
-      fetch(`${urlLimpa}/`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+      fetch(`${urlLimpa}/instance/init`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", admintoken: token },
+        body: JSON.stringify({ name: nomeInstancia }),
       }),
-      10000 // 10s — servidores próprios podem demorar mais
+      10000
     )
 
-    // Se o servidor respondeu (qualquer status), ele está acessível
-    // Apenas 5xx indica problema real no servidor
+    if (resp.ok) {
+      // Conectado e autenticado — limpar instância de teste
+      try {
+        const dados = await resp.json()
+        const instanceId = dados?.instance?.id
+        if (instanceId) {
+          await fetch(`${urlLimpa}/instance/${instanceId}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json", admintoken: token },
+          })
+        }
+      } catch { /* ignora erro na limpeza */ }
+      return { status: "conectado" }
+    }
+
+    if (resp.status === 401 || resp.status === 403) {
+      return { status: "desconectado", mensagem: "Token inválido ou sem permissão" }
+    }
     if (resp.status >= 500) {
       return { status: "desconectado", mensagem: `Servidor com erro (${resp.status})` }
     }
-
-    return { status: "conectado" }
+    return { status: "desconectado", mensagem: `Erro ${resp.status} — verifique a URL` }
   } catch (erro) {
     const mensagem = erro instanceof Error && erro.message === "Timeout"
       ? "Timeout ao conectar (10s)"

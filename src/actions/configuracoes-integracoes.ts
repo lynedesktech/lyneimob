@@ -50,22 +50,17 @@ async function validarChavesNovas(
     }
   }
 
-  // Uazapi
+  // Uazapi — validar URL + admin token criando instância de teste
   if (novasChaves.uazapi_url || novasChaves.uazapi_token) {
-    // Precisa das duas credenciais pra validar — buscar a que falta do banco se necessário
     const urlUazapi = novasChaves.uazapi_url?.trim()
     const tokenUazapi = novasChaves.uazapi_token?.trim()
 
     if (urlUazapi && tokenUazapi) {
       try {
-        const resp = await fetch(`${urlUazapi.replace(/\/$/, "")}/`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(10000),
-        })
-        // Qualquer resposta do servidor (mesmo 401/403) significa que está acessível
-        if (!resp.ok && resp.status !== 401 && resp.status !== 403) {
-          return `Servidor Uazapi não acessível (erro ${resp.status}). Verifique a URL.`
+        const { testarConexaoUazapi } = await import("@/lib/whatsapp/uazapi")
+        const valido = await testarConexaoUazapi(urlUazapi, tokenUazapi)
+        if (!valido) {
+          return "Credenciais Uazapi inválidas. Verifique a URL e o admin token."
         }
       } catch {
         return "Não foi possível conectar ao servidor Uazapi. Verifique a URL e tente novamente."

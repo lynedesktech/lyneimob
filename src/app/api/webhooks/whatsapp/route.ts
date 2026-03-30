@@ -102,15 +102,18 @@ export async function POST(request: Request) {
     }
 
     // 3. Fallback: extrair org do padrão "lyneimob-{orgPrefix}"
+    // O orgPrefix é um UUID parcial (8 chars) — buscar orgs que começam com ele
     if (!config && instanceIdent?.startsWith("lyneimob-")) {
       const orgPrefix = instanceIdent.replace("lyneimob-", "")
-      const { data } = await supabase
-        .from("config_whatsapp")
-        .select("*")
-        .ilike("organizacao_id", `${orgPrefix}%`)
-        .eq("ativo", true)
-        .single()
-      config = data
+      if (orgPrefix.length >= 8) {
+        const { data: configs } = await supabase
+          .from("config_whatsapp")
+          .select("*")
+          .eq("ativo", true)
+
+        // Filtrar em JS para evitar ILIKE ambíguo
+        config = configs?.find((c) => c.organizacao_id.startsWith(orgPrefix)) ?? null
+      }
     }
 
     if (!config) {

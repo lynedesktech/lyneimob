@@ -126,7 +126,7 @@ export async function excluirInstanciaUazapi(
 ): Promise<void> {
   const resposta = await fetch(montarUrlBase(url, `/instance/${instanceId}`), {
     method: "DELETE",
-    headers: { "Content-Type": "application/json", token: adminToken },
+    headers: { "Content-Type": "application/json", admintoken: adminToken },
   })
 
   if (!resposta.ok) {
@@ -227,12 +227,10 @@ export async function marcarComoLida(
 
 /**
  * Testa se as credenciais admin da Uazapi são válidas.
- * Cria uma instância de teste e a exclui em seguida para validar conectividade.
- * Fallback: tenta GET na raiz para verificar se o servidor responde.
+ * Cria uma instância de teste e a exclui em seguida para validar conectividade e autenticação.
  */
 export async function testarConexaoUazapi(url: string, adminToken: string): Promise<boolean> {
   try {
-    // Tentar criar uma instância de teste
     const nomeInstancia = `lyneimob-teste-${Date.now()}`
     const resposta = await fetch(montarUrlBase(url, "/instance/init"), {
       method: "POST",
@@ -240,27 +238,20 @@ export async function testarConexaoUazapi(url: string, adminToken: string): Prom
       body: JSON.stringify({ name: nomeInstancia }),
     })
 
-    if (resposta.ok) {
-      // Instância criada — excluir imediatamente
-      const dados = await resposta.json()
-      const instanceId = dados?.instance?.id
-      if (instanceId) {
-        try {
-          await fetch(montarUrlBase(url, `/instance/${instanceId}`), {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json", token: adminToken },
-          })
-        } catch { /* ignora erro na exclusão */ }
-      }
-      return true
-    }
+    if (!resposta.ok) return false
 
-    // Se falhou na criação, tentar apenas acessar a raiz do servidor
-    const respostaRaiz = await fetch(montarUrlBase(url, "/"), {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    })
-    return respostaRaiz.ok
+    // Instância criada — excluir imediatamente
+    const dados = await resposta.json()
+    const instanceId = dados?.instance?.id
+    if (instanceId) {
+      try {
+        await fetch(montarUrlBase(url, `/instance/${instanceId}`), {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", admintoken: adminToken },
+        })
+      } catch { /* ignora erro na exclusão */ }
+    }
+    return true
   } catch {
     return false
   }
