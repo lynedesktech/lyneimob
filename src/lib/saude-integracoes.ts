@@ -121,7 +121,7 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
   try {
     const urlLimpa = url.replace(/\/$/, "")
 
-    // Verificar se o servidor responde na raiz
+    // Verificar se o servidor responde — qualquer resposta HTTP prova que está vivo
     const resp = await comTimeout(
       fetch(`${urlLimpa}/`, {
         method: "GET",
@@ -130,15 +130,13 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
       10000 // 10s — servidores próprios podem demorar mais
     )
 
-    if (resp.ok) return { status: "conectado" }
-    if (resp.status === 401 || resp.status === 403) {
-      // Servidor respondeu mas exige autenticação — está vivo
-      return { status: "conectado" }
+    // Se o servidor respondeu (qualquer status), ele está acessível
+    // Apenas 5xx indica problema real no servidor
+    if (resp.status >= 500) {
+      return { status: "desconectado", mensagem: `Servidor com erro (${resp.status})` }
     }
-    if (resp.status === 404) {
-      return { status: "desconectado", mensagem: "URL inválida — verifique o endereço do servidor" }
-    }
-    return { status: "desconectado", mensagem: `Erro ${resp.status} — servidor indisponível` }
+
+    return { status: "conectado" }
   } catch (erro) {
     const mensagem = erro instanceof Error && erro.message === "Timeout"
       ? "Timeout ao conectar (10s)"
