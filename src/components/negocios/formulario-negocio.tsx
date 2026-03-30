@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
 import { criarNegocio, atualizarNegocio } from "@/actions/negocios"
@@ -33,6 +34,7 @@ type EtapaSimples = { id: string; nome: string; cor: string; tipo: string; ordem
 export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const editando = !!negocio
   const action = editando ? atualizarNegocio : criarNegocio
+  const router = useRouter()
 
   const [tipoValue, setTipoValue] = useState(negocio?.tipo ?? "")
   const [etapaId, setEtapaId] = useState(negocio?.etapa_id ?? "")
@@ -100,10 +102,19 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
     setPendente(true)
     try {
       const resultado = await action({}, formData)
-      if (resultado?.erro) toast.error(resultado.erro)
-      if (resultado?.sucesso) toast.success(resultado.sucesso)
-    } catch {
-      // redirect() lança um erro especial que o Next.js intercepta
+      if (resultado?.erro) {
+        toast.error(resultado.erro)
+      } else if (resultado?.sucesso) {
+        toast.success(resultado.sucesso)
+        if (resultado.redirectUrl) {
+          router.push(resultado.redirectUrl)
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("NEXT_REDIRECT")) {
+        toast.error("Erro inesperado: " + msg)
+      }
     } finally {
       setPendente(false)
     }
@@ -166,13 +177,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                 <SelectContent>
                   {etapasNormais.map((etapa) => (
                     <SelectItem key={etapa.id} value={etapa.id}>
-                      <span className="flex items-center gap-2">
-                        <span
-                          className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: etapa.cor }}
-                        />
-                        {etapa.nome}
-                      </span>
+                      {etapa.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>

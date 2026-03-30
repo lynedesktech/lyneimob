@@ -36,18 +36,19 @@ export function HeaderSite({ organizacao, temLoteamentos }: Props) {
           href={`/${organizacao.slug}`}
           className="flex items-center gap-2.5"
         >
-          {organizacao.logo_url && (
+          {organizacao.logo_url ? (
             <Image
               src={organizacao.logo_url}
               alt={organizacao.nome}
-              width={36}
-              height={36}
-              className="rounded"
+              width={120}
+              height={40}
+              className="h-10 w-auto object-contain"
             />
+          ) : (
+            <span className="text-lg font-bold text-[var(--site-primaria)]">
+              {organizacao.nome}
+            </span>
           )}
-          <span className="text-lg font-bold text-[var(--site-primaria)]">
-            {organizacao.nome}
-          </span>
         </Link>
 
         {/* Navegação desktop */}

@@ -1,10 +1,10 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  rectIntersection,
   PointerSensor,
   useSensor,
   useSensors,
@@ -28,6 +28,10 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
   const [negocioArrastando, setNegocioArrastando] =
     useState<NegocioComRelacoes | null>(null)
 
+  // Ref para acessar o estado mais recente sem depender de closures
+  const etapasRef = useRef(etapasLocal)
+  etapasRef.current = etapasLocal
+
   // Atualizar estado local quando props mudam
   if (etapas !== etapasLocal && !negocioArrastando) {
     setEtapasLocal(etapas)
@@ -35,29 +39,27 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
+      activationConstraint: { distance: 5 },
     })
   )
 
-  const encontrarNegocio = useCallback(
-    (id: string) => {
-      for (const etapa of etapasLocal) {
-        const negocio = etapa.negocios.find((n) => n.id === id)
-        if (negocio) return { negocio, etapa }
-      }
-      return null
-    },
-    [etapasLocal]
-  )
+  function encontrarNegocioAtual(id: string) {
+    for (const etapa of etapasRef.current) {
+      const negocio = etapa.negocios.find((n) => n.id === id)
+      if (negocio) return { negocio, etapa }
+    }
+    return null
+  }
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
-      const resultado = encontrarNegocio(event.active.id as string)
+      const resultado = encontrarNegocioAtual(event.active.id as string)
       if (resultado) {
         setNegocioArrastando(resultado.negocio)
       }
     },
-    [encontrarNegocio]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   )
 
   const handleDragOver = useCallback(
@@ -68,18 +70,18 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
       const activeId = active.id as string
       const overId = over.id as string
 
-      const resultadoAtivo = encontrarNegocio(activeId)
+      const resultadoAtivo = encontrarNegocioAtual(activeId)
       if (!resultadoAtivo) return
 
       const etapaOrigemId = resultadoAtivo.etapa.id
 
       // Verificar se o over é uma coluna (etapa) ou um card (negócio)
       let etapaDestinoId: string
-      const etapaOver = etapasLocal.find((e) => e.id === overId)
+      const etapaOver = etapasRef.current.find((e) => e.id === overId)
       if (etapaOver) {
         etapaDestinoId = overId
       } else {
-        const resultadoOver = encontrarNegocio(overId)
+        const resultadoOver = encontrarNegocioAtual(overId)
         if (!resultadoOver) return
         etapaDestinoId = resultadoOver.etapa.id
       }
@@ -108,7 +110,8 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
         })
       )
     },
-    [encontrarNegocio, etapasLocal]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   )
 
   const handleDragEnd = useCallback(
@@ -118,7 +121,7 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
 
       setNegocioArrastando(null)
 
-      const resultado = encontrarNegocio(activeId)
+      const resultado = encontrarNegocioAtual(activeId)
       if (!resultado) return
 
       const { etapa } = resultado
@@ -130,7 +133,8 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
         onAtualizar()
       }
     },
-    [encontrarNegocio, onAtualizar]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [onAtualizar]
   )
 
   // Filtrar etapas finais (ganho/perdido) que não têm negócios
@@ -141,7 +145,7 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={rectIntersection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}

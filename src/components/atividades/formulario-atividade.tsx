@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { criarAtividade, atualizarAtividade } from "@/actions/atividades"
 import { Button } from "@/components/ui/button"
@@ -54,6 +55,7 @@ function formatarParaInput(data: string | null | undefined) {
 export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAtividadeProps) {
   const editando = !!atividade
   const action = editando ? atualizarAtividade : criarAtividade
+  const router = useRouter()
 
   // Acessar data_vencimento com fallback para data_vencimento (DB pode ter nomes diferentes)
   const atv = atividade as (AtividadeComRelacoes & Record<string, unknown>) | null | undefined
@@ -97,7 +99,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
         supabase
           .from("negocios")
           .select("id, titulo")
-          .not("etapa", "in", '("fechado_ganho","fechado_perdido")')
+          .eq("status", "aberto")
           .order("titulo"),
         supabase
           .from("imoveis")
@@ -127,10 +129,19 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
     setPendente(true)
     try {
       const resultado = await action({}, formData)
-      if (resultado?.erro) toast.error(resultado.erro)
-      if (resultado?.sucesso) toast.success(resultado.sucesso)
-    } catch {
-      // redirect() lança um erro especial que o Next.js intercepta
+      if (resultado?.erro) {
+        toast.error(resultado.erro)
+      } else if (resultado?.sucesso) {
+        toast.success(resultado.sucesso)
+        if (resultado.redirectUrl) {
+          router.push(resultado.redirectUrl)
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("NEXT_REDIRECT")) {
+        toast.error("Erro inesperado: " + msg)
+      }
     } finally {
       setPendente(false)
     }

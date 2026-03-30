@@ -48,6 +48,10 @@ export function GaleriaFotosLoteamento({
 
     setEnviando(true)
 
+    // Controlar ordem e capa localmente (state não atualiza dentro do loop)
+    let totalAtual = fotos.length
+    const novasFotos: LoteamentoFoto[] = []
+
     for (const arquivo of Array.from(arquivos)) {
       const extensao = arquivo.name.split(".").pop()?.toLowerCase()
       if (!["jpg", "jpeg", "png", "webp"].includes(extensao ?? "")) {
@@ -81,8 +85,8 @@ export function GaleriaFotosLoteamento({
         .insert({
           loteamento_id: loteamentoId,
           url: urlData.publicUrl,
-          ordem: fotos.length,
-          eh_capa: fotos.length === 0,
+          ordem: totalAtual,
+          eh_capa: totalAtual === 0,
         })
         .select()
         .single()
@@ -92,7 +96,12 @@ export function GaleriaFotosLoteamento({
         continue
       }
 
-      setFotos((prev) => [...prev, novaFoto as LoteamentoFoto])
+      novasFotos.push(novaFoto as LoteamentoFoto)
+      totalAtual++
+    }
+
+    if (novasFotos.length > 0) {
+      setFotos((prev) => [...prev, ...novasFotos])
     }
 
     setEnviando(false)

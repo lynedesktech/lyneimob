@@ -40,6 +40,8 @@ export async function criarImovel(
     banheiros: formData.get("banheiros") || 0,
     vagas: formData.get("vagas") || 0,
     destaque: formData.get("destaque") === "on" || formData.get("destaque") === "true",
+    publicar_site: formData.get("publicar_site") === "on" || formData.get("publicar_site") === "true",
+    publicar_portais: formData.get("publicar_portais") === "on" || formData.get("publicar_portais") === "true",
     latitude: formData.get("latitude") || undefined,
     longitude: formData.get("longitude") || undefined,
   })
@@ -61,11 +63,24 @@ export async function criarImovel(
 
   const supabase = await criarClienteServer()
 
+  // Auto-gerar código interno se não fornecido
+  let codigoInterno = dados.data.codigo_interno
+  if (!codigoInterno) {
+    const { count } = await supabase
+      .from("imoveis")
+      .select("id", { count: "exact", head: true })
+      .eq("organizacao_id", usuario.organizacao_id)
+
+    const sequencial = (count ?? 0) + 1
+    codigoInterno = `IMO-${String(sequencial).padStart(3, "0")}`
+  }
+
   // Campos do Zod schema correspondem 1:1 às colunas do banco live
   const { data: imovel, error } = await supabase
     .from("imoveis")
     .insert({
       ...dados.data,
+      codigo_interno: codigoInterno,
       organizacao_id: usuario.organizacao_id,
       corretor_id: usuario.id,
     })
@@ -81,7 +96,7 @@ export async function criarImovel(
 
   revalidatePath("/imoveis")
   revalidatePath("/")
-  redirect(`/imoveis/${imovel.id}`)
+  return { sucesso: "Imóvel cadastrado com sucesso!", redirectUrl: `/imoveis/${imovel.id}` }
 }
 
 // ============================================================
@@ -117,6 +132,8 @@ export async function atualizarImovel(
     banheiros: formData.get("banheiros") || 0,
     vagas: formData.get("vagas") || 0,
     destaque: formData.get("destaque") === "on" || formData.get("destaque") === "true",
+    publicar_site: formData.get("publicar_site") === "on" || formData.get("publicar_site") === "true",
+    publicar_portais: formData.get("publicar_portais") === "on" || formData.get("publicar_portais") === "true",
     latitude: formData.get("latitude") || undefined,
     longitude: formData.get("longitude") || undefined,
   })
@@ -147,7 +164,7 @@ export async function atualizarImovel(
 
   revalidatePath("/imoveis")
   revalidatePath(`/imoveis/${id}`)
-  redirect(`/imoveis/${id}`)
+  return { sucesso: "Imóvel atualizado com sucesso!", redirectUrl: `/imoveis/${id}` }
 }
 
 // ============================================================

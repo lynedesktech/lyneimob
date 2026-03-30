@@ -106,7 +106,7 @@ export function WidgetIA() {
             <Button
               data-testid="widget-ia-botao"
               size="icon"
-              className={`fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 ${
+              className={`fixed bottom-24 right-6 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 ${
                 desabilitado
                   ? "bg-muted text-muted-foreground hover:bg-muted"
                   : "bg-gradient-to-br from-[var(--grad-start)] to-[var(--grad-end)] text-white hover:opacity-90"

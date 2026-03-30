@@ -63,7 +63,7 @@ export async function criarCliente(
 
   revalidatePath("/clientes")
   revalidatePath("/")
-  redirect(`/clientes/${cliente.id}`)
+  return { sucesso: "Cliente cadastrado com sucesso!", redirectUrl: `/clientes/${cliente.id}` }
 }
 
 // ============================================================
@@ -113,7 +113,7 @@ export async function atualizarCliente(
 
   revalidatePath("/clientes")
   revalidatePath(`/clientes/${id}`)
-  redirect(`/clientes/${id}`)
+  return { sucesso: "Cliente atualizado com sucesso!", redirectUrl: `/clientes/${id}` }
 }
 
 // ============================================================

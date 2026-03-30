@@ -24,7 +24,7 @@ const vazioParaUndefined = (val: unknown) =>
 // Schema de criação de imóvel
 // ============================================================
 export const schemaCriarImovel = z.object({
-  codigo_interno: z.string().min(1, "Código é obrigatório"),
+  codigo_interno: z.string().optional(),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   descricao: z.string().optional(),
   tipo: z.enum(TIPOS_IMOVEL, { message: "Selecione o tipo do imóvel" }),
@@ -49,6 +49,8 @@ export const schemaCriarImovel = z.object({
   banheiros: z.coerce.number().int().min(0).default(0),
   vagas: z.coerce.number().int().min(0).default(0),
   destaque: z.coerce.boolean().default(false),
+  publicar_site: z.coerce.boolean().default(true),
+  publicar_portais: z.coerce.boolean().default(true),
   latitude: z.preprocess(vazioParaUndefined, z.coerce.number().optional()),
   longitude: z.preprocess(vazioParaUndefined, z.coerce.number().optional()),
 })

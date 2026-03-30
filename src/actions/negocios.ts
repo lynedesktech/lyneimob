@@ -75,7 +75,7 @@ export async function criarNegocio(
 
   revalidatePath("/negocios")
   revalidatePath("/")
-  redirect(`/negocios/${negocio.id}`)
+  return { sucesso: "Negócio criado com sucesso!", redirectUrl: `/negocios/${negocio.id}` }
 }
 
 // ============================================================
@@ -130,7 +130,7 @@ export async function atualizarNegocio(
 
   revalidatePath("/negocios")
   revalidatePath(`/negocios/${dados.data.id}`)
-  redirect(`/negocios/${dados.data.id}`)
+  return { sucesso: "Negócio atualizado com sucesso!", redirectUrl: `/negocios/${dados.data.id}` }
 }
 
 // ============================================================

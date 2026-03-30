@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
 import { criarImovel, atualizarImovel } from "@/actions/imoveis"
@@ -65,16 +66,67 @@ function campoNum(imovel: Imovel | undefined, ...nomes: string[]): number | stri
 export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const editando = !!imovel
   const action = editando ? atualizarImovel : criarImovel
+  const router = useRouter()
 
   const [tipoValue, setTipoValue] = useState(campo(imovel, "tipo"))
   const [finalidadeValue, setFinalidadeValue] = useState(campo(imovel, "finalidade"))
   const [estadoValue, setEstadoValue] = useState(campo(imovel, "estado"))
   const [statusValue, setStatusValue] = useState(campo(imovel, "status") || "disponivel")
   const [destaqueValue, setDestaqueValue] = useState(Boolean((imovel as Record<string, unknown> | undefined)?.destaque))
+  const [publicarSiteValue, setPublicarSiteValue] = useState((imovel as Record<string, unknown> | undefined)?.publicar_site !== false)
+  const [publicarPortaisValue, setPublicarPortaisValue] = useState((imovel as Record<string, unknown> | undefined)?.publicar_portais !== false)
   const [valorValue, setValorValue] = useState<number | null>(campoNum(imovel, "valor", "valor") as number || null)
   const [valorCondominioValue, setValorCondominioValue] = useState<number | null>(campoNum(imovel, "valor_condominio", "condominio") as number || null)
   const [valorIptuValue, setValorIptuValue] = useState<number | null>(campoNum(imovel, "valor_iptu", "iptu") as number || null)
   const [pendente, setPendente] = useState(false)
+  const [buscandoCep, setBuscandoCep] = useState(false)
+
+  // Refs para preencher endereço via CEP
+  const logradouroRef = useRef<HTMLInputElement>(null)
+  const bairroRef = useRef<HTMLInputElement>(null)
+  const cidadeRef = useRef<HTMLInputElement>(null)
+
+  async function buscarEnderecoPorCep(cep: string) {
+    const digitos = cep.replace(/\D/g, "")
+    if (digitos.length !== 8) return
+
+    setBuscandoCep(true)
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digitos}/json/`)
+      const dados = await res.json()
+      if (dados.erro) {
+        toast.error("CEP não encontrado")
+        return
+      }
+
+      // Preencher campos via ref (inputs não controlados)
+      if (logradouroRef.current) {
+        logradouroRef.current.value = dados.logradouro || ""
+        // Disparar evento nativo para o React detectar a mudança
+        const ev = new Event("input", { bubbles: true })
+        logradouroRef.current.dispatchEvent(ev)
+      }
+      if (bairroRef.current) {
+        bairroRef.current.value = dados.bairro || ""
+        const ev = new Event("input", { bubbles: true })
+        bairroRef.current.dispatchEvent(ev)
+      }
+      if (cidadeRef.current) {
+        cidadeRef.current.value = dados.localidade || ""
+        const ev = new Event("input", { bubbles: true })
+        cidadeRef.current.dispatchEvent(ev)
+      }
+      if (dados.uf) {
+        setEstadoValue(dados.uf)
+      }
+
+      toast.success("Endereço preenchido pelo CEP")
+    } catch {
+      toast.error("Erro ao buscar CEP")
+    } finally {
+      setBuscandoCep(false)
+    }
+  }
 
   async function handleAction(formData: FormData) {
     // Adicionar campos de Select (não são inputs nativos)
@@ -86,14 +138,25 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
       formData.set("status", statusValue)
     }
     if (destaqueValue) formData.set("destaque", "on")
+    if (publicarSiteValue) formData.set("publicar_site", "on")
+    if (publicarPortaisValue) formData.set("publicar_portais", "on")
 
     setPendente(true)
     try {
       const resultado = await action({}, formData)
-      if (resultado?.erro) toast.error(resultado.erro)
-      if (resultado?.sucesso) toast.success(resultado.sucesso)
-    } catch {
-      // redirect() lança um erro especial que o Next.js intercepta
+      if (resultado?.erro) {
+        toast.error(resultado.erro)
+      } else if (resultado?.sucesso) {
+        toast.success(resultado.sucesso)
+        if (resultado.redirectUrl) {
+          router.push(resultado.redirectUrl)
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes("NEXT_REDIRECT")) {
+        toast.error("Erro inesperado: " + msg)
+      }
     } finally {
       setPendente(false)
     }
@@ -125,11 +188,11 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="codigo_interno">Código interno *</FieldLabel>
+              <FieldLabel htmlFor="codigo_interno">Código interno</FieldLabel>
               <Input
                 id="codigo_interno"
                 name="codigo_interno"
-                placeholder="Ex: APT-001"
+                placeholder="Gerado automaticamente (ex: IMO-001)"
                 defaultValue={campo(imovel, "codigo_interno", "codigo")}
               />
             </Field>
@@ -215,12 +278,21 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field>
               <FieldLabel htmlFor="cep">CEP</FieldLabel>
-              <InputCep id="cep" name="cep" defaultValue={campo(imovel, "cep")} />
+              <InputCep
+                id="cep"
+                name="cep"
+                defaultValue={campo(imovel, "cep")}
+                disabled={buscandoCep}
+                onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                  const digitos = e.target.value.replace(/\D/g, "")
+                  if (digitos.length === 8) buscarEnderecoPorCep(digitos)
+                }}
+              />
             </Field>
 
             <Field className="sm:col-span-2">
               <FieldLabel htmlFor="logradouro">Logradouro</FieldLabel>
-              <Input id="logradouro" name="logradouro" placeholder="Rua, Avenida, etc." defaultValue={campo(imovel, "logradouro")} />
+              <Input ref={logradouroRef} id="logradouro" name="logradouro" placeholder="Rua, Avenida, etc." defaultValue={campo(imovel, "logradouro")} />
             </Field>
 
             <Field>
@@ -235,12 +307,12 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
 
             <Field>
               <FieldLabel htmlFor="bairro">Bairro</FieldLabel>
-              <Input id="bairro" name="bairro" placeholder="Centro" defaultValue={campo(imovel, "bairro")} />
+              <Input ref={bairroRef} id="bairro" name="bairro" placeholder="Centro" defaultValue={campo(imovel, "bairro")} />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="cidade">Cidade *</FieldLabel>
-              <Input id="cidade" name="cidade" placeholder="São Paulo" defaultValue={campo(imovel, "cidade")} />
+              <Input ref={cidadeRef} id="cidade" name="cidade" placeholder="São Paulo" defaultValue={campo(imovel, "cidade")} />
             </Field>
 
             <Field>
@@ -363,12 +435,32 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           </CardContent>
         </Card>
 
-        {/* Destaque */}
+        {/* Publicação */}
         <Card>
           <CardHeader>
-            <CardTitle>Destaque</CardTitle>
+            <CardTitle>Publicação</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Switch
+                checked={publicarSiteValue}
+                onCheckedChange={setPublicarSiteValue}
+              />
+              <div>
+                <p className="text-sm font-medium">Publicar no site</p>
+                <p className="text-xs text-muted-foreground">Imóvel aparece no site público da imobiliária</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Switch
+                checked={publicarPortaisValue}
+                onCheckedChange={setPublicarPortaisValue}
+              />
+              <div>
+                <p className="text-sm font-medium">Publicar em portais</p>
+                <p className="text-xs text-muted-foreground">Imóvel aparece nos portais (OLX, VivaReal, etc.)</p>
+              </div>
+            </label>
             <label className="flex items-center gap-3 cursor-pointer">
               <Switch
                 checked={destaqueValue}

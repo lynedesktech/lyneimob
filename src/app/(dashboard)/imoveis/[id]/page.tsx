@@ -29,6 +29,7 @@ import {
   Layers,
   Globe,
   Rss,
+  ExternalLink,
 } from "lucide-react"
 import { labelsTipoImovel, labelsFinalidade } from "@/lib/constantes"
 import { formatarPreco, formatarCep } from "@/lib/formatadores"
@@ -49,13 +50,23 @@ export default async function DetalheImovelPage({
 
   const { data: imovel } = await supabase
     .from("imoveis")
-    .select("*")
+    .select("*, imovel_fotos(*)")
     .eq("id", id)
     .single()
 
   if (!imovel) {
     redirect("/imoveis")
   }
+
+  const fotos = (imovel.imovel_fotos ?? []).sort((a: { ordem: number }, b: { ordem: number }) => a.ordem - b.ordem)
+
+  // Buscar slug da organização para link do site público
+  const { data: org } = await supabase
+    .from("organizacoes")
+    .select("slug")
+    .eq("id", usuario!.organizacao_id)
+    .single()
+  const slugOrg = org?.slug
 
   return (
     <div className="space-y-6">
@@ -89,6 +100,15 @@ export default async function DetalheImovelPage({
         </div>
 
         <div className="flex gap-2">
+          {imovel.publicar_site && slugOrg && (
+            <Button
+              variant="outline"
+              render={<a href={`/${slugOrg}/imoveis/${id}`} target="_blank" rel="noopener noreferrer" />}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Ver no site
+            </Button>
+          )}
           <Button
             variant="outline"
             render={<Link href={`/imoveis/${id}/editar`} />}
@@ -336,7 +356,7 @@ export default async function DetalheImovelPage({
         <TabsContent value="fotos">
           <GaleriaFotos
             imovelId={id}
-            fotos={[]}
+            fotos={fotos}
           />
         </TabsContent>
 

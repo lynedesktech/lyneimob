@@ -64,24 +64,25 @@ export function KanbanCard({ negocio, etapas, onMover, overlay }: KanbanCardProp
 
   return (
     <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`${isDragging ? "opacity-50" : ""} ${overlay ? "rotate-3 shadow-lg" : ""}`}
+      >
       <ContextMenu>
         <ContextMenuTrigger>
-          <div
-            ref={setNodeRef}
-            style={style}
-            className={`${isDragging ? "opacity-50" : ""} ${overlay ? "rotate-3 shadow-lg" : ""}`}
-          >
-            <Card className="cursor-grab border bg-card shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing">
+            <Card className="border bg-card shadow-sm transition-shadow hover:shadow-md">
               <CardContent className="p-3">
                 <div className="flex items-start gap-2">
                   {/* Grip para arrastar */}
-                  <button
+                  <div
                     {...attributes}
                     {...listeners}
-                    className="mt-0.5 shrink-0 text-muted-foreground hover:text-foreground"
+                    className="mt-0.5 shrink-0 cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+                    style={{ touchAction: "none" }}
                   >
                     <GripVertical className="h-4 w-4" />
-                  </button>
+                  </div>
 
                   <div className="min-w-0 flex-1">
                     {/* Título */}
@@ -154,7 +155,6 @@ export function KanbanCard({ negocio, etapas, onMover, overlay }: KanbanCardProp
                 </div>
               </CardContent>
             </Card>
-          </div>
         </ContextMenuTrigger>
 
         <ContextMenuContent className="w-48">
@@ -221,6 +221,7 @@ export function KanbanCard({ negocio, etapas, onMover, overlay }: KanbanCardProp
           )}
         </ContextMenuContent>
       </ContextMenu>
+      </div>
 
       <DialogGanho
         negocioId={negocio.id}

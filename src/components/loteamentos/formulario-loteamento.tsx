@@ -47,10 +47,13 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
   const editando = !!loteamento
   const action = editando ? atualizarLoteamento : criarLoteamento
 
+  const [buscandoCep, setBuscandoCep] = useState(false)
+
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<CriarLoteamentoInput>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,6 +82,30 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
   useEffect(() => {
     if (retorno.erro) toast.error(retorno.erro)
   }, [retorno])
+
+  async function buscarEnderecoPorCep(cep: string) {
+    const digitos = cep.replace(/\D/g, "")
+    if (digitos.length !== 8) return
+
+    setBuscandoCep(true)
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digitos}/json/`)
+      const dados = await res.json()
+      if (dados.erro) {
+        toast.error("CEP não encontrado")
+        return
+      }
+      if (dados.logradouro) setValue("logradouro", dados.logradouro)
+      if (dados.bairro) setValue("bairro", dados.bairro)
+      if (dados.localidade) setValue("cidade", dados.localidade)
+      if (dados.uf) setValue("estado", dados.uf)
+      toast.success("Endereço preenchido pelo CEP")
+    } catch {
+      toast.error("Erro ao buscar CEP")
+    } finally {
+      setBuscandoCep(false)
+    }
+  }
 
   function onSubmit(dados: CriarLoteamentoInput) {
     const formData = new FormData()
@@ -182,6 +209,10 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
                     id="cep"
                     value={field.value ?? ""}
                     onChange={field.onChange}
+                    disabled={buscandoCep}
+                    onBlur={() => {
+                      if (field.value) buscarEnderecoPorCep(field.value)
+                    }}
                   />
                 )}
               />

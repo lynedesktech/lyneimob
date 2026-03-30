@@ -69,7 +69,7 @@ export async function criarAtividade(
   }
 
   revalidarAtividades(atividade.id)
-  redirect(`/atividades/${atividade.id}`)
+  return { sucesso: "Atividade criada com sucesso!", redirectUrl: `/atividades/${atividade.id}` }
 }
 
 // ============================================================
@@ -119,7 +119,7 @@ export async function atualizarAtividade(
   }
 
   revalidarAtividades(id)
-  redirect(`/atividades/${id}`)
+  return { sucesso: "Atividade atualizada com sucesso!", redirectUrl: `/atividades/${id}` }
 }
 
 // ============================================================

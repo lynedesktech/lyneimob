@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
 import { criarCliente, atualizarCliente } from "@/actions/clientes"
@@ -39,6 +40,7 @@ type FormularioClienteProps = {
 export function FormularioCliente({ cliente }: FormularioClienteProps) {
   const editando = !!cliente
   const action = editando ? atualizarCliente : criarCliente
+  const router = useRouter()
 
   const [tipoValue, setTipoValue] = useState(cliente?.tipo ?? "")
   const [origemValue, setOrigemValue] = useState(cliente?.origem ?? "outro")
@@ -57,10 +59,15 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
     setPendente(true)
     try {
       const resultado = await action({}, formData)
-      if (resultado?.erro) toast.error(resultado.erro)
-      if (resultado?.sucesso) toast.success(resultado.sucesso)
+      if (resultado?.erro) {
+        toast.error(resultado.erro)
+      } else if (resultado?.sucesso) {
+        toast.success(resultado.sucesso)
+        if (resultado.redirectUrl) {
+          router.push(resultado.redirectUrl)
+        }
+      }
     } catch (err) {
-      // redirect() lança um erro especial que o Next.js intercepta
       const msg = err instanceof Error ? err.message : String(err)
       console.error("[FORM CLIENTE] catch:", msg, err)
       if (!msg.includes("NEXT_REDIRECT")) {

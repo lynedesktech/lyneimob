@@ -25,16 +25,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusLote } from "@/lib/constantes/status-configs"
 import { ConfirmacaoExclusao } from "@/components/ui/confirmacao-exclusao"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
-import { alterarStatusLote, excluirLote } from "@/actions/loteamentos"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { InputMonetario } from "@/components/ui/input-monetario"
+import { alterarStatusLote, excluirLote, criarLote } from "@/actions/loteamentos"
 import { formatarPreco, formatarData } from "@/lib/formatadores"
 import { labelsStatusLote } from "@/lib/constantes"
 import Link from "next/link"
-import { Search, MoreHorizontal, Layers, X, FileSpreadsheet } from "lucide-react"
+import { Search, MoreHorizontal, Layers, X, FileSpreadsheet, Plus } from "lucide-react"
 import type { Lote } from "@/types/database"
 
 type TabelaLotesProps = {
@@ -46,6 +58,30 @@ export function TabelaLotes({ lotes, loteamentoId }: TabelaLotesProps) {
   const [busca, setBusca] = useState("")
   const [filtroQuadra, setFiltroQuadra] = useState<string | null>(null)
   const [filtroStatus, setFiltroStatus] = useState<string | null>(null)
+  const [dialogAberto, setDialogAberto] = useState(false)
+  const [salvandoLote, setSalvandoLote] = useState(false)
+  const [valorLote, setValorLote] = useState<number | null>(null)
+
+  async function handleCriarLote(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    formData.set("loteamento_id", loteamentoId)
+    if (valorLote !== null) formData.set("valor", String(valorLote))
+
+    setSalvandoLote(true)
+    const resultado = await criarLote({}, formData)
+    setSalvandoLote(false)
+
+    if (resultado.erro) {
+      toast.error(resultado.erro)
+    } else {
+      toast.success(resultado.sucesso)
+      setDialogAberto(false)
+      setValorLote(null)
+      form.reset()
+    }
+  }
 
   // Quadras únicas para o filtro
   const quadras = useMemo(() => {
@@ -82,6 +118,57 @@ export function TabelaLotes({ lotes, loteamentoId }: TabelaLotesProps) {
     }
   }
 
+  const dialogCadastroManual = (
+    <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
+      <DialogTrigger render={<Button variant="outline" />}>
+        <Plus className="mr-2 h-4 w-4" />
+        Cadastrar manualmente
+      </DialogTrigger>
+      <DialogContent>
+        <form onSubmit={handleCriarLote}>
+          <DialogHeader>
+            <DialogTitle>Cadastrar lote</DialogTitle>
+            <DialogDescription>Preencha os dados do lote manualmente.</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <Label htmlFor="quadra-manual">Quadra *</Label>
+              <Input id="quadra-manual" name="quadra" placeholder="A" required />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="numero-lote-manual">Lote *</Label>
+              <Input id="numero-lote-manual" name="numero_lote" placeholder="01" required />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="unidade-manual">Unidade *</Label>
+              <Input id="unidade-manual" name="unidade" placeholder="A-01" required />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="area-manual">Área (m²)</Label>
+              <Input id="area-manual" name="area" type="number" step="0.01" min="0" placeholder="300" />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="valor-manual">Valor</Label>
+              <InputMonetario id="valor-manual" valor={valorLote} onValorChange={setValorLote} />
+            </div>
+            <div className="space-y-1 sm:col-span-3">
+              <Label htmlFor="obs-manual">Observações</Label>
+              <Textarea id="obs-manual" name="observacoes" placeholder="Observações sobre o lote..." rows={2} />
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={() => setDialogAberto(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={salvandoLote}>
+              {salvandoLote ? "Salvando..." : "Cadastrar lote"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+
   if (lotes.length === 0) {
     return (
       <EstadoVazio
@@ -89,10 +176,13 @@ export function TabelaLotes({ lotes, loteamentoId }: TabelaLotesProps) {
         titulo="Nenhum lote cadastrado"
         descricao="Importe lotes via CSV ou cadastre manualmente"
         acao={
-          <Button render={<Link href={`/loteamentos/${loteamentoId}/importar`} />}>
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Importar lotes
-          </Button>
+          <div className="flex gap-2">
+            {dialogCadastroManual}
+            <Button render={<Link href={`/loteamentos/${loteamentoId}/importar`} />}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Importar lotes
+            </Button>
+          </div>
         }
       />
     )

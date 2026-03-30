@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { ChevronsUpDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -89,12 +89,6 @@ export function ComboboxCampo({
                   }}
                 >
                   {labelVazio}
-                  <Check
-                    className={cn(
-                      "ml-auto h-3.5 w-3.5",
-                      value === "" ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                 </CommandItem>
               )}
               {opcoes.map((opcao) => (
@@ -108,12 +102,6 @@ export function ComboboxCampo({
                   }}
                 >
                   {opcao.label}
-                  <Check
-                    className={cn(
-                      "ml-auto h-3.5 w-3.5",
-                      value === opcao.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                 </CommandItem>
               ))}
             </CommandGroup>
