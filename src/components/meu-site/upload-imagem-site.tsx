@@ -52,10 +52,8 @@ function uploadComProgresso(
     xhr.open("POST", url)
     xhr.setRequestHeader("Authorization", `Bearer ${token}`)
     xhr.setRequestHeader("x-upsert", "true")
-
-    const form = new FormData()
-    form.append("", arquivo)
-    xhr.send(form)
+    xhr.setRequestHeader("Content-Type", arquivo.type)
+    xhr.send(arquivo)
   })
 }
 
