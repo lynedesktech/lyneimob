@@ -316,5 +316,40 @@ export async function executarEncaminharCorretor(
 
   if (error) return `Erro ao encaminhar: ${error.message}`
 
+  // Notificar corretor por email
+  if (corretorId) {
+    try {
+      const { data: corretor } = await supabase
+        .from("usuarios")
+        .select("email, nome")
+        .eq("id", corretorId)
+        .single()
+
+      if (corretor?.email) {
+        const { enviarEmail } = await import("@/lib/resend")
+        const resumo = (args.resumo as string) || "Sem resumo"
+        const motivo = (args.motivo as string) || "Lead qualificado pela IA"
+        const numero = contexto.numeroCliente || "desconhecido"
+
+        await enviarEmail({
+          para: corretor.email,
+          assunto: `Novo lead encaminhado — ${numero}`,
+          html: `
+            <h2>Novo lead encaminhado para você</h2>
+            <p><strong>Número:</strong> ${numero}</p>
+            <p><strong>Motivo:</strong> ${motivo}</p>
+            <p><strong>Resumo da conversa:</strong></p>
+            <p>${resumo}</p>
+            <br>
+            <p>Acesse a plataforma para dar continuidade ao atendimento.</p>
+          `,
+        })
+      }
+    } catch (err) {
+      console.error("[Encaminhar Corretor] Erro ao notificar:", err instanceof Error ? err.message : err)
+      // Não falha o encaminhamento se o email falhar
+    }
+  }
+
   return `Conversa encaminhada para o corretor. Motivo: ${args.motivo}`
 }

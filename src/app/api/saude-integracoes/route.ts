@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { verificarSaudeIntegracoes } from "@/lib/saude-integracoes"
+import { descriptografarCredenciais } from "@/actions/configuracoes-integracoes"
 
 export async function GET() {
   // Autenticar usuário
@@ -37,7 +38,8 @@ export async function GET() {
     .eq("id", usuario.organizacao_id)
     .single()
 
-  const configBanco = (org?.configuracoes_integracoes ?? {}) as Record<string, string>
+  const configBancoCriptografado = (org?.configuracoes_integracoes ?? {}) as Record<string, string>
+  const configBanco = descriptografarCredenciais(configBancoCriptografado)
 
   // Montar credenciais: banco primeiro, fallback para env vars
   const credenciais = {

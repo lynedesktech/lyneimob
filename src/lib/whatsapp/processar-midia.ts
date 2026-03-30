@@ -69,7 +69,7 @@ export async function analisarImagem(
 
 /**
  * Extrai texto de documento/PDF
- * Para MVP, faz extração simples — sem dependência externa de PDF parser
+ * Usa pdf-parse para PDFs, fallback para UTF-8 para outros formatos
  */
 export async function extrairTextoDocumento(
   config: ConfigWhatsapp,
@@ -77,17 +77,30 @@ export async function extrairTextoDocumento(
   nomeArquivo?: string
 ): Promise<string> {
   const buffer = await baixarMidia(config, messageId)
+  const extensao = nomeArquivo?.split(".").pop()?.toLowerCase() || ""
 
-  // Tentar extrair texto simples do buffer
+  // Tentar parsing de PDF se for PDF ou se o buffer começa com %PDF
+  const ehPdf = extensao === "pdf" || buffer.slice(0, 5).toString() === "%PDF-"
+  if (ehPdf) {
+    try {
+      const mod = await import("pdf-parse")
+      const pdfParseFn = ("default" in mod ? mod.default : mod) as (buf: Buffer) => Promise<{ text: string }>
+      const resultado = await pdfParseFn(buffer)
+      const texto = resultado.text?.trim()
+      if (texto && texto.length > 20) {
+        return texto.substring(0, 4000)
+      }
+    } catch {
+      // Se pdf-parse falhar, continuar para fallback
+    }
+  }
+
+  // Fallback: tentar extrair texto simples do buffer (txt, csv, etc.)
   const texto = buffer.toString("utf-8")
-
-  // Se o texto tem conteúdo legível, retornar
-  // Caso contrário, retornar indicação do arquivo recebido
   const textoLimpo = texto.replace(/[^\x20-\x7E\xC0-\xFF\n\r\t]/g, "").trim()
 
   if (textoLimpo.length > 50) {
-    // Limitar a 2000 chars para não sobrecarregar a IA
-    return textoLimpo.substring(0, 2000)
+    return textoLimpo.substring(0, 4000)
   }
 
   return `Documento recebido: ${nomeArquivo || "arquivo"}. Conteúdo não pôde ser extraído automaticamente.`

@@ -6,6 +6,43 @@ import { ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfiguracoesIntegracoes } from "@/types/configuracoes-integracoes"
 import type { EstadoFormulario } from "@/types/formulario"
 import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
+import { criptografar, descriptografar, estaCriptografada } from "@/lib/criptografia"
+
+// ============================================================
+// Criptografia de credenciais
+// ============================================================
+
+const CAMPOS_SENSIVEIS = [
+  "openai_api_key",
+  "stripe_secret_key",
+  "stripe_webhook_secret",
+  "uazapi_token",
+  "upstash_redis_token",
+]
+
+function criptografarCredenciais(dados: Record<string, string>): Record<string, string> {
+  const resultado = { ...dados }
+  for (const campo of CAMPOS_SENSIVEIS) {
+    if (resultado[campo] && !estaCriptografada(resultado[campo])) {
+      resultado[campo] = criptografar(resultado[campo])
+    }
+  }
+  return resultado
+}
+
+export function descriptografarCredenciais(dados: Record<string, string>): Record<string, string> {
+  const resultado = { ...dados }
+  for (const campo of CAMPOS_SENSIVEIS) {
+    if (resultado[campo] && estaCriptografada(resultado[campo])) {
+      try {
+        resultado[campo] = descriptografar(resultado[campo])
+      } catch {
+        // Se falhar a descriptografia, manter o valor original
+      }
+    }
+  }
+  return resultado
+}
 
 // ============================================================
 // Validação real das chaves contra as APIs
@@ -128,7 +165,9 @@ export async function salvarConfiguracoesIntegracoes(
     .eq("id", usuario.organizacao_id)
     .single()
 
-  const configAtuais = (orgAtual?.configuracoes_integracoes ?? {}) as Record<string, string>
+  const configAtuaisCriptografadas = (orgAtual?.configuracoes_integracoes ?? {}) as Record<string, string>
+  // Descriptografar para fazer merge correto
+  const configAtuais = descriptografarCredenciais(configAtuaisCriptografadas)
 
   // Merge: campos vazios = manter atual, campos preenchidos = sobrescrever
   const configMerged: Record<string, string> = { ...configAtuais }
@@ -153,11 +192,14 @@ export async function salvarConfiguracoesIntegracoes(
     return { erro: erroValidacao }
   }
 
+  // Criptografar campos sensíveis antes de salvar
+  const dadosCriptografados = criptografarCredenciais(resultado.data as Record<string, string>)
+
   // Salvar no banco
   const { error } = await supabase
     .from("organizacoes")
     .update({
-      configuracoes_integracoes: resultado.data,
+      configuracoes_integracoes: dadosCriptografados,
     })
     .eq("id", usuario.organizacao_id)
 

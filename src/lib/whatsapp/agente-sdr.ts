@@ -99,7 +99,15 @@ export async function processarComAgente(
       }
     }
 
-    // 4. Buscar nome da organização
+    // 4. Verificar rate limit da OpenAI
+    const { verificarLimiteOpenAI } = await import("@/lib/rate-limit")
+    const limite = await verificarLimiteOpenAI(organizacaoId)
+    if (!limite.permitido) {
+      console.warn(`[Agente SDR] Rate limit atingido para org ${organizacaoId}. Restante: ${limite.restante}`)
+      return
+    }
+
+    // 5. Buscar nome da organização
     const { data: org } = await supabase
       .from("organizacoes")
       .select("nome")

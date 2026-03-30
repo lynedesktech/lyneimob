@@ -1,5 +1,5 @@
 // ============================================================
-// Memória de conversa com Redis
+// Memória de conversa com Redis + fallback para banco
 // Mantém contexto entre mensagens — janela de 30 mensagens, TTL 7 dias
 // ============================================================
 
@@ -24,7 +24,7 @@ export async function salvarMensagemMemoria(
   conteudo: string
 ): Promise<void> {
   const { redis } = await import("@/lib/redis")
-  if (!redis) return
+  if (!redis) return // Sem Redis, mensagens já estão salvas no banco como fallback
   const chave = `${CHAVE_PREFIX}${conversaId}`
 
   const mensagem: MensagemMemoria = {
@@ -33,45 +33,74 @@ export async function salvarMensagemMemoria(
     timestamp: new Date().toISOString(),
   }
 
-  // Adicionar no final da lista
-  await redis.rpush(chave, JSON.stringify(mensagem))
-
-  // Manter apenas as últimas MAX_MENSAGENS
-  await redis.ltrim(chave, -MAX_MENSAGENS, -1)
-
-  // Renovar TTL
-  await redis.expire(chave, TTL_SEGUNDOS)
+  try {
+    await redis.rpush(chave, JSON.stringify(mensagem))
+    await redis.ltrim(chave, -MAX_MENSAGENS, -1)
+    await redis.expire(chave, TTL_SEGUNDOS)
+  } catch (err) {
+    console.warn("[Memória] Erro ao salvar no Redis, fallback para banco:", err instanceof Error ? err.message : err)
+  }
 }
 
 /**
- * Busca memória da conversa no Redis
+ * Busca memória da conversa — Redis primeiro, fallback para banco
  * Retorna array de mensagens ordenadas cronologicamente
  */
 export async function buscarMemoria(
   conversaId: string
 ): Promise<Array<{ papel: "usuario" | "assistente"; conteudo: string }>> {
-  const { redis } = await import("@/lib/redis")
-  if (!redis) return []
-  const chave = `${CHAVE_PREFIX}${conversaId}`
+  // Tentar Redis primeiro
+  try {
+    const { redis } = await import("@/lib/redis")
+    if (redis) {
+      const chave = `${CHAVE_PREFIX}${conversaId}`
+      const itens = await redis.lrange(chave, 0, -1)
 
-  const itens = await redis.lrange(chave, 0, -1)
-
-  if (!itens || itens.length === 0) {
-    return []
+      if (itens && itens.length > 0) {
+        return itens.map((item) => {
+          const mensagem = (typeof item === "string" ? JSON.parse(item) : item) as MensagemMemoria
+          return { papel: mensagem.papel, conteudo: mensagem.conteudo }
+        })
+      }
+    }
+  } catch (err) {
+    console.warn("[Memória] Redis indisponível, usando fallback do banco:", err instanceof Error ? err.message : err)
   }
 
-  return itens.map((item) => {
-    const mensagem = (typeof item === "string" ? JSON.parse(item) : item) as MensagemMemoria
-    return { papel: mensagem.papel, conteudo: mensagem.conteudo }
-  })
+  // Fallback: buscar mensagens do banco de dados
+  try {
+    const { criarClienteAdmin } = await import("@/lib/supabase/admin")
+    const supabase = criarClienteAdmin()
+
+    const { data: mensagens } = await supabase
+      .from("mensagens_whatsapp")
+      .select("direcao, conteudo")
+      .eq("conversa_id", conversaId)
+      .not("conteudo", "is", null)
+      .order("criado_em", { ascending: true })
+      .limit(MAX_MENSAGENS)
+
+    if (!mensagens || mensagens.length === 0) return []
+
+    return mensagens.map((m) => ({
+      papel: (m.direcao === "recebida" ? "usuario" : "assistente") as "usuario" | "assistente",
+      conteudo: m.conteudo || "",
+    }))
+  } catch {
+    return []
+  }
 }
 
 /**
  * Limpa memória de uma conversa
  */
 export async function limparMemoria(conversaId: string): Promise<void> {
-  const { redis } = await import("@/lib/redis")
-  if (!redis) return
-  const chave = `${CHAVE_PREFIX}${conversaId}`
-  await redis.del(chave)
+  try {
+    const { redis } = await import("@/lib/redis")
+    if (!redis) return
+    const chave = `${CHAVE_PREFIX}${conversaId}`
+    await redis.del(chave)
+  } catch {
+    // Ignorar erro na limpeza
+  }
 }
