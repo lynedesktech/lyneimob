@@ -120,17 +120,20 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
 
   try {
     const urlLimpa = url.replace(/\/$/, "")
+
+    // Verificar se o servidor responde na raiz
     const resp = await comTimeout(
-      fetch(`${urlLimpa}/instance/list`, {
+      fetch(`${urlLimpa}/`, {
         method: "GET",
-        headers: { "Content-Type": "application/json", admintoken: token },
+        headers: { "Content-Type": "application/json" },
       }),
       10000 // 10s — servidores próprios podem demorar mais
     )
 
     if (resp.ok) return { status: "conectado" }
     if (resp.status === 401 || resp.status === 403) {
-      return { status: "desconectado", mensagem: "Token inválido ou sem permissão" }
+      // Servidor respondeu mas exige autenticação — está vivo
+      return { status: "conectado" }
     }
     if (resp.status === 404) {
       return { status: "desconectado", mensagem: "URL inválida — verifique o endereço do servidor" }

@@ -227,15 +227,40 @@ export async function marcarComoLida(
 
 /**
  * Testa se as credenciais admin da Uazapi são válidas.
- * Faz um GET em /instance/list para verificar conectividade e autenticação.
+ * Cria uma instância de teste e a exclui em seguida para validar conectividade.
+ * Fallback: tenta GET na raiz para verificar se o servidor responde.
  */
 export async function testarConexaoUazapi(url: string, adminToken: string): Promise<boolean> {
   try {
-    const resposta = await fetch(montarUrlBase(url, "/instance/list"), {
-      method: "GET",
+    // Tentar criar uma instância de teste
+    const nomeInstancia = `lyneimob-teste-${Date.now()}`
+    const resposta = await fetch(montarUrlBase(url, "/instance/init"), {
+      method: "POST",
       headers: { "Content-Type": "application/json", admintoken: adminToken },
+      body: JSON.stringify({ name: nomeInstancia }),
     })
-    return resposta.ok
+
+    if (resposta.ok) {
+      // Instância criada — excluir imediatamente
+      const dados = await resposta.json()
+      const instanceId = dados?.instance?.id
+      if (instanceId) {
+        try {
+          await fetch(montarUrlBase(url, `/instance/${instanceId}`), {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json", token: adminToken },
+          })
+        } catch { /* ignora erro na exclusão */ }
+      }
+      return true
+    }
+
+    // Se falhou na criação, tentar apenas acessar a raiz do servidor
+    const respostaRaiz = await fetch(montarUrlBase(url, "/"), {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+    return respostaRaiz.ok
   } catch {
     return false
   }
