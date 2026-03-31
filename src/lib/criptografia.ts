@@ -53,3 +53,39 @@ export function estaCriptografada(texto: string): boolean {
   const partes = texto.split(":")
   return partes.length === 3 && partes[0].length === 32 && partes[1].length === 32
 }
+
+// ============================================================
+// Criptografia de credenciais de integrações
+// ============================================================
+
+const CAMPOS_SENSIVEIS = [
+  "openai_api_key",
+  "stripe_secret_key",
+  "stripe_webhook_secret",
+  "uazapi_token",
+  "upstash_redis_token",
+]
+
+export function criptografarCredenciais(dados: Record<string, string>): Record<string, string> {
+  const resultado = { ...dados }
+  for (const campo of CAMPOS_SENSIVEIS) {
+    if (resultado[campo] && !estaCriptografada(resultado[campo])) {
+      resultado[campo] = criptografar(resultado[campo])
+    }
+  }
+  return resultado
+}
+
+export function descriptografarCredenciais(dados: Record<string, string>): Record<string, string> {
+  const resultado = { ...dados }
+  for (const campo of CAMPOS_SENSIVEIS) {
+    if (resultado[campo] && estaCriptografada(resultado[campo])) {
+      try {
+        resultado[campo] = descriptografar(resultado[campo])
+      } catch {
+        // Se falhar a descriptografia, manter o valor original
+      }
+    }
+  }
+  return resultado
+}

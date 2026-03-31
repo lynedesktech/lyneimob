@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { verificarSaudeIntegracoes } from "@/lib/saude-integracoes"
-import { descriptografarCredenciais } from "@/actions/configuracoes-integracoes"
+import { descriptografarCredenciais } from "@/lib/criptografia"
 
 export async function GET() {
   // Autenticar usuário

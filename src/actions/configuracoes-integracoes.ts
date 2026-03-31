@@ -6,43 +6,7 @@ import { ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfiguracoesIntegracoes } from "@/types/configuracoes-integracoes"
 import type { EstadoFormulario } from "@/types/formulario"
 import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
-import { criptografar, descriptografar, estaCriptografada } from "@/lib/criptografia"
-
-// ============================================================
-// Criptografia de credenciais
-// ============================================================
-
-const CAMPOS_SENSIVEIS = [
-  "openai_api_key",
-  "stripe_secret_key",
-  "stripe_webhook_secret",
-  "uazapi_token",
-  "upstash_redis_token",
-]
-
-function criptografarCredenciais(dados: Record<string, string>): Record<string, string> {
-  const resultado = { ...dados }
-  for (const campo of CAMPOS_SENSIVEIS) {
-    if (resultado[campo] && !estaCriptografada(resultado[campo])) {
-      resultado[campo] = criptografar(resultado[campo])
-    }
-  }
-  return resultado
-}
-
-export function descriptografarCredenciais(dados: Record<string, string>): Record<string, string> {
-  const resultado = { ...dados }
-  for (const campo of CAMPOS_SENSIVEIS) {
-    if (resultado[campo] && estaCriptografada(resultado[campo])) {
-      try {
-        resultado[campo] = descriptografar(resultado[campo])
-      } catch {
-        // Se falhar a descriptografia, manter o valor original
-      }
-    }
-  }
-  return resultado
-}
+import { criptografarCredenciais, descriptografarCredenciais } from "@/lib/criptografia"
 
 // ============================================================
 // Validação real das chaves contra as APIs

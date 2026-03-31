@@ -43,7 +43,7 @@ async function buscarCredenciaisAdmin(_organizacaoId: string) {
     .eq("id", superAdmin.organizacao_id)
     .single()
 
-  const { descriptografarCredenciais } = await import("@/actions/configuracoes-integracoes")
+  const { descriptografarCredenciais } = await import("@/lib/criptografia")
   const configCriptografado = (org?.configuracoes_integracoes ?? {}) as Record<string, string>
   const config = descriptografarCredenciais(configCriptografado)
   const url = config.uazapi_url
