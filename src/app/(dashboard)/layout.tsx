@@ -54,7 +54,7 @@ export default async function DashboardLayout({
                     plano={organizacao.plano}
                     trialFimEm={organizacao.trial_fim_em}
                   />
-                  <main className="flex-1 overflow-auto p-6">{children}</main>
+                  <main className="flex-1 overflow-y-auto overflow-x-hidden p-6">{children}</main>
                 </SidebarInset>
               </SidebarProvider>
               <WidgetIA />

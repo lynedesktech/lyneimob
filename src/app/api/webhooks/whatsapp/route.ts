@@ -141,7 +141,11 @@ export async function POST(request: Request) {
 
     // Se conversa nova e agente está ativo → criar cliente + negócio automaticamente
     if (isNova && config.ativo) {
-      await criarClienteENegocioInicial(supabase, organizacaoId, numeroCliente, conversaId, config)
+      // Usar pushName do WhatsApp como nome do contato; se vazio, formatar número como fallback
+      const nomeContato = pushName || formatarNumeroFallback(numeroCliente)
+      await criarClienteENegocioInicial(supabase, organizacaoId, numeroCliente, conversaId, config, {
+        nomeCliente: nomeContato,
+      })
     }
 
     // Salvar mensagem no banco (com dedup pelo message_id_whatsapp)
@@ -253,6 +257,22 @@ function detectarConteudo(msg: {
 
   // Fallback: se tiver texto, trata como texto
   return { tipo: "texto", conteudo: texto }
+}
+
+/**
+ * Formata número de telefone como fallback quando pushName não está disponível.
+ * Ex: "5527997986566" → "+55 27 99798-6566"
+ */
+function formatarNumeroFallback(numero: string): string {
+  // Espera formato "55DDNNNNNNNNN" (13 dígitos para celular)
+  if (numero.startsWith("55") && numero.length >= 12) {
+    const ddi = numero.slice(0, 2)
+    const ddd = numero.slice(2, 4)
+    const parte1 = numero.slice(4, 9)
+    const parte2 = numero.slice(9)
+    return `+${ddi} ${ddd} ${parte1}-${parte2}`
+  }
+  return `+${numero}`
 }
 
 // buscarOuCriarConversa e criarClienteENegocioInicial foram extraídas para

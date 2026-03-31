@@ -44,12 +44,10 @@ export function CardCliente({ cliente }: { cliente: Cliente }) {
             </div>
           )}
 
-          {cliente.email && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Mail className="h-3.5 w-3.5" />
-              <span className="line-clamp-1">{cliente.email}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Mail className="h-3.5 w-3.5" />
+            <span className="line-clamp-1">{cliente.email || "—"}</span>
+          </div>
 
           <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-muted-foreground">
