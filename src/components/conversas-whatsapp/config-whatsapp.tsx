@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { useConfigWhatsapp } from "@/hooks/use-config-whatsapp"
 import { useListaUsuarios } from "@/hooks/use-lista-usuarios"
+import { useQueryClient } from "@tanstack/react-query"
 import { salvarConfigAgenteWhatsapp } from "@/actions/whatsapp"
 import type { EstadoFormulario } from "@/types/formulario"
 
@@ -66,7 +67,11 @@ async function actionWrapper(_estado: EstadoFormulario, formData: FormData): Pro
 export function ConfigWhatsapp() {
   const { config, carregando } = useConfigWhatsapp()
   const { usuarios } = useListaUsuarios()
+  const queryClient = useQueryClient()
   const [ativo, setAtivo] = useState(false)
+  const [nomeAgente, setNomeAgente] = useState("")
+  const [promptPersonalizado, setPromptPersonalizado] = useState("")
+  const [mensagemFora, setMensagemFora] = useState("")
   const [horario, setHorario] = useState<Record<string, ConfigDia>>(HORARIO_VAZIO)
   const [corretorId, setCorretorId] = useState("")
 
@@ -81,16 +86,22 @@ export function ConfigWhatsapp() {
   useEffect(() => {
     if (config) {
       setAtivo(config.ativo)
+      setNomeAgente(config.nome_agente ?? "")
+      setPromptPersonalizado(config.prompt_personalizado ?? "")
+      setMensagemFora(config.mensagem_fora_horario ?? "")
       setHorario(carregarHorarioDoConfig(config.horario_atendimento as Record<string, { inicio: string; fim: string }> | null))
       setCorretorId(config.corretor_padrao_id ?? "")
     }
   }, [config])
 
-  // Toast de feedback
+  // Toast de feedback + invalidar cache após salvar
   useEffect(() => {
-    if (estado.sucesso) toast.success(estado.sucesso)
+    if (estado.sucesso) {
+      toast.success(estado.sucesso)
+      queryClient.invalidateQueries({ queryKey: ["config-whatsapp"] })
+    }
     if (estado.erro) toast.error(estado.erro)
-  }, [estado])
+  }, [estado, queryClient])
 
   function serializarHorario() {
     const resultado: Record<string, { inicio: string; fim: string }> = {}
@@ -165,7 +176,8 @@ export function ConfigWhatsapp() {
               id="nome_agente"
               name="nome_agente"
               placeholder="Ex: Ana Paula, Sofia, Assistente Lynedesk..."
-              defaultValue={config?.nome_agente ?? ""}
+              value={nomeAgente}
+              onChange={(e) => setNomeAgente(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
               Como o agente se apresenta nas conversas. Deixe em branco para usar "Assistente [Nome da Imobiliária]".
@@ -179,7 +191,8 @@ export function ConfigWhatsapp() {
               id="prompt_personalizado"
               name="prompt_personalizado"
               placeholder="Ex: Sempre mencionar que temos imóveis na planta no bairro X..."
-              defaultValue={config?.prompt_personalizado ?? ""}
+              value={promptPersonalizado}
+              onChange={(e) => setPromptPersonalizado(e.target.value)}
               rows={4}
             />
             <p className="text-xs text-muted-foreground">
@@ -194,7 +207,8 @@ export function ConfigWhatsapp() {
               id="mensagem_fora_horario"
               name="mensagem_fora_horario"
               placeholder="Obrigado por entrar em contato! Nosso horário é de segunda a sexta, das 8h às 18h."
-              defaultValue={config?.mensagem_fora_horario ?? ""}
+              value={mensagemFora}
+              onChange={(e) => setMensagemFora(e.target.value)}
               rows={3}
             />
           </div>
