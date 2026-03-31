@@ -17,7 +17,7 @@ export default async function EditarAtividadePage({ params }: Props) {
   const { data: atividade, error } = await supabase
     .from("atividades")
     .select(
-      "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo_interno), negocios(id, titulo, etapa)"
+      "*, clientes(id, nome, telefone), imoveis(id, titulo, codigo_interno), negocios(id, titulo, status)"
     )
     .eq("id", id)
     .single()

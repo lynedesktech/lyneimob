@@ -14,6 +14,8 @@ export function useListaAtividades(filtros: FiltrosAtividadesInput) {
     total: number
   }>({
     queryKey: ["atividades", filtros],
+    refetchOnMount: "always",
+    staleTime: 0,
     queryFn: async () => {
       let query = supabase
         .from("atividades")

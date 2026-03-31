@@ -22,7 +22,7 @@ export default function AtividadesPage() {
 
   const { filtros, setFiltros, paginaAtual, calcularTotalPaginas, irParaPagina } =
     useFiltrosListagem<FiltrosAtividadesInput>({
-      inicial: { pagina: 1, por_pagina: 20 },
+      inicial: { pagina: 1, por_pagina: 20, status: "pendente" },
     })
 
   const { atividades, total, carregando } = useListaAtividades(filtros)
