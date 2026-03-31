@@ -28,7 +28,7 @@ export default async function NegociosPage({
     : padrao
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <PageHeader
         titulo="Negócios"
         descricao="Acompanhe seu pipeline e feche mais negócios"
