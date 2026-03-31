@@ -364,12 +364,17 @@ export type Lote = {
   unidade: string
   status: (typeof STATUS_LOTE)[number]
   comprador: string | null
+  cliente_id: string | null
   valor: number
   data_venda: string | null
   area: number | null
   observacoes: string | null
   created_at: string
   updated_at: string
+}
+
+export type LoteComCliente = Lote & {
+  cliente: { id: string; nome: string } | null
 }
 
 export type LoteamentoFoto = {
@@ -387,11 +392,11 @@ export type LoteamentoComFotos = Loteamento & {
 }
 
 export type LoteamentoComLotes = Loteamento & {
-  lotes: Lote[]
+  lotes: LoteComCliente[]
 }
 
 export type LoteamentoCompleto = Loteamento & {
-  lotes: Lote[]
+  lotes: LoteComCliente[]
   loteamento_fotos: LoteamentoFoto[]
 }
 

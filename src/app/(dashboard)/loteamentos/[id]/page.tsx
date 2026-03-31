@@ -32,7 +32,7 @@ export default async function DetalheLoteamentoPage({
 
   const { data: loteamento } = await supabase
     .from("loteamentos")
-    .select("*, lotes(*), loteamento_fotos(*)")
+    .select("*, lotes(*, cliente:clientes(id, nome)), loteamento_fotos(*)")
     .eq("id", id)
     .single()
 

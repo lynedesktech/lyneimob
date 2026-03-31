@@ -26,13 +26,11 @@ export function CardLoteamentoPublico({ loteamento, slug }: Props) {
   const primeiraFoto = loteamento.loteamento_fotos[0]
   const fotoUrl = fotoCapa?.url ?? primeiraFoto?.url
 
-  // Calcular valor mínimo dos lotes disponíveis
-  const lotesDisponiveis = loteamento.lotes.filter(
-    (l) => l.status === "disponivel"
-  )
+  // Calcular menor valor entre todos os lotes com valor > 0
+  const lotesComValor = loteamento.lotes.filter((l) => l.valor > 0)
   const valorMinimo =
-    lotesDisponiveis.length > 0
-      ? Math.min(...lotesDisponiveis.map((l) => l.valor))
+    lotesComValor.length > 0
+      ? Math.min(...lotesComValor.map((l) => l.valor))
       : null
 
   return (
@@ -66,15 +64,18 @@ export function CardLoteamentoPublico({ loteamento, slug }: Props) {
         </CardHeader>
 
         <CardContent className="space-y-2">
-          <p className="text-xl font-bold text-[var(--site-primaria)]">
-            {valorMinimo ? (
-              <>
-                A partir de {formatarPreco(valorMinimo)}
-              </>
-            ) : (
-              "Consulte"
-            )}
-          </p>
+          {valorMinimo ? (
+            <div>
+              <span className="text-xs font-medium text-muted-foreground">A partir de</span>
+              <p className="text-xl font-bold text-[var(--site-primaria)]">
+                {formatarPreco(valorMinimo)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-xl font-bold text-[var(--site-primaria)]">
+              Consulte
+            </p>
+          )}
 
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />

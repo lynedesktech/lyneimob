@@ -230,6 +230,7 @@ export async function atualizarLote(
     unidade: formData.get("unidade"),
     status: formData.get("status") || "disponivel",
     comprador: formData.get("comprador") || undefined,
+    cliente_id: formData.get("cliente_id") || null,
     valor: formData.get("valor"),
     data_venda: formData.get("data_venda") || undefined,
     area: formData.get("area") || undefined,
@@ -306,7 +307,8 @@ export async function excluirLote(id: string): Promise<EstadoFormulario> {
 
 export async function alterarStatusLote(
   id: string,
-  status: string
+  status: string,
+  opcoes?: { cliente_id?: string; comprador?: string }
 ): Promise<EstadoFormulario> {
   const statusValidos = ["disponivel", "reservado", "vendido"]
   if (!statusValidos.includes(status)) {
@@ -327,9 +329,40 @@ export async function alterarStatusLote(
     .eq("id", id)
     .single()
 
+  // Montar campos de atualização
+  const camposAtualizar: Record<string, unknown> = { status }
+
+  if (status === "reservado" || status === "vendido") {
+    // Vincular cliente (da base ou texto livre)
+    if (opcoes?.cliente_id) {
+      camposAtualizar.cliente_id = opcoes.cliente_id
+      // Buscar nome do cliente pra preencher o campo comprador
+      const { data: cliente } = await supabase
+        .from("clientes")
+        .select("nome")
+        .eq("id", opcoes.cliente_id)
+        .single()
+      if (cliente) {
+        camposAtualizar.comprador = cliente.nome
+      }
+    } else if (opcoes?.comprador) {
+      camposAtualizar.comprador = opcoes.comprador
+      camposAtualizar.cliente_id = null
+    }
+
+    if (status === "vendido") {
+      camposAtualizar.data_venda = new Date().toISOString().split("T")[0]
+    }
+  } else if (status === "disponivel") {
+    // Ao voltar pra disponível, limpar comprador e cliente
+    camposAtualizar.comprador = null
+    camposAtualizar.cliente_id = null
+    camposAtualizar.data_venda = null
+  }
+
   const { error } = await supabase
     .from("lotes")
-    .update({ status })
+    .update(camposAtualizar)
     .eq("id", id)
 
   if (error) {

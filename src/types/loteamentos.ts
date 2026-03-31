@@ -50,6 +50,7 @@ export const schemaCriarLote = z.object({
   unidade: z.string().min(1, "Unidade obrigatória"),
   status: z.enum(STATUS_LOTE).default("disponivel"),
   comprador: z.string().optional(),
+  cliente_id: z.string().uuid().optional().nullable(),
   valor: z.coerce.number().min(0, "Valor deve ser positivo"),
   data_venda: z.string().optional(),
   area: z.coerce.number().positive("Área deve ser positiva").optional(),
