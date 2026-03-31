@@ -42,7 +42,7 @@ export default async function ImoveisPage({
 
   let query = supabase
     .from("imoveis")
-    .select("*", { count: "exact" })
+    .select("*, imovel_fotos(url, eh_capa)", { count: "exact" })
 
   if (params.busca) {
     query = query.or(
