@@ -175,6 +175,30 @@ export async function excluirEtapaPipeline(id: string): Promise<EstadoFormulario
     return { erro: `A etapa "${etapa.nome}" não pode ser excluída — ela é obrigatória para o atendimento automático via WhatsApp` }
   }
 
+  // Verificar se é a primeira etapa normal (Novo Lead) — destino da IA após atendimento
+  if (etapa.tipo === "normal") {
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("organizacao_id")
+      .eq("id", (await supabase.auth.getUser()).data.user!.id)
+      .single()
+
+    if (usuario) {
+      const { data: primeiraEtapaNormal } = await supabase
+        .from("pipeline_etapas")
+        .select("id")
+        .eq("organizacao_id", usuario.organizacao_id)
+        .eq("tipo", "normal")
+        .order("ordem", { ascending: true })
+        .limit(1)
+        .single()
+
+      if (primeiraEtapaNormal && primeiraEtapaNormal.id === id) {
+        return { erro: `A etapa "${etapa.nome}" não pode ser excluída — é a primeira etapa do funil e destino dos leads atendidos pela IA` }
+      }
+    }
+  }
+
   // Verificar se tem negócios ativos nessa etapa
   const { count } = await supabase
     .from("negocios")

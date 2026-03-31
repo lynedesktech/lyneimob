@@ -14,6 +14,7 @@ export function usePipeline(filtros?: {
 
   const { data, isLoading, error, refetch } = useQuery<EtapaComNegocios[]>({
     queryKey: ["pipeline", filtros],
+    refetchInterval: 30_000, // Atualiza a cada 30s para capturar mudanças do agente IA
     queryFn: async () => {
       // Buscar etapas ordenadas
       const { data: etapas, error: erroEtapas } = await supabase

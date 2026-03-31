@@ -256,6 +256,12 @@ export async function executarCriarAtividade(
 
   if (error) return `Erro ao criar atividade: ${error.message}`
 
+  // Atividade agendada (visita, ligação, etc.) = IA terminou seu trabalho
+  // Mover negócio para "Novo Lead" para o corretor assumir
+  if (contexto.negocioId) {
+    await moverNegocioParaNovoLead(supabase, contexto.negocioId, contexto.organizacaoId, usuarioId)
+  }
+
   return "Atividade agendada com sucesso."
 }
 
@@ -316,6 +322,11 @@ export async function executarEncaminharCorretor(
 
   if (error) return `Erro ao encaminhar: ${error.message}`
 
+  // Mover negócio de "Pré-atendimento IA" para "Novo Lead" (primeira etapa normal)
+  if (contexto.negocioId) {
+    await moverNegocioParaNovoLead(supabase, contexto.negocioId, contexto.organizacaoId, corretorId)
+  }
+
   // Notificar corretor por email
   if (corretorId) {
     try {
@@ -352,4 +363,80 @@ export async function executarEncaminharCorretor(
   }
 
   return `Conversa encaminhada para o corretor. Motivo: ${args.motivo}`
+}
+
+/**
+ * Move o negócio da etapa "Pré-atendimento IA" para a primeira etapa "normal" do pipeline.
+ * Também atribui o corretor ao negócio se informado.
+ */
+async function moverNegocioParaNovoLead(
+  supabase: ReturnType<Awaited<typeof import("@/lib/supabase/admin")>["criarClienteAdmin"]>,
+  negocioId: string,
+  organizacaoId: string,
+  corretorId: string | null
+): Promise<void> {
+  try {
+    // Verificar se o negócio ainda está em "Pré-atendimento IA"
+    // Se o corretor já moveu manualmente, não sobrescrever
+    const { data: negocioAtual } = await supabase
+      .from("negocios")
+      .select("etapa_id, pipeline_etapas(tipo)")
+      .eq("id", negocioId)
+      .single()
+
+    const tipoEtapaAtual = (negocioAtual?.pipeline_etapas as { tipo?: string } | null)?.tipo
+    if (tipoEtapaAtual !== "pre_atendimento_ia") {
+      console.log(`[Mover Negócio] Negócio ${negocioId} já saiu do pré-atendimento (etapa: ${tipoEtapaAtual}). Ignorando.`)
+      return
+    }
+
+    // Buscar primeira etapa normal do pipeline (Novo Lead)
+    const { data: etapaNovoLead } = await supabase
+      .from("pipeline_etapas")
+      .select("id")
+      .eq("organizacao_id", organizacaoId)
+      .eq("tipo", "normal")
+      .order("ordem", { ascending: true })
+      .limit(1)
+      .single()
+
+    if (!etapaNovoLead) {
+      console.error("[Mover Negócio] Etapa 'Novo Lead' não encontrada para org:", organizacaoId)
+      return
+    }
+
+    // Calcular próxima posição na etapa destino
+    const { data: ultimoNegocio } = await supabase
+      .from("negocios")
+      .select("posicao")
+      .eq("etapa_id", etapaNovoLead.id)
+      .order("posicao", { ascending: false })
+      .limit(1)
+      .single()
+
+    const posicao = (ultimoNegocio?.posicao ?? -1) + 1
+
+    // Mover negócio para a nova etapa + atribuir corretor
+    const atualizacao: Record<string, unknown> = {
+      etapa_id: etapaNovoLead.id,
+      posicao,
+    }
+    if (corretorId) {
+      atualizacao.corretor_id = corretorId
+    }
+
+    const { error } = await supabase
+      .from("negocios")
+      .update(atualizacao)
+      .eq("id", negocioId)
+
+    if (error) {
+      console.error("[Mover Negócio] Erro ao mover negócio para Novo Lead:", error.message)
+    } else {
+      console.log(`[Mover Negócio] Negócio ${negocioId} movido para Novo Lead (etapa ${etapaNovoLead.id})`)
+    }
+  } catch (err) {
+    console.error("[Mover Negócio] Erro ao mover negócio:", err instanceof Error ? err.message : err)
+    // Não falha a operação principal se a movimentação falhar
+  }
 }

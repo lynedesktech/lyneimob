@@ -230,13 +230,15 @@ function DialogEditarEtapa({
 function DialogExcluirEtapa({
   etapa,
   onSucesso,
+  protegida: protegidaExterna,
 }: {
   etapa: PipelineEtapa
   onSucesso: () => void
+  protegida?: boolean
 }) {
   const [aberto, setAberto] = useState(false)
   const [carregando, setCarregando] = useState(false)
-  const protegida = etapa.tipo === "ganho" || etapa.tipo === "perdido"
+  const protegida = etapa.tipo === "ganho" || etapa.tipo === "perdido" || !!protegidaExterna
 
   async function confirmarExclusao() {
     setCarregando(true)
@@ -305,6 +307,7 @@ function LinhaEtapa({
   etapa,
   indice,
   total,
+  ehPrimeiraEtapaNormal,
   onMoverCima,
   onMoverBaixo,
   onAtualizar,
@@ -312,6 +315,7 @@ function LinhaEtapa({
   etapa: PipelineEtapa
   indice: number
   total: number
+  ehPrimeiraEtapaNormal: boolean
   onMoverCima: () => void
   onMoverBaixo: () => void
   onAtualizar: () => void
@@ -337,6 +341,11 @@ function LinhaEtapa({
       </div>
 
       {/* Badge de tipo especial */}
+      {ehPrimeiraEtapaNormal && (
+        <Badge variant="outline" className="shrink-0 text-xs">
+          Destino IA
+        </Badge>
+      )}
       {ehPreAtendimento && (
         <Badge variant="outline" className="shrink-0 text-xs">
           IA
@@ -376,7 +385,7 @@ function LinhaEtapa({
       <DialogEditarEtapa etapa={etapa} onSucesso={onAtualizar} />
 
       {/* Excluir */}
-      <DialogExcluirEtapa etapa={etapa} onSucesso={onAtualizar} />
+      <DialogExcluirEtapa etapa={etapa} onSucesso={onAtualizar} protegida={ehPrimeiraEtapaNormal} />
     </div>
   )
 }
@@ -440,17 +449,21 @@ export function ConteudoPipelineConfig() {
             </p>
           ) : (
             <div className="space-y-2" aria-busy={reordenando}>
-              {etapas.map((etapa, i) => (
-                <LinhaEtapa
-                  key={etapa.id}
-                  etapa={etapa}
-                  indice={i}
-                  total={etapas.length}
-                  onMoverCima={() => moverEtapa(i, "cima")}
-                  onMoverBaixo={() => moverEtapa(i, "baixo")}
-                  onAtualizar={() => recarregar()}
-                />
-              ))}
+              {etapas.map((etapa, i) => {
+                const idPrimeiraEtapaNormal = etapas.find((e) => e.tipo === "normal")?.id
+                return (
+                  <LinhaEtapa
+                    key={etapa.id}
+                    etapa={etapa}
+                    indice={i}
+                    total={etapas.length}
+                    ehPrimeiraEtapaNormal={etapa.id === idPrimeiraEtapaNormal}
+                    onMoverCima={() => moverEtapa(i, "cima")}
+                    onMoverBaixo={() => moverEtapa(i, "baixo")}
+                    onAtualizar={() => recarregar()}
+                  />
+                )
+              })}
             </div>
           )}
         </CardContent>
@@ -459,8 +472,9 @@ export function ConteudoPipelineConfig() {
       <Card className="border-muted bg-muted/30">
         <CardContent className="pt-4 pb-4">
           <p className="text-xs text-muted-foreground">
-            <strong>Dica:</strong> As etapas <em>Pré-atendimento IA</em>, <em>Ganho</em> e <em>Perdido</em> são
-            obrigatórias e não podem ser excluídas. Você pode renomeá-las e mudar a cor, mas não removê-las.
+            <strong>Dica:</strong> As etapas <em>Pré-atendimento IA</em>, <em>Ganho</em>, <em>Perdido</em> e a
+            primeira etapa do funil (destino dos leads atendidos pela IA) são obrigatórias e não podem ser excluídas.
+            Você pode renomeá-las e mudar a cor, mas não removê-las.
           </p>
         </CardContent>
       </Card>
