@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
-import { verificarPermissao, ehSuperAdmin } from "@/lib/permissoes"
+import { verificarPermissao } from "@/lib/permissoes"
 import { schemaConfigWhatsapp } from "@/types/whatsapp"
 import type { StatusConversa } from "@/types/whatsapp"
 import type { EstadoFormulario } from "@/types/formulario"
@@ -135,8 +135,9 @@ export async function salvarConfigWhatsapp(
     return { erro: "Usuário não autenticado" }
   }
 
-  if (!ehSuperAdmin(usuario)) {
-    return { erro: "Apenas o administrador da plataforma pode alterar configurações do WhatsApp." }
+  const permissao = verificarPermissao(usuario.cargo, "gerenciar_integracoes", usuario.perfil_plataforma)
+  if (permissao.erro) {
+    return { erro: "Você não tem permissão para alterar configurações do WhatsApp." }
   }
 
   const supabase = await criarClienteServer()
@@ -205,8 +206,9 @@ export async function salvarConfigAgenteWhatsapp(
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
 
-  if (!ehSuperAdmin(usuario)) {
-    return { erro: "Apenas o administrador da plataforma pode alterar configurações do WhatsApp." }
+  const permissao = verificarPermissao(usuario.cargo, "gerenciar_integracoes", usuario.perfil_plataforma)
+  if (permissao.erro) {
+    return { erro: "Você não tem permissão para alterar configurações do WhatsApp." }
   }
 
   const supabase = await criarClienteServer()
@@ -270,8 +272,9 @@ export async function limparMemoriasOrganizacao(): Promise<EstadoFormulario> {
   const usuario = await buscarUsuarioLogado()
   if (!usuario) return { erro: "Usuário não autenticado" }
 
-  if (!ehSuperAdmin(usuario)) {
-    return { erro: "Apenas o administrador da plataforma pode limpar a memória do agente." }
+  const permissao = verificarPermissao(usuario.cargo, "gerenciar_integracoes", usuario.perfil_plataforma)
+  if (permissao.erro) {
+    return { erro: "Você não tem permissão para limpar a memória do agente." }
   }
 
   const supabase = criarClienteAdmin()

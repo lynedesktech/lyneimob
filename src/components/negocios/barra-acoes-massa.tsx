@@ -157,12 +157,19 @@ function DialogMoverEtapa({
 
   useEffect(() => {
     if (!aberto) return
-    const supabase = criarClienteBrowser()
-    supabase
-      .from("pipeline_etapas")
-      .select("id, nome")
-      .order("ordem")
-      .then(({ data }) => setEtapas(data || []))
+    async function carregar() {
+      try {
+        const supabase = criarClienteBrowser()
+        const { data } = await supabase
+          .from("pipeline_etapas")
+          .select("id, nome")
+          .order("ordem")
+        setEtapas(data || [])
+      } catch {
+        setEtapas([])
+      }
+    }
+    carregar()
   }, [aberto])
 
   async function handleMover() {

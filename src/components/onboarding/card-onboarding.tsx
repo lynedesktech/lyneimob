@@ -60,29 +60,36 @@ export function CardOnboarding({
   }, [])
 
   async function handleNext() {
-    if (ehUltimo) {
-      if (ehBoasVindas) {
-        await marcarTourCompleto()
-        queryClient.invalidateQueries({ queryKey: ["onboarding"] })
-      } else if (ehTourManual && tourAtual) {
-        const chaveEtapa = TOUR_PARA_ETAPA[tourAtual as ChaveMiniTour]
-        if (chaveEtapa) {
-          await marcarEtapaChecklist(chaveEtapa)
+    try {
+      if (ehUltimo) {
+        if (ehBoasVindas) {
+          await marcarTourCompleto()
           queryClient.invalidateQueries({ queryKey: ["onboarding"] })
+        } else if (ehTourManual && tourAtual) {
+          const chaveEtapa = TOUR_PARA_ETAPA[tourAtual as ChaveMiniTour]
+          if (chaveEtapa) {
+            await marcarEtapaChecklist(chaveEtapa)
+            queryClient.invalidateQueries({ queryKey: ["onboarding"] })
+          }
         }
+        closeOnborda()
+        if (ehBoasVindas) router.push("/painel")
+        return
       }
+      nextStep()
+    } catch (erro) {
+      console.error("Erro no onboarding:", erro)
       closeOnborda()
-      if (ehBoasVindas) router.push("/painel")
-      return
     }
-    nextStep()
   }
 
   function handlePular() {
     if (ehBoasVindas) {
-      marcarTourCompleto().then(() => {
-        queryClient.invalidateQueries({ queryKey: ["onboarding"] })
-      })
+      marcarTourCompleto()
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ["onboarding"] })
+        })
+        .catch((erro) => console.error("Erro ao pular tour:", erro))
     }
     closeOnborda()
   }

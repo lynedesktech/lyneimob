@@ -28,15 +28,20 @@ export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps)
   const { tipos } = useTiposAtividade()
 
   useEffect(() => {
-    const supabase = criarClienteBrowser()
-    supabase
-      .from("usuarios")
-      .select("id, nome")
-      .eq("ativo", true)
-      .order("nome")
-      .then(({ data }) => {
+    async function carregar() {
+      try {
+        const supabase = criarClienteBrowser()
+        const { data } = await supabase
+          .from("usuarios")
+          .select("id, nome")
+          .eq("ativo", true)
+          .order("nome")
         setUsuarios((data as UsuarioSimples[]) || [])
-      })
+      } catch {
+        setUsuarios([])
+      }
+    }
+    carregar()
   }, [])
 
   const temFiltros =

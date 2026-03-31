@@ -26,29 +26,35 @@ export function ConteudoPortais() {
   const totalPaginas = calcularTotalPaginas(total)
 
   useEffect(() => {
+    let cancelado = false
     async function buscarSlug() {
-      const supabase = criarClienteBrowser()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      try {
+        const supabase = criarClienteBrowser()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user || cancelado) return
 
-      const { data: usuario } = await supabase
-        .from("usuarios")
-        .select("organizacao_id")
-        .eq("id", user.id)
-        .single()
+        const { data: usuario, error: userError } = await supabase
+          .from("usuarios")
+          .select("organizacao_id")
+          .eq("id", user.id)
+          .single()
 
-      if (!usuario) return
+        if (userError || !usuario || cancelado) return
 
-      const { data: org } = await supabase
-        .from("organizacoes")
-        .select("slug")
-        .eq("id", usuario.organizacao_id)
-        .single()
+        const { data: org, error: orgError } = await supabase
+          .from("organizacoes")
+          .select("slug")
+          .eq("id", usuario.organizacao_id)
+          .single()
 
-      if (org) setSlug(org.slug)
+        if (!orgError && org && !cancelado) setSlug(org.slug)
+      } catch (erro) {
+        console.error("Erro ao buscar slug:", erro)
+      }
     }
 
     buscarSlug()
+    return () => { cancelado = true }
   }, [])
 
   const leadsNovos = leads.filter((l) => l.status === "novo").length

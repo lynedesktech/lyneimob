@@ -36,15 +36,20 @@ export function FiltrosPipeline({ filtros, onChange }: FiltrosPipelineProps) {
   const [corretores, setCorretores] = useState<CorretorSimples[]>([])
 
   useEffect(() => {
-    const supabase = criarClienteBrowser()
-    supabase
-      .from("usuarios")
-      .select("id, nome")
-      .eq("ativo", true)
-      .order("nome")
-      .then(({ data }) => {
+    async function carregar() {
+      try {
+        const supabase = criarClienteBrowser()
+        const { data } = await supabase
+          .from("usuarios")
+          .select("id, nome")
+          .eq("ativo", true)
+          .order("nome")
         setCorretores((data as CorretorSimples[]) || [])
-      })
+      } catch {
+        setCorretores([])
+      }
+    }
+    carregar()
   }, [])
 
   const temFiltros =

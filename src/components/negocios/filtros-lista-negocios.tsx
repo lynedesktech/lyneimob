@@ -39,19 +39,21 @@ export function FiltrosListaNegocios({ filtros, onChange }: FiltrosListaNegocios
   const [etapas, setEtapas] = useState<EtapaSimples[]>([])
 
   useEffect(() => {
-    const supabase = criarClienteBrowser()
-    supabase
-      .from("usuarios")
-      .select("id, nome")
-      .eq("ativo", true)
-      .order("nome")
-      .then(({ data }) => setCorretores((data as CorretorSimples[]) || []))
-
-    supabase
-      .from("pipeline_etapas")
-      .select("id, nome")
-      .order("ordem")
-      .then(({ data }) => setEtapas((data as EtapaSimples[]) || []))
+    async function carregar() {
+      try {
+        const supabase = criarClienteBrowser()
+        const [resCorretores, resEtapas] = await Promise.all([
+          supabase.from("usuarios").select("id, nome").eq("ativo", true).order("nome"),
+          supabase.from("pipeline_etapas").select("id, nome").order("ordem"),
+        ])
+        setCorretores((resCorretores.data as CorretorSimples[]) || [])
+        setEtapas((resEtapas.data as EtapaSimples[]) || [])
+      } catch {
+        setCorretores([])
+        setEtapas([])
+      }
+    }
+    carregar()
   }, [])
 
   const temFiltros =
