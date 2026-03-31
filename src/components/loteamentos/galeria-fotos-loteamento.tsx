@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import { useOrganizacao } from "@/hooks/use-organizacao"
 import { Button } from "@/components/ui/button"
@@ -36,6 +36,20 @@ export function GaleriaFotosLoteamento({
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = criarClienteBrowser()
   const { organizacao } = useOrganizacao()
+
+  const buscarFotos = useCallback(async () => {
+    const { data } = await supabase
+      .from("loteamento_fotos")
+      .select("*")
+      .eq("loteamento_id", loteamentoId)
+      .order("ordem")
+
+    if (data) setFotos(data as LoteamentoFoto[])
+  }, [supabase, loteamentoId])
+
+  useEffect(() => {
+    buscarFotos()
+  }, [buscarFotos])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivos = e.target.files
@@ -100,13 +114,13 @@ export function GaleriaFotosLoteamento({
       totalAtual++
     }
 
-    if (novasFotos.length > 0) {
-      setFotos((prev) => [...prev, ...novasFotos])
-    }
-
     setEnviando(false)
     if (inputRef.current) inputRef.current.value = ""
-    toast.success("Fotos enviadas com sucesso")
+
+    if (novasFotos.length > 0) {
+      await buscarFotos()
+      toast.success("Fotos enviadas com sucesso")
+    }
   }
 
   async function marcarComoCapa(fotoId: string) {
@@ -120,9 +134,7 @@ export function GaleriaFotosLoteamento({
       .update({ eh_capa: true })
       .eq("id", fotoId)
 
-    setFotos((prev) =>
-      prev.map((f) => ({ ...f, eh_capa: f.id === fotoId }))
-    )
+    await buscarFotos()
     toast.success("Foto de capa atualizada")
   }
 
@@ -138,7 +150,7 @@ export function GaleriaFotosLoteamento({
 
     await supabase.from("loteamento_fotos").delete().eq("id", foto.id)
 
-    setFotos((prev) => prev.filter((f) => f.id !== foto.id))
+    await buscarFotos()
     toast.success("Foto removida")
   }
 
