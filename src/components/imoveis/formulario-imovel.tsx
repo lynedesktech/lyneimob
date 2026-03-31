@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -26,9 +26,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { labelsTipoImovel, labelsFinalidade, labelsStatusImovel, opcoesDeLabels } from "@/lib/constantes"
+import { useBuscaCep } from "@/hooks/use-busca-cep"
 
 const opcoesTipo = opcoesDeLabels(labelsTipoImovel)
 const opcoesFinalidade = opcoesDeLabels(labelsFinalidade)
@@ -79,52 +80,19 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const [valorCondominioValue, setValorCondominioValue] = useState<number | null>(campoNum(imovel, "valor_condominio", "condominio") as number || null)
   const [valorIptuValue, setValorIptuValue] = useState<number | null>(campoNum(imovel, "valor_iptu", "iptu") as number || null)
   const [pendente, setPendente] = useState(false)
-  const [buscandoCep, setBuscandoCep] = useState(false)
+  const [logradouroValue, setLogradouroValue] = useState(campo(imovel, "logradouro"))
+  const [bairroValue, setBairroValue] = useState(campo(imovel, "bairro"))
+  const [cidadeValue, setCidadeValue] = useState(campo(imovel, "cidade"))
 
-  // Refs para preencher endereço via CEP
-  const logradouroRef = useRef<HTMLInputElement>(null)
-  const bairroRef = useRef<HTMLInputElement>(null)
-  const cidadeRef = useRef<HTMLInputElement>(null)
+  const { buscandoCep, preenchidoPorCep, buscarCep, limparPreenchimento } = useBuscaCep()
 
-  async function buscarEnderecoPorCep(cep: string) {
-    const digitos = cep.replace(/\D/g, "")
-    if (digitos.length !== 8) return
-
-    setBuscandoCep(true)
-    try {
-      const res = await fetch(`https://viacep.com.br/ws/${digitos}/json/`)
-      const dados = await res.json()
-      if (dados.erro) {
-        toast.error("CEP não encontrado")
-        return
-      }
-
-      // Preencher campos via ref (inputs não controlados)
-      if (logradouroRef.current) {
-        logradouroRef.current.value = dados.logradouro || ""
-        // Disparar evento nativo para o React detectar a mudança
-        const ev = new Event("input", { bubbles: true })
-        logradouroRef.current.dispatchEvent(ev)
-      }
-      if (bairroRef.current) {
-        bairroRef.current.value = dados.bairro || ""
-        const ev = new Event("input", { bubbles: true })
-        bairroRef.current.dispatchEvent(ev)
-      }
-      if (cidadeRef.current) {
-        cidadeRef.current.value = dados.localidade || ""
-        const ev = new Event("input", { bubbles: true })
-        cidadeRef.current.dispatchEvent(ev)
-      }
-      if (dados.uf) {
-        setEstadoValue(dados.uf)
-      }
-
-      toast.success("Endereço preenchido pelo CEP")
-    } catch {
-      toast.error("Erro ao buscar CEP")
-    } finally {
-      setBuscandoCep(false)
+  async function handleBuscarCep(cep: string) {
+    const dados = await buscarCep(cep)
+    if (dados) {
+      setLogradouroValue(dados.logradouro)
+      setBairroValue(dados.bairro)
+      setCidadeValue(dados.cidade)
+      setEstadoValue(dados.estado)
     }
   }
 
@@ -278,21 +246,28 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field>
               <FieldLabel htmlFor="cep">CEP</FieldLabel>
-              <InputCep
-                id="cep"
-                name="cep"
-                defaultValue={campo(imovel, "cep")}
-                disabled={buscandoCep}
-                onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                  const digitos = e.target.value.replace(/\D/g, "")
-                  if (digitos.length === 8) buscarEnderecoPorCep(digitos)
-                }}
-              />
+              <div className="relative">
+                <InputCep
+                  id="cep"
+                  name="cep"
+                  defaultValue={campo(imovel, "cep")}
+                  disabled={buscandoCep}
+                  onComplete={handleBuscarCep}
+                  onChange={(valor) => {
+                    if (valor.replace(/\D/g, "").length < 8) {
+                      limparPreenchimento()
+                    }
+                  }}
+                />
+                {buscandoCep && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
             </Field>
 
             <Field className="sm:col-span-2">
               <FieldLabel htmlFor="logradouro">Logradouro</FieldLabel>
-              <Input ref={logradouroRef} id="logradouro" name="logradouro" placeholder="Rua, Avenida, etc." defaultValue={campo(imovel, "logradouro")} />
+              <Input id="logradouro" name="logradouro" placeholder="Rua, Avenida, etc." value={logradouroValue} onChange={(e) => !preenchidoPorCep && setLogradouroValue(e.target.value)} readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
             </Field>
 
             <Field>
@@ -307,17 +282,17 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
 
             <Field>
               <FieldLabel htmlFor="bairro">Bairro</FieldLabel>
-              <Input ref={bairroRef} id="bairro" name="bairro" placeholder="Centro" defaultValue={campo(imovel, "bairro")} />
+              <Input id="bairro" name="bairro" placeholder="Centro" value={bairroValue} onChange={(e) => !preenchidoPorCep && setBairroValue(e.target.value)} readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="cidade">Cidade *</FieldLabel>
-              <Input ref={cidadeRef} id="cidade" name="cidade" placeholder="São Paulo" defaultValue={campo(imovel, "cidade")} />
+              <Input id="cidade" name="cidade" placeholder="São Paulo" value={cidadeValue} onChange={(e) => !preenchidoPorCep && setCidadeValue(e.target.value)} readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="estado_uf">Estado *</FieldLabel>
-              <Select value={estadoValue} onValueChange={(v) => v && setEstadoValue(v)}>
+              <Select value={estadoValue} onValueChange={(v) => v && !preenchidoPorCep && setEstadoValue(v)} disabled={preenchidoPorCep}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="UF" />
                 </SelectTrigger>

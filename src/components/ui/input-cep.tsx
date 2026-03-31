@@ -22,9 +22,11 @@ interface InputCepProps extends Omit<React.ComponentProps<typeof Input>, "value"
   value?: string
   /** Callback com valor limpo (só dígitos) — para uso com React Hook Form */
   onChange?: (valor: string) => void
+  /** Chamado quando o usuário digita 8 dígitos (CEP completo) */
+  onComplete?: (cep: string) => void
 }
 
-export function InputCep({ defaultValue, name, value, onChange, ...props }: InputCepProps) {
+export function InputCep({ defaultValue, name, value, onChange, onComplete, ...props }: InputCepProps) {
   const controlado = value !== undefined
 
   const [displayInterno, setDisplayInterno] = React.useState(() =>
@@ -42,6 +44,11 @@ export function InputCep({ defaultValue, name, value, onChange, ...props }: Inpu
       onChange?.(limpo)
     } else {
       setDisplayInterno(mascarado)
+      onChange?.(limpo)
+    }
+
+    if (limpo.length === 8) {
+      onComplete?.(limpo)
     }
   }
 

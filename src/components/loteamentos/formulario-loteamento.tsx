@@ -28,8 +28,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { ArrowLeft, Globe } from "lucide-react"
+import { ArrowLeft, Globe, Loader2 } from "lucide-react"
 import { labelsStatusLoteamento, opcoesDeLabels } from "@/lib/constantes"
+import { useBuscaCep } from "@/hooks/use-busca-cep"
 
 const opcoesStatus = opcoesDeLabels(labelsStatusLoteamento)
 
@@ -46,8 +47,6 @@ type FormularioLoteamentoProps = {
 export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) {
   const editando = !!loteamento
   const action = editando ? atualizarLoteamento : criarLoteamento
-
-  const [buscandoCep, setBuscandoCep] = useState(false)
 
   const {
     register,
@@ -74,6 +73,8 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
     },
   })
 
+  const { buscandoCep, preenchidoPorCep, buscarCep, limparPreenchimento } = useBuscaCep()
+
   const [statusValue, setStatusValue] = useState(loteamento?.status ?? "em_vendas")
   const [retorno, formAction] = useActionState(action, {})
   const [transitando, iniciarTransicao] = useTransition()
@@ -83,27 +84,13 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
     if (retorno.erro) toast.error(retorno.erro)
   }, [retorno])
 
-  async function buscarEnderecoPorCep(cep: string) {
-    const digitos = cep.replace(/\D/g, "")
-    if (digitos.length !== 8) return
-
-    setBuscandoCep(true)
-    try {
-      const res = await fetch(`https://viacep.com.br/ws/${digitos}/json/`)
-      const dados = await res.json()
-      if (dados.erro) {
-        toast.error("CEP não encontrado")
-        return
-      }
-      if (dados.logradouro) setValue("logradouro", dados.logradouro)
-      if (dados.bairro) setValue("bairro", dados.bairro)
-      if (dados.localidade) setValue("cidade", dados.localidade)
-      if (dados.uf) setValue("estado", dados.uf)
-      toast.success("Endereço preenchido pelo CEP")
-    } catch {
-      toast.error("Erro ao buscar CEP")
-    } finally {
-      setBuscandoCep(false)
+  async function handleBuscarCep(cep: string) {
+    const dados = await buscarCep(cep)
+    if (dados) {
+      setValue("logradouro", dados.logradouro)
+      setValue("bairro", dados.bairro)
+      setValue("cidade", dados.cidade)
+      setValue("estado", dados.estado)
     }
   }
 
@@ -201,21 +188,29 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
           <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field>
               <FieldLabel htmlFor="cep">CEP</FieldLabel>
-              <Controller
-                name="cep"
-                control={control}
-                render={({ field }) => (
-                  <InputCep
-                    id="cep"
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    disabled={buscandoCep}
-                    onBlur={() => {
-                      if (field.value) buscarEnderecoPorCep(field.value)
-                    }}
-                  />
+              <div className="relative">
+                <Controller
+                  name="cep"
+                  control={control}
+                  render={({ field }) => (
+                    <InputCep
+                      id="cep"
+                      value={field.value ?? ""}
+                      onChange={(valor) => {
+                        field.onChange(valor)
+                        if (valor.replace(/\D/g, "").length < 8) {
+                          limparPreenchimento()
+                        }
+                      }}
+                      onComplete={handleBuscarCep}
+                      disabled={buscandoCep}
+                    />
+                  )}
+                />
+                {buscandoCep && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
                 )}
-              />
+              </div>
             </Field>
 
             <Field className="sm:col-span-2">
@@ -224,6 +219,8 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
                 id="logradouro"
                 placeholder="Rua, Avenida, etc."
                 {...register("logradouro")}
+                readOnly={preenchidoPorCep}
+                className={preenchidoPorCep ? "bg-muted" : ""}
               />
             </Field>
 
@@ -251,6 +248,8 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
                 id="bairro"
                 placeholder="Centro"
                 {...register("bairro")}
+                readOnly={preenchidoPorCep}
+                className={preenchidoPorCep ? "bg-muted" : ""}
               />
             </Field>
 
@@ -261,6 +260,8 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
                 placeholder="São Paulo"
                 {...register("cidade")}
                 aria-invalid={!!errors.cidade}
+                readOnly={preenchidoPorCep}
+                className={preenchidoPorCep ? "bg-muted" : ""}
               />
               <FieldError errors={[errors.cidade]} />
             </Field>
@@ -271,7 +272,7 @@ export function FormularioLoteamento({ loteamento }: FormularioLoteamentoProps) 
                 name="estado"
                 control={control}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={field.onChange} disabled={preenchidoPorCep}>
                     <SelectTrigger className="w-full" aria-invalid={!!errors.estado}>
                       <SelectValue placeholder="UF" />
                     </SelectTrigger>

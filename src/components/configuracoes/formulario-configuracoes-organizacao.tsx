@@ -4,7 +4,7 @@ import { useActionState, useEffect, useTransition } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Save, Building2, Phone, Mail, MapPin, FileText } from "lucide-react"
+import { Save, Building2, Phone, Mail, MapPin, FileText, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InputCep } from "@/components/ui/input-cep"
@@ -19,6 +19,7 @@ import {
 import { InputTelefone } from "@/components/ui/input-telefone"
 import { salvarConfiguracoesOrganizacao } from "@/actions/configuracoes-organizacao"
 import { toast } from "sonner"
+import { useBuscaCep } from "@/hooks/use-busca-cep"
 
 // ============================================================
 // Schema de validação
@@ -67,6 +68,7 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<FormConfigOrg>({
     resolver: zodResolver(schemaConfigOrg),
@@ -85,6 +87,8 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
     },
   })
 
+  const { buscandoCep, preenchidoPorCep, buscarCep, limparPreenchimento } = useBuscaCep()
+
   const [estado, formAction] = useActionState(
     salvarConfiguracoesOrganizacao,
     {}
@@ -96,6 +100,16 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
     if (estado.sucesso) toast.success(estado.sucesso)
     if (estado.erro) toast.error(estado.erro)
   }, [estado])
+
+  async function handleBuscarCep(cep: string) {
+    const dados = await buscarCep(cep)
+    if (dados) {
+      setValue("logradouro", dados.logradouro)
+      setValue("bairro", dados.bairro)
+      setValue("cidade", dados.cidade)
+      setValue("estado", dados.estado)
+    }
+  }
 
   function onSubmit(dados: FormConfigOrg) {
     const formData = new FormData()
@@ -185,10 +199,36 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <Field className="sm:max-w-[200px]">
+              <FieldLabel htmlFor="cep">CEP</FieldLabel>
+              <div className="relative">
+                <Controller
+                  name="cep"
+                  control={control}
+                  render={({ field }) => (
+                    <InputCep
+                      id="cep"
+                      value={field.value ?? ""}
+                      onChange={(valor) => {
+                        field.onChange(valor)
+                        if (valor.replace(/\D/g, "").length < 8) {
+                          limparPreenchimento()
+                        }
+                      }}
+                      onComplete={handleBuscarCep}
+                      disabled={buscandoCep}
+                    />
+                  )}
+                />
+                {buscandoCep && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
+            </Field>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field className="sm:col-span-2">
                 <FieldLabel htmlFor="logradouro">Logradouro</FieldLabel>
-                <Input id="logradouro" {...register("logradouro")} placeholder="Rua, Avenida..." />
+                <Input id="logradouro" {...register("logradouro")} placeholder="Rua, Avenida..." readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
               </Field>
               <Field>
                 <FieldLabel htmlFor="numero">Número</FieldLabel>
@@ -198,31 +238,17 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
             <div className="grid gap-4 sm:grid-cols-3">
               <Field>
                 <FieldLabel htmlFor="bairro">Bairro</FieldLabel>
-                <Input id="bairro" {...register("bairro")} />
+                <Input id="bairro" {...register("bairro")} readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
               </Field>
               <Field>
                 <FieldLabel htmlFor="cidade">Cidade</FieldLabel>
-                <Input id="cidade" {...register("cidade")} />
+                <Input id="cidade" {...register("cidade")} readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
               </Field>
               <Field>
                 <FieldLabel htmlFor="estado">Estado</FieldLabel>
-                <Input id="estado" {...register("estado")} placeholder="SP" />
+                <Input id="estado" {...register("estado")} placeholder="SP" readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
               </Field>
             </div>
-            <Field className="sm:max-w-[200px]">
-              <FieldLabel htmlFor="cep">CEP</FieldLabel>
-              <Controller
-                name="cep"
-                control={control}
-                render={({ field }) => (
-                  <InputCep
-                    id="cep"
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </Field>
           </CardContent>
         </Card>
 
