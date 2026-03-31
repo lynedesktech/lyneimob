@@ -144,7 +144,11 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
 
             <Field>
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
-              <Select value={tipoValue} onValueChange={(v) => v && setTipoValue(v)}>
+              <Select
+                value={tipoValue}
+                onValueChange={(v) => v && setTipoValue(v)}
+                items={Object.entries(labelsTipoNegocio).map(([valor, label]) => ({ value: valor, label }))}
+              >
                 <SelectTrigger id="tipo">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -170,7 +174,11 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
 
             <Field>
               <FieldLabel htmlFor="etapa_id">Etapa *</FieldLabel>
-              <Select value={etapaId} onValueChange={(v) => v && setEtapaId(v)}>
+              <Select
+                value={etapaId}
+                onValueChange={(v) => v && setEtapaId(v)}
+                items={etapasNormais.map((e) => ({ value: e.id, label: e.nome }))}
+              >
                 <SelectTrigger id="etapa_id">
                   <SelectValue placeholder="Selecione a etapa" />
                 </SelectTrigger>

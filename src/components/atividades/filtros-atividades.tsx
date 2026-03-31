@@ -124,6 +124,10 @@ export function FiltrosAtividades({ filtros, onChange }: FiltrosAtividadesProps)
           onValueChange={(v) =>
             onChange({ ...filtros, responsavel_id: !v || v === "todos" ? undefined : v, pagina: 1 })
           }
+          items={[
+            { value: "todos", label: "Todos" },
+            ...usuarios.map((u) => ({ value: u.id, label: u.nome })),
+          ]}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Todos" />

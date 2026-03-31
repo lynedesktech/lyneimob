@@ -208,6 +208,7 @@ export function DialogNovoUsuario({ organizacoes, organizacaoFixa }: DialogNovoU
                     <Select
                       value={organizacaoId || undefined}
                       onValueChange={(val) => val && setOrganizacaoId(val)}
+                      items={organizacoes.map((org) => ({ value: org.id, label: org.nome }))}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Selecione a organização" />

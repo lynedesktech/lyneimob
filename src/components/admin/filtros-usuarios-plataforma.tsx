@@ -94,6 +94,7 @@ export function FiltrosUsuariosPlataforma({ organizacoes }: FiltrosUsuariosPlata
         <Select
           value={searchParams.get("organizacao") ?? undefined}
           onValueChange={(valor) => atualizarFiltro("organizacao", valor || null)}
+          items={organizacoes.map((org) => ({ value: org.id, label: org.nome }))}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Organização" />
