@@ -35,6 +35,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Lynedesk" }],
   creator: "Lynedesk",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.svg",
+  },
   openGraph: {
     type: "website",
     locale: "pt_BR",

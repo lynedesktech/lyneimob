@@ -35,12 +35,10 @@ export async function generateMetadata({
       template: `%s | ${org.nome}`,
     },
     description: `Confira os imóveis disponíveis na ${org.nome}. Encontre casas, apartamentos e muito mais.`,
-    ...(configs.favicon_url && {
-      icons: {
-        icon: configs.favicon_url,
-        apple: configs.favicon_url,
-      },
-    }),
+    icons: {
+      icon: configs.favicon_url || "/favicon.ico",
+      apple: configs.favicon_url || "/apple-icon.svg",
+    },
     openGraph: {
       type: "website",
       locale: "pt_BR",
