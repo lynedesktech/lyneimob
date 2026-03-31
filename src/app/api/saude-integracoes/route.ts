@@ -39,7 +39,7 @@ export async function GET() {
     .single()
 
   const configBancoCriptografado = (org?.configuracoes_integracoes ?? {}) as Record<string, string>
-  const configBanco = descriptografarCredenciais(configBancoCriptografado)
+  const configBanco = await descriptografarCredenciais(configBancoCriptografado)
 
   // Usar APENAS credenciais do banco — sem fallback para env vars
   // Se não está cadastrado no banco, deve aparecer como "Não configurado"

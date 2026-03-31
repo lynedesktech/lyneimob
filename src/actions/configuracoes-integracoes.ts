@@ -131,7 +131,7 @@ export async function salvarConfiguracoesIntegracoes(
 
   const configAtuaisCriptografadas = (orgAtual?.configuracoes_integracoes ?? {}) as Record<string, string>
   // Descriptografar para fazer merge correto
-  const configAtuais = descriptografarCredenciais(configAtuaisCriptografadas)
+  const configAtuais = await descriptografarCredenciais(configAtuaisCriptografadas)
 
   // Merge: campos vazios = manter atual, campos preenchidos = sobrescrever
   const configMerged: Record<string, string> = { ...configAtuais }
