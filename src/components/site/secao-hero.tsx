@@ -1,6 +1,4 @@
-import Link from "next/link"
 import Image from "next/image"
-import { Search } from "lucide-react"
 import type { OrganizacaoSite } from "@/lib/site/buscar-dados-site"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
 import { BuscaHeroModerna } from "@/components/site/busca-hero-moderna"
@@ -43,7 +41,10 @@ export function SecaoHero({ organizacao, temLoteamentos }: Props) {
               <span key={i}>
                 {parte}
                 {i < arr.length - 1 && (
-                  <span style={{ color: 'var(--site-destaque)' }}>{organizacao.nome}</span>
+                  <>
+                    <br />
+                    <span style={{ color: 'var(--site-destaque)' }}>{organizacao.nome}</span>
+                  </>
                 )}
               </span>
             ))
@@ -54,22 +55,6 @@ export function SecaoHero({ organizacao, temLoteamentos }: Props) {
         <p className="mx-auto mt-4 max-w-2xl text-base text-white/80 sm:text-lg">
           {configs.hero.subtitulo}
         </p>
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href={`/${organizacao.slug}/imoveis`}
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold transition-colors hover:bg-white/90"
-            style={{ color: configs.cores.primaria }}
-          >
-            <Search className="h-4 w-4" />
-            Ver imóveis disponíveis
-          </Link>
-          <Link
-            href={`/${organizacao.slug}/contato`}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            Fale conosco
-          </Link>
-        </div>
 
         {/* Busca moderna */}
         <BuscaHeroModerna slug={organizacao.slug} temLoteamentos={temLoteamentos} />

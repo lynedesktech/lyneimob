@@ -11,26 +11,25 @@ export function SecaoEstatisticas({
   totalBairros,
   totalLoteamentos,
 }: Props) {
+  const temLoteamentos = totalLoteamentos && totalLoteamentos > 0
+
   const estatisticas = [
     {
       icone: Building2,
       valor: totalImoveis,
       label: "Imóveis disponíveis",
     },
-    ...(totalLoteamentos && totalLoteamentos > 0
-      ? [
-          {
-            icone: LandPlot,
-            valor: totalLoteamentos,
-            label: "Loteamentos",
-          },
-        ]
-      : []),
-    {
-      icone: MapPin,
-      valor: totalBairros,
-      label: "Bairros atendidos",
-    },
+    temLoteamentos
+      ? {
+          icone: LandPlot,
+          valor: totalLoteamentos,
+          label: "Loteamentos",
+        }
+      : {
+          icone: MapPin,
+          valor: totalBairros,
+          label: "Bairros atendidos",
+        },
     {
       icone: Handshake,
       valor: 100,

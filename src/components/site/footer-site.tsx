@@ -34,20 +34,18 @@ export function FooterSite({ organizacao }: Props) {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {/* Sobre */}
           <div>
-            <div className="mb-4 flex items-center gap-2">
-              {organizacao.logo_url && (
-                <Image
-                  src={organizacao.logo_url}
-                  alt={organizacao.nome}
-                  width={36}
-                  height={36}
-                  className="rounded brightness-0 invert"
-                />
-              )}
-              <span className="text-lg font-bold">{organizacao.nome}</span>
-            </div>
+            {organizacao.logo_url && (
+              <Image
+                src={organizacao.logo_url}
+                alt={organizacao.nome}
+                width={120}
+                height={40}
+                className="mb-3 brightness-0 invert"
+              />
+            )}
+            <p className="text-lg font-bold">{organizacao.nome}</p>
             {organizacao.creci && (
-              <p className="text-sm text-white/70">CRECI: {organizacao.creci}</p>
+              <p className="mt-1 text-sm text-white/70">CRECI: {organizacao.creci}</p>
             )}
           </div>
 

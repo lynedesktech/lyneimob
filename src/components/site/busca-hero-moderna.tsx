@@ -22,13 +22,24 @@ const FINALIDADE_MAP: Record<string, string> = {
   alugar: "aluguel",
 }
 
+function mascaraReal(valor: string): string {
+  const numeros = valor.replace(/\D/g, "")
+  if (!numeros) return ""
+  const numero = Number(numeros)
+  return numero.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  })
+}
+
 export function BuscaHeroModerna({ slug, temLoteamentos }: Props) {
   const router = useRouter()
   const [abaAtiva, setAbaAtiva] = useState<Aba>("comprar")
   const [busca, setBusca] = useState("")
   const [filtrosAbertos, setFiltrosAbertos] = useState(false)
 
-  // Filtros avançados
+  // Filtros avançados — imóveis
   const [precoMin, setPrecoMin] = useState("")
   const [precoMax, setPrecoMax] = useState("")
   const [dormitorios, setDormitorios] = useState<number | null>(null)
@@ -36,16 +47,33 @@ export function BuscaHeroModerna({ slug, temLoteamentos }: Props) {
   const [areaMin, setAreaMin] = useState("")
   const [areaMax, setAreaMax] = useState("")
 
+  // Filtros avançados — lotes
+  const [loteCidade, setLoteCidade] = useState("")
+  const [lotePrecoMin, setLotePrecoMin] = useState("")
+  const [lotePrecoMax, setLotePrecoMax] = useState("")
+  const [loteAreaMin, setLoteAreaMin] = useState("")
+  const [loteAreaMax, setLoteAreaMax] = useState("")
+
   const temFiltrosAtivos =
-    precoMin || precoMax || dormitorios || vagas || areaMin || areaMax
+    abaAtiva === "lotes"
+      ? !!(loteCidade || lotePrecoMin || lotePrecoMax || loteAreaMin || loteAreaMax)
+      : !!(precoMin || precoMax || dormitorios || vagas || areaMin || areaMax)
 
   function limparFiltros() {
-    setPrecoMin("")
-    setPrecoMax("")
-    setDormitorios(null)
-    setVagas(null)
-    setAreaMin("")
-    setAreaMax("")
+    if (abaAtiva === "lotes") {
+      setLoteCidade("")
+      setLotePrecoMin("")
+      setLotePrecoMax("")
+      setLoteAreaMin("")
+      setLoteAreaMax("")
+    } else {
+      setPrecoMin("")
+      setPrecoMax("")
+      setDormitorios(null)
+      setVagas(null)
+      setAreaMin("")
+      setAreaMax("")
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -54,6 +82,11 @@ export function BuscaHeroModerna({ slug, temLoteamentos }: Props) {
     if (abaAtiva === "lotes") {
       const params = new URLSearchParams()
       if (busca) params.set("busca", busca)
+      if (loteCidade) params.set("cidade", loteCidade)
+      if (lotePrecoMin) params.set("preco_min", lotePrecoMin.replace(/\D/g, ""))
+      if (lotePrecoMax) params.set("preco_max", lotePrecoMax.replace(/\D/g, ""))
+      if (loteAreaMin) params.set("area_min", loteAreaMin)
+      if (loteAreaMax) params.set("area_max", loteAreaMax)
       router.push(`/${slug}/loteamentos?${params.toString()}`)
       return
     }
@@ -89,10 +122,7 @@ export function BuscaHeroModerna({ slug, temLoteamentos }: Props) {
             <button
               key={aba.id}
               type="button"
-              onClick={() => {
-                setAbaAtiva(aba.id)
-                if (aba.id === "lotes") setFiltrosAbertos(false)
-              }}
+              onClick={() => setAbaAtiva(aba.id)}
               className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 abaAtiva === aba.id
                   ? "bg-white text-foreground shadow-sm"
@@ -127,119 +157,177 @@ export function BuscaHeroModerna({ slug, temLoteamentos }: Props) {
             Buscar
           </button>
 
-          {abaAtiva !== "lotes" && (
-            <button
-              type="button"
-              onClick={() => setFiltrosAbertos(!filtrosAbertos)}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
-                filtrosAbertos || temFiltrosAtivos
-                  ? "border-white bg-white/20 text-white"
-                  : "border-white/30 text-white/80 hover:border-white/50 hover:text-white"
-              }`}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              <span className="hidden sm:inline">Filtros</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setFiltrosAbertos(!filtrosAbertos)}
+            className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
+              filtrosAbertos || temFiltrosAtivos
+                ? "border-white bg-white/20 text-white"
+                : "border-white/30 text-white/80 hover:border-white/50 hover:text-white"
+            }`}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            <span className="hidden sm:inline">Filtros</span>
+          </button>
         </div>
       </div>
 
       {/* Painel de filtros expandível */}
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          filtrosAbertos && abaAtiva !== "lotes"
+          filtrosAbertos
             ? "mt-4 max-h-96 opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
         <div className="rounded-lg bg-white/10 p-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Valor */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white/80">Valor</p>
-              <div className="flex gap-2">
+          {abaAtiva === "lotes" ? (
+            /* Filtros de lotes */
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {/* Localização */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/80">Localização</p>
                 <input
                   type="text"
-                  placeholder="De R$"
-                  value={precoMin}
-                  onChange={(e) => setPrecoMin(e.target.value.replace(/\D/g, ""))}
-                  className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Até R$"
-                  value={precoMax}
-                  onChange={(e) => setPrecoMax(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Cidade ou bairro"
+                  value={loteCidade}
+                  onChange={(e) => setLoteCidade(e.target.value)}
                   className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
                 />
               </div>
-            </div>
 
-            {/* Dormitórios */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white/80">Dormitórios</p>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setDormitorios(dormitorios === n ? null : n)}
-                    className={`flex-1 rounded-md py-2 text-xs font-medium transition-colors ${
-                      dormitorios === n
-                        ? "text-white shadow-sm"
-                        : "bg-white/20 text-white/80 hover:bg-white/30"
-                    }`}
-                    style={dormitorios === n ? { backgroundColor: "var(--site-primaria)" } : undefined}
-                  >
-                    {n === 4 ? "4+" : n}
-                  </button>
-                ))}
+              {/* Valor */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/80">Valor</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Mínimo"
+                    value={lotePrecoMin ? mascaraReal(lotePrecoMin) : ""}
+                    onChange={(e) => setLotePrecoMin(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Máximo"
+                    value={lotePrecoMax ? mascaraReal(lotePrecoMax) : ""}
+                    onChange={(e) => setLotePrecoMax(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Área */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white/80">Área (m²)</p>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="De"
-                  value={areaMin}
-                  onChange={(e) => setAreaMin(e.target.value)}
-                  className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
-                />
-                <input
-                  type="number"
-                  placeholder="Até"
-                  value={areaMax}
-                  onChange={(e) => setAreaMax(e.target.value)}
-                  className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
-                />
+              {/* Área */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/80">Área (m²)</p>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="De"
+                    value={loteAreaMin}
+                    onChange={(e) => setLoteAreaMin(e.target.value)}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Até"
+                    value={loteAreaMax}
+                    onChange={(e) => setLoteAreaMax(e.target.value)}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                </div>
               </div>
             </div>
+          ) : (
+            /* Filtros de imóveis */
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Valor */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/80">Valor</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Mínimo"
+                    value={precoMin ? mascaraReal(precoMin) : ""}
+                    onChange={(e) => setPrecoMin(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Máximo"
+                    value={precoMax ? mascaraReal(precoMax) : ""}
+                    onChange={(e) => setPrecoMax(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                </div>
+              </div>
 
-            {/* Vagas */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-white/80">Vagas</p>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setVagas(vagas === n ? null : n)}
-                    className={`flex-1 rounded-md py-2 text-xs font-medium transition-colors ${
-                      vagas === n
-                        ? "text-white shadow-sm"
-                        : "bg-white/20 text-white/80 hover:bg-white/30"
-                    }`}
-                    style={vagas === n ? { backgroundColor: "var(--site-primaria)" } : undefined}
-                  >
-                    {n === 4 ? "4+" : n}
-                  </button>
-                ))}
+              {/* Dormitórios */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/80">Dormitórios</p>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setDormitorios(dormitorios === n ? null : n)}
+                      className={`flex-1 rounded-md py-2 text-xs font-medium transition-colors ${
+                        dormitorios === n
+                          ? "text-white shadow-sm"
+                          : "bg-white/20 text-white/80 hover:bg-white/30"
+                      }`}
+                      style={dormitorios === n ? { backgroundColor: "var(--site-primaria)" } : undefined}
+                    >
+                      {n === 4 ? "4+" : n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Área */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/80">Área (m²)</p>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="De"
+                    value={areaMin}
+                    onChange={(e) => setAreaMin(e.target.value)}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Até"
+                    value={areaMax}
+                    onChange={(e) => setAreaMax(e.target.value)}
+                    className="w-full rounded-md bg-white/90 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Vagas */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-white/80">Vagas</p>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setVagas(vagas === n ? null : n)}
+                      className={`flex-1 rounded-md py-2 text-xs font-medium transition-colors ${
+                        vagas === n
+                          ? "text-white shadow-sm"
+                          : "bg-white/20 text-white/80 hover:bg-white/30"
+                      }`}
+                      style={vagas === n ? { backgroundColor: "var(--site-primaria)" } : undefined}
+                    >
+                      {n === 4 ? "4+" : n}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Limpar filtros */}
           {temFiltrosAtivos && (
