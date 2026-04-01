@@ -82,8 +82,18 @@ export function HeaderSite({ organizacao, temLoteamentos }: Props) {
           </SheetTrigger>
           <SheetContent side="right" className="w-72">
             <SheetHeader>
-              <SheetTitle className="text-left text-[var(--site-primaria)]">
-                {organizacao.nome}
+              <SheetTitle className="text-left">
+                {organizacao.logo_url ? (
+                  <Image
+                    src={organizacao.logo_url}
+                    alt={organizacao.nome}
+                    width={120}
+                    height={40}
+                    className="h-10 w-auto object-contain"
+                  />
+                ) : (
+                  <span className="text-[var(--site-primaria)]">{organizacao.nome}</span>
+                )}
               </SheetTitle>
             </SheetHeader>
             <nav className="mt-6 flex flex-col gap-1">

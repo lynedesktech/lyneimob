@@ -42,8 +42,8 @@ export function SecaoHero({ organizacao, temLoteamentos }: Props) {
                 {parte}
                 {i < arr.length - 1 && (
                   <>
-                    <br />
-                    <span style={{ color: 'var(--site-destaque)' }}>{organizacao.nome}</span>
+                    <br className="hidden sm:block" />
+                    <span style={{ color: 'var(--site-destaque)' }}> {organizacao.nome}</span>
                   </>
                 )}
               </span>
