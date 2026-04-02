@@ -1,7 +1,13 @@
 "use client"
 
-import { ThemeProvider } from "next-themes"
-
+/**
+ * Wrapper que aplica o tema do site público (claro ou escuro)
+ * diretamente via classe CSS, independente do ThemeProvider do sistema.
+ *
+ * Funciona porque o Tailwind v4 usa `&:is(.dark *)` como seletor,
+ * então a classe .dark em qualquer elemento pai ativa o modo escuro
+ * nos filhos.
+ */
 export function ProvedorTemaSite({
   tema = "claro",
   children,
@@ -10,9 +16,12 @@ export function ProvedorTemaSite({
   children: React.ReactNode
 }) {
   return (
-    <ThemeProvider forcedTheme={tema === "escuro" ? "dark" : "light"}>
+    <div
+      className={tema === "escuro" ? "dark" : "light"}
+      style={{ colorScheme: tema === "escuro" ? "dark" : "light" }}
+    >
       {children}
-    </ThemeProvider>
+    </div>
   )
 }
 
