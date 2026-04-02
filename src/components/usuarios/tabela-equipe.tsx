@@ -211,10 +211,10 @@ export function TabelaEquipe({
                             <span className="sr-only">Ações</span>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => onAlterarCargo(u)}>
+                            <DropdownMenuItem onClick={() => onAlterarCargo(u)}>
                               Alterar cargo
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => onAlternarStatus(u)}>
+                            <DropdownMenuItem onClick={() => onAlternarStatus(u)}>
                               {u.ativo ? "Desativar" : "Ativar"}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

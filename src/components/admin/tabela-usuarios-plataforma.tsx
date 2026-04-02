@@ -292,28 +292,28 @@ export function TabelaUsuariosPlataforma({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {podeMudarPerfil && (
-                          <DropdownMenuItem onSelect={() => setEditandoId(u.id)}>
+                          <DropdownMenuItem onClick={() => setEditandoId(u.id)}>
                             Alterar perfil plataforma
                           </DropdownMenuItem>
                         )}
                         {podeMudarPerfil && (
-                          <DropdownMenuItem onSelect={() => setDialogCargo(u)}>
+                          <DropdownMenuItem onClick={() => setDialogCargo(u)}>
                             Alterar cargo
                           </DropdownMenuItem>
                         )}
                         {podeMudarPerfil && (
-                          <DropdownMenuItem onSelect={() => setDialogOrg(u)}>
+                          <DropdownMenuItem onClick={() => setDialogOrg(u)}>
                             Mover organização
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
                         {podeMudarPerfil && (
-                          <DropdownMenuItem onSelect={() => aoAlternarStatus(u)}>
+                          <DropdownMenuItem onClick={() => aoAlternarStatus(u)}>
                             {u.ativo ? "Desativar" : "Ativar"}
                           </DropdownMenuItem>
                         )}
                         {u.organizacao_nome && (
-                          <DropdownMenuItem onSelect={() => router.push(`/admin/organizacoes/${u.organizacao_id ?? ""}`)}>
+                          <DropdownMenuItem onClick={() => router.push(`/admin/organizacoes/${u.organizacao_id ?? ""}`)}>
                             Ver organização
                           </DropdownMenuItem>
                         )}

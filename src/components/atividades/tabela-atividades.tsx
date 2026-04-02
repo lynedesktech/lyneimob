@@ -268,10 +268,10 @@ export function TabelaAtividades({
                           <span className="sr-only">Ações</span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => router.push(`/atividades/${atividade.id}`)}>
+                          <DropdownMenuItem onClick={() => router.push(`/atividades/${atividade.id}`)}>
                             Ver atividade
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => router.push(`/atividades/${atividade.id}/editar`)}>
+                          <DropdownMenuItem onClick={() => router.push(`/atividades/${atividade.id}/editar`)}>
                             Editar
                           </DropdownMenuItem>
                         </DropdownMenuContent>

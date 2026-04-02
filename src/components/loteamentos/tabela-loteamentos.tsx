@@ -225,10 +225,10 @@ export function TabelaLoteamentos({
                         <span className="sr-only">Ações</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => router.push(`/loteamentos/${loteamento.id}`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/loteamentos/${loteamento.id}`)}>
                           Ver loteamento
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => router.push(`/loteamentos/${loteamento.id}/editar`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/loteamentos/${loteamento.id}/editar`)}>
                           Editar
                         </DropdownMenuItem>
                       </DropdownMenuContent>

@@ -135,13 +135,13 @@ function MenuAcoes({
           <span className="sr-only">Ações</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => router.push(`/negocios/${negocio.id}`)}>
+          <DropdownMenuItem onClick={() => router.push(`/negocios/${negocio.id}`)}>
             Ver negócio
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {negocio.status === "aberto" && (
             <>
-              <DropdownMenuItem onSelect={() => setDialogGanhar(true)}>
+              <DropdownMenuItem onClick={() => setDialogGanhar(true)}>
                 Ganhar negócio
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -153,7 +153,7 @@ function MenuAcoes({
             </>
           )}
           {(negocio.status === "ganho" || negocio.status === "perdido") && (
-            <DropdownMenuItem onSelect={() => handleReabrir()}>
+            <DropdownMenuItem onClick={() => handleReabrir()}>
               Reabrir negócio
             </DropdownMenuItem>
           )}

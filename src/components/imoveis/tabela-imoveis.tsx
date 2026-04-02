@@ -219,10 +219,10 @@ export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelRow[]; to
                         <span className="sr-only">Ações</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => router.push(`/imoveis/${imovel.id}`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/imoveis/${imovel.id}`)}>
                           Ver imóvel
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => router.push(`/imoveis/${imovel.id}/editar`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/imoveis/${imovel.id}/editar`)}>
                           Editar
                         </DropdownMenuItem>
                       </DropdownMenuContent>

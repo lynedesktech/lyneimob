@@ -114,10 +114,10 @@ export function TabelaUsuariosOrg({ usuarios, ehSuperAdmin }: TabelaUsuariosOrgP
                           <span className="sr-only">Ações</span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => setUsuarioAlterarCargo(u)}>
+                          <DropdownMenuItem onClick={() => setUsuarioAlterarCargo(u)}>
                             Alterar cargo
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleAlternarStatus(u)}>
+                          <DropdownMenuItem onClick={() => handleAlternarStatus(u)}>
                             {u.ativo ? "Desativar" : "Ativar"}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />

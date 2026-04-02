@@ -121,11 +121,11 @@ export function BotaoExportar({ modulo, filtros, total }: Props) {
         {exportando ? "Exportando..." : "Exportar"}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuItem onSelect={() => exportar("excel")}>
+        <DropdownMenuItem onClick={() => exportar("excel")}>
           <FileSpreadsheet className="h-4 w-4 text-success" />
           Planilha Excel (.xlsx)
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => exportar("pdf")}>
+        <DropdownMenuItem onClick={() => exportar("pdf")}>
           <FileText className="h-4 w-4 text-destructive" />
           Relatório PDF (.pdf)
         </DropdownMenuItem>

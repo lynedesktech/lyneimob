@@ -221,10 +221,10 @@ export function TabelaClientes({ clientes, total = 0, filtros, paginacao }: { cl
                         <span className="sr-only">Ações</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => router.push(`/clientes/${cliente.id}`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/clientes/${cliente.id}`)}>
                           Ver cliente
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => router.push(`/clientes/${cliente.id}/editar`)}>
+                        <DropdownMenuItem onClick={() => router.push(`/clientes/${cliente.id}/editar`)}>
                           Editar
                         </DropdownMenuItem>
                       </DropdownMenuContent>

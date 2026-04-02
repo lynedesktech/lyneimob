@@ -698,27 +698,27 @@ export function TabelaLotes({ lotes, loteamentoId }: TabelaLotesProps) {
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                        <DropdownMenuItem onSelect={() => abrirDetalhes(lote)}>
+                        <DropdownMenuItem onClick={() => abrirDetalhes(lote)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver detalhes
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => abrirEdicao(lote)}>
+                        <DropdownMenuItem onClick={() => abrirEdicao(lote)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Editar lote
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {lote.status !== "disponivel" && (
-                          <DropdownMenuItem onSelect={() => handleAlterarStatus(lote.id, "disponivel")}>
+                          <DropdownMenuItem onClick={() => handleAlterarStatus(lote.id, "disponivel")}>
                             Marcar como Disponível
                           </DropdownMenuItem>
                         )}
                         {lote.status !== "reservado" && (
-                          <DropdownMenuItem onSelect={() => abrirModalCliente(lote.id, "reservado")}>
+                          <DropdownMenuItem onClick={() => abrirModalCliente(lote.id, "reservado")}>
                             Marcar como Reservado
                           </DropdownMenuItem>
                         )}
                         {lote.status !== "vendido" && (
-                          <DropdownMenuItem onSelect={() => abrirModalCliente(lote.id, "vendido")}>
+                          <DropdownMenuItem onClick={() => abrirModalCliente(lote.id, "vendido")}>
                             Marcar como Vendido
                           </DropdownMenuItem>
                         )}
