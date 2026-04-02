@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -62,6 +63,7 @@ type Props = {
 // ============================================================
 
 export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
+  const router = useRouter()
   const endereco = (organizacao.endereco ?? {}) as Record<string, string>
 
   const {
@@ -97,9 +99,12 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
   const pendente = transitando
 
   useEffect(() => {
-    if (estado.sucesso) toast.success(estado.sucesso)
+    if (estado.sucesso) {
+      toast.success(estado.sucesso)
+      router.push("/configuracoes")
+    }
     if (estado.erro) toast.error(estado.erro)
-  }, [estado])
+  }, [estado, router])
 
   async function handleBuscarCep(cep: string) {
     const dados = await buscarCep(cep)

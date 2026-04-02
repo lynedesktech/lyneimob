@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useEffect, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { ExternalLink, Globe, Palette, Type, Info, Save, RotateCcw, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +28,7 @@ type Props = {
 }
 
 export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname }: Props) {
+  const router = useRouter()
   const configsIniciais = extrairConfiguracoes(
     organizacao.configuracoes_site as Record<string, unknown>
   )
@@ -41,9 +43,12 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
 
   // Mostrar toast quando a action retornar
   useEffect(() => {
-    if (estado.sucesso) toast.success(estado.sucesso)
+    if (estado.sucesso) {
+      toast.success(estado.sucesso)
+      router.push("/configuracoes")
+    }
     if (estado.erro) toast.error(estado.erro)
-  }, [estado])
+  }, [estado, router])
 
   // Helpers para atualizar parcialmente
   function atualizarCores(campo: string, valor: string) {

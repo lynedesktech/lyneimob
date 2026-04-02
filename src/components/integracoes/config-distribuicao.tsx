@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Shuffle, Scale, MousePointerClick, Check } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ const ICONES_MODO: Record<ModoDistribuicao, React.ComponentType<React.SVGProps<S
 }
 
 export function ConfigDistribuicao() {
+  const router = useRouter()
   const { config, corretores, carregando, recarregar } = useConfigDistribuicao()
   const [modoSelecionado, setModoSelecionado] = useState<ModoDistribuicao>("manual")
   const [participantes, setParticipantes] = useState<string[]>([])
@@ -38,12 +40,12 @@ export function ConfigDistribuicao() {
   useEffect(() => {
     if (estado.sucesso) {
       toast.success(estado.sucesso)
-      recarregar()
+      router.push("/configuracoes")
     }
     if (estado.erro) {
       toast.error(estado.erro)
     }
-  }, [estado, recarregar])
+  }, [estado, router])
 
   function toggleParticipante(id: string) {
     setParticipantes((prev) =>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -65,6 +66,7 @@ async function actionWrapper(_estado: EstadoFormulario, formData: FormData): Pro
 }
 
 export function ConfigWhatsapp() {
+  const router = useRouter()
   const { config, carregando } = useConfigWhatsapp()
   const { usuarios } = useListaUsuarios()
   const queryClient = useQueryClient()
@@ -99,9 +101,10 @@ export function ConfigWhatsapp() {
     if (estado.sucesso) {
       toast.success(estado.sucesso)
       queryClient.invalidateQueries({ queryKey: ["config-whatsapp"] })
+      router.push("/configuracoes")
     }
     if (estado.erro) toast.error(estado.erro)
-  }, [estado, queryClient])
+  }, [estado, queryClient, router])
 
   function serializarHorario() {
     const resultado: Record<string, { inicio: string; fim: string }> = {}
