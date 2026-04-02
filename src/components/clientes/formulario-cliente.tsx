@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { InputCpfCnpj } from "@/components/ui/input-cpf-cnpj"
 import { InputTelefone } from "@/components/ui/input-telefone"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import {
   Select,
   SelectContent,
@@ -46,6 +46,24 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
   const [origemValue, setOrigemValue] = useState(cliente?.origem ?? "outro")
   const [statusValue, setStatusValue] = useState(cliente?.status ?? "ativo")
   const [pendente, setPendente] = useState(false)
+  const [erros, setErros] = useState<Record<string, string>>({})
+
+  function handleSubmitForm(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const novosErros: Record<string, string> = {}
+    const formData = new FormData(e.currentTarget)
+
+    if (!formData.get("nome")?.toString().trim()) novosErros.nome = "Campo obrigatório"
+    if (!tipoValue) novosErros.tipo = "Campo obrigatório"
+
+    if (Object.keys(novosErros).length > 0) {
+      setErros(novosErros)
+      return
+    }
+
+    setErros({})
+    handleAction(formData)
+  }
 
   async function handleAction(formData: FormData) {
     // Adicionar campos do Select (que não são inputs nativos)
@@ -96,7 +114,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
         </div>
       </div>
 
-      <form action={handleAction} className="space-y-6">
+      <form onSubmit={handleSubmitForm} className="space-y-6">
         {/* Dados Pessoais */}
         <Card id="onborda-cliente-dados">
           <CardHeader>
@@ -110,7 +128,9 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 name="nome"
                 placeholder="Ex: João da Silva"
                 defaultValue={cliente?.nome ?? ""}
+                className={erros.nome ? "border-destructive" : ""}
               />
+              {erros.nome && <FieldError>{erros.nome}</FieldError>}
             </Field>
 
             <Field>
@@ -176,7 +196,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 value={tipoValue}
                 onValueChange={(v) => v && setTipoValue(v)}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className={`w-full ${erros.tipo ? "border-destructive" : ""}`}>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,6 +207,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {erros.tipo && <FieldError>{erros.tipo}</FieldError>}
             </Field>
 
             <Field>

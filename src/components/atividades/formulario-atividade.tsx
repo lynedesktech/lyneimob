@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { ComboboxCampo } from "@/components/ui/combobox-campo"
 import { criarClienteBrowser } from "@/lib/supabase/client"
 import type { AtividadeComRelacoes } from "@/types/database"
@@ -147,8 +147,28 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
     }
   }
 
+  const [erros, setErros] = useState<Record<string, string>>({})
+
+  function handleSubmitForm(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const novosErros: Record<string, string> = {}
+    const formData = new FormData(e.currentTarget)
+
+    if (!formData.get("titulo")?.toString().trim()) novosErros.titulo = "Campo obrigatório"
+    if (!tipoValue) novosErros.tipo = "Campo obrigatório"
+    if (!formData.get("data_vencimento")?.toString().trim()) novosErros.data_vencimento = "Campo obrigatório"
+
+    if (Object.keys(novosErros).length > 0) {
+      setErros(novosErros)
+      return
+    }
+
+    setErros({})
+    handleAction(formData)
+  }
+
   return (
-    <form action={handleAction} className="space-y-6">
+    <form onSubmit={handleSubmitForm} className="space-y-6">
       {/* Dados da atividade */}
       <Card>
         <CardHeader>
@@ -163,13 +183,15 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
                 name="titulo"
                 placeholder="Ex: Visita ao apto 3Q com João"
                 defaultValue={atividade?.titulo ?? valoresIniciais?.titulo ?? ""}
+                className={erros.titulo ? "border-destructive" : ""}
               />
+              {erros.titulo && <FieldError>{erros.titulo}</FieldError>}
             </Field>
 
             <Field>
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Select value={tipoValue} onValueChange={(v) => v && setTipoValue(v)}>
-                <SelectTrigger id="tipo">
+                <SelectTrigger id="tipo" className={erros.tipo ? "border-destructive" : ""}>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
@@ -186,6 +208,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
                   ))}
                 </SelectContent>
               </Select>
+              {erros.tipo && <FieldError>{erros.tipo}</FieldError>}
             </Field>
 
             <Field>
@@ -211,7 +234,9 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
                 defaultValue={formatarParaInput(
                   (atv?.data_vencimento as string) ?? (atv?.data_vencimento as string) ?? null
                 )}
+                className={erros.data_vencimento ? "border-destructive" : ""}
               />
+              {erros.data_vencimento && <FieldError>{erros.data_vencimento}</FieldError>}
             </Field>
           </div>
         </CardContent>

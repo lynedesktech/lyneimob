@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InputCep } from "@/components/ui/input-cep"
 import { Textarea } from "@/components/ui/textarea"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/input-group"
 import { InputMonetario } from "@/components/ui/input-monetario"
 import {
@@ -80,6 +80,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const [valorCondominioValue, setValorCondominioValue] = useState<number | null>(campoNum(imovel, "valor_condominio", "condominio") as number || null)
   const [valorIptuValue, setValorIptuValue] = useState<number | null>(campoNum(imovel, "valor_iptu", "iptu") as number || null)
   const [pendente, setPendente] = useState(false)
+  const [erros, setErros] = useState<Record<string, string>>({})
   const [logradouroValue, setLogradouroValue] = useState(campo(imovel, "logradouro"))
   const [bairroValue, setBairroValue] = useState(campo(imovel, "bairro"))
   const [cidadeValue, setCidadeValue] = useState(campo(imovel, "cidade"))
@@ -94,6 +95,26 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
       setCidadeValue(dados.cidade)
       setEstadoValue(dados.estado)
     }
+  }
+
+  function handleSubmitForm(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const novosErros: Record<string, string> = {}
+    const formData = new FormData(e.currentTarget)
+
+    if (!formData.get("titulo")?.toString().trim()) novosErros.titulo = "Campo obrigatório"
+    if (!tipoValue) novosErros.tipo = "Campo obrigatório"
+    if (!finalidadeValue) novosErros.finalidade = "Campo obrigatório"
+    if (!cidadeValue.trim()) novosErros.cidade = "Campo obrigatório"
+    if (!estadoValue) novosErros.estado = "Campo obrigatório"
+
+    if (Object.keys(novosErros).length > 0) {
+      setErros(novosErros)
+      return
+    }
+
+    setErros({})
+    handleAction(formData)
   }
 
   async function handleAction(formData: FormData) {
@@ -148,7 +169,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
         </div>
       </div>
 
-      <form action={handleAction} className="space-y-6" id="onborda-form-imovel">
+      <form onSubmit={handleSubmitForm} className="space-y-6" id="onborda-form-imovel">
         {/* Dados Básicos */}
         <Card id="onborda-imovel-basico">
           <CardHeader>
@@ -172,13 +193,15 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 name="titulo"
                 placeholder="Ex: Apartamento 3 quartos no Centro"
                 defaultValue={campo(imovel, "titulo")}
+                className={erros.titulo ? "border-destructive" : ""}
               />
+              {erros.titulo && <FieldError>{erros.titulo}</FieldError>}
             </Field>
 
             <Field>
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Select value={tipoValue} onValueChange={(v) => v && setTipoValue(v)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className={`w-full ${erros.tipo ? "border-destructive" : ""}`}>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,12 +212,13 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {erros.tipo && <FieldError>{erros.tipo}</FieldError>}
             </Field>
 
             <Field>
               <FieldLabel htmlFor="finalidade">Finalidade *</FieldLabel>
               <Select value={finalidadeValue} onValueChange={(v) => v && setFinalidadeValue(v)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className={`w-full ${erros.finalidade ? "border-destructive" : ""}`}>
                   <SelectValue placeholder="Selecione a finalidade" />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,6 +229,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {erros.finalidade && <FieldError>{erros.finalidade}</FieldError>}
             </Field>
 
             {editando && (
@@ -287,13 +312,14 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
 
             <Field>
               <FieldLabel htmlFor="cidade">Cidade *</FieldLabel>
-              <Input id="cidade" name="cidade" placeholder="São Paulo" value={cidadeValue} onChange={(e) => !preenchidoPorCep && setCidadeValue(e.target.value)} readOnly={preenchidoPorCep} className={preenchidoPorCep ? "bg-muted" : ""} />
+              <Input id="cidade" name="cidade" placeholder="São Paulo" value={cidadeValue} onChange={(e) => !preenchidoPorCep && setCidadeValue(e.target.value)} readOnly={preenchidoPorCep} className={`${preenchidoPorCep ? "bg-muted" : ""} ${erros.cidade ? "border-destructive" : ""}`} />
+              {erros.cidade && <FieldError>{erros.cidade}</FieldError>}
             </Field>
 
             <Field>
               <FieldLabel htmlFor="estado_uf">Estado *</FieldLabel>
               <Select value={estadoValue} onValueChange={(v) => v && !preenchidoPorCep && setEstadoValue(v)} disabled={preenchidoPorCep}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className={`w-full ${erros.estado ? "border-destructive" : ""}`}>
                   <SelectValue placeholder="UF" />
                 </SelectTrigger>
                 <SelectContent>
@@ -304,6 +330,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {erros.estado && <FieldError>{erros.estado}</FieldError>}
             </Field>
           </CardContent>
         </Card>

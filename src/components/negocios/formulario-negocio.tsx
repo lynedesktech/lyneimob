@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { InputMonetario } from "@/components/ui/input-monetario"
 import { ComboboxCampo } from "@/components/ui/combobox-campo"
 import { labelsTipoNegocio } from "@/lib/constantes"
@@ -120,11 +120,32 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
     }
   }
 
+  const [erros, setErros] = useState<Record<string, string>>({})
+
+  function handleSubmitForm(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const novosErros: Record<string, string> = {}
+    const formData = new FormData(e.currentTarget)
+
+    if (!formData.get("titulo")?.toString().trim()) novosErros.titulo = "Campo obrigatório"
+    if (!tipoValue) novosErros.tipo = "Campo obrigatório"
+    if (!etapaId) novosErros.etapa_id = "Campo obrigatório"
+    if (!clienteId) novosErros.cliente_id = "Campo obrigatório"
+
+    if (Object.keys(novosErros).length > 0) {
+      setErros(novosErros)
+      return
+    }
+
+    setErros({})
+    handleAction(formData)
+  }
+
   // Filtrar etapas normais para o select (não mostrar ganho/perdido na criação)
   const etapasNormais = etapas.filter((e) => e.tipo === "normal")
 
   return (
-    <form action={handleAction} className="space-y-6">
+    <form onSubmit={handleSubmitForm} className="space-y-6">
       {/* Dados do negócio */}
       <Card>
         <CardHeader>
@@ -139,7 +160,9 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                 name="titulo"
                 placeholder="Ex: Venda apto 3Q - João Silva"
                 defaultValue={negocio?.titulo ?? ""}
+                className={erros.titulo ? "border-destructive" : ""}
               />
+              {erros.titulo && <FieldError>{erros.titulo}</FieldError>}
             </Field>
 
             <Field>
@@ -149,7 +172,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                 onValueChange={(v) => v && setTipoValue(v)}
                 items={Object.entries(labelsTipoNegocio).map(([valor, label]) => ({ value: valor, label }))}
               >
-                <SelectTrigger id="tipo">
+                <SelectTrigger id="tipo" className={erros.tipo ? "border-destructive" : ""}>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
@@ -160,6 +183,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {erros.tipo && <FieldError>{erros.tipo}</FieldError>}
             </Field>
 
             <Field>
@@ -179,7 +203,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                 onValueChange={(v) => v && setEtapaId(v)}
                 items={etapasNormais.map((e) => ({ value: e.id, label: e.nome }))}
               >
-                <SelectTrigger id="etapa_id">
+                <SelectTrigger id="etapa_id" className={erros.etapa_id ? "border-destructive" : ""}>
                   <SelectValue placeholder="Selecione a etapa" />
                 </SelectTrigger>
                 <SelectContent>
@@ -190,6 +214,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {erros.etapa_id && <FieldError>{erros.etapa_id}</FieldError>}
             </Field>
 
             <Field>
@@ -220,7 +245,9 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                 onChange={setClienteId}
                 placeholder="Selecionar cliente..."
                 placeholderBusca="Buscar por nome..."
+                className={erros.cliente_id ? "border-destructive" : ""}
               />
+              {erros.cliente_id && <FieldError>{erros.cliente_id}</FieldError>}
             </Field>
 
             <Field>
