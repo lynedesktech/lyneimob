@@ -52,6 +52,7 @@ const sobrePadrao = {
 }
 
 export const schemaConfiguracoesSite = z.object({
+  tema: z.enum(["claro", "escuro"]).default("claro"),
   cores: schemaCoresSite.default(coresPadrao),
   hero: schemaHeroSite.default(heroPadrao),
   sobre: schemaSobreSite.default(sobrePadrao),

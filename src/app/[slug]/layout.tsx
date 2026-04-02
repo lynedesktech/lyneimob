@@ -5,7 +5,7 @@ import {
 } from "@/lib/site/buscar-dados-site"
 import { HeaderSite } from "@/components/site/header-site"
 import { FooterSite } from "@/components/site/footer-site"
-import { ProvedorTemaClaro } from "@/components/site/provedor-tema-claro"
+import { ProvedorTemaSite } from "@/components/site/provedor-tema-claro"
 import { BotaoWhatsappFlutuante } from "@/components/site/botao-whatsapp-flutuante"
 import { extrairConfiguracoes } from "@/types/configuracoes-site"
 import type { Metadata } from "next"
@@ -74,7 +74,7 @@ export default async function SiteLayout({
   ])
 
   return (
-    <ProvedorTemaClaro>
+    <ProvedorTemaSite tema={configs.tema}>
       <div
         className="flex min-h-screen flex-col bg-background"
         style={
@@ -98,6 +98,6 @@ export default async function SiteLayout({
           />
         )}
       </div>
-    </ProvedorTemaClaro>
+    </ProvedorTemaSite>
   )
 }

@@ -182,6 +182,40 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Tema do site */}
+              <div className="space-y-2">
+                <Label>Tema do site</Label>
+                <p className="text-xs text-muted-foreground">
+                  Define se o site público aparece com fundo claro ou escuro, independente do tema do sistema.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfigs((prev) => ({ ...prev, tema: "claro" }))}
+                    className={`flex items-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors ${
+                      configs.tema === "claro"
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    <span className="h-4 w-4 rounded-full bg-white border border-border" />
+                    Claro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfigs((prev) => ({ ...prev, tema: "escuro" }))}
+                    className={`flex items-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors ${
+                      configs.tema === "escuro"
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    <span className="h-4 w-4 rounded-full bg-zinc-900 border border-border" />
+                    Escuro
+                  </button>
+                </div>
+              </div>
+
               <div className="grid gap-6 sm:grid-cols-3">
                 {/* Cor primária */}
                 <div className="space-y-2">

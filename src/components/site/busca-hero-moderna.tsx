@@ -125,9 +125,10 @@ export function BuscaHeroModerna({ slug, temLoteamentos }: Props) {
               onClick={() => setAbaAtiva(aba.id)}
               className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 abaAtiva === aba.id
-                  ? "bg-white text-foreground shadow-sm"
+                  ? "bg-white shadow-sm"
                   : "text-white/80 hover:text-white hover:bg-white/10"
               }`}
+              style={abaAtiva === aba.id ? { color: "var(--site-primaria)" } : undefined}
             >
               {aba.label}
             </button>
