@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusLoteamento } from "@/lib/constantes/status-configs"
 import {
@@ -24,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { formatarPreco } from "@/lib/formatadores"
 import type { Loteamento, LoteamentoFoto } from "@/types/database"
@@ -100,45 +101,45 @@ export function TabelaLoteamentos({
           </p>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
-          >
+          <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}>
             <Columns3 className="h-4 w-4" />
             Colunas
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={colunas.cidade}
-              onCheckedChange={() => toggleColuna("cidade")}
-            >
-              Cidade/Estado
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.totalLotes}
-              onCheckedChange={() => toggleColuna("totalLotes")}
-            >
-              Total de Lotes
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.disponiveis}
-              onCheckedChange={() => toggleColuna("disponiveis")}
-            >
-              Disponíveis
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.valorTotal}
-              onCheckedChange={() => toggleColuna("valorTotal")}
-            >
-              Valor Total
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.cadastro}
-              onCheckedChange={() => toggleColuna("cadastro")}
-            >
-              Cadastro
-            </DropdownMenuCheckboxItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={colunas.cidade}
+                onCheckedChange={() => toggleColuna("cidade")}
+              >
+                Cidade/Estado
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.totalLotes}
+                onCheckedChange={() => toggleColuna("totalLotes")}
+              >
+                Total de Lotes
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.disponiveis}
+                onCheckedChange={() => toggleColuna("disponiveis")}
+              >
+                Disponíveis
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.valorTotal}
+                onCheckedChange={() => toggleColuna("valorTotal")}
+              >
+                Valor Total
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.cadastro}
+                onCheckedChange={() => toggleColuna("cadastro")}
+              >
+                Cadastro
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -219,14 +220,11 @@ export function TabelaLoteamentos({
                   )}
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
-                      >
+                      <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Ações</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem onSelect={() => router.push(`/loteamentos/${loteamento.id}`)}>
                           Ver loteamento
                         </DropdownMenuItem>

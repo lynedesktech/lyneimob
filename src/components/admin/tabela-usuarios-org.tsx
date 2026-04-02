@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -109,29 +109,24 @@ export function TabelaUsuariosOrg({ usuarios, ehSuperAdmin }: TabelaUsuariosOrgP
                   {ehSuperAdmin && (
                     <TableCell>
                       <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
-                        >
+                        <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}>
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Ações</span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuGroup>
-                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={() => setUsuarioAlterarCargo(u)}>
-                              Alterar cargo
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleAlternarStatus(u)}>
-                              {u.ativo ? "Desativar" : "Ativar"}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onSelect={() => setUsuarioRemover(u)}
-                            >
-                              Remover
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
+                          <DropdownMenuItem onSelect={() => setUsuarioAlterarCargo(u)}>
+                            Alterar cargo
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleAlternarStatus(u)}>
+                            {u.ativo ? "Desativar" : "Ativar"}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onSelect={() => setUsuarioRemover(u)}
+                          >
+                            Remover
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

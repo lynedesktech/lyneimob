@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusAtividade, configPrioridade } from "@/lib/constantes/status-configs"
@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { useTiposAtividade } from "@/hooks/use-tipos-atividade"
 import { formatarDataHoraCurta } from "@/lib/formatadores"
@@ -115,51 +116,51 @@ export function TabelaAtividades({
           </p>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
-          >
+          <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}>
             <Columns3 className="h-4 w-4" />
             Colunas
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={colunas.tipo}
-              onCheckedChange={() => toggleColuna("tipo")}
-            >
-              Tipo
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.prioridade}
-              onCheckedChange={() => toggleColuna("prioridade")}
-            >
-              Prioridade
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.data}
-              onCheckedChange={() => toggleColuna("data")}
-            >
-              Data
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.status}
-              onCheckedChange={() => toggleColuna("status")}
-            >
-              Status
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.cliente}
-              onCheckedChange={() => toggleColuna("cliente")}
-            >
-              Cliente
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.responsavel}
-              onCheckedChange={() => toggleColuna("responsavel")}
-            >
-              Responsável
-            </DropdownMenuCheckboxItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={colunas.tipo}
+                onCheckedChange={() => toggleColuna("tipo")}
+              >
+                Tipo
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.prioridade}
+                onCheckedChange={() => toggleColuna("prioridade")}
+              >
+                Prioridade
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.data}
+                onCheckedChange={() => toggleColuna("data")}
+              >
+                Data
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.status}
+                onCheckedChange={() => toggleColuna("status")}
+              >
+                Status
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.cliente}
+                onCheckedChange={() => toggleColuna("cliente")}
+              >
+                Cliente
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.responsavel}
+                onCheckedChange={() => toggleColuna("responsavel")}
+              >
+                Responsável
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -262,14 +263,11 @@ export function TabelaAtividades({
                     )}
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
-                        >
+                        <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}>
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Ações</span>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuItem onSelect={() => router.push(`/atividades/${atividade.id}`)}>
                             Ver atividade
                           </DropdownMenuItem>

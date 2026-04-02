@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { EstadoVazio } from "@/components/ui/estado-vazio"
 import { PaginacaoListagem } from "@/components/ui/paginacao-listagem"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusNegocio } from "@/lib/constantes/status-configs"
 import {
@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
@@ -127,13 +128,13 @@ function MenuAcoes({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e: React.MouseEvent) => e.stopPropagation()} />}
+          className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           <MoreHorizontal className="h-4 w-4" />
           <span className="sr-only">Ações</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Ações</DropdownMenuLabel>
           <DropdownMenuItem onSelect={() => router.push(`/negocios/${negocio.id}`)}>
             Ver negócio
           </DropdownMenuItem>
@@ -281,39 +282,39 @@ export function ListaNegocios() {
 
         {/* Seletor de colunas */}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
-          >
+          <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}>
             <Columns3 className="h-4 w-4" />
             Colunas
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={colunas.etapa}
-              onCheckedChange={() => toggleColuna("etapa")}
-            >
-              Etapa
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.tipo}
-              onCheckedChange={() => toggleColuna("tipo")}
-            >
-              Tipo
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.previsao}
-              onCheckedChange={() => toggleColuna("previsao")}
-            >
-              Previsão
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.corretor}
-              onCheckedChange={() => toggleColuna("corretor")}
-            >
-              Corretor
-            </DropdownMenuCheckboxItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={colunas.etapa}
+                onCheckedChange={() => toggleColuna("etapa")}
+              >
+                Etapa
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.tipo}
+                onCheckedChange={() => toggleColuna("tipo")}
+              >
+                Tipo
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.previsao}
+                onCheckedChange={() => toggleColuna("previsao")}
+              >
+                Previsão
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.corretor}
+                onCheckedChange={() => toggleColuna("corretor")}
+              >
+                Corretor
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

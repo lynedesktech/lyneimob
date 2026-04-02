@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,13 +106,12 @@ export function TabelaEquipe({
           </p>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
-          >
+          <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}>
             <Columns3 className="h-4 w-4" />
             Colunas
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuGroup>
             <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
@@ -133,6 +132,7 @@ export function TabelaEquipe({
             >
               Status
             </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -206,29 +206,24 @@ export function TabelaEquipe({
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       {!ehProprioUsuario && (
                         <DropdownMenu>
-                          <DropdownMenuTrigger
-                            render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
-                          >
+                          <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}>
                             <MoreHorizontal className="h-4 w-4" />
                             <span className="sr-only">Ações</span>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuGroup>
-                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={() => onAlterarCargo(u)}>
-                                Alterar cargo
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => onAlternarStatus(u)}>
-                                {u.ativo ? "Desativar" : "Ativar"}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onSelect={() => onRemover(u)}
-                              >
-                                Remover
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
+                            <DropdownMenuItem onSelect={() => onAlterarCargo(u)}>
+                              Alterar cargo
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => onAlternarStatus(u)}>
+                              {u.ativo ? "Desativar" : "Ativar"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onSelect={() => onRemover(u)}
+                            >
+                              Remover
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}

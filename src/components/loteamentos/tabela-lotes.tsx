@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusLote } from "@/lib/constantes/status-configs"
@@ -692,7 +692,8 @@ export function TabelaLotes({ lotes, loteamentoId }: TabelaLotesProps) {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e: React.MouseEvent) => e.stopPropagation()} />}
+                        className={buttonVariants({ variant: "ghost", size: "icon", className: "h-8 w-8" })}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>

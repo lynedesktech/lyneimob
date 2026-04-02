@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusCliente } from "@/lib/constantes/status-configs"
 import { ScoreBadge } from "./score-badge"
@@ -21,6 +21,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -88,14 +89,13 @@ export function TabelaClientes({ clientes, total = 0, filtros, paginacao }: { cl
           </p>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
-          >
+          <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}>
             <Columns3 className="h-4 w-4" />
             Colunas
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
               checked={colunas.origem}
@@ -127,6 +127,7 @@ export function TabelaClientes({ clientes, total = 0, filtros, paginacao }: { cl
             >
               Cadastro
             </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -215,14 +216,11 @@ export function TabelaClientes({ clientes, total = 0, filtros, paginacao }: { cl
                   )}
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
-                      >
+                      <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Ações</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem onSelect={() => router.push(`/clientes/${cliente.id}`)}>
                           Ver cliente
                         </DropdownMenuItem>

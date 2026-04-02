@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { configStatusImovel } from "@/lib/constantes/status-configs"
 import {
@@ -24,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { labelsTipoImovel } from "@/lib/constantes"
 import { formatarPreco } from "@/lib/formatadores"
@@ -88,39 +89,39 @@ export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelRow[]; to
           {total} {total === 1 ? "imóvel encontrado" : "imóveis encontrados"}
         </p>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
-          >
+          <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}>
             <Columns3 className="h-4 w-4" />
             Colunas
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={colunas.finalidade}
-              onCheckedChange={() => toggleColuna("finalidade")}
-            >
-              Finalidade
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.cidade}
-              onCheckedChange={() => toggleColuna("cidade")}
-            >
-              Cidade
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.area}
-              onCheckedChange={() => toggleColuna("area")}
-            >
-              Área
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={colunas.quartos}
-              onCheckedChange={() => toggleColuna("quartos")}
-            >
-              Quartos
-            </DropdownMenuCheckboxItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={colunas.finalidade}
+                onCheckedChange={() => toggleColuna("finalidade")}
+              >
+                Finalidade
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.cidade}
+                onCheckedChange={() => toggleColuna("cidade")}
+              >
+                Cidade
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.area}
+                onCheckedChange={() => toggleColuna("area")}
+              >
+                Área
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={colunas.quartos}
+                onCheckedChange={() => toggleColuna("quartos")}
+              >
+                Quartos
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -213,14 +214,11 @@ export function TabelaImoveis({ imoveis, total = 0 }: { imoveis: ImovelRow[]; to
                   )}
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
-                      >
+                      <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Ações</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem onSelect={() => router.push(`/imoveis/${imovel.id}`)}>
                           Ver imóvel
                         </DropdownMenuItem>

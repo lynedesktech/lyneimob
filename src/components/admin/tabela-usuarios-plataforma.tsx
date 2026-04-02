@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
   DropdownMenu,
@@ -149,13 +149,12 @@ export function TabelaUsuariosPlataforma({
           </p>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="outline" size="sm" className="gap-2" />}
-          >
+          <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm", className: "gap-2" })}>
             <Columns3 className="h-4 w-4" />
             Colunas
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuGroup>
             <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
@@ -194,6 +193,7 @@ export function TabelaUsuariosPlataforma({
             >
               Criado em
             </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -286,53 +286,48 @@ export function TabelaUsuariosPlataforma({
                   )}
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
-                      >
+                      <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "sm", className: "h-7 w-7 p-0" })}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Ações</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          {podeMudarPerfil && (
-                            <DropdownMenuItem onSelect={() => setEditandoId(u.id)}>
-                              Alterar perfil plataforma
+                        {podeMudarPerfil && (
+                          <DropdownMenuItem onSelect={() => setEditandoId(u.id)}>
+                            Alterar perfil plataforma
+                          </DropdownMenuItem>
+                        )}
+                        {podeMudarPerfil && (
+                          <DropdownMenuItem onSelect={() => setDialogCargo(u)}>
+                            Alterar cargo
+                          </DropdownMenuItem>
+                        )}
+                        {podeMudarPerfil && (
+                          <DropdownMenuItem onSelect={() => setDialogOrg(u)}>
+                            Mover organização
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        {podeMudarPerfil && (
+                          <DropdownMenuItem onSelect={() => aoAlternarStatus(u)}>
+                            {u.ativo ? "Desativar" : "Ativar"}
+                          </DropdownMenuItem>
+                        )}
+                        {u.organizacao_nome && (
+                          <DropdownMenuItem onSelect={() => router.push(`/admin/organizacoes/${u.organizacao_id ?? ""}`)}>
+                            Ver organização
+                          </DropdownMenuItem>
+                        )}
+                        {podeMudarPerfil && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onSelect={() => setDialogRemover(u)}
+                            >
+                              Remover
                             </DropdownMenuItem>
-                          )}
-                          {podeMudarPerfil && (
-                            <DropdownMenuItem onSelect={() => setDialogCargo(u)}>
-                              Alterar cargo
-                            </DropdownMenuItem>
-                          )}
-                          {podeMudarPerfil && (
-                            <DropdownMenuItem onSelect={() => setDialogOrg(u)}>
-                              Mover organização
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          {podeMudarPerfil && (
-                            <DropdownMenuItem onSelect={() => aoAlternarStatus(u)}>
-                              {u.ativo ? "Desativar" : "Ativar"}
-                            </DropdownMenuItem>
-                          )}
-                          {u.organizacao_nome && (
-                            <DropdownMenuItem onSelect={() => router.push(`/admin/organizacoes/${u.organizacao_id ?? ""}`)}>
-                              Ver organização
-                            </DropdownMenuItem>
-                          )}
-                          {podeMudarPerfil && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onSelect={() => setDialogRemover(u)}
-                              >
-                                Remover
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuGroup>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
