@@ -49,6 +49,121 @@ export async function obterCorretorParaAtribuicao(organizacaoId: string): Promis
 // Implementação de cada executor
 // ============================================================
 
+/**
+ * Formata um imóvel completo em texto legível para a IA
+ */
+function formatarImovelCompleto(i: Record<string, unknown>): string {
+  const preco = i.valor
+    ? `Venda: R$ ${Number(i.valor).toLocaleString("pt-BR")}`
+    : i.valor_aluguel
+      ? `Aluguel: R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
+      : "Preço sob consulta"
+  const partes = [
+    `ID: ${i.id}`,
+    `Título: ${i.titulo}`,
+    `Código interno: ${i.codigo_interno || "sem código"}`,
+    `Tipo: ${i.tipo}`,
+    `Finalidade: ${i.finalidade}`,
+    `Status: ${i.status}`,
+    `Endereço: ${[i.logradouro, i.numero, i.bairro, i.cidade, i.estado].filter(Boolean).join(", ")}`,
+    `CEP: ${i.cep || "não informado"}`,
+    `Preço: ${preco}`,
+    i.valor_condominio ? `Condomínio: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}/mês` : null,
+    i.valor_iptu ? `IPTU: R$ ${Number(i.valor_iptu).toLocaleString("pt-BR")}/ano` : null,
+    `Quartos: ${i.quartos || 0}`,
+    `Suítes: ${i.suites || 0}`,
+    `Banheiros: ${i.banheiros || 0}`,
+    `Vagas: ${i.vagas || 0}`,
+    `Área total: ${i.area_total ? `${i.area_total}m²` : "não informada"}`,
+    `Área construída: ${i.area_construida ? `${i.area_construida}m²` : "não informada"}`,
+    i.descricao ? `Descrição: ${i.descricao}` : null,
+  ]
+  return partes.filter(Boolean).join("\n")
+}
+
+const CAMPOS_IMOVEL_COMPLETO = "id, titulo, codigo_interno, tipo, finalidade, status, descricao, logradouro, numero, bairro, cidade, estado, cep, valor, valor_aluguel, valor_condominio, valor_iptu, quartos, suites, banheiros, vagas, area_total, area_construida"
+
+export async function executarBuscarImovelPorIdentificacao(
+  args: Record<string, unknown>,
+  contexto: ContextoTool
+): Promise<string> {
+  const { criarClienteAdmin } = await import("@/lib/supabase/admin")
+  const supabase = criarClienteAdmin()
+
+  const id = args.id as string | undefined
+  const codigo = args.codigo as string | undefined
+  const nome = args.nome as string | undefined
+
+  // Busca por ID exato
+  if (id) {
+    const { data, error } = await supabase
+      .from("imoveis")
+      .select(CAMPOS_IMOVEL_COMPLETO)
+      .eq("organizacao_id", contexto.organizacaoId)
+      .eq("id", id)
+      .single()
+
+    if (error || !data) return "Imóvel não encontrado com esse ID."
+    return `Imóvel encontrado:\n${formatarImovelCompleto(data as unknown as Record<string, unknown>)}`
+  }
+
+  // Busca por código interno (ex: IMO-001, IMO 01)
+  if (codigo) {
+    const codigoLimpo = codigo.replace(/\s+/g, "").toUpperCase()
+    const { data, error } = await supabase
+      .from("imoveis")
+      .select(CAMPOS_IMOVEL_COMPLETO)
+      .eq("organizacao_id", contexto.organizacaoId)
+      .ilike("codigo_interno", `%${codigoLimpo}%`)
+      .limit(1)
+      .single()
+
+    if (!error && data) {
+      return `Imóvel encontrado:\n${formatarImovelCompleto(data as unknown as Record<string, unknown>)}`
+    }
+
+    // Fallback: tentar busca mais flexível sem hifens
+    const codigoSemHifen = codigoLimpo.replace(/-/g, "")
+    const { data: data2 } = await supabase
+      .from("imoveis")
+      .select(CAMPOS_IMOVEL_COMPLETO)
+      .eq("organizacao_id", contexto.organizacaoId)
+
+    const imovelMatch = (data2 || []).find((i: Record<string, unknown>) => {
+      const cod = String(i.codigo_interno || "").replace(/[-\s]/g, "").toUpperCase()
+      return cod === codigoSemHifen || cod.includes(codigoSemHifen)
+    })
+
+    if (imovelMatch) {
+      return `Imóvel encontrado:\n${formatarImovelCompleto(imovelMatch as unknown as Record<string, unknown>)}`
+    }
+
+    return `Nenhum imóvel encontrado com o código "${codigo}".`
+  }
+
+  // Busca por nome/título (busca parcial)
+  if (nome) {
+    const { data, error } = await supabase
+      .from("imoveis")
+      .select(CAMPOS_IMOVEL_COMPLETO)
+      .eq("organizacao_id", contexto.organizacaoId)
+      .ilike("titulo", `%${nome}%`)
+      .limit(3)
+
+    if (error) return `Erro ao buscar imóvel: ${error.message}`
+    if (!data || data.length === 0) return `Nenhum imóvel encontrado com o nome "${nome}".`
+
+    if (data.length === 1) {
+      return `Imóvel encontrado:\n${formatarImovelCompleto(data[0] as unknown as Record<string, unknown>)}`
+    }
+
+    const lista = data.map((i: Record<string, unknown>) => `- ${i.titulo} (Cód: ${i.codigo_interno || "sem código"}) — ID: ${i.id}`)
+    return `Encontrei ${data.length} imóveis com esse nome:\n${lista.join("\n")}\n\nUse o ID para buscar os detalhes completos de um deles.`
+  }
+
+  return "Informe o nome, código ou ID do imóvel para buscar."
+}
+
 export async function executarBuscarImoveis(
   args: Record<string, unknown>,
   contexto: ContextoTool
@@ -58,7 +173,7 @@ export async function executarBuscarImoveis(
 
   let query = supabase
     .from("imoveis")
-    .select("id, titulo, tipo, finalidade, bairro, cidade, estado, valor, valor_aluguel, quartos, area_total")
+    .select(CAMPOS_IMOVEL_COMPLETO)
     .eq("organizacao_id", contexto.organizacaoId)
     .eq("status", "disponivel")
 
@@ -81,7 +196,7 @@ export async function executarBuscarImoveis(
 
   const { data: imoveis, error } = await query
     .order("created_at", { ascending: false })
-    .limit(10)
+    .limit(5)
 
   if (error) return `Erro ao buscar imóveis: ${error.message}`
   if (!imoveis || imoveis.length === 0) return "Nenhum imóvel encontrado com esses critérios."
@@ -92,7 +207,7 @@ export async function executarBuscarImoveis(
       : i.valor_aluguel
         ? `Aluguel: R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
         : "Preço sob consulta"
-    return `- [${i.id}] ${i.titulo} | ${i.tipo} | ${i.bairro || ""}, ${i.cidade}-${i.estado} | ${preco} | ${i.quartos || 0} quartos | ${i.area_total || "?"}m²`
+    return `- [${i.id}] ${i.titulo} (Cód: ${i.codigo_interno || "?"}) | ${i.tipo} | ${i.bairro || ""}, ${i.cidade}-${i.estado} | ${preco} | ${i.quartos || 0}q/${i.suites || 0}s/${i.banheiros || 0}b/${i.vagas || 0}v | ${i.area_total || "?"}m² total, ${i.area_construida || "?"}m² constr.${i.valor_condominio ? ` | Cond: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}` : ""}`
   })
 
   return `Encontrei ${imoveis.length} imóvel(is):\n${lista.join("\n")}`

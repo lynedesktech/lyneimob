@@ -198,21 +198,31 @@ export async function processarComAgente(
     const origemLead = (conversa.origem_lead as string | null) || "whatsapp"
     contextoExtra += `\n- Canal de origem: ${origemLead.toUpperCase()}`
 
-    // Se há imóvel de interesse (lead de portal com imóvel específico), buscar dados
+    // Se há imóvel de interesse (lead de portal/site com imóvel específico), buscar TODOS os dados
     if (conversa.imovel_interesse_id) {
       const { data: imovelInteresse } = await supabase
         .from("imoveis")
-        .select("titulo, tipo, bairro, valor, valor_aluguel")
+        .select("id, titulo, codigo_interno, tipo, finalidade, status, descricao, logradouro, numero, bairro, cidade, estado, cep, valor, valor_aluguel, valor_condominio, valor_iptu, quartos, suites, banheiros, vagas, area_total, area_construida")
         .eq("id", conversa.imovel_interesse_id as string)
         .single()
 
       if (imovelInteresse) {
-        const preco = imovelInteresse.valor
-          ? `R$ ${Number(imovelInteresse.valor).toLocaleString("pt-BR")}`
-          : imovelInteresse.valor_aluguel
-            ? `R$ ${Number(imovelInteresse.valor_aluguel).toLocaleString("pt-BR")}/mês`
+        const i = imovelInteresse
+        const preco = i.valor
+          ? `R$ ${Number(i.valor).toLocaleString("pt-BR")}`
+          : i.valor_aluguel
+            ? `R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
             : "preço sob consulta"
-        contextoExtra += `\n- Imóvel de interesse: ${imovelInteresse.titulo} | ${imovelInteresse.tipo} | ${imovelInteresse.bairro} | ${preco}`
+        contextoExtra += `\n\nDETALHES COMPLETOS DO IMÓVEL DE INTERESSE:
+- ID: ${i.id}
+- Título: ${i.titulo}
+- Código interno: ${i.codigo_interno || "sem código"}
+- Tipo: ${i.tipo} | Finalidade: ${i.finalidade}
+- Endereço: ${[i.logradouro, i.numero, i.bairro, i.cidade, i.estado].filter(Boolean).join(", ")}
+- Preço: ${preco}${i.valor_condominio ? ` | Condomínio: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}/mês` : ""}${i.valor_iptu ? ` | IPTU: R$ ${Number(i.valor_iptu).toLocaleString("pt-BR")}/ano` : ""}
+- Quartos: ${i.quartos || 0} | Suítes: ${i.suites || 0} | Banheiros: ${i.banheiros || 0} | Vagas: ${i.vagas || 0}
+- Área total: ${i.area_total ? `${i.area_total}m²` : "não informada"} | Área construída: ${i.area_construida ? `${i.area_construida}m²` : "não informada"}${i.descricao ? `\n- Descrição: ${i.descricao}` : ""}
+Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cliente sobre ele sem precisar chamar ferramentas.`
       }
     }
 

@@ -2,6 +2,7 @@ import type { ChatCompletionTool } from "openai/resources/chat/completions"
 import type { ContextoTool } from "./executores-sdr"
 import {
   executarBuscarImoveis,
+  executarBuscarImovelPorIdentificacao,
   executarCriarCliente,
   executarCriarNegocio,
   executarCriarAtividade,
@@ -19,9 +20,35 @@ export const definicaoToolsSdr: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "buscar_imovel_por_identificacao",
+      description:
+        "Buscar um imóvel específico pelo nome, código interno ou ID. Retorna TODOS os detalhes do imóvel (endereço, preço, quartos, suítes, banheiros, vagas, áreas, descrição, etc). Use quando o cliente mencionar um imóvel específico pelo nome ou código, ou quando precisar dos detalhes completos de um imóvel já identificado.",
+      parameters: {
+        type: "object",
+        properties: {
+          nome: {
+            type: "string",
+            description: "Nome ou parte do título do imóvel (ex: 'Kubica', 'apartamento centro')",
+          },
+          codigo: {
+            type: "string",
+            description: "Código interno do imóvel (ex: 'IMO-001', 'IMO 01')",
+          },
+          id: {
+            type: "string",
+            description: "ID UUID do imóvel no sistema (retornado por buscar_imoveis ou presente no contexto)",
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "buscar_imoveis",
       description:
-        "Buscar imóveis disponíveis no sistema que correspondam aos critérios do cliente. Use sempre que precisar apresentar opções de imóveis.",
+        "Buscar imóveis disponíveis no sistema que correspondam aos critérios do cliente. Use sempre que precisar apresentar opções de imóveis ou recomendar similares.",
       parameters: {
         type: "object",
         properties: {
@@ -249,6 +276,8 @@ export async function executarTool(
   contexto: ContextoTool
 ): Promise<string> {
   switch (nome) {
+    case "buscar_imovel_por_identificacao":
+      return executarBuscarImovelPorIdentificacao(argumentos, contexto)
     case "buscar_imoveis":
       return executarBuscarImoveis(argumentos, contexto)
     case "atualizar_cliente":
