@@ -201,7 +201,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 <SelectTrigger className={`w-full ${erros.tipo ? "border-destructive" : ""}`}>
                   <SelectValue placeholder="Selecione o tipo">{tipoValue ? opcoesTipo.find(o => o.value === tipoValue)?.label : null}</SelectValue>
                 </SelectTrigger>
-                <SelectContent alignItemWithTrigger={false}>
+                <SelectContent>
                   {opcoesTipo.map((opcao) => (
                     <SelectItem key={opcao.value} value={opcao.value}>
                       {opcao.label}
@@ -221,7 +221,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione a origem">{origemValue ? opcoesOrigem.find(o => o.value === origemValue)?.label : null}</SelectValue>
                 </SelectTrigger>
-                <SelectContent alignItemWithTrigger={false}>
+                <SelectContent>
                   {opcoesOrigem.map((opcao) => (
                     <SelectItem key={opcao.value} value={opcao.value}>
                       {opcao.label}
@@ -238,7 +238,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o status">{statusValue ? opcoesStatus.find(o => o.value === statusValue)?.label : null}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
+                  <SelectContent>
                     {opcoesStatus.map((opcao) => (
                       <SelectItem key={opcao.value} value={opcao.value}>
                         {opcao.label}
