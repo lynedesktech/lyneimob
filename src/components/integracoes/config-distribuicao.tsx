@@ -40,12 +40,12 @@ export function ConfigDistribuicao() {
   useEffect(() => {
     if (estado.sucesso) {
       toast.success(estado.sucesso)
-      router.push("/configuracoes")
+      recarregar()
     }
     if (estado.erro) {
       toast.error(estado.erro)
     }
-  }, [estado, router])
+  }, [estado, recarregar])
 
   function toggleParticipante(id: string) {
     setParticipantes((prev) =>

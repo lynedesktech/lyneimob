@@ -43,12 +43,9 @@ export function FormularioConfiguracoesSite({ organizacao, dominio, appHostname 
 
   // Mostrar toast quando a action retornar
   useEffect(() => {
-    if (estado.sucesso) {
-      toast.success(estado.sucesso)
-      router.push("/configuracoes")
-    }
+    if (estado.sucesso) toast.success(estado.sucesso)
     if (estado.erro) toast.error(estado.erro)
-  }, [estado, router])
+  }, [estado])
 
   // Helpers para atualizar parcialmente
   function atualizarCores(campo: string, valor: string) {
