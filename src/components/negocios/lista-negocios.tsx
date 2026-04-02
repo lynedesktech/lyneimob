@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Briefcase, MoreHorizontal, Columns3 } from "lucide-react"
 import {
@@ -72,6 +73,7 @@ function MenuAcoes({
   negocio: { id: string; titulo: string; status: string; valor: number | null }
   onAcaoConcluida: () => void
 }) {
+  const router = useRouter()
   const [dialogGanhar, setDialogGanhar] = useState(false)
   const [dialogPerder, setDialogPerder] = useState(false)
   const [valor, setValor] = useState<number | null>(negocio.valor)
@@ -125,54 +127,32 @@ function MenuAcoes({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Ações</span>
-            </Button>
-          }
-        />
+          render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e: React.MouseEvent) => e.stopPropagation()} />}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Ações</span>
+        </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Ações</DropdownMenuLabel>
-          <DropdownMenuItem
-            render={<Link href={`/negocios/${negocio.id}`} onClick={(e) => e.stopPropagation()} />}
-          >
+          <DropdownMenuItem onSelect={() => router.push(`/negocios/${negocio.id}`)}>
             Ver negócio
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {negocio.status === "aberto" && (
             <>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setDialogGanhar(true)
-                }}
-              >
+              <DropdownMenuItem onSelect={() => setDialogGanhar(true)}>
                 Ganhar negócio
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setDialogPerder(true)
-                }}
+                onSelect={() => setDialogPerder(true)}
               >
                 Marcar como perdido
               </DropdownMenuItem>
             </>
           )}
           {(negocio.status === "ganho" || negocio.status === "perdido") && (
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation()
-                handleReabrir()
-              }}
-            >
+            <DropdownMenuItem onSelect={() => handleReabrir()}>
               Reabrir negócio
             </DropdownMenuItem>
           )}
@@ -302,13 +282,11 @@ export function ListaNegocios() {
         {/* Seletor de colunas */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <Button variant="outline" size="sm" className="gap-2">
-                <Columns3 className="h-4 w-4" />
-                Colunas
-              </Button>
-            }
-          />
+            render={<Button variant="outline" size="sm" className="gap-2" />}
+          >
+            <Columns3 className="h-4 w-4" />
+            Colunas
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
             <DropdownMenuSeparator />

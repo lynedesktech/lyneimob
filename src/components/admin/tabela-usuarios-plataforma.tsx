@@ -150,13 +150,11 @@ export function TabelaUsuariosPlataforma({
         )}
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <Button variant="outline" size="sm" className="gap-2">
-                <Columns3 className="h-4 w-4" />
-                Colunas
-              </Button>
-            }
-          />
+            render={<Button variant="outline" size="sm" className="gap-2" />}
+          >
+            <Columns3 className="h-4 w-4" />
+            Colunas
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -289,17 +287,11 @@ export function TabelaUsuariosPlataforma({
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Ações</span>
-                          </Button>
-                        }
-                      />
+                        render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Ações</span>
+                      </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuGroup>
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
@@ -325,9 +317,7 @@ export function TabelaUsuariosPlataforma({
                             </DropdownMenuItem>
                           )}
                           {u.organizacao_nome && (
-                            <DropdownMenuItem
-                              render={<Link href={`/admin/organizacoes/${u.organizacao_id ?? ""}`} />}
-                            >
+                            <DropdownMenuItem onSelect={() => router.push(`/admin/organizacoes/${u.organizacao_id ?? ""}`)}>
                               Ver organização
                             </DropdownMenuItem>
                           )}

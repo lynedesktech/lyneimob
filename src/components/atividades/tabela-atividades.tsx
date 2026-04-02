@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { MoreHorizontal, Columns3 } from "lucide-react"
 import {
@@ -61,6 +62,7 @@ export function TabelaAtividades({
   filtros?: React.ReactNode
   paginacao?: React.ReactNode
 }) {
+  const router = useRouter()
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [colunas, setColunas] = useState<ColunasVisiveis>(colunasPadrao)
   const { labelDoTipo } = useTiposAtividade()
@@ -114,13 +116,11 @@ export function TabelaAtividades({
         )}
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <Button variant="outline" size="sm" className="gap-2">
-                <Columns3 className="h-4 w-4" />
-                Colunas
-              </Button>
-            }
-          />
+            render={<Button variant="outline" size="sm" className="gap-2" />}
+          >
+            <Columns3 className="h-4 w-4" />
+            Colunas
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Visibilidade</DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -263,27 +263,17 @@ export function TabelaAtividades({
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Ações</span>
-                            </Button>
-                          }
-                        />
+                          render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Ações</span>
+                        </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem
-                            render={<Link href={`/atividades/${atividade.id}`} />}
-                          >
+                          <DropdownMenuItem onSelect={() => router.push(`/atividades/${atividade.id}`)}>
                             Ver atividade
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            render={<Link href={`/atividades/${atividade.id}/editar`} />}
-                          >
+                          <DropdownMenuItem onSelect={() => router.push(`/atividades/${atividade.id}/editar`)}>
                             Editar
                           </DropdownMenuItem>
                         </DropdownMenuContent>

@@ -110,17 +110,11 @@ export function TabelaUsuariosOrg({ usuarios, ehSuperAdmin }: TabelaUsuariosOrgP
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Ações</span>
-                            </Button>
-                          }
-                        />
+                          render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Ações</span>
+                        </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuGroup>
                             <DropdownMenuLabel>Ações</DropdownMenuLabel>

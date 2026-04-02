@@ -692,39 +692,32 @@ export function TabelaLotes({ lotes, loteamentoId }: TabelaLotesProps) {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        }
-                      />
+                        render={<Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e: React.MouseEvent) => e.stopPropagation()} />}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => abrirDetalhes(lote)}>
+                        <DropdownMenuItem onSelect={() => abrirDetalhes(lote)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Ver detalhes
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => abrirEdicao(lote)}>
+                        <DropdownMenuItem onSelect={() => abrirEdicao(lote)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Editar lote
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {lote.status !== "disponivel" && (
-                          <DropdownMenuItem onClick={() => handleAlterarStatus(lote.id, "disponivel")}>
+                          <DropdownMenuItem onSelect={() => handleAlterarStatus(lote.id, "disponivel")}>
                             Marcar como Disponível
                           </DropdownMenuItem>
                         )}
                         {lote.status !== "reservado" && (
-                          <DropdownMenuItem onClick={() => abrirModalCliente(lote.id, "reservado")}>
+                          <DropdownMenuItem onSelect={() => abrirModalCliente(lote.id, "reservado")}>
                             Marcar como Reservado
                           </DropdownMenuItem>
                         )}
                         {lote.status !== "vendido" && (
-                          <DropdownMenuItem onClick={() => abrirModalCliente(lote.id, "vendido")}>
+                          <DropdownMenuItem onSelect={() => abrirModalCliente(lote.id, "vendido")}>
                             Marcar como Vendido
                           </DropdownMenuItem>
                         )}
