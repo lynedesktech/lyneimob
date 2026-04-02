@@ -60,6 +60,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
   // Acessar data_vencimento com fallback para data_vencimento (DB pode ter nomes diferentes)
   const atv = atividade as (AtividadeComRelacoes & Record<string, unknown>) | null | undefined
 
+  const [tituloValue, setTituloValue] = useState(atividade?.titulo ?? valoresIniciais?.titulo ?? "")
   const [tipoValue, setTipoValue] = useState(atividade?.tipo ?? valoresIniciais?.tipo ?? "")
   const [prioridadeValue, setPrioridadeValue] = useState(atividade?.prioridade ?? "media")
   const [clienteId, setClienteId] = useState(atividade?.cliente_id ?? "")
@@ -154,7 +155,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
     const novosErros: Record<string, string> = {}
     const formData = new FormData(e.currentTarget)
 
-    if (!formData.get("titulo")?.toString().trim()) novosErros.titulo = "Campo obrigatório"
+    if (!tituloValue.trim()) novosErros.titulo = "Campo obrigatório"
     if (!tipoValue) novosErros.tipo = "Campo obrigatório"
     if (!formData.get("data_vencimento")?.toString().trim()) novosErros.data_vencimento = "Campo obrigatório"
 
@@ -182,7 +183,8 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
                 id="titulo"
                 name="titulo"
                 placeholder="Ex: Visita ao apto 3Q com João"
-                defaultValue={atividade?.titulo ?? valoresIniciais?.titulo ?? ""}
+                value={tituloValue}
+                onChange={(e) => setTituloValue(e.target.value)}
                 className={erros.titulo ? "border-destructive" : ""}
               />
               {erros.titulo && <FieldError>{erros.titulo}</FieldError>}
@@ -192,7 +194,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Select value={tipoValue} onValueChange={(v) => v && setTipoValue(v)}>
                 <SelectTrigger id="tipo" className={erros.tipo ? "border-destructive" : ""}>
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder="Selecione">{tipoValue ? tipos.find(t => t.slug === tipoValue)?.nome : null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {tipos.map((tipo) => (
@@ -215,7 +217,7 @@ export function FormularioAtividade({ atividade, valoresIniciais }: FormularioAt
               <FieldLabel htmlFor="prioridade">Prioridade</FieldLabel>
               <Select value={prioridadeValue} onValueChange={(v) => v && setPrioridadeValue(v)}>
                 <SelectTrigger id="prioridade">
-                  <SelectValue placeholder="Média" />
+                  <SelectValue placeholder="Média">{prioridadeValue === "baixa" ? "Baixa" : prioridadeValue === "media" ? "Média" : prioridadeValue === "alta" ? "Alta" : null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="baixa">Baixa</SelectItem>

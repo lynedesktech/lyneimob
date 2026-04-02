@@ -36,6 +36,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
   const action = editando ? atualizarNegocio : criarNegocio
   const router = useRouter()
 
+  const [tituloValue, setTituloValue] = useState(negocio?.titulo ?? "")
   const [tipoValue, setTipoValue] = useState(negocio?.tipo ?? "")
   const [etapaId, setEtapaId] = useState(negocio?.etapa_id ?? "")
   const [clienteId, setClienteId] = useState(negocio?.cliente_id ?? "")
@@ -127,7 +128,7 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
     const novosErros: Record<string, string> = {}
     const formData = new FormData(e.currentTarget)
 
-    if (!formData.get("titulo")?.toString().trim()) novosErros.titulo = "Campo obrigatório"
+    if (!tituloValue.trim()) novosErros.titulo = "Campo obrigatório"
     if (!tipoValue) novosErros.tipo = "Campo obrigatório"
     if (!etapaId) novosErros.etapa_id = "Campo obrigatório"
     if (!clienteId) novosErros.cliente_id = "Campo obrigatório"
@@ -159,7 +160,8 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
                 id="titulo"
                 name="titulo"
                 placeholder="Ex: Venda apto 3Q - João Silva"
-                defaultValue={negocio?.titulo ?? ""}
+                value={tituloValue}
+                onChange={(e) => setTituloValue(e.target.value)}
                 className={erros.titulo ? "border-destructive" : ""}
               />
               {erros.titulo && <FieldError>{erros.titulo}</FieldError>}
@@ -170,10 +172,9 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
               <Select
                 value={tipoValue}
                 onValueChange={(v) => v && setTipoValue(v)}
-                items={Object.entries(labelsTipoNegocio).map(([valor, label]) => ({ value: valor, label }))}
               >
                 <SelectTrigger id="tipo" className={erros.tipo ? "border-destructive" : ""}>
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder="Selecione">{tipoValue ? labelsTipoNegocio[tipoValue] : null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(labelsTipoNegocio).map(([valor, label]) => (
@@ -201,10 +202,9 @@ export function FormularioNegocio({ negocio }: FormularioNegocioProps) {
               <Select
                 value={etapaId}
                 onValueChange={(v) => v && setEtapaId(v)}
-                items={etapasNormais.map((e) => ({ value: e.id, label: e.nome }))}
               >
                 <SelectTrigger id="etapa_id" className={erros.etapa_id ? "border-destructive" : ""}>
-                  <SelectValue placeholder="Selecione a etapa" />
+                  <SelectValue placeholder="Selecione a etapa">{etapaId ? etapasNormais.find(e => e.id === etapaId)?.nome : null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {etapasNormais.map((etapa) => (

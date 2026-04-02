@@ -42,6 +42,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
   const action = editando ? atualizarCliente : criarCliente
   const router = useRouter()
 
+  const [nomeValue, setNomeValue] = useState(cliente?.nome ?? "")
   const [tipoValue, setTipoValue] = useState(cliente?.tipo ?? "")
   const [origemValue, setOrigemValue] = useState(cliente?.origem ?? "outro")
   const [statusValue, setStatusValue] = useState(cliente?.status ?? "ativo")
@@ -53,7 +54,7 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
     const novosErros: Record<string, string> = {}
     const formData = new FormData(e.currentTarget)
 
-    if (!formData.get("nome")?.toString().trim()) novosErros.nome = "Campo obrigatório"
+    if (!nomeValue.trim()) novosErros.nome = "Campo obrigatório"
     if (!tipoValue) novosErros.tipo = "Campo obrigatório"
 
     if (Object.keys(novosErros).length > 0) {
@@ -127,7 +128,8 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 id="nome"
                 name="nome"
                 placeholder="Ex: João da Silva"
-                defaultValue={cliente?.nome ?? ""}
+                value={nomeValue}
+                onChange={(e) => setNomeValue(e.target.value)}
                 className={erros.nome ? "border-destructive" : ""}
               />
               {erros.nome && <FieldError>{erros.nome}</FieldError>}
@@ -197,9 +199,9 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 onValueChange={(v) => v && setTipoValue(v)}
               >
                 <SelectTrigger className={`w-full ${erros.tipo ? "border-destructive" : ""}`}>
-                  <SelectValue placeholder="Selecione o tipo" />
+                  <SelectValue placeholder="Selecione o tipo">{tipoValue ? opcoesTipo.find(o => o.value === tipoValue)?.label : null}</SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent alignItemWithTrigger={false}>
                   {opcoesTipo.map((opcao) => (
                     <SelectItem key={opcao.value} value={opcao.value}>
                       {opcao.label}
@@ -217,9 +219,9 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 onValueChange={(v) => v && setOrigemValue(v)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione a origem" />
+                  <SelectValue placeholder="Selecione a origem">{origemValue ? opcoesOrigem.find(o => o.value === origemValue)?.label : null}</SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent alignItemWithTrigger={false}>
                   {opcoesOrigem.map((opcao) => (
                     <SelectItem key={opcao.value} value={opcao.value}>
                       {opcao.label}
@@ -234,9 +236,9 @@ export function FormularioCliente({ cliente }: FormularioClienteProps) {
                 <FieldLabel htmlFor="status">Status</FieldLabel>
                 <Select value={statusValue} onValueChange={(v) => v && setStatusValue(v)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o status" />
+                    <SelectValue placeholder="Selecione o status">{statusValue ? opcoesStatus.find(o => o.value === statusValue)?.label : null}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent alignItemWithTrigger={false}>
                     {opcoesStatus.map((opcao) => (
                       <SelectItem key={opcao.value} value={opcao.value}>
                         {opcao.label}

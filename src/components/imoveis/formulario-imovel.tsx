@@ -79,6 +79,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const [valorValue, setValorValue] = useState<number | null>(campoNum(imovel, "valor", "valor") as number || null)
   const [valorCondominioValue, setValorCondominioValue] = useState<number | null>(campoNum(imovel, "valor_condominio", "condominio") as number || null)
   const [valorIptuValue, setValorIptuValue] = useState<number | null>(campoNum(imovel, "valor_iptu", "iptu") as number || null)
+  const [tituloValue, setTituloValue] = useState(campo(imovel, "titulo"))
   const [pendente, setPendente] = useState(false)
   const [erros, setErros] = useState<Record<string, string>>({})
   const [logradouroValue, setLogradouroValue] = useState(campo(imovel, "logradouro"))
@@ -102,7 +103,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
     const novosErros: Record<string, string> = {}
     const formData = new FormData(e.currentTarget)
 
-    if (!formData.get("titulo")?.toString().trim()) novosErros.titulo = "Campo obrigatório"
+    if (!tituloValue.trim()) novosErros.titulo = "Campo obrigatório"
     if (!tipoValue) novosErros.tipo = "Campo obrigatório"
     if (!finalidadeValue) novosErros.finalidade = "Campo obrigatório"
     if (!cidadeValue.trim()) novosErros.cidade = "Campo obrigatório"
@@ -192,7 +193,8 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 id="titulo"
                 name="titulo"
                 placeholder="Ex: Apartamento 3 quartos no Centro"
-                defaultValue={campo(imovel, "titulo")}
+                value={tituloValue}
+                onChange={(e) => setTituloValue(e.target.value)}
                 className={erros.titulo ? "border-destructive" : ""}
               />
               {erros.titulo && <FieldError>{erros.titulo}</FieldError>}
@@ -202,7 +204,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <FieldLabel htmlFor="tipo">Tipo *</FieldLabel>
               <Select value={tipoValue} onValueChange={(v) => v && setTipoValue(v)}>
                 <SelectTrigger className={`w-full ${erros.tipo ? "border-destructive" : ""}`}>
-                  <SelectValue placeholder="Selecione o tipo" />
+                  <SelectValue placeholder="Selecione o tipo">{tipoValue ? opcoesTipo.find(o => o.value === tipoValue)?.label : null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {opcoesTipo.map((opcao) => (
@@ -219,7 +221,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <FieldLabel htmlFor="finalidade">Finalidade *</FieldLabel>
               <Select value={finalidadeValue} onValueChange={(v) => v && setFinalidadeValue(v)}>
                 <SelectTrigger className={`w-full ${erros.finalidade ? "border-destructive" : ""}`}>
-                  <SelectValue placeholder="Selecione a finalidade" />
+                  <SelectValue placeholder="Selecione a finalidade">{finalidadeValue ? opcoesFinalidade.find(o => o.value === finalidadeValue)?.label : null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {opcoesFinalidade.map((opcao) => (
@@ -237,7 +239,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 <FieldLabel htmlFor="status">Status</FieldLabel>
                 <Select value={statusValue} onValueChange={(v) => v && setStatusValue(v)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o status" />
+                    <SelectValue placeholder="Selecione o status">{statusValue ? opcoesStatus.find(o => o.value === statusValue)?.label : null}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {opcoesStatus.map((opcao) => (
@@ -320,7 +322,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
               <FieldLabel htmlFor="estado_uf">Estado *</FieldLabel>
               <Select value={estadoValue} onValueChange={(v) => v && !preenchidoPorCep && setEstadoValue(v)} disabled={preenchidoPorCep}>
                 <SelectTrigger className={`w-full ${erros.estado ? "border-destructive" : ""}`}>
-                  <SelectValue placeholder="UF" />
+                  <SelectValue placeholder="UF">{estadoValue || null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {estadosBr.map((uf) => (
