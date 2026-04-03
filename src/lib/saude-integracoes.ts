@@ -121,29 +121,17 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
   try {
     const urlLimpa = url.replace(/\/$/, "")
 
-    // Testar criando instância temporária — valida URL + admin token de verdade
-    const nomeInstancia = `lyneimob-health-${Date.now()}`
+    // Validar credenciais sem criar instância — usa GET na raiz da API com admintoken
     const resp = await comTimeout(
-      fetch(`${urlLimpa}/instance/init`, {
-        method: "POST",
+      fetch(`${urlLimpa}/instance/status`, {
+        method: "GET",
         headers: { "Content-Type": "application/json", admintoken: token },
-        body: JSON.stringify({ name: nomeInstancia }),
       }),
-      10000
+      TIMEOUT_MS
     )
 
-    if (resp.ok) {
-      // Conectado e autenticado — limpar instância de teste
-      try {
-        const dados = await resp.json()
-        const instanceId = dados?.instance?.id
-        if (instanceId) {
-          await fetch(`${urlLimpa}/instance/${instanceId}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json", admintoken: token },
-          })
-        }
-      } catch { /* ignora erro na limpeza */ }
+    // Qualquer resposta que não seja erro de auth indica que a API está acessível
+    if (resp.ok || resp.status === 404) {
       return { status: "conectado" }
     }
 
@@ -156,7 +144,7 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
     return { status: "desconectado", mensagem: `Erro ${resp.status} — verifique a URL` }
   } catch (erro) {
     const mensagem = erro instanceof Error && erro.message === "Timeout"
-      ? "Timeout ao conectar (10s)"
+      ? "Timeout ao conectar"
       : "Erro de conexão"
     return { status: "desconectado", mensagem }
   }

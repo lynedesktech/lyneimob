@@ -196,9 +196,12 @@ export async function criarEConectarInstancia(): Promise<
 
   }
 
-  // Configurar webhook — sempre, seja instância nova ou reutilizada
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  const webhookUrl = `${appUrl}/api/webhooks/whatsapp`
+  // Configurar webhook — aponta para o Railway (agente Python)
+  // Se AGENT_RAILWAY_URL não estiver definida, usa o Vercel como fallback
+  const railwayUrl = process.env.AGENT_RAILWAY_URL
+  const webhookUrl = railwayUrl
+    ? `${railwayUrl.replace(/\/$/, "")}/webhook/lyneimob`
+    : `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/webhooks/whatsapp`
 
   try {
     await configurarWebhookUazapi(credenciais.url, instanceToken, webhookUrl)

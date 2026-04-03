@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+httpx
+redis
+pydantic-settings
+openai
+pypdf2
+python-docx

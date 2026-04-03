@@ -227,30 +227,19 @@ export async function marcarComoLida(
 
 /**
  * Testa se as credenciais admin da Uazapi são válidas.
- * Cria uma instância de teste e a exclui em seguida para validar conectividade e autenticação.
+ * Faz uma requisição leve à API para validar conectividade e autenticação sem criar instâncias.
  */
 export async function testarConexaoUazapi(url: string, adminToken: string): Promise<boolean> {
   try {
-    const nomeInstancia = `lyneimob-teste-${Date.now()}`
-    const resposta = await fetch(montarUrlBase(url, "/instance/init"), {
-      method: "POST",
+    const resposta = await fetch(montarUrlBase(url, "/instance/status"), {
+      method: "GET",
       headers: { "Content-Type": "application/json", admintoken: adminToken },
-      body: JSON.stringify({ name: nomeInstancia }),
     })
 
-    if (!resposta.ok) return false
+    // 401/403 = credenciais inválidas
+    if (resposta.status === 401 || resposta.status === 403) return false
 
-    // Instância criada — excluir imediatamente
-    const dados = await resposta.json()
-    const instanceId = dados?.instance?.id
-    if (instanceId) {
-      try {
-        await fetch(montarUrlBase(url, `/instance/${instanceId}`), {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json", admintoken: adminToken },
-        })
-      } catch { /* ignora erro na exclusão */ }
-    }
+    // Qualquer outra resposta (200, 404, etc.) = API acessível e token válido
     return true
   } catch {
     return false
