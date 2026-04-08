@@ -264,12 +264,45 @@ export function ehGrupo(remoteJid: string): boolean {
 /**
  * Baixa mídia do WhatsApp via Uazapi
  */
+/**
+ * Baixa mídia do WhatsApp via Uazapi.
+ * Usa /message/download com return_link para obter o link e depois baixar o binário.
+ * Fallback para /chat/downloadMedia se o primeiro endpoint falhar.
+ */
 export async function baixarMidia(
   config: ConfigWhatsapp,
-  messageId: string
+  messageIdFull: string
 ): Promise<Buffer> {
+  // Método principal: POST /message/download (mesmo padrão dos agentes Laura/Remax)
+  try {
+    const respostaLink = await fetch(
+      montarUrl(config, "/message/download"),
+      {
+        method: "POST",
+        headers: montarHeaders(config),
+        body: JSON.stringify({ id: messageIdFull, return_link: true }),
+      }
+    )
+
+    if (respostaLink.ok) {
+      const dados = await respostaLink.json()
+      const fileUrl = dados.fileURL || dados.url || dados.file
+
+      if (fileUrl) {
+        const respostaBinario = await fetch(fileUrl)
+        if (respostaBinario.ok) {
+          const arrayBuffer = await respostaBinario.arrayBuffer()
+          return Buffer.from(arrayBuffer)
+        }
+      }
+    }
+  } catch (erro) {
+    console.warn("[baixarMidia] /message/download falhou, tentando fallback:", erro instanceof Error ? erro.message : erro)
+  }
+
+  // Fallback: GET /chat/downloadMedia/{messageId} (endpoint antigo)
   const resposta = await fetch(
-    montarUrl(config, `/chat/downloadMedia/${messageId}`),
+    montarUrl(config, `/chat/downloadMedia/${messageIdFull}`),
     { headers: montarHeaders(config) }
   )
 

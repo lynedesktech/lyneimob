@@ -248,21 +248,28 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
 
     for (const msg of mensagensNovas) {
       if (msg.direcao === "recebida") {
+        // O conteudo já vem processado pelo debounce (Whisper, Vision, pdf-parse)
+        // Usar o conteudo processado diretamente — não substituir por placeholders genéricos
+        const conteudo = msg.conteudo?.trim()
         let conteudoFormatado: string
+
         if (msg.tipo_conteudo === "audio") {
-          conteudoFormatado = "[cliente enviou uma mensagem de voz — sem transcrição disponível]"
+          // Se o debounce transcreveu, conteudo tem a transcrição. Senão, fallback.
+          conteudoFormatado = conteudo
+            ? `[mensagem de voz do cliente]: ${conteudo}`
+            : "[cliente enviou áudio que não foi possível transcrever]"
         } else if (msg.tipo_conteudo === "imagem") {
-          conteudoFormatado = msg.conteudo
-            ? `[cliente enviou uma imagem com legenda: ${msg.conteudo}]`
-            : "[cliente enviou uma imagem]"
-        } else if (msg.tipo_conteudo === "video") {
-          conteudoFormatado = "[cliente enviou um vídeo]"
+          // conteudo pode ter legenda + análise Vision
+          conteudoFormatado = conteudo || "[cliente enviou uma imagem]"
         } else if (msg.tipo_conteudo === "documento") {
-          conteudoFormatado = "[cliente enviou um documento]"
+          // conteudo pode ter o texto extraído do PDF/doc
+          conteudoFormatado = conteudo || "[cliente enviou um documento]"
+        } else if (msg.tipo_conteudo === "video") {
+          conteudoFormatado = conteudo || "[cliente enviou um vídeo]"
         } else if (msg.tipo_conteudo === "sticker") {
           conteudoFormatado = "[cliente enviou um sticker]"
         } else {
-          conteudoFormatado = msg.conteudo || "[mensagem sem conteúdo]"
+          conteudoFormatado = conteudo || "[mensagem sem conteúdo]"
         }
         messages.push({ role: "user", content: conteudoFormatado })
       }

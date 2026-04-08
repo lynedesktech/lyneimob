@@ -10,7 +10,6 @@ from openai import AsyncOpenAI
 
 from agente.config import settings
 from agente.core.prompt import montar_prompt_sdr
-from agente.core.sanitizer import sanitize_text
 from agente.core.tools import TOOLS_DEFINITION, ToolContext, execute_tool
 from agente.services import redis_client
 from agente.services import supabase_client as db
@@ -198,7 +197,7 @@ async def run_agent(
             tipo = msg.get("tipo_conteudo", "texto")
             conteudo = msg.get("conteudo", "")
             if tipo == "audio":
-                conteudo_formatado = conteudo if conteudo and "[" not in conteudo[:5] else "[cliente enviou uma mensagem de voz]"
+                conteudo_formatado = f"[mensagem de voz do cliente]: {conteudo}" if conteudo else "[cliente enviou audio que nao foi possivel transcrever]"
             elif tipo == "imagem":
                 conteudo_formatado = conteudo if conteudo else "[cliente enviou uma imagem]"
             elif tipo in ("video", "documento", "sticker"):

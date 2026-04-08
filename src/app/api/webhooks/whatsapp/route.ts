@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     const remoteJid = messageData.chatid
     const fromMe = messageData.fromMe
     const messageId = messageData.messageid
+    const messageIdFull = messageData.id || messageId // ID completo para download de mídia
     const pushName = messageData.senderName || payload.chat?.wa_contactName || null
     const instanceIdent = payload.instanceName || payload.instance
 
@@ -159,7 +160,7 @@ export async function POST(request: Request) {
         conteudo: conteudo,
         conteudo_original: conteudo,
         message_id_whatsapp: messageId,
-        metadata: messageData as unknown as Record<string, unknown>,
+        metadata: { ...(messageData as unknown as Record<string, unknown>), message_id_full: messageIdFull },
       })
       .select("id")
       .single()

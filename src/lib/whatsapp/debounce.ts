@@ -113,15 +113,18 @@ export async function processarLote(
         continue
       }
 
-      const nomeArquivo = (mensagem.metadata as Record<string, unknown>)
-        ?.documentMessage
-        ? ((mensagem.metadata as Record<string, unknown>).documentMessage as Record<string, unknown>)?.fileName as string | undefined
+      // Usar message_id_full (ID completo) para download de mídia — fallback pro messageid curto
+      const metadata = (mensagem.metadata || {}) as Record<string, unknown>
+      const messageIdFull = (metadata.message_id_full as string) || (metadata.id as string) || mensagem.message_id_whatsapp
+
+      const nomeArquivo = metadata.documentMessage
+        ? (metadata.documentMessage as Record<string, unknown>)?.fileName as string | undefined
         : undefined
 
       const { processarConteudo } = await import("./processar-midia")
       const resultado = await processarConteudo(
         config as unknown as ConfigWhatsapp,
-        mensagem.message_id_whatsapp,
+        messageIdFull,
         mensagem.tipo_conteudo as TipoConteudo,
         mensagem.conteudo,
         nomeArquivo

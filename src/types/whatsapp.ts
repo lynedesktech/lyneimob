@@ -154,6 +154,7 @@ export const schemaPayloadUazapi = z.object({
     chatid: z.string(),
     fromMe: z.boolean(),
     messageid: z.string(),
+    id: z.string().optional(), // ID completo da mensagem (necessário para download de mídia)
     senderName: z.string().optional(),
     text: z.string().optional(),
     content: z.string().optional(),

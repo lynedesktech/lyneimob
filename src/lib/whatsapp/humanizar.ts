@@ -1,9 +1,10 @@
 import type { ConfigWhatsapp } from "@/types/whatsapp"
-import { enviarTexto } from "./uazapi"
+import { enviarTexto, simularDigitando, pararDigitando } from "./uazapi"
 
 // ============================================================
 // Envio humanizado de mensagens
-// Simula digitação, quebra mensagens longas e adiciona delays
+// Simula comportamento humano: leitura → digitando → envio por partes
+// Padrão: Laura/Remax (anti-bloqueio + naturalidade)
 // ============================================================
 
 /**
@@ -14,16 +15,54 @@ function aguardar(ms: number): Promise<void> {
 }
 
 /**
- * Calcula o delay de digitação baseado no tamanho do texto
- * Mensagem curta (< 50 chars): 1s
- * Mensagem média (50-200 chars): 2s
- * Mensagem longa (> 200 chars): 3s
+ * Gera número aleatório entre min e max
+ */
+function randomEntre(min: number, max: number): number {
+  return Math.random() * (max - min) + min
+}
+
+/**
+ * Calcula o delay de digitação proporcional ao tamanho do texto
+ * ~50ms por caractere, com limites min/max e jitter aleatório
  */
 export function calcularDelayDigitacao(texto: string): number {
-  const tamanho = texto.length
-  if (tamanho < 50) return 1000
-  if (tamanho <= 200) return 2000
-  return 3000
+  const charCount = texto.length
+  const baseTime = charCount / 50 // ~50ms por caractere em segundos
+
+  // Limites: mínimo 1.5s, máximo 6s
+  const clampado = Math.max(1.5, Math.min(baseTime, 6))
+
+  // Jitter: ±25% de variação para parecer natural
+  const jitter = randomEntre(0.75, 1.25)
+  return Math.round(clampado * jitter * 1000)
+}
+
+/**
+ * Calcula delay entre segmentos de uma mesma resposta
+ * Varia de 1 a 3 segundos com fator de comprimento
+ */
+function calcularDelayEntreSegmentos(texto: string, indice: number): number {
+  const base = randomEntre(1.0, 3.0)
+  const fatorComprimento = Math.min(texto.length / 400, 1.0) * 0.5
+  let delay = base + fatorComprimento
+
+  // Primeiro segmento é mais rápido
+  if (indice === 0) delay *= 0.7
+
+  // De madrugada (22h-7h) fica mais lento
+  const hora = new Date().getHours()
+  if (hora >= 22 || hora < 7) {
+    delay *= randomEntre(1.2, 1.6)
+  }
+
+  return Math.round(delay * 1000)
+}
+
+/**
+ * Simula tempo de "leitura" antes de começar a digitar
+ */
+function calcularDelayLeitura(): number {
+  return Math.round(randomEntre(0.5, 2.0) * 1000)
 }
 
 /**
@@ -31,7 +70,6 @@ export function calcularDelayDigitacao(texto: string): number {
  * Tenta quebrar em parágrafos ou frases, não no meio de palavras
  */
 export function quebrarMensagem(texto: string, maxCaracteres = 500): string[] {
-  // Se cabe em uma mensagem, retorna direto
   if (texto.length <= maxCaracteres) {
     return [texto]
   }
@@ -43,7 +81,7 @@ export function quebrarMensagem(texto: string, maxCaracteres = 500): string[] {
   }
 
   // Tenta quebrar por frases (ponto final seguido de espaço)
-  const frases = texto.split(/(?<=\.)\s+/)
+  const frases = texto.split(/(?<=[.!?])\s+/)
   if (frases.length > 1) {
     return agruparPartes(frases, maxCaracteres)
   }
@@ -54,7 +92,6 @@ export function quebrarMensagem(texto: string, maxCaracteres = 500): string[] {
     return agruparPartes(linhas, maxCaracteres)
   }
 
-  // Se não conseguiu quebrar naturalmente, divide por tamanho
   return dividirPorTamanho(texto, maxCaracteres)
 }
 
@@ -105,9 +142,10 @@ function dividirPorTamanho(texto: string, maxCaracteres: number): string[] {
 
 /**
  * Envia mensagem de forma humanizada:
- * Usa o parâmetro `delay` nativo da Uazapi — mostra "Digitando..." automaticamente
- * antes do envio. Na primeira parte, marca as mensagens anteriores como lidas.
- * Se a mensagem for longa, quebra em partes com 1s entre cada.
+ * 1. Simula tempo de leitura (0.5-2s)
+ * 2. Para cada segmento: mostra "digitando..." → espera proporcional → envia
+ * 3. Entre segmentos: delay aleatório de 1-3s
+ * 4. No final: para de "digitar"
  */
 export async function enviarHumanizado(
   config: ConfigWhatsapp,
@@ -116,18 +154,38 @@ export async function enviarHumanizado(
 ): Promise<void> {
   const partes = quebrarMensagem(texto)
 
+  // Simular tempo de leitura antes de começar a digitar
+  await aguardar(calcularDelayLeitura())
+
   for (let i = 0; i < partes.length; i++) {
     const parte = partes[i]
-    const delay = calcularDelayDigitacao(parte)
+    const delayDigitacao = calcularDelayDigitacao(parte)
 
+    // Mostrar "digitando..." pro cliente
+    try {
+      await simularDigitando(config, numero)
+    } catch {
+      // Não falhar o envio se presença der erro
+    }
+
+    // Esperar o tempo proporcional ao texto (simula digitação)
+    await aguardar(delayDigitacao)
+
+    // Enviar a mensagem
     await enviarTexto(config, numero, parte, {
-      delay,
-      readmessages: i === 0,
+      readmessages: i === 0, // Marca como lida na primeira parte
     })
 
-    // Se tem mais partes, espera 1s antes da próxima
+    // Se tem mais partes, espera antes da próxima
     if (i < partes.length - 1) {
-      await aguardar(1000)
+      await aguardar(calcularDelayEntreSegmentos(parte, i))
     }
+  }
+
+  // Parar de "digitar" após enviar tudo
+  try {
+    await pararDigitando(config, numero)
+  } catch {
+    // Não falhar se presença der erro
   }
 }
