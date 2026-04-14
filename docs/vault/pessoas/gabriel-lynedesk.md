@@ -1,5 +1,6 @@
 ---
-title: Gabriel (Lynedesk)
+title: "Gabriel — Desenvolvedor IA"
+date: 2026-04-14
 tags: [pessoa, equipe, lynedesk, dev]
 empresa: Lynedesk
 ---

@@ -20,11 +20,15 @@ status: em-andamento
 
 | Membro | Papel | Responsabilidades |
 |--------|-------|-------------------|
-| Joao Lucas Ucceli | CTO | Decisoes tecnicas, estrategia, aprovacao de clientes, reunioes |
-| Vitoria | Desenvolvedora | Implementacao de codigo, todas as tasks tecnicas |
-| Mateus | Colaborador | Gravacao de video, prospeccao de clientes beta |
+| Joao Lucas Ucceli | CTO / PO | Decisoes tecnicas, estrategia, aprovacao de clientes, reunioes |
+| Vitoria | Desenvolvedora | Infra, frontend, backend, banco de dados — tudo do sistema |
+| Gabriel | Desenvolvedor IA | Agente WhatsApp, automacoes, inteligencia artificial |
+| Mateus | Comercial / Ops | Clientes, demos, vendas, operacao comercial |
+| Eduardo | CEO / Socio | Visao de mercado, posicionamento, validacao estrategica |
 
-**Regra:** toda decisao tecnica (qual IA usar, qual ferramenta, qual abordagem) e do Joao. Vitoria executa. Se algo nao estiver claro na task, perguntar pro Joao antes.
+**Regra:** toda decisao tecnica e do Joao. Vitoria executa demandas do sistema. Gabriel executa demandas de IA. Mateus cuida do comercial. Eduardo valida estrategia.
+
+> **Atualizado em 14/04/2026** — equipe completa definida na [[2026-04-14-reuniao-equipe-onboarding|reuniao de onboarding]].
 
 ---
 
@@ -123,9 +127,9 @@ LYNEDES-74  Ajustes Dashboard (5 sub)
   79  Loading/error states — 17/04, Vitoria
 
 LYNEDES-70  Feedback Jader (3 sub)
-  71  Fix WhatsApp IA — 14/04, Vitoria
-  72  Botao aplicar descricao — 14/04, Vitoria
-  73  Wizard formulario imovel — 16/04, Vitoria
+  71  Fix WhatsApp IA — 16/04, Gabriel (reatribuido 14/04)
+  72  Botao aplicar descricao — 18/04, Vitoria
+  73  Wizard formulario imovel — 22/04, Vitoria
 
 LYNEDES-60  Operacao 5 Clientes (3 sub)
   68  Mapear 5 clientes — 13/04, Mateus
@@ -133,8 +137,21 @@ LYNEDES-60  Operacao 5 Clientes (3 sub)
   61  Infra operacional — 17/04, Vitoria
 
 LYNEDES-69  Video de venda — 21/04, Mateus
-LYNEDES-36  Reuniao Lynedesk — 14/04, Joao
+LYNEDES-36  Reuniao Lynedesk — 14/04, Joao ✅ CONCLUIDA
 LYNEDES-39  Reuniao Eduardo — 15/04, Joao
+
+Gabriel (IA):
+LYNEDES-82  Onboarding tecnico IA (4 sub) — 21/04, Gabriel
+  83  Mapear stack IA — 16/04, Gabriel
+  84  Documentar processos IA — 18/04, Gabriel
+  85  Mapear atividades IA — 18/04, Gabriel
+  86  Documentacao consolidada — 21/04, Gabriel
+
+Issues criadas pos-reuniao 14/04:
+LYNEDES-93  Protocolo unificado no repo — 15/04, Joao
+LYNEDES-94  Planejamento marketing — 28/04, Joao
+LYNEDES-95  Rafael Doni beta tester — 18/04, Mateus
+LYNEDES-96  Grupo WhatsApp geral — 18/04, Mateus
 ```
 
 ### Sprint 2 — Ate 28/04

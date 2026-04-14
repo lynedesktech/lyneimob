@@ -19,14 +19,14 @@ Todo o desenvolvimento do sistema LyneImob que nao envolve IA:
 - Backend (API routes, server actions, webhooks)
 - Banco de dados (migrations, queries, RLS)
 
-## Demandas ativas (13 tasks)
+## Demandas ativas (14 tasks)
 
 ### Semana 1 (14-18/04)
 1. LYNEDES-75 — Remover onboarding quebrado (15/04)
-2. LYNEDES-71 — Corrigir agente WhatsApp IA (16/04)
-3. LYNEDES-65 — CI, build limpo e tipos do banco (16/04)
-4. LYNEDES-90 — Branding dashboard — [[angelo|Angelo]] (17/04)
-5. LYNEDES-76 — Layout dashboard-01 (17/04)
+2. LYNEDES-65 — CI, build limpo e tipos do banco (16/04)
+3. LYNEDES-90 — Branding dashboard — [[angelo|Angelo]] (17/04)
+4. LYNEDES-76 — Layout dashboard-01 (17/04)
+5. LYNEDES-74 — Ajustes Dashboard (17/04)
 6. LYNEDES-72 — Botao aplicar descricao IA (18/04)
 
 ### Semana 2 (21-28/04)
@@ -37,6 +37,9 @@ Todo o desenvolvimento do sistema LyneImob que nao envolve IA:
 11. LYNEDES-79 — Loading/error states (24/04)
 12. LYNEDES-61 — Infra onboarding + monitoramento (25/04)
 13. LYNEDES-41 — Site institucional completo (28/04)
+14. LYNEDES-52 — Blog automatizado (28/04)
+
+> **Nota:** LYNEDES-71 (agente WhatsApp IA) foi reatribuida ao [[gabriel-lynedesk|Gabriel]] na reuniao de 14/04 — demandas de IA sao responsabilidade dele.
 
 ## Diferencial
 
