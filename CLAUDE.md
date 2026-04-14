@@ -12,6 +12,120 @@ Este arquivo guia o Claude Code ao trabalhar neste projeto.
 
 ---
 
+## LEITURA OBRIGATORIA — Protocolo de Trabalho da Equipe
+
+> **Antes de executar qualquer task neste projeto, o Claude Code DEVE ler o protocolo completo em `docs/vault/processos/protocolo-lynedesk.md`.**
+>
+> Esse documento define como toda a equipe Lynedesk opera: ferramentas, papeis, fluxo de trabalho, regras inegociaveis e checklists obrigatorios. Nao e sugestao — e o contrato de trabalho.
+
+### Equipe e papeis
+
+| Papel | Quem | Responsabilidade |
+|-------|------|-----------------|
+| CTO / PO | Joao | Define prioridades, cria tasks, aprova entregas, decide arquitetura |
+| Dev | Vitoria | Infra, frontend, backend, banco de dados — tudo do sistema |
+| Dev IA | Gabriel | Agente WhatsApp, automacoes, inteligencia artificial |
+| Comercial / Ops | Mateus | Clientes, demos, vendas, acompanhamento |
+| CEO / Socio | Eduardo | Visao de mercado, posicionamento, validacao estrategica |
+
+### Regras inegociaveis
+
+1. **Uma task por vez**, na sequencia do Linear — nao antecipar nem pular
+2. **Somente Joao cria tasks** — devs sugerem via WhatsApp
+3. **Somente Joao fecha tasks** — dev move para "Revisao", nunca "Concluido"
+4. **Build tem que passar** antes de cada commit (`npm run build`)
+5. **Qualidade > Velocidade** — se vai atrasar, avisar no WhatsApp e Joao ajusta prazo
+6. **Credenciais nunca no repositorio** — tudo em `.env` (no `.gitignore`)
+7. **Tasks bloqueadas sao intocaveis** — status "Aguardando cliente" nao pode ser iniciado sem aviso
+
+### Cadencia obrigatoria (NUNCA inverter)
+
+```
+Codigo → Git (commit + push) → Linear (checkboxes + comentario) → WhatsApp (1 linha)
+```
+
+**Mensagem no WhatsApp SEM commit no Git = nada pra validar.**
+
+### Status das tasks no Linear
+
+| Status | Significado | Quem move |
+|--------|-------------|-----------|
+| **Backlog** | Ideia registrada, sem prioridade | Joao |
+| **A fazer** | Priorizada, aguardando execucao | Joao |
+| **Em andamento** | Em execucao pelo dev | Dev |
+| **Revisao** | Implementado, aguardando aprovacao do Joao | Dev |
+| **Aguardando cliente** | Depende de retorno externo | Joao |
+| **Concluido** | Aprovado pelo Joao | **Somente Joao** |
+
+### Convencao de commits
+
+Formato: `prefixo: LYNEDES-XX descricao curta`
+
+| Prefixo | Quando usar |
+|---------|-------------|
+| `feat:` | Nova funcionalidade |
+| `fix:` | Correcao de bug |
+| `refactor:` | Refatoracao sem mudar comportamento |
+| `chore:` | Configuracao, deps, infra |
+| `docs:` | Documentacao |
+
+Exemplo: `feat: LYNEDES-75 remover onboarding`
+
+### Fluxo Git
+
+```
+main (branch principal)
+  └── feature/LYNEDES-XX-descricao (branch da task)
+       └── PR → review (Joao) → merge em main
+```
+
+### Checklist essencial antes de codar
+
+```
+[ ] Task aberta no Linear? Li a spec COMPLETA?
+[ ] Sei o que "pronto" significa? (criterios de aceite claros)
+[ ] Task movida pra "Em andamento"?
+[ ] Task NAO esta bloqueada?
+```
+
+### Checklist antes de commitar
+
+```
+[ ] Build passa localmente? (npm run build sem erros)
+[ ] Zero credenciais no codigo?
+[ ] Novas env vars documentadas no .env.example?
+[ ] Commit message no formato correto?
+```
+
+### Checklist depois do push
+
+```
+[ ] Linear atualizado? (checkboxes + comentario de progresso)
+[ ] Task movida pra "Revisao"?
+[ ] Aviso no WhatsApp? (1 linha: [LYNEDES-XX] descricao curta)
+```
+
+### 4 canais de trabalho
+
+| Canal | Funcao |
+|-------|--------|
+| **Git/GitHub** | Producao — codigo vive aqui |
+| **Linear** | Operacional — tasks, specs, progresso |
+| **WhatsApp** | Comunicacao — avisos curtos com referencia ao Linear |
+| **Obsidian** (`docs/vault/`) | Memoria — decisoes, aprendizados, atas, processos |
+
+### Modelo mental
+
+> "Um commit sem update no Linear e uma entrega incompleta, da mesma forma que codigo que nao builda e codigo incompleto."
+>
+> - Se o Linear nao reflete o que voce fez → voce nao fez.
+> - Se o Git nao tem o commit → o codigo nao existe.
+> - Se o WhatsApp nao tem o aviso → ninguem sabe.
+
+O processo NAO e burocracia. O processo E PARTE do trabalho.
+
+---
+
 ## Estilo de Apresentacao de Planos
 
 Todo plano deve ser escrito como conversa, nao como documentacao tecnica. Usar linguagem natural, analogias quando necessario, e explicar como se estivesse falando com alguem.
@@ -70,7 +184,7 @@ src/
 │   │   ├── usuarios/      # Gestao de equipe
 │   │   ├── integracoes/   # Integracoes (WhatsApp, portais)
 │   │   ├── loteamentos/   # CRUD de loteamentos + lotes + importacao em massa
-│   │   ├── admin/         # Area de super admin (gestao global, roadmap)
+│   │   ├── admin/         # Area de super admin (gestao global)
 │   │   └── financeiro/    # Modulo financeiro
 │   ├── [slug]/            # Site publico da imobiliaria (por slug)
 │   ├── api/               # API Routes (XML feed, webhooks: portais, stripe, whatsapp; cron: resumo-semanal)
@@ -188,8 +302,7 @@ MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados 
 
 - **pesquisa** — etapa 1 do metodo: pesquisa qualquer tema e gera `planejamento/pesquisas/pesquisa-[tema].md`. Nao executa nada, nao altera o projeto — produto final e apenas o arquivo .md
 - **requisitos** — etapa 2 do metodo: le uma pesquisa (ou trabalha com escopo conhecido) e gera `planejamento/requisitos/requisito-[tema].md` com o plano de execucao completo. Nao executa nada, nao implementa, nao altera o codigo — produto final e apenas o arquivo .md
-- **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Quando conclui, gera tarefas no banco (tabela `tarefas_roadmap`). Nao implementa nada, nao altera codigo — produto final sao as tarefas no roadmap
-- **criar-sprint** — cria uma sprint no roadmap com titulo, descricao, checklist, prioridade e prazo. Toda demanda nova deve virar sprint antes de ser executada
+- **debate** — etapa 3 do metodo: sessao de debate sobre o plano do projeto. Discute arquitetura, escopo, prioridades e trade-offs com o usuario. Ao concluir, o Joao cria as tasks no Linear
 - **frontend-design** — OBRIGATORIO para qualquer alteracao visual (layout, componentes, CSS, paginas). Contem o design system completo do projeto.
 - **busca-no-yt** — buscar videos no YouTube
 - **commit-inteligente** — analisa mudancas, cria mensagem de commit estruturada, commita e faz push automaticamente. Resolve tudo de uma vez.
@@ -206,43 +319,8 @@ Pesquisas e requisitos ficam em `planejamento/` e sao temporarios — existem pa
 - Pesquisa: `planejamento/pesquisas/pesquisa-[tema].md`
 - Requisito: `planejamento/requisitos/requisito-[tema].md`
 
-**Limpeza automatica:** quando uma tarefa for movida para **Concluido** no roadmap, verificar se existe pesquisa ou requisito associado. Se sim, informar o usuario e apagar. Se o usuario quiser manter, respeitar.
+**Limpeza automatica:** quando uma task for movida para **Concluido** no Linear, verificar se existe pesquisa ou requisito associado. Se sim, informar o usuario e apagar. Se o usuario quiser manter, respeitar.
 
 ---
 
-## Gestao de Tarefas — Banco de Dados (tabela `tarefas_roadmap`)
-
-O roadmap vive no banco de dados e e acessivel em `/admin/roadmap` (area de Super Admin). O arquivo `roadmap.md` foi removido — a fonte de verdade e o banco.
-
-### Os 5 status
-
-- **a_fazer** — fila priorizada aguardando execucao
-- **fazendo** — tarefa em andamento agora
-- **pronto** — implementacao concluida, aguardando validacao do usuario
-- **concluido** — validado e aprovado pelo usuario
-- **sugestao** — melhorias identificadas pelo Claude durante o trabalho
-
-### Como gerenciar tarefas
-
-Usar as server actions em `src/actions/roadmap.ts`:
-- `criarTarefaRoadmap(dados)` — criar nova tarefa
-- `atualizarStatusTarefa(id, status)` — mover entre status
-- `excluirTarefaRoadmap(id)` — remover tarefa
-- `listarTarefasRoadmap()` — listar todas
-- `buscarResumoRoadmap()` — contadores por status
-
-### Regra obrigatoria: sprint primeiro
-
-**Ao iniciar trabalho numa sprint, o PRIMEIRO passo — antes de qualquer codigo — e mudar o status pra `fazendo`** via `atualizarStatusTarefa(id, 'fazendo')`. So depois comecar a implementar. Isso garante que o roadmap sempre reflete o que esta sendo trabalhado agora.
-
-### Comportamento automatico
-
-O Claude atualiza o roadmap **por conta propria**, sem precisar ser solicitado:
-
-1. **Pedido novo** → usar a skill `/criar-sprint` para mapear como sprint antes de executar
-2. **Iniciar sprint** → mudar status para `fazendo` (OBRIGATORIO antes de codar)
-3. **Concluir sprint** → mover para `pronto` e informar o usuario
-4. **Usuario valida** → mover para `concluido` com data
-5. **Sugestao de melhoria** → registrar com status `sugestao`
-
-> Se nao esta no roadmap, nao existe. O Claude nunca perde uma demanda e nunca trabalha no escuro.
+*Gestao de tarefas: **Linear** e a unica fonte de verdade. Detalhes no topo deste documento (secao "LEITURA OBRIGATORIA — Protocolo de Trabalho da Equipe") e no arquivo `docs/vault/processos/protocolo-lynedesk.md`.*
