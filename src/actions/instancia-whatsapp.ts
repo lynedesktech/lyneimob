@@ -21,6 +21,18 @@ import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
 // Helpers
 // ============================================================
 
+/**
+ * Monta a URL do webhook WhatsApp que aponta pro Railway (agente Python).
+ * AGENT_RAILWAY_URL é obrigatória — sem ela o agente não funciona.
+ */
+function montarWebhookUrl(): string {
+  const railwayUrl = process.env.AGENT_RAILWAY_URL
+  if (!railwayUrl) {
+    throw new Error("AGENT_RAILWAY_URL não configurada. O webhook precisa apontar pro Railway onde o agente roda.")
+  }
+  return `${railwayUrl.replace(/\/$/, "")}/webhook/lyneimob`
+}
+
 /** Busca URL e admintoken da Uazapi nas configurações de integrações.
  *  As credenciais são da plataforma inteira — ficam na org do super_admin.
  *  Usamos o cliente admin para bypasaar o RLS e ler entre organizações. */
@@ -196,17 +208,14 @@ export async function criarEConectarInstancia(): Promise<
 
   }
 
-  // Configurar webhook — aponta para o Railway (agente Python)
-  // Se AGENT_RAILWAY_URL não estiver definida, usa o Vercel como fallback
-  const railwayUrl = process.env.AGENT_RAILWAY_URL
-  const webhookUrl = railwayUrl
-    ? `${railwayUrl.replace(/\/$/, "")}/webhook/lyneimob`
-    : `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/webhooks/whatsapp`
-
+  // Configurar webhook — obrigatoriamente aponta pro Railway (agente Python)
   try {
+    const webhookUrl = montarWebhookUrl()
     await configurarWebhookUazapi(credenciais.url, instanceToken, webhookUrl)
+    console.log(`[Instância WhatsApp] Webhook configurado: ${webhookUrl}`)
   } catch (err) {
     console.error("[Instância WhatsApp] Erro ao configurar webhook:", err instanceof Error ? err.message : err)
+    return { erro: "Erro ao configurar webhook. Verifique se AGENT_RAILWAY_URL está definida." }
   }
 
   // Conectar (gerar QR code)
@@ -274,7 +283,7 @@ export async function verificarStatusInstancia(): Promise<
       console.log(`[Instância WhatsApp] Token atualizado no banco para config ${config.id}`)
     }
 
-    // Se acabou de conectar, ativar instância e salvar número quando disponível
+    // Se acabou de conectar, ativar instância, salvar número e garantir webhook correto
     if (conectado && !config.ativo) {
       const updates: Record<string, unknown> = { ativo: true }
       if (resposta.status?.jid) {
@@ -284,6 +293,16 @@ export async function verificarStatusInstancia(): Promise<
         .from("config_whatsapp")
         .update(updates)
         .eq("id", config.id)
+
+      // Reconfigurar webhook automaticamente ao conectar
+      // Garante que aponta pro Railway (agente Python) mesmo se foi configurado errado antes
+      try {
+        const webhookUrl = montarWebhookUrl()
+        await configurarWebhookUazapi(credenciais.url, config.uazapi_token, webhookUrl)
+        console.log(`[Instância WhatsApp] Webhook reconfigurado automaticamente: ${webhookUrl}`)
+      } catch (err) {
+        console.error("[Instância WhatsApp] Erro ao reconfigurar webhook:", err instanceof Error ? err.message : err)
+      }
     }
 
     return {
@@ -351,4 +370,41 @@ export async function desconectarInstancia(): Promise<EstadoFormulario> {
     .eq("id", config.id)
 
   return { sucesso: "WhatsApp desconectado e instância excluída com sucesso" }
+}
+
+// ============================================================
+// Reconfigurar webhook (corrigir URL sem desconectar)
+// ============================================================
+
+export async function reconfigurarWebhook(): Promise<EstadoFormulario> {
+  const usuario = await buscarUsuarioLogado()
+  if (!usuario) return { erro: "Usuário não autenticado" }
+
+  if (usuario.cargo !== "admin" && !ehSuperAdmin(usuario)) {
+    return { erro: "Apenas o administrador pode gerenciar instâncias WhatsApp." }
+  }
+
+  const credenciais = await buscarCredenciaisAdmin(usuario.organizacao_id)
+  if (!credenciais) return { erro: "Credenciais Uazapi não configuradas" }
+
+  const supabase = await criarClienteServer()
+
+  const { data: config } = await supabase
+    .from("config_whatsapp")
+    .select("uazapi_token")
+    .eq("organizacao_id", usuario.organizacao_id)
+    .single()
+
+  if (!config?.uazapi_token) return { erro: "Nenhuma instância encontrada" }
+
+  const webhookUrl = montarWebhookUrl()
+
+  try {
+    await configurarWebhookUazapi(credenciais.url, config.uazapi_token, webhookUrl)
+    console.log(`[Instância WhatsApp] Webhook reconfigurado manualmente: ${webhookUrl}`)
+    return { sucesso: `Webhook atualizado para: ${webhookUrl}` }
+  } catch (err) {
+    console.error("[Instância WhatsApp] Erro ao reconfigurar webhook:", err instanceof Error ? err.message : err)
+    return { erro: "Erro ao reconfigurar webhook. Verifique as credenciais." }
+  }
 }

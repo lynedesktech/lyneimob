@@ -121,17 +121,16 @@ async function verificarUazapi(url?: string, token?: string): Promise<ItemSaude>
   try {
     const urlLimpa = url.replace(/\/$/, "")
 
-    // Validar credenciais sem criar instância — usa GET na raiz da API com admintoken
+    // Validar credenciais admin — usa GET /instance/all que requer admintoken
     const resp = await comTimeout(
-      fetch(`${urlLimpa}/instance/status`, {
+      fetch(`${urlLimpa}/instance/all`, {
         method: "GET",
         headers: { "Content-Type": "application/json", admintoken: token },
       }),
       TIMEOUT_MS
     )
 
-    // Qualquer resposta que não seja erro de auth indica que a API está acessível
-    if (resp.ok || resp.status === 404) {
+    if (resp.ok) {
       return { status: "conectado" }
     }
 
