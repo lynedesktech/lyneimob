@@ -253,6 +253,50 @@ async def process_buffered_messages(
         logger.error(f"[PROCESS] Erro para {chat_id}: {e}", exc_info=True)
 
 
+# ─────────────────── Callback Next.js ───────────────────
+
+
+async def criar_cliente_negocio_via_nextjs(
+    conversa_id: str, org_id: str, numero_cliente: str, nome_cliente: str
+) -> None:
+    """Chama o Next.js (Vercel) pra criar cliente + negócio no CRM.
+    Fire-and-forget com 1 retry — se falhar, a conversa continua normal."""
+    nextjs_url = settings.nextjs_app_url
+    if not nextjs_url:
+        logger.warning("[CRM] NEXTJS_APP_URL não configurada — cliente/negócio não criado")
+        return
+
+    url = f"{nextjs_url.rstrip('/')}/api/interno/criar-cliente-negocio"
+    payload = {
+        "conversaId": conversa_id,
+        "organizacaoId": org_id,
+        "numeroCliente": numero_cliente,
+        "nomeCliente": nome_cliente or "Contato WhatsApp",
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "x-internal-secret": settings.supabase_service_key,
+    }
+
+    for tentativa in range(2):  # 1 tentativa + 1 retry
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code < 400:
+                data = resp.json()
+                logger.info(f"[CRM] Cliente/negócio criado: {data.get('status')} (conversa {conversa_id})")
+                return
+            logger.warning(f"[CRM] Erro {resp.status_code} ao criar cliente/negócio (tentativa {tentativa + 1}): {resp.text[:200]}")
+        except Exception as e:
+            logger.warning(f"[CRM] Falha ao chamar Next.js (tentativa {tentativa + 1}): {e}")
+
+        if tentativa == 0:
+            await asyncio.sleep(2)  # espera 2s antes do retry
+
+    logger.error(f"[CRM] Não foi possível criar cliente/negócio para conversa {conversa_id} após 2 tentativas")
+
+
 # ══════════════════════════════════════════════════════════
 #  ENDPOINTS — WEBHOOK UAZAPI
 # ══════════════════════════════════════════════════════════
@@ -321,13 +365,22 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
 
     # 5. Buscar ou criar conversa
     conversa = await db.buscar_conversa_ativa(org_id, chat_id)
+    is_nova = False
     if not conversa:
         conversa = await db.criar_conversa(org_id, chat_id, msg.nome)
+        is_nova = True
         if not conversa:
             logger.error(f"[WEBHOOK] Falha ao criar conversa para {chat_id}")
             return JSONResponse({"status": "error"}, status_code=500)
 
     conversa_id = conversa["id"]
+
+    # 5.1 Conversa nova → chamar Next.js pra criar cliente + negócio no CRM
+    if is_nova:
+        background_tasks.add_task(
+            criar_cliente_negocio_via_nextjs,
+            conversa_id, org_id, chat_id, msg.nome or ""
+        )
 
     # 6. Marcar como lida
     if api_url and token and msg.message_id_full:

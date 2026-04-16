@@ -44,7 +44,7 @@ export async function processarComAgente(
       .single()
 
     if (!config) {
-      console.error(`[Agente SDR] Config WhatsApp não encontrada para org ${organizacaoId}`)
+      console.error(`[Agente SDR] IA NÃO RESPONDEU — Config WhatsApp não encontrada para org ${organizacaoId}`)
       return
     }
 
@@ -58,17 +58,19 @@ export async function processarComAgente(
       .single()
 
     if (!conversa) {
-      console.error(`[Agente SDR] Conversa ${conversaId} não encontrada`)
+      console.error(`[Agente SDR] IA NÃO RESPONDEU — Conversa ${conversaId} não encontrada no banco`)
       return
     }
 
     // Não processar conversas encaminhadas ou finalizadas
     if (conversa.status === "encaminhado" || conversa.status === "finalizado" || conversa.status === "arquivado") {
+      console.log(`[Agente SDR] Conversa ${conversaId}: ignorada — status "${conversa.status}". IA não responde neste estado.`)
       return
     }
 
-    // Verificar se o negócio está na etapa "Pré-atendimento IA"
-    // A IA só atende enquanto o card estiver nessa etapa
+    // Log informativo da etapa do pipeline (não bloqueia mais)
+    // A IA continua respondendo enquanto a conversa estiver ativa (em_andamento/qualificado)
+    // O controle correto é pelo status da conversa, não pela etapa do negócio
     if (conversa.negocio_id) {
       const { data: negocioEtapa } = await supabase
         .from("negocios")
@@ -78,8 +80,7 @@ export async function processarComAgente(
 
       const tipoEtapa = (negocioEtapa?.pipeline_etapas as { tipo?: string } | null)?.tipo
       if (tipoEtapa && tipoEtapa !== "pre_atendimento_ia") {
-        console.log(`[Agente SDR] Conversa ${conversaId}: negócio fora do pré-atendimento IA (etapa: ${tipoEtapa}). IA desativada.`)
-        return
+        console.log(`[Agente SDR] Conversa ${conversaId}: negócio na etapa "${tipoEtapa}" (fora do pré-atendimento). IA continua respondendo pois conversa está "${conversa.status}".`)
       }
     }
 
@@ -103,7 +104,7 @@ export async function processarComAgente(
     const { verificarLimiteOpenAI } = await import("@/lib/rate-limit")
     const limite = await verificarLimiteOpenAI(organizacaoId)
     if (!limite.permitido) {
-      console.warn(`[Agente SDR] Rate limit atingido para org ${organizacaoId}. Restante: ${limite.restante}`)
+      console.warn(`[Agente SDR] IA NÃO RESPONDEU — Rate limit OpenAI atingido para org ${organizacaoId}. Restante: ${limite.restante}`)
       return
     }
 
@@ -125,6 +126,7 @@ export async function processarComAgente(
       .limit(30)
 
     if (!mensagensRecentes || mensagensRecentes.length === 0) {
+      console.log(`[Agente SDR] IA NÃO RESPONDEU — Conversa ${conversaId}: nenhuma mensagem encontrada no banco`)
       return
     }
 
@@ -280,6 +282,7 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
       (m) => m.role === "user"
     )
     if (!temMensagemUsuario) {
+      console.log(`[Agente SDR] IA NÃO RESPONDEU — Conversa ${conversaId}: nenhuma mensagem nova do usuário para processar`)
       return
     }
 
@@ -357,7 +360,7 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
     }
 
     if (!respostaFinal) {
-      console.error(`[Agente SDR] IA não retornou resposta para conversa ${conversaId}`)
+      console.error(`[Agente SDR] IA NÃO RESPONDEU — OpenAI retornou resposta vazia para conversa ${conversaId}`)
       return
     }
 
