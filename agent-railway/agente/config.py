@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_key: str = ""  # Service role key (bypassa RLS)
 
+    # --- Next.js (Vercel) — callback pra criar cliente/negócio ---
+    nextjs_app_url: str = ""  # URL do app Next.js (ex: https://lyneimob.vercel.app)
+
     # --- Buffer (agrupamento de mensagens) ---
     buffer_wait_seconds: int = 20
     buffer_ttl_seconds: int = 300
