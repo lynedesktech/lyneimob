@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
 import { criarImovel, atualizarImovel } from "@/actions/imoveis"
 import type { Imovel } from "@/types/database"
+import { useContextoIA } from "@/components/ia/contexto-ia"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InputCep } from "@/components/ui/input-cep"
@@ -80,6 +81,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const [valorCondominioValue, setValorCondominioValue] = useState<number | null>(campoNum(imovel, "valor_condominio", "condominio") as number || null)
   const [valorIptuValue, setValorIptuValue] = useState<number | null>(campoNum(imovel, "valor_iptu", "iptu") as number || null)
   const [tituloValue, setTituloValue] = useState(campo(imovel, "titulo"))
+  const [descricaoValue, setDescricaoValue] = useState(campo(imovel, "descricao"))
   const [pendente, setPendente] = useState(false)
   const [erros, setErros] = useState<Record<string, string>>({})
   const [logradouroValue, setLogradouroValue] = useState(campo(imovel, "logradouro"))
@@ -87,6 +89,37 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
   const [cidadeValue, setCidadeValue] = useState(campo(imovel, "cidade"))
 
   const { buscandoCep, preenchidoPorCep, buscarCep, limparPreenchimento } = useBuscaCep()
+
+  // Registra o imovel no contexto da IA pra o widget conseguir aplicar
+  // descricao/titulo gerados diretamente no formulario
+  const { definirEntidade } = useContextoIA()
+  const tituloRef = useRef(tituloValue)
+  const descricaoRef = useRef(descricaoValue)
+  tituloRef.current = tituloValue
+  descricaoRef.current = descricaoValue
+
+  useEffect(() => {
+    if (!imovel?.id) return
+    definirEntidade({
+      modulo: "imovel",
+      entidadeId: imovel.id,
+      dados: {
+        descricao_ia: campo(imovel, "descricao_ia"),
+        titulo_ia: campo(imovel, "titulo_ia"),
+        get descricao() {
+          return descricaoRef.current
+        },
+        get titulo() {
+          return tituloRef.current
+        },
+        onAplicar: (c: "descricao" | "titulo", texto: string) => {
+          if (c === "descricao") setDescricaoValue(texto)
+          if (c === "titulo") setTituloValue(texto)
+        },
+      },
+    })
+    return () => definirEntidade(null)
+  }, [imovel, definirEntidade])
 
   async function handleBuscarCep(cep: string) {
     const dados = await buscarCep(cep)
@@ -259,7 +292,8 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 name="descricao"
                 placeholder="Descreva o imóvel em detalhes..."
                 rows={4}
-                defaultValue={campo(imovel, "descricao")}
+                value={descricaoValue}
+                onChange={(e) => setDescricaoValue(e.target.value)}
               />
             </Field>
           </CardContent>
