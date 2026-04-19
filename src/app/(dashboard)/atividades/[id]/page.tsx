@@ -119,7 +119,7 @@ export default async function DetalheAtividadePage({ params }: Props) {
 
         <TabsContent value="informacoes" className="space-y-4">
           {/* Cards de resumo */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <Card>
               <CardContent className="flex items-center gap-3 p-4">
                 <Clock className="h-8 w-8 text-primary" />
