@@ -134,7 +134,7 @@ export function FormularioConfiguracoesOrganizacao({ organizacao }: Props) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" id="onborda-form-empresa">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Dados básicos */}
         <Card>
           <CardHeader>

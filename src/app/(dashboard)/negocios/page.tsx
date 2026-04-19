@@ -35,7 +35,7 @@ export default async function NegociosPage({
         acoes={
           <>
             <ToggleVisualizacao rota="/negocios" paramNome="visao" padrao={padrao} opcoes={opcoesKanbanLista} />
-            <Button render={<Link href="/negocios/novo" />} id="onborda-btn-novo-negocio">
+            <Button render={<Link href="/negocios/novo" />}>
               <Plus className="mr-2 h-4 w-4" />
               Novo Negócio
             </Button>
@@ -45,7 +45,7 @@ export default async function NegociosPage({
 
       <ResumoNegocios />
 
-      <div id="onborda-kanban">
+      <div>
         {visao === "lista" ? <ListaNegocios /> : <KanbanContainer />}
       </div>
     </div>

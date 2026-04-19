@@ -65,7 +65,7 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
     )
   }
 
-  // Wizard de onboarding (primeira configuração)
+  // Wizard de primeira configuração
   if (modoWizard) {
     return (
       <div className="space-y-6">

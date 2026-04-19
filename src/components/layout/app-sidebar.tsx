@@ -180,7 +180,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
                   </SidebarGroupLabel>
                 )}
                 <SidebarGroupContent>
-                  <SidebarMenu {...(indice === 0 ? { id: "onborda-sidebar-nav" } : {})}>
+                  <SidebarMenu>
                     {itensVisiveis.map((item) => {
                       const ativo =
                         item.href === "/painel"
