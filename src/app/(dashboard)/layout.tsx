@@ -81,13 +81,15 @@ export default async function DashboardLayout({
             >
               <SidebarProvider>
                 <AppSidebar usuario={usuario} organizacao={orgComBranding} />
-                <SidebarInset>
-                  <Header organizacao={organizacao} />
-                  <BannerTrialLayout
-                    plano={organizacao.plano}
-                    trialFimEm={organizacao.trial_fim_em}
-                  />
-                  <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">{children}</main>
+                <SidebarInset className="bg-muted/40 dark:bg-sidebar">
+                  <div className="flex flex-1 flex-col overflow-hidden rounded-xl border bg-background shadow-sm m-2 md:m-4">
+                    <Header organizacao={organizacao} />
+                    <BannerTrialLayout
+                      plano={organizacao.plano}
+                      trialFimEm={organizacao.trial_fim_em}
+                    />
+                    <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">{children}</main>
+                  </div>
                 </SidebarInset>
               </SidebarProvider>
               <WidgetIA />
