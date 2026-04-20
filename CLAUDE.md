@@ -256,8 +256,17 @@ RESEND_FROM_EMAIL=LyneImob <noreply@seudominio.com>
 
 ## Divida Tecnica Conhecida
 
-- Tipos do banco em `types/database.ts` sao manuais — trocar por `supabase gen types` quando o CLI estiver configurado
+- Tipos do banco em `types/database.ts` sao manuais. Ja existe o script `npm run gen:types` que gera `types/database.generated.ts` via Supabase CLI — migrar o codigo pra usar o gerado em task separada (requer comparacao campo a campo pra garantir que nada quebre). Ver `scripts/README-gen-types.md`.
 - Middleware do Next.js 16 usa convencao deprecated (`middleware.ts`) — migrar para `proxy` quando a nova API estabilizar
+
+## CI
+
+PRs rodam automaticamente via GitHub Actions (`.github/workflows/ci.yml`):
+
+- **Lint + typecheck** — `npm run lint` e `npm run typecheck`. Se falhar, PR nao merge.
+- **Build de producao** — `npm run build` com env vars dummy (so valida compilacao, nao executa codigo real).
+
+Pra forcar o CI bloquear merge com falha, habilitar branch protection em `main` e `desenvolvimento` no GitHub: Settings → Branches → Add rule → "Require status checks to pass before merging" → marcar `Lint + Typecheck` e `Build de producao`.
 
 ---
 
