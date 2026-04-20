@@ -75,7 +75,7 @@ export function PainelAdmin({
 
       {/* KPI cards */}
       <div
-        className="animate-fade-in-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="animate-fade-in-up grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
         style={{ animationDelay: "100ms" }}
       >
         <CardKpi
