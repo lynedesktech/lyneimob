@@ -58,8 +58,23 @@ export default async function DashboardLayout({
             <div
               style={
                 {
+                  // Site publico — ja usado em [slug]/layout.tsx
                   "--site-primaria": configs.cores.primaria,
                   "--site-destaque": configs.cores.destaque,
+
+                  // Dashboard — sobrescreve vars do shadcn com as cores da
+                  // organizacao (LYNEDES-128). Pinta o sistema inteiro:
+                  // botoes primarios, sidebar item ativo, badges, wizards,
+                  // checkboxes, switches, progress bars, focus rings.
+                  // Se a org nao tem cores custom, `configs.cores.primaria`
+                  // cai pro default do schema (`#063A8C` azul LyneImob),
+                  // mantendo consistencia com o site publico.
+                  "--primary": configs.cores.primaria,
+                  "--primary-foreground": "#FFFFFF",
+                  "--sidebar-primary": configs.cores.primaria,
+                  "--sidebar-primary-foreground": "#FFFFFF",
+                  "--sidebar-accent-foreground": configs.cores.primaria,
+                  "--ring": configs.cores.primaria,
                 } as React.CSSProperties
               }
               className="contents"
