@@ -22,7 +22,6 @@ import { GraficoImoveis } from "./grafico-imoveis"
 import { GraficoEvolucao, type PontoMensal } from "./grafico-evolucao"
 import { ListaAtividadesHoje, type AtividadeHojeItem } from "./lista-atividades-hoje"
 import { CardResumoSemanal } from "./card-resumo-semanal"
-import { ChecklistOnboarding } from "@/components/onboarding/checklist-onboarding"
 
 interface PainelAdminProps {
   nomeUsuario: string
@@ -74,14 +73,8 @@ export function PainelAdmin({
         </Badge>
       </div>
 
-      {/* Checklist de onboarding (some quando completar tudo) */}
-      <div id="onborda-checklist" className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-        <ChecklistOnboarding />
-      </div>
-
       {/* KPI cards */}
       <div
-        id="onborda-dashboard-cards"
         className="animate-fade-in-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
         style={{ animationDelay: "100ms" }}
       >
@@ -205,7 +198,7 @@ export function PainelAdmin({
       </Card>
 
       {/* Ações rápidas */}
-      <div id="onborda-acoes-rapidas" className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+      <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">Ações rápidas</h2>
         <div className="flex flex-wrap gap-3">
           <Link href="/imoveis/novo">
