@@ -198,6 +198,22 @@ async def set_absence_message(message: str) -> None:
     await r.set(_ABSENCE_MSG_KEY, message)
 
 
+async def ja_enviou_ausencia_hoje(chat_id: str, org_id: str) -> bool:
+    """Verifica se ja enviou mensagem de ausencia pra esse contato hoje.
+    Evita spam quando lead manda varias msgs seguidas fora do horario."""
+    r = await get_redis()
+    key = f"absence_sent:{org_id}:{chat_id}"
+    return bool(await r.get(key))
+
+
+async def marcar_ausencia_enviada(chat_id: str, org_id: str) -> None:
+    """Marca que ja enviou ausencia pra esse contato. TTL de 20h
+    (nao envia outra no mesmo dia, mas libera se voltar amanha)."""
+    r = await get_redis()
+    key = f"absence_sent:{org_id}:{chat_id}"
+    await r.set(key, "1", ex=20 * 60 * 60)
+
+
 async def get_business_hours() -> dict:
     r = await get_redis()
     data = await r.hgetall(_BUSINESS_HOURS_KEY)

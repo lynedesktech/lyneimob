@@ -10,12 +10,23 @@ MAX_SEGMENT_LENGTH = 500
 
 
 def parse_output(output: str) -> list[ParsedSegment]:
-    """Divide a saida do agente em segmentos para envio pelo WhatsApp."""
+    """Divide a saida do agente em segmentos para envio pelo WhatsApp.
+
+    Prioriza split por '---' em linha propria (delimitador explicito da IA,
+    usado pra fragmentar mensagens em blocos curtos). Se nao encontrar '---',
+    cai no split por paragrafo duplo (\\n\\n) como fallback.
+    """
     if not output or not output.strip():
         return []
 
     segments: list[ParsedSegment] = []
-    paragraphs = re.split(r"\n\n+", output.strip())
+
+    # Prioridade 1: split por --- em linha propria (delimitador explicito da IA)
+    if re.search(r"(^|\n)\s*---\s*(\n|$)", output):
+        paragraphs = re.split(r"(?:^|\n)\s*---\s*(?:\n|$)", output.strip())
+    else:
+        # Fallback: split por paragrafo duplo
+        paragraphs = re.split(r"\n\n+", output.strip())
 
     for para in paragraphs:
         para = para.strip()
