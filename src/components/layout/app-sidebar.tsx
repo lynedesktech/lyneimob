@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -119,6 +120,8 @@ interface AppSidebarProps {
   }
   organizacao: {
     nome: string
+    logo_url?: string | null
+    corPrimaria?: string
   }
 }
 
@@ -145,12 +148,29 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
 
   return (
     <Sidebar className="border-r-0">
-      {/* Header — ícone + nome da org + descrição */}
+      {/* Header — logo/ícone + nome da org + descrição */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Building2 className="h-5 w-5" />
-          </div>
+          {organizacao.logo_url ? (
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-sidebar-border">
+              <Image
+                src={organizacao.logo_url}
+                alt={organizacao.nome}
+                fill
+                sizes="36px"
+                className="object-contain p-0.5"
+              />
+            </div>
+          ) : (
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sidebar-primary-foreground"
+              style={{
+                backgroundColor: organizacao.corPrimaria ?? "var(--sidebar-primary)",
+              }}
+            >
+              <Building2 className="h-5 w-5" />
+            </div>
+          )}
           <div className="flex min-w-0 flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground truncate">
               {organizacao.nome}
