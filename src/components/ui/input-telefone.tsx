@@ -26,12 +26,20 @@ function aplicarMascaraTelefone(valor: string): string {
 interface InputTelefoneProps extends Omit<React.ComponentProps<typeof Input>, "value" | "onChange" | "type"> {
   /** Valor inicial (pode ter máscara ou ser só dígitos) */
   defaultValue?: string
-  /** Nome do campo para FormData (envia só dígitos) */
+  /** Nome do campo para FormData (envia o valor com máscara — actions usam `digitosDe()` pra limpar) */
   name?: string
   /** Valor controlado (só dígitos) — para uso com React Hook Form */
   value?: string
   /** Callback com valor limpo (só dígitos) — para uso com React Hook Form */
   onChange?: (valor: string) => void
+}
+
+/**
+ * Remove tudo que não é dígito. Use em Server Actions que recebem o
+ * valor deste input via FormData.
+ */
+export function digitosDe(valor: string | null | undefined): string {
+  return (valor ?? "").replace(/\D/g, "")
 }
 
 export function InputTelefone({ defaultValue, name, value, onChange, ...props }: InputTelefoneProps) {
@@ -55,18 +63,15 @@ export function InputTelefone({ defaultValue, name, value, onChange, ...props }:
     }
   }
 
-  // Valor limpo (só dígitos) para enviar no FormData
-  const valorLimpo = display.replace(/\D/g, "")
-
   return (
-    <>
-      <Input
-        inputMode="tel"
-        value={display}
-        onChange={handleChange}
-        {...props}
-      />
-      {name && !controlado && <input type="hidden" name={name} value={valorLimpo} />}
-    </>
+    <Input
+      type="tel"
+      inputMode="tel"
+      autoComplete="tel"
+      name={controlado ? undefined : name}
+      value={display}
+      onChange={handleChange}
+      {...props}
+    />
   )
 }

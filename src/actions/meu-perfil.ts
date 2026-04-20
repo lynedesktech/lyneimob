@@ -3,6 +3,7 @@
 import { criarClienteServer } from "@/lib/supabase/server"
 import { schemaAtualizarPerfil } from "@/types/meu-perfil"
 import type { EstadoFormulario } from "@/types/formulario"
+import { digitosDe } from "@/components/ui/input-telefone"
 
 // ============================================================
 // Buscar dados do perfil do usuário logado
@@ -52,7 +53,7 @@ export async function atualizarMeuPerfil(
 
   const dadosBrutos = {
     nome: formData.get("nome"),
-    telefone: formData.get("telefone"),
+    telefone: digitosDe(formData.get("telefone") as string | null),
     creci: formData.get("creci"),
     bio: formData.get("bio"),
   }

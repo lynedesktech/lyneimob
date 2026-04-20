@@ -5,6 +5,7 @@ import { redis } from "@/lib/redis"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { schemaContatoSite } from "@/types/leads-portais"
 import type { EstadoFormulario } from "@/types/formulario"
+import { digitosDe } from "@/components/ui/input-telefone"
 
 const LIMITE_ENVIOS = 3
 const JANELA_SEGUNDOS = 900 // 15 minutos
@@ -15,7 +16,7 @@ export async function enviarContatoSite(
   const dados = {
     nome: formData.get("nome") as string,
     email: formData.get("email") as string,
-    telefone: formData.get("telefone") as string,
+    telefone: digitosDe(formData.get("telefone") as string | null),
     mensagem: formData.get("mensagem") as string,
     organizacao_slug: formData.get("organizacao_slug") as string,
     imovel_codigo: (formData.get("imovel_codigo") as string) || "",
