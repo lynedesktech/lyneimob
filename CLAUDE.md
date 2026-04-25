@@ -183,6 +183,9 @@ MCPs sao integracoes externas que dao superpoderes ao Claude Code. Configurados 
 - **shadcn** — especialista de UI: gerencia componentes shadcn/ui, busca exemplos, verifica disponibilidade, instala novos componentes
 - **Supabase** — acesso direto ao banco (executar SQL, listar tabelas, criar migrations, gerar tipos)
 - **Playwright** — automacao de browser (testes visuais, navegacao, screenshots)
+- **Linear** — gestao de projetos e tarefas (criar issues, buscar tickets, gerenciar projetos, ciclos e equipes)
+
+> **Como configurar localmente**: o `.mcp.json` esta no `.gitignore` (contem tokens). Para configurar na sua maquina, copie `.mcp.json.example` para `.mcp.json` e preencha os tokens de cada servico (Supabase, Gamma, Linear).
 
 ## Ferramentas Disponiveis (Skills)
 
