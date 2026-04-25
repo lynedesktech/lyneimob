@@ -6,10 +6,10 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
 import { BannerTrialLayout } from "@/components/planos/banner-trial-layout"
 import { ProvedorBuscaGlobal, DialogBuscaGlobal } from "@/components/layout/busca-global"
-import { ProvedorOnboarding } from "@/components/onboarding/provedor-onboarding"
 import { ProvedorContextoIA } from "@/components/ia/contexto-ia"
 import { WidgetIA } from "@/components/ia/widget-ia"
 import { Providers } from "./providers"
+import { extrairConfiguracoes } from "@/types/configuracoes-site"
 import {
   obterUsuarioAutenticado,
   obterDadosUsuario,
@@ -40,29 +40,62 @@ export default async function DashboardLayout({
       redirect("/login?erro=organizacao-nao-encontrada")
     }
 
+  // Personalizacao visual por organizacao: logo + cores vem de configuracoes_site
+  const configs = extrairConfiguracoes(
+    (organizacao as unknown as { configuracoes_site?: Record<string, unknown> }).configuracoes_site
+  )
+  const orgComBranding = {
+    nome: organizacao.nome,
+    logo_url: (organizacao as unknown as { logo_url?: string | null }).logo_url ?? null,
+    corPrimaria: configs.cores.primaria,
+  }
+
   return (
     <Providers>
-      <ProvedorOnboarding>
-        <ProvedorBuscaGlobal superAdmin={!!usuario.perfil_plataforma}>
-          <ProvedorContextoIA>
-            <TooltipProvider>
+      <ProvedorBuscaGlobal superAdmin={!!usuario.perfil_plataforma}>
+        <ProvedorContextoIA>
+          <TooltipProvider>
+            <div
+              style={
+                {
+                  // Site publico — ja usado em [slug]/layout.tsx
+                  "--site-primaria": configs.cores.primaria,
+                  "--site-destaque": configs.cores.destaque,
+
+                  // Dashboard — sobrescreve vars do shadcn com as cores da
+                  // organizacao (LYNEDES-128). Pinta o sistema inteiro:
+                  // botoes primarios, sidebar item ativo, badges, wizards,
+                  // checkboxes, switches, progress bars, focus rings.
+                  // Se a org nao tem cores custom, `configs.cores.primaria`
+                  // cai pro default do schema (`#063A8C` azul LyneImob),
+                  // mantendo consistencia com o site publico.
+                  "--primary": configs.cores.primaria,
+                  "--primary-foreground": "#FFFFFF",
+                  "--sidebar-primary": configs.cores.primaria,
+                  "--sidebar-primary-foreground": "#FFFFFF",
+                  "--sidebar-accent-foreground": configs.cores.primaria,
+                  "--ring": configs.cores.primaria,
+                } as React.CSSProperties
+              }
+              className="contents"
+            >
               <SidebarProvider>
-                <AppSidebar usuario={usuario} organizacao={organizacao} />
+                <AppSidebar usuario={usuario} organizacao={orgComBranding} />
                 <SidebarInset>
                   <Header organizacao={organizacao} />
                   <BannerTrialLayout
                     plano={organizacao.plano}
                     trialFimEm={organizacao.trial_fim_em}
                   />
-                  <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-6">{children}</main>
+                  <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">{children}</main>
                 </SidebarInset>
               </SidebarProvider>
               <WidgetIA />
-            </TooltipProvider>
-            <DialogBuscaGlobal />
-          </ProvedorContextoIA>
-        </ProvedorBuscaGlobal>
-      </ProvedorOnboarding>
+            </div>
+          </TooltipProvider>
+          <DialogBuscaGlobal />
+        </ProvedorContextoIA>
+      </ProvedorBuscaGlobal>
     </Providers>
   )
   } catch (erro) {

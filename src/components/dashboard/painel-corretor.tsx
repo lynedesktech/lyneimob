@@ -16,7 +16,6 @@ import {
 } from "lucide-react"
 import { CardKpi } from "./cards-kpi"
 import { ListaAtividadesHoje, type AtividadeHojeItem } from "./lista-atividades-hoje"
-import { ChecklistOnboarding } from "@/components/onboarding/checklist-onboarding"
 import { CardResumoSemanal } from "./card-resumo-semanal"
 
 interface PainelCorretorProps {
@@ -44,15 +43,9 @@ export function PainelCorretor({
         <p className="text-sm text-muted-foreground">Aqui está o resumo do seu dia.</p>
       </div>
 
-      {/* Checklist de onboarding (some quando completar tudo) */}
-      <div id="onborda-checklist" className="animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-        <ChecklistOnboarding />
-      </div>
-
       {/* KPI cards */}
       <div
-        id="onborda-dashboard-cards"
-        className="animate-fade-in-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="animate-fade-in-up grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
         style={{ animationDelay: "100ms" }}
       >
         <CardKpi
@@ -127,7 +120,7 @@ export function PainelCorretor({
       </div>
 
       {/* Ações rápidas */}
-      <div id="onborda-acoes-rapidas" className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+      <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">Ações rápidas</h2>
         <div className="flex flex-wrap gap-3">
           <Link href="/imoveis/novo">

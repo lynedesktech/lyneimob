@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { usePathname } from "next/navigation"
-import { Bot, X, Loader2, Sparkles } from "lucide-react"
+import { Bot, X, Loader2, Sparkles, Check, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -42,6 +42,17 @@ const LABELS_MODULO: Record<string, string> = {
   painel: "Dashboard",
 }
 
+// Ações cujo resultado pode ser aplicado em um campo do formulário
+const ACAO_PARA_CAMPO: Record<string, "descricao" | "titulo"> = {
+  "gerar-descricao": "descricao",
+  "melhorar-texto": "descricao",
+  "gerar-titulo": "titulo",
+  "gerar-descricao-loteamento": "descricao",
+  "melhorar-texto-loteamento": "descricao",
+}
+
+type AplicarNoFormulario = (campo: "descricao" | "titulo", texto: string) => void
+
 // ============================================================
 // Widget IA
 // ============================================================
@@ -64,6 +75,32 @@ export function WidgetIA() {
 
   const temAcoes = acoes.length > 0
   const desabilitado = !temAcoes
+
+  const copiarParaClipboard = useCallback(async (texto: string) => {
+    try {
+      await navigator.clipboard.writeText(texto)
+      toast.success("Copiado!")
+    } catch {
+      toast.error("Não foi possível copiar")
+    }
+  }, [])
+
+  const aplicarNoFormulario = useCallback(
+    (campo: "descricao" | "titulo", texto: string) => {
+      const onAplicar = entidade?.dados?.onAplicar as AplicarNoFormulario | undefined
+      if (!onAplicar) {
+        toast.info("Abra a página de edição para aplicar no formulário")
+        return
+      }
+      const valorAtual = String((entidade?.dados?.[campo] as string | undefined) ?? "").trim()
+      const label = campo === "titulo" ? "título" : "descrição"
+      if (valorAtual && !window.confirm(`Substituir ${label} atual?`)) return
+      onAplicar(campo, texto)
+      toast.success(`${campo === "titulo" ? "Título aplicado" : "Descrição aplicada"} no formulário`)
+      setAberto(false)
+    },
+    [entidade]
+  )
 
   const handleExecutarAcao = useCallback(
     async (acao: AcaoIA) => {
@@ -106,10 +143,11 @@ export function WidgetIA() {
             <Button
               data-testid="widget-ia-botao"
               size="icon"
-              className={`fixed bottom-24 right-6 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 ${
+              aria-label="Assistente IA"
+              className={`fixed bottom-6 right-6 z-40 h-12 w-12 rounded-full shadow-lg transition-all hover:scale-105 ${
                 desabilitado
                   ? "bg-muted text-muted-foreground hover:bg-muted"
-                  : "bg-gradient-to-br from-[var(--grad-start)] to-[var(--grad-end)] text-white hover:opacity-90"
+                  : "bg-gradient-to-br from-[var(--grad-start)] to-[var(--grad-end)] text-white hover:opacity-90 dark:from-[var(--accent-blue)] dark:to-[var(--grad-start)]"
               }`}
               onClick={() => {
                 if (desabilitado) {
@@ -143,7 +181,7 @@ export function WidgetIA() {
       <Sheet open={aberto} onOpenChange={setAberto}>
         <SheetContent
           side="right"
-          className="flex w-[400px] flex-col sm:max-w-[400px]"
+          className="flex w-full flex-col sm:w-[400px] sm:max-w-[400px]"
           data-testid="widget-ia-painel"
         >
           <SheetHeader>
@@ -215,6 +253,27 @@ export function WidgetIA() {
                         </div>
                         <div className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
                           {resultado}
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          {ACAO_PARA_CAMPO[acao.id] && (
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => aplicarNoFormulario(ACAO_PARA_CAMPO[acao.id]!, resultado)}
+                            >
+                              <Check className="mr-1 h-3 w-3" />
+                              Usar {ACAO_PARA_CAMPO[acao.id] === "titulo" ? "este título" : "esta descrição"}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={ACAO_PARA_CAMPO[acao.id] ? "" : "flex-1"}
+                            onClick={() => copiarParaClipboard(resultado)}
+                          >
+                            <Copy className="mr-1 h-3 w-3" />
+                            Copiar
+                          </Button>
                         </div>
                       </div>
                     )}

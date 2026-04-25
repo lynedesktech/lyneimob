@@ -227,11 +227,11 @@ export async function marcarComoLida(
 
 /**
  * Testa se as credenciais admin da Uazapi são válidas.
- * Faz uma requisição leve à API para validar conectividade e autenticação sem criar instâncias.
+ * Usa GET /instance/all que requer admintoken (não token de instância).
  */
 export async function testarConexaoUazapi(url: string, adminToken: string): Promise<boolean> {
   try {
-    const resposta = await fetch(montarUrlBase(url, "/instance/status"), {
+    const resposta = await fetch(montarUrlBase(url, "/instance/all"), {
       method: "GET",
       headers: { "Content-Type": "application/json", admintoken: adminToken },
     })
@@ -239,8 +239,8 @@ export async function testarConexaoUazapi(url: string, adminToken: string): Prom
     // 401/403 = credenciais inválidas
     if (resposta.status === 401 || resposta.status === 403) return false
 
-    // Qualquer outra resposta (200, 404, etc.) = API acessível e token válido
-    return true
+    // 200 = API acessível e admin token válido
+    return resposta.ok
   } catch {
     return false
   }
