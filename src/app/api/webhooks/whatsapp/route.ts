@@ -62,8 +62,38 @@ export async function POST(request: Request) {
     const pushName = messageData.senderName || payload.chat?.wa_contactName || null
     const instanceIdent = payload.instanceName || payload.instance
 
-    // Ignorar mensagens do próprio bot
+    // LYNEDES-103 Sprint 2: auto-block quando humano responde manualmente
+    // Mensagem fromMe que NAO foi enviada via API = corretor respondeu manualmente
+    // Bloqueia IA nesse contato pra nao responder em cima do corretor (TTL 30 dias)
     if (fromMe) {
+      const wasSentByApi = (messageData as { wasSentByApi?: boolean }).wasSentByApi === true
+      const messageType = (messageData as { messageType?: string }).messageType || ""
+      const ehMensagemReal =
+        !wasSentByApi &&
+        !messageType.startsWith("protocol") &&
+        messageType !== "reactionMessage" &&
+        messageType !== "receiptMessage"
+
+      if (ehMensagemReal) {
+        const numeroCliente = extrairNumero(remoteJid)
+        // Buscar org pelo token e bloquear contato
+        const tokenPayload = (body as { token?: string }).token
+        if (tokenPayload) {
+          const supabaseAdmin = criarClienteAdmin()
+          const { data: cfg } = await supabaseAdmin
+            .from("config_whatsapp")
+            .select("organizacao_id")
+            .eq("uazapi_token", tokenPayload)
+            .eq("ativo", true)
+            .single()
+
+          if (cfg?.organizacao_id) {
+            const { setContactBlock } = await import("@/lib/whatsapp/ia-toggle")
+            await setContactBlock(numeroCliente, cfg.organizacao_id)
+            console.log(`[WhatsApp Webhook] Auto-block: humano respondeu para ${numeroCliente} (org ${cfg.organizacao_id})`)
+          }
+        }
+      }
       return NextResponse.json({ status: "ignorado", motivo: "mensagem_propria" })
     }
 

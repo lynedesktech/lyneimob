@@ -141,11 +141,20 @@ function dividirPorTamanho(texto: string, maxCaracteres: number): string[] {
 }
 
 /**
+ * LYNEDES-103 Sprint 3: burst cooldown anti-bloqueio
+ * Quando enviamos muitos segmentos seguidos, WhatsApp pode rate-limitar.
+ * Pausa extra de 5s quando passa de 5 segmentos (alinhado com o Python).
+ */
+const BURST_THRESHOLD = 5
+const BURST_COOLDOWN_MS = 5_000
+
+/**
  * Envia mensagem de forma humanizada:
  * 1. Simula tempo de leitura (0.5-2s)
  * 2. Para cada segmento: mostra "digitando..." → espera proporcional → envia
  * 3. Entre segmentos: delay aleatório de 1-3s
- * 4. No final: para de "digitar"
+ * 4. Burst cooldown: pausa extra a cada BURST_THRESHOLD segmentos
+ * 5. No final: para de "digitar"
  */
 export async function enviarHumanizado(
   config: ConfigWhatsapp,
@@ -179,6 +188,15 @@ export async function enviarHumanizado(
     // Se tem mais partes, espera antes da próxima
     if (i < partes.length - 1) {
       await aguardar(calcularDelayEntreSegmentos(parte, i))
+
+      // Burst cooldown: a cada BURST_THRESHOLD segmentos, pausa extra
+      const segmentosEnviados = i + 1
+      if (segmentosEnviados % BURST_THRESHOLD === 0) {
+        console.log(
+          `[Humanizar] Burst cooldown apos ${segmentosEnviados} segmentos — pausando ${BURST_COOLDOWN_MS}ms`
+        )
+        await aguardar(BURST_COOLDOWN_MS)
+      }
     }
   }
 

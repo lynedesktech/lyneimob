@@ -10,6 +10,7 @@ import {
   desconectarInstanciaUazapi,
   excluirInstanciaUazapi,
   configurarWebhookUazapi,
+  configurarPrivacidadeUazapi,
   extrairNumero,
   testarConexaoUazapi,
 } from "@/lib/whatsapp/uazapi"
@@ -302,6 +303,15 @@ export async function verificarStatusInstancia(): Promise<
         console.log(`[Instância WhatsApp] Webhook reconfigurado automaticamente: ${webhookUrl}`)
       } catch (err) {
         console.error("[Instância WhatsApp] Erro ao reconfigurar webhook:", err instanceof Error ? err.message : err)
+      }
+
+      // LYNEDES-103 Sprint 3: configurar privacidade anti-bot
+      // Sempre online, sem "visto por ultimo", confirmacao de leitura ativa
+      try {
+        await configurarPrivacidadeUazapi(credenciais.url, config.uazapi_token)
+        console.log(`[Instância WhatsApp] Privacidade configurada (online: all, last: none, readreceipts: all)`)
+      } catch (err) {
+        console.error("[Instância WhatsApp] Erro ao configurar privacidade:", err instanceof Error ? err.message : err)
       }
     }
 

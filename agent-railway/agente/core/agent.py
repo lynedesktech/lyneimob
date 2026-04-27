@@ -16,7 +16,9 @@ from agente.services import supabase_client as db
 
 logger = logging.getLogger(__name__)
 
-MAX_TOOL_ITERATIONS = 3
+# LYNEDES-103 Sprint 3: aumentado de 3 para 7
+# Fluxos complexos (buscar imovel + qualificar + agendar + encaminhar) precisam de mais iteracoes
+MAX_TOOL_ITERATIONS = 7
 
 
 def _get_openai() -> AsyncOpenAI:
@@ -280,6 +282,10 @@ async def run_agent(
             })
 
         if iteration >= MAX_TOOL_ITERATIONS:
+            logger.warning(
+                f"[AGENT] MAX_TOOL_ITERATIONS atingido para conversa {conversa_id} "
+                f"(limite: {MAX_TOOL_ITERATIONS}). Encerrando loop de tools."
+            )
             break
 
     if not resposta_final:

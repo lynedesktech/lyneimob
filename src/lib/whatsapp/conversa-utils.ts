@@ -53,6 +53,36 @@ export async function buscarOuCriarConversa(
     return { id: conversaExistente.id, isNova: false }
   }
 
+  // LYNEDES-103 Sprint 2: detectar retorno
+  // Antes de criar nova, verificar se ja existiu conversa anterior encerrada
+  // (encaminhado/finalizado/arquivado). Se sim, abrir novo ciclo nessa conversa.
+  const { data: conversaAnterior } = await supabase
+    .from("conversas_whatsapp")
+    .select("id, ciclo_atual")
+    .eq("organizacao_id", organizacaoId)
+    .eq("numero_cliente", numeroCliente)
+    .in("status", ["finalizado", "arquivado"])
+    .order("criado_em", { ascending: false })
+    .limit(1)
+    .single()
+
+  if (conversaAnterior) {
+    const novoCiclo = (conversaAnterior.ciclo_atual ?? 1) + 1
+    await supabase
+      .from("conversas_whatsapp")
+      .update({
+        status: "em_andamento",
+        eh_retorno: true,
+        ciclo_atual: novoCiclo,
+        ultima_mensagem_em: new Date().toISOString(),
+        nome_cliente: nomeCliente || undefined,
+      })
+      .eq("id", conversaAnterior.id)
+
+    console.log(`[Conversa] Retorno detectado para ${numeroCliente} — ciclo ${novoCiclo} aberto`)
+    return { id: conversaAnterior.id, isNova: false }
+  }
+
   // Criar nova conversa (com proteção contra race condition)
   // Se 5 webhooks chegam ao mesmo tempo, todos tentam INSERT.
   // O unique index parcial garante que só 1 consegue — os outros recebem erro 23505.
@@ -63,6 +93,8 @@ export async function buscarOuCriarConversa(
       numero_cliente: numeroCliente,
       nome_cliente: nomeCliente,
       status: "em_andamento",
+      ciclo_atual: 1,
+      eh_retorno: false,
       ultima_mensagem_em: new Date().toISOString(),
     })
     .select("id")
