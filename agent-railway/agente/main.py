@@ -273,9 +273,12 @@ async def criar_cliente_negocio_via_nextjs(
         "numeroCliente": numero_cliente,
         "nomeCliente": nome_cliente or "Contato WhatsApp",
     }
+    # LYNEDES-148: usar INTERNAL_API_SECRET dedicado (com fallback pra service-role
+    # enquanto a env nao foi adicionada no Railway)
+    internal_secret = settings.internal_api_secret or settings.supabase_service_key
     headers = {
         "Content-Type": "application/json",
-        "x-internal-secret": settings.supabase_service_key,
+        "Authorization": f"Bearer {internal_secret}",
     }
 
     for tentativa in range(2):  # 1 tentativa + 1 retry
