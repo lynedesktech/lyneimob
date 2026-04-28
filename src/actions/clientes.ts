@@ -13,6 +13,7 @@ import {
 } from "@/types/clientes"
 import type { EstadoFormulario } from "@/types/formulario"
 import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
+import { digitosDe } from "@/components/ui/input-telefone"
 
 // ============================================================
 // Criar cliente
@@ -25,8 +26,8 @@ export async function criarCliente(
   const dados = schemaCriarCliente.safeParse({
     nome: formData.get("nome"),
     email: formData.get("email") || undefined,
-    telefone: formData.get("telefone") || undefined,
-    whatsapp: formData.get("whatsapp") || undefined,
+    telefone: digitosDe(formData.get("telefone") as string | null) || undefined,
+    whatsapp: digitosDe(formData.get("whatsapp") as string | null) || undefined,
     cpf_cnpj: formData.get("cpf_cnpj") || undefined,
     tipo: formData.get("tipo"),
     origem: formData.get("origem") || "outro",
@@ -78,8 +79,8 @@ export async function atualizarCliente(
     id: formData.get("id"),
     nome: formData.get("nome"),
     email: formData.get("email") || undefined,
-    telefone: formData.get("telefone") || undefined,
-    whatsapp: formData.get("whatsapp") || undefined,
+    telefone: digitosDe(formData.get("telefone") as string | null) || undefined,
+    whatsapp: digitosDe(formData.get("whatsapp") as string | null) || undefined,
     cpf_cnpj: formData.get("cpf_cnpj") || undefined,
     tipo: formData.get("tipo"),
     origem: formData.get("origem") || "outro",
