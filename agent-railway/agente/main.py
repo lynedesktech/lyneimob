@@ -355,10 +355,14 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         from datetime import timedelta, timezone as tz
         hora_atual = datetime.now(tz=tz(timedelta(hours=-3))).hour
         if hora_atual < bh["start"] or hora_atual >= bh["end"]:
-            absence_msg = await redis_client.get_absence_message()
-            if api_url and token:
+            # Envia mensagem de ausencia so uma vez por contato no dia (evita spam)
+            ja_enviou = await redis_client.ja_enviou_ausencia_hoje(chat_id, org_id)
+            if not ja_enviou and api_url and token:
+                absence_msg = await redis_client.get_absence_message()
                 from agente.services.whatsapp import send_text
                 await send_text(api_url, token, chat_id, absence_msg)
+                await redis_client.marcar_ausencia_enviada(chat_id, org_id)
+                logger.info(f"[AUSENCIA] Msg enviada pra {chat_id} (fora do horario {bh['start']}h-{bh['end']}h)")
             return JSONResponse({"status": "outside_business_hours"})
 
     # 4. Deduplicacao
