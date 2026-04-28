@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Identificar empresa pelo header ou campo no body
+    // Identificar organizacao pelo header ou campo no body
     const orgSlug =
       request.headers.get("x-org-slug") ||
       (payload.org_slug as string) ||
@@ -25,12 +25,7 @@ export async function POST(request: Request) {
       (payload.organizacao_id as string) ||
       (payload.empresa_id as string)
 
-    // Identificar portal pelo token do webhook
-    const tokenWebhook =
-      request.headers.get("x-webhook-token") ||
-      (payload.webhook_token as string)
-
-    if (!orgSlug && !orgId && !tokenWebhook) {
+    if (!orgSlug && !orgId) {
       return NextResponse.json(
         { erro: "Organização não identificada. Envie x-org-slug no header ou org_slug no body." },
         { status: 400 }
@@ -39,29 +34,10 @@ export async function POST(request: Request) {
 
     const supabase = criarClienteAdmin()
 
-    // Buscar empresa e portal
+    // Buscar empresa
     let empresaId: string
-    let portalId: string | null = null
 
-    if (tokenWebhook) {
-      // Identificar via token do webhook — busca na tabela integracoes_portais
-      const { data: integracao, error: erroIntegracao } = await supabase
-        .from("integracoes_portais")
-        .select("id, organizacao_id, nome_portal")
-        .eq("token_webhook", tokenWebhook)
-        .eq("ativo", true)
-        .single()
-
-      if (erroIntegracao || !integracao) {
-        return NextResponse.json(
-          { erro: "Token de webhook inválido ou integração inativa" },
-          { status: 404 }
-        )
-      }
-
-      empresaId = integracao.organizacao_id
-      portalId = integracao.id
-    } else if (orgId) {
+    if (orgId) {
       empresaId = orgId
     } else {
       const { data: org, error: erroOrg } = await supabase
@@ -79,52 +55,11 @@ export async function POST(request: Request) {
       empresaId = org.id
     }
 
-    // Detectar portal de origem (para normalização)
+    // Detectar portal de origem (header ou body)
     const portalExplicito =
       request.headers.get("x-portal") ||
       (payload.portal as string) ||
       undefined
-
-    // Se não temos portalId ainda, tentar encontrar pela nome_portal
-    if (!portalId && portalExplicito) {
-      const nomePortalMap: Record<string, string> = {
-        zap: "ZAP Imóveis",
-        zapimoveis: "ZAP Imóveis",
-        olx: "OLX",
-        vivareal: "VivaReal",
-        imovelweb: "Imovelweb",
-      }
-
-      const nomeBusca = nomePortalMap[portalExplicito.toLowerCase()]
-      if (nomeBusca) {
-        const { data: integracao } = await supabase
-          .from("integracoes_portais")
-          .select("id")
-          .eq("organizacao_id", empresaId)
-          .ilike("nome_portal", nomeBusca)
-          .limit(1)
-          .maybeSingle()
-
-        if (integracao) {
-          portalId = integracao.id
-        }
-      }
-    }
-
-    // Se ainda não temos portalId, buscar a primeira integração ativa da empresa
-    if (!portalId) {
-      const { data: integracao } = await supabase
-        .from("integracoes_portais")
-        .select("id")
-        .eq("organizacao_id", empresaId)
-        .eq("ativo", true)
-        .limit(1)
-        .maybeSingle()
-
-      if (integracao) {
-        portalId = integracao.id
-      }
-    }
 
     // Normalizar lead
     const leadNormalizado = normalizarLead(
@@ -140,33 +75,30 @@ export async function POST(request: Request) {
       )
     }
 
-    // Salvar lead no banco
-    const dadosInsercao: Record<string, unknown> = {
-      organizacao_id: empresaId,
-      nome: leadNormalizado.nome,
-      email: leadNormalizado.email,
-      telefone: leadNormalizado.telefone,
-      mensagem: leadNormalizado.mensagem,
-      imovel_referencia: leadNormalizado.imovel_codigo,
-      dados_brutos: payload,
-      convertido: false,
-    }
-
-    // Só adicionar portal_id se encontramos
-    if (portalId) {
-      dadosInsercao.portal_id = portalId
-    }
-
+    // Salvar lead no banco (schema: supabase/migrations/006_leads_portais.sql)
     const { data: lead, error: erroLead } = await supabase
       .from("leads_portais")
-      .insert(dadosInsercao)
+      .insert({
+        organizacao_id: empresaId,
+        portal: leadNormalizado.portal,
+        payload_original: payload,
+        nome: leadNormalizado.nome,
+        email: leadNormalizado.email,
+        telefone: leadNormalizado.telefone,
+        mensagem: leadNormalizado.mensagem,
+        imovel_codigo: leadNormalizado.imovel_codigo,
+        status: "novo",
+      })
       .select("id")
       .single()
 
     if (erroLead) {
-      console.error("[Portais Webhook] Erro ao salvar lead:", erroLead.message)
+      console.error("[Portais Webhook] Erro ao salvar lead:", erroLead.message, {
+        organizacao_id: empresaId,
+        portal: leadNormalizado.portal,
+      })
       return NextResponse.json(
-        { erro: "Erro ao salvar lead" },
+        { erro: "Erro ao salvar lead", detalhe: erroLead.message },
         { status: 500 }
       )
     }
@@ -195,9 +127,14 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (erro) {
-    console.error("[Portais Webhook] Erro geral:", erro instanceof Error ? erro.message : erro)
+    console.error("[Portais Webhook] Erro geral:", erro instanceof Error ? erro.message : erro, {
+      stack: erro instanceof Error ? erro.stack : undefined,
+    })
     return NextResponse.json(
-      { erro: "Erro ao processar webhook" },
+      {
+        erro: "Erro ao processar webhook",
+        detalhe: erro instanceof Error ? erro.message : String(erro),
+      },
       { status: 500 }
     )
   }
