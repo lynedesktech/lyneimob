@@ -28,6 +28,9 @@ class Settings(BaseSettings):
 
     # --- Next.js (Vercel) — callback pra criar cliente/negócio ---
     nextjs_app_url: str = ""  # URL do app Next.js (ex: https://lyneimob.vercel.app)
+    # LYNEDES-148: secret dedicado pra auth dos endpoints internos do Next.js.
+    # Quando vazio, fallback pra supabase_service_key (compat temporaria).
+    internal_api_secret: str = ""
 
     # --- Buffer (agrupamento de mensagens) ---
     buffer_wait_seconds: int = 20

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
+import { validarAuthInterna } from "@/lib/auth-interna"
 
 // ============================================================
 // Endpoint interno de debounce — processa mensagens agrupadas
@@ -12,9 +13,8 @@ const DEBOUNCE_MS = 20_000 // 20 segundos
 const MAX_CICLOS = 2 // Máximo 2 ciclos de espera (40s total)
 
 export async function POST(request: Request) {
-  // Autenticação: só aceita chamadas internas
-  const secret = request.headers.get("x-internal-secret")
-  if (secret !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  // LYNEDES-148: auth com secret dedicado (INTERNAL_API_SECRET)
+  if (!validarAuthInterna(request)) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 })
   }
 
