@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { criarClienteENegocioInicial } from "@/lib/whatsapp/conversa-utils"
+import { validarAuthInterna } from "@/lib/auth-interna"
 
 // ============================================================
 // Endpoint interno — cria cliente + negócio para conversa nova
@@ -8,9 +9,8 @@ import { criarClienteENegocioInicial } from "@/lib/whatsapp/conversa-utils"
 // ============================================================
 
 export async function POST(request: Request) {
-  // Autenticação: só aceita chamadas internas (mesmo padrão do debounce)
-  const secret = request.headers.get("x-internal-secret")
-  if (secret !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  // LYNEDES-148: auth com secret dedicado (INTERNAL_API_SECRET)
+  if (!validarAuthInterna(request)) {
     return NextResponse.json({ erro: "Não autorizado" }, { status: 401 })
   }
 

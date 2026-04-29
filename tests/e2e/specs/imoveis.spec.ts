@@ -3,21 +3,21 @@ import { PERFIS, dadosImovel } from '../fixtures/test-data'
 
 // ============================================================
 // Sprint 2 — Imoveis (CRUD + permissoes por perfil)
+//
+// IMPORTANTE: desde LYNEDES-73 o formulario de imovel virou wizard
+// multi-step de 6 etapas. Os helpers navegam pelo wizard usando
+// data-testid estaveis adicionados em LYNEDES-124.
 // ============================================================
 
 // --- Helpers ---
 
 async function fecharTourSeVisivel(page: import('@playwright/test').Page) {
-  const btnPularTour = page.getByRole('button', { name: /pular tour/i })
-  try {
-    await btnPularTour.waitFor({ state: 'visible', timeout: 3_000 })
-    await btnPularTour.click()
-    await page.locator('[data-name="onborda-overlay"]').waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
-  } catch {
-    // Tour nao apareceu
-  }
+  // LYNEDES-75 removeu 100% do onboarding, mas o helper continua
+  // como safety-net caso surja outro overlay em prod (diffuso de cache).
   await page.evaluate(() => {
-    document.querySelectorAll('[data-name="onborda-overlay"], [data-name="onborda-pointer"]').forEach(el => el.remove())
+    document
+      .querySelectorAll('[data-name="onborda-overlay"], [data-name="onborda-pointer"]')
+      .forEach((el) => el.remove())
   }).catch(() => {})
 }
 
@@ -32,7 +32,7 @@ const SELETOR_LINK_IMOVEL = 'a[href*="/imoveis/"]:not([href*="importar"]):not([h
 async function aguardarDetalheImovel(page: import('@playwright/test').Page, titulo: string) {
   await expect(
     page.getByRole('heading', { level: 1 }).filter({ hasText: titulo })
-  ).toBeVisible({ timeout: 500_000 })
+  ).toBeVisible({ timeout: 30_000 })
 }
 
 async function navegarParaDetalheImovel(page: import('@playwright/test').Page) {
@@ -45,6 +45,15 @@ async function navegarParaDetalheImovel(page: import('@playwright/test').Page) {
   await fecharTourSeVisivel(page)
 }
 
+async function avancarAteRevisao(page: import('@playwright/test').Page, etapasParaAvancar = 5) {
+  // O wizard tem 6 etapas. Pra chegar na 6 (revisao) a partir da 1,
+  // clicamos "Proximo" 5 vezes. Pra editar (voltamos pra etapa 1 sempre),
+  // tb sao 5 cliques.
+  for (let i = 0; i < etapasParaAvancar; i++) {
+    await page.getByTestId('wizard-proximo').click()
+  }
+}
+
 async function criarImovel(page: import('@playwright/test').Page, perfil: string) {
   const dados = dadosImovel(perfil)
 
@@ -52,25 +61,23 @@ async function criarImovel(page: import('@playwright/test').Page, perfil: string
   await page.waitForLoadState('networkidle')
   await fecharTourSeVisivel(page)
 
-  await page.locator('#codigo').fill(dados.codigo)
-  await page.locator('#titulo').fill(dados.titulo)
-
+  // Etapa 1 — Basicos
+  await page.getByTestId('imovel-codigo').fill(dados.codigo)
+  await page.getByTestId('imovel-titulo').fill(dados.titulo)
   await selecionarOpcao(page, 'Selecione o tipo', 'Apartamento')
   await selecionarOpcao(page, 'Selecione a finalidade', 'Venda')
+  await page.getByTestId('wizard-proximo').click()
 
-  await page.locator('#cidade').fill(dados.cidade)
+  // Etapa 2 — Endereco (so obrigatorios sao cidade + estado)
+  await page.getByTestId('imovel-cidade').fill(dados.cidade)
   await selecionarOpcao(page, 'UF', dados.estado)
+  await page.getByTestId('wizard-proximo').click()
 
-  await page.locator('#preco_venda').fill(dados.preco_venda)
-  await page.locator('#preco_aluguel').fill('1')
+  // Etapas 3, 4, 5 — Caracteristicas, Valores, IA+Publicacao (pula)
+  await avancarAteRevisao(page, 3)
 
-  await fecharTourSeVisivel(page)
-
-  await page.evaluate(() => {
-    document.querySelectorAll('[data-name="onborda-overlay"], [data-name="onborda-pointer"]').forEach(el => el.remove())
-    const btn = document.getElementById('onborda-imovel-salvar') as HTMLButtonElement | null
-    btn?.click()
-  })
+  // Etapa 6 — Revisao, clica em Cadastrar imovel
+  await page.getByTestId('imovel-salvar').click()
 
   return dados
 }
@@ -93,7 +100,9 @@ test.describe('Admin — Imoveis', () => {
     await page.waitForLoadState('networkidle')
     await fecharTourSeVisivel(page)
 
-    const items = page.locator('[data-testid="imovel-card"], table tbody tr, .grid > a, .grid > div > a').first()
+    const items = page
+      .locator('[data-testid="imovel-card"], table tbody tr, .grid > a, .grid > div > a')
+      .first()
     await expect(items).toBeVisible({ timeout: 15_000 })
   })
 
@@ -107,15 +116,13 @@ test.describe('Admin — Imoveis', () => {
     await page.waitForLoadState('networkidle')
     await fecharTourSeVisivel(page)
 
+    // Etapa 1 — edita o titulo
     const tituloEditado = `Editado Admin ${Date.now()}`
-    await page.locator('#titulo').fill(tituloEditado)
+    await page.getByTestId('imovel-titulo').fill(tituloEditado)
 
-    await fecharTourSeVisivel(page)
-    await page.evaluate(() => {
-      document.querySelectorAll('[data-name="onborda-overlay"], [data-name="onborda-pointer"]').forEach(el => el.remove())
-      const btn = document.getElementById('onborda-imovel-salvar') as HTMLButtonElement | null
-      btn?.click()
-    })
+    // Avanca ate a etapa 6 e salva
+    await avancarAteRevisao(page, 5)
+    await page.getByTestId('imovel-salvar').click()
 
     await aguardarDetalheImovel(page, tituloEditado)
   })
@@ -155,7 +162,9 @@ test.describe('Gerente — Imoveis', () => {
     await page.waitForLoadState('networkidle')
     await fecharTourSeVisivel(page)
 
-    const items = page.locator('[data-testid="imovel-card"], table tbody tr, .grid > a, .grid > div > a').first()
+    const items = page
+      .locator('[data-testid="imovel-card"], table tbody tr, .grid > a, .grid > div > a')
+      .first()
     await expect(items).toBeVisible({ timeout: 15_000 })
   })
 
