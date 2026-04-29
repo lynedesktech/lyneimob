@@ -22,6 +22,15 @@ export async function middleware(request: NextRequest) {
   // Se é o domínio principal ou domínio Vercel → fluxo normal (auth, dashboard, etc.)
   const ehVercel = hostnameBase.endsWith(".vercel.app")
   if (hostnameBase === dominioPrincipal || ehVercel) {
+    // Redirect permanente da rota antiga após renomeação em LYNEDES-154
+    // (rota /meu-perfil virou /minha-conta/meu-perfil)
+    if (request.nextUrl.pathname === "/meu-perfil") {
+      return NextResponse.redirect(
+        new URL("/minha-conta/meu-perfil", request.url),
+        308
+      )
+    }
+
     return await atualizarSessao(request)
   }
 
