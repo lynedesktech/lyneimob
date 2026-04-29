@@ -103,9 +103,9 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/meu-perfil")}>
+              <DropdownMenuItem onClick={() => router.push("/minha-conta")}>
                 <User className="mr-2 h-4 w-4" />
-                <span>Meu perfil</span>
+                <span>Minha conta</span>
               </DropdownMenuItem>
               {mostrarFinanceiro && (
                 <DropdownMenuItem onClick={() => router.push("/financeiro")}>
