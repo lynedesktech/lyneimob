@@ -157,7 +157,9 @@ export const schemaPayloadUazapi = z.object({
     id: z.string().optional(), // ID completo da mensagem (necessário para download de mídia)
     senderName: z.string().optional(),
     text: z.string().optional(),
-    content: z.string().optional(),
+    // Uazapi as vezes manda content como string (texto), as vezes como objeto
+    // (midia, sticker, etc). Aceita os dois pra nao quebrar o webhook.
+    content: z.union([z.string(), z.object({}).passthrough()]).optional(),
     type: z.string().optional(),
     mediaType: z.string().optional(),
     isGroup: z.boolean().optional(),

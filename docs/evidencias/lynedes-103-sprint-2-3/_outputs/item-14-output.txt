@@ -1,0 +1,19 @@
+=== ITEM 14 — PRIVACIDADE WHATSAPP UAZAPI ===
+
+[1] POST /instance/privacy (aplica config)
+HTTP 200: {"calladd":"all","groupadd":"all","last":"none","online":"all","profile":"all","readreceipts":"all","status":"all"}
+
+
+[2] GET /instance/privacy (confirma config aplicada)
+HTTP 200: {"calladd":"all","groupadd":"all","last":"none","online":"all","profile":"all","readreceipts":"all","status":"all"}
+
+
+[3] Contexto da instancia
+  - Nome:        lyneimob-1f03e678
+  - ProfileName: Lynedesk
+  - Owner:       5511958042849
+  - Connected:   true
+
+CONFIRMA: configuracao { online: "all", last: "none", readreceipts: "all" }
+foi aceita pela Uazapi (HTTP 200). Em prod, isso roda
+automaticamente apos cada conexao via configurarPrivacidadeUazapi().

@@ -1,0 +1,10 @@
+﻿=== ITEM 9 — CRON AUTO-CLOSE ===
+
+[1/2] Sem auth (deve dar 401):
+[HTTP 401] {"erro":"Nao autorizado"}
+
+[2/2] Com auth correta (Bearer CRON_SECRET):
+[HTTP 200] {"status":"ok","fechadas":13,"limiteHoras":24}
+
+Limite: 24h sem atividade. Status fechaveis: em_andamento, qualificado.
+Schedule no vercel.json: '0 */6 * * *' (a cada 6h).
