@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { criarClienteENegocioInicial } from "@/lib/whatsapp/conversa-utils"
 import { validarAuthInterna } from "@/lib/auth-interna"
+import { registrarCallback } from "@/lib/observabilidade/callback-railway"
 
 // ============================================================
 // Endpoint interno — cria cliente + negócio para conversa nova
@@ -36,6 +37,11 @@ export async function POST(request: Request) {
     )
   }
 
+  // LYNEDES-151: cronometra a partir daqui — depois de validar input/auth.
+  // 400/401 nao contam como callback Railway (sao erros de cliente).
+  const inicioMs = performance.now()
+  const medirLatencia = () => Math.round(performance.now() - inicioMs)
+
   const supabase = criarClienteAdmin()
 
   // Verificar se a conversa já tem cliente/negócio vinculado
@@ -46,6 +52,7 @@ export async function POST(request: Request) {
     .single()
 
   if (conversa?.cliente_id && conversa?.negocio_id) {
+    await registrarCallback("already_exists", medirLatencia())
     return NextResponse.json({
       status: "ja_existe",
       cliente_id: conversa.cliente_id,
@@ -62,6 +69,7 @@ export async function POST(request: Request) {
     .single()
 
   if (!config) {
+    await registrarCallback("fail", medirLatencia())
     return NextResponse.json(
       { erro: "Config WhatsApp não encontrada para esta organização" },
       { status: 404 }
@@ -79,6 +87,7 @@ export async function POST(request: Request) {
   )
 
   if (!resultado) {
+    await registrarCallback("fail", medirLatencia())
     return NextResponse.json(
       { erro: "Erro ao criar cliente/negócio" },
       { status: 500 }
@@ -87,6 +96,7 @@ export async function POST(request: Request) {
 
   console.log(`[criar-cliente-negocio] Cliente ${resultado.clienteId} e negócio ${resultado.negocioId} criados para conversa ${conversaId}`)
 
+  await registrarCallback("success", medirLatencia())
   return NextResponse.json({
     status: "criado",
     cliente_id: resultado.clienteId,
