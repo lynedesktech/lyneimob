@@ -3,9 +3,13 @@ import { criarClienteServer } from "@/lib/supabase/server"
 import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
 import { criarClienteStripe } from "@/lib/stripe"
 import { PaginaPlanos } from "@/components/planos/pagina-planos"
+import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 import type { InfoAssinatura, TipoPlano, StatusPlano, LimitesPlano, FaturaStripe } from "@/types/billing"
 
 export default async function PlanosPage() {
+  // Em modo produto unico (Duna), nao ha planos/billing
+  if (MODO_PRODUTO_UNICO) redirect("/painel")
+
   const user = await obterUsuarioAutenticado()
 
   if (!user) {
