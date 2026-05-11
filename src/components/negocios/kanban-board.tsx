@@ -131,7 +131,13 @@ export function KanbanBoard({ etapas, onAtualizar }: KanbanBoardProps) {
       if (res.erro) {
         toast.error(res.erro)
         onAtualizar()
+        return
       }
+
+      // Sugestão IA roda em background no Server (after()).
+      // Aguardamos ~5s e damos refresh pra trazer o sugestao_ia_resumo
+      // novo pro card sem o usuario precisar dar F5.
+      setTimeout(() => onAtualizar(), 5000)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [onAtualizar]

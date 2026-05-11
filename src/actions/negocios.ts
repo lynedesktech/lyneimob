@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { criarClienteServer } from "@/lib/supabase/server"
 import { verificarPermissao } from "@/lib/permissoes"
 import {
@@ -189,15 +190,20 @@ export async function moverNegocio(
     return { erro: "Erro ao mover negócio. Tente novamente." }
   }
 
-  // Atualizar sugestão de ação ao mudar de etapa (import dinâmico para não pesar o bundle)
-  try {
-    const { sugerirAcao } = await import("@/actions/ia-negocios")
-    await sugerirAcao(negocioId)
-  } catch {
-    // IA é opcional — não bloqueia o fluxo principal
-  }
-
   revalidatePath("/negocios")
+
+  // Sugestão IA roda em background (Next 16 after) — não bloqueia o response
+  // do drag-and-drop. UX: card vira instantaneo, sugestao aparece via refresh
+  // ~5s depois (disparado pelo KanbanBoard).
+  after(async () => {
+    try {
+      const { sugerirAcao } = await import("@/actions/ia-negocios")
+      await sugerirAcao(negocioId)
+    } catch (error) {
+      console.error("[KANBAN] Falha ao sugerir ação em background", error)
+    }
+  })
+
   return { sucesso: "Negócio movido com sucesso" }
 }
 
