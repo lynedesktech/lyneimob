@@ -37,7 +37,7 @@ export function CardAtividade({ atividade }: CardAtividadeProps) {
                 ? "bg-muted text-muted-foreground"
                 : estaAtrasada
                   ? "bg-destructive/10 text-destructive"
-                  : "bg-primary/10 text-primary"
+                  : "bg-accent text-accent-foreground"
           }`}>
             <MoreHorizontal className="h-5 w-5" />
           </div>

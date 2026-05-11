@@ -11,7 +11,7 @@ import type { LucideIcon } from "lucide-react"
 type VarianteKpi = "primary" | "info" | "success" | "warning" | "muted"
 
 const classesPorVariante: Record<VarianteKpi, string> = {
-  primary: "bg-primary/10 text-primary",
+  primary: "bg-accent text-accent-foreground",
   info: "bg-info/10 text-info",
   success: "bg-success/10 text-success",
   warning: "bg-warning/10 text-warning",

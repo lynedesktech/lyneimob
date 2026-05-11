@@ -139,7 +139,7 @@ export default async function ConfiguracoesPage() {
               <Link key={card.href} href={card.href} className="group">
                 <Card className="h-full transition-colors hover:bg-accent/50">
                   <CardContent className="flex items-start gap-4 p-5">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                       <card.icone className="h-5 w-5" />
                     </div>
                     <div className="flex-1 space-y-1">
