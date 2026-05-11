@@ -19,6 +19,7 @@ import {
   SidebarMenuItem,
   SidebarMenu,
 } from "@/components/ui/sidebar"
+import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 
 interface UsuarioMenuProps {
   usuario: {
@@ -54,7 +55,8 @@ function AvatarUsuario({ usuario, className }: { usuario: UsuarioMenuProps["usua
 export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
   const router = useRouter()
   const perfilPlataforma = usuario.perfil_plataforma ?? (usuario.super_admin ? "super_admin" : null)
-  const mostrarFinanceiro = !perfilPlataforma || perfilPlataforma === "super_admin"
+  // Em modo produto unico (Duna), sem billing — esconde Financeiro do menu
+  const mostrarFinanceiro = !MODO_PRODUTO_UNICO && (!perfilPlataforma || perfilPlataforma === "super_admin")
 
   return (
     <SidebarMenu>

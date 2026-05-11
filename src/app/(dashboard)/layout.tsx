@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
 import { BannerTrialLayout } from "@/components/planos/banner-trial-layout"
+import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 import { ProvedorBuscaGlobal, DialogBuscaGlobal } from "@/components/layout/busca-global"
 import { ProvedorContextoIA } from "@/components/ia/contexto-ia"
 import { WidgetIA } from "@/components/ia/widget-ia"
@@ -84,10 +85,13 @@ export default async function DashboardLayout({
                 <SidebarInset className="bg-muted/40 dark:bg-sidebar">
                   <div className="flex flex-1 flex-col overflow-hidden rounded-xl border bg-background shadow-sm m-2 md:m-4">
                     <Header organizacao={organizacao} />
-                    <BannerTrialLayout
-                      plano={organizacao.plano}
-                      trialFimEm={organizacao.trial_fim_em}
-                    />
+                    {/* Banner de trial nao se aplica em modo produto unico (Duna) */}
+                    {!MODO_PRODUTO_UNICO && (
+                      <BannerTrialLayout
+                        plano={organizacao.plano}
+                        trialFimEm={organizacao.trial_fim_em}
+                      />
+                    )}
                     <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">{children}</main>
                   </div>
                 </SidebarInset>
