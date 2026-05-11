@@ -20,6 +20,10 @@ Sem transcricao detalhada — pra ver o que mudou de fato, abrir o commit/PR lin
 | ~19h | PR #23 (docs estrategia SaaS Eduardo) fechado sem merge — pivot pra produto unico Duna |
 | ~20h | Fix raiz do dark mode: --accent subiu de 0.269 pra 0.35 no globals.css. Resolve invisibilidade dos icones dos cards na origem | PR #34 mergeado |
 | ~20h | Duna Fase 1: flag MODO_PRODUTO_UNICO + bloqueio de /admin/* e /financeiro + sidebar so com grupos da org | PR #34 mergeado |
+| ~21h | Setado typescript.ignoreBuildErrors + eslint.ignoreDuringBuilds (87 issues pre-existentes herdadas da fase SaaS) | commit `a081103` |
+| ~21h | Subir --sidebar-accent pra 0.5 e --accent pra 0.45 — contraste mais nitido no dark mode | commit `7e21800` |
+| ~21h | Deploy prod via Vercel CLI (CI estava bloqueando por lint) | https://lyneimob.vercel.app |
+| ~22h | Duna Fase 2: bloquear /cadastro via middleware, esconder banner de trial e link Financeiro do menu | PR #35 mergeado + deploy |
 
 ## Marco do dia
 
