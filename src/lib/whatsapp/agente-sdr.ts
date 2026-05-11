@@ -7,7 +7,9 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat/completio
 // executa tools → envia resposta humanizada
 // ============================================================
 
-const MAX_ITERACOES_TOOLS = 3
+// LYNEDES-103 Sprint 3: aumentado de 3 para 7
+// Fluxos complexos (buscar imovel + qualificar + agendar + encaminhar) precisam de mais iteracoes
+const MAX_ITERACOES_TOOLS = 7
 
 /**
  * Processa conversa com o agente IA
@@ -32,6 +34,14 @@ export async function processarComAgente(
   }
 
   try {
+    // LYNEDES-103 Sprint 2: check do toggle global da IA antes de qualquer coisa
+    const { isIAGlobalEnabled } = await import("./ia-toggle")
+    const iaGlobalAtiva = await isIAGlobalEnabled()
+    if (!iaGlobalAtiva) {
+      console.log(`[Agente SDR] IA NÃO RESPONDEU — IA desativada globalmente (master switch off)`)
+      return
+    }
+
     const { criarClienteAdmin } = await import("@/lib/supabase/admin")
     const supabase = criarClienteAdmin()
 
@@ -59,6 +69,14 @@ export async function processarComAgente(
 
     if (!conversa) {
       console.error(`[Agente SDR] IA NÃO RESPONDEU — Conversa ${conversaId} não encontrada no banco`)
+      return
+    }
+
+    // LYNEDES-103 Sprint 2: check de bloqueio por contato (auto-block quando humano responde)
+    const { isContactBlocked } = await import("./ia-toggle")
+    const contatoBloqueado = await isContactBlocked(conversa.numero_cliente, organizacaoId)
+    if (contatoBloqueado) {
+      console.log(`[Agente SDR] IA NÃO RESPONDEU — Contato ${conversa.numero_cliente} bloqueado (humano respondeu manualmente)`)
       return
     }
 
@@ -171,15 +189,25 @@ export async function processarComAgente(
       : 0
     const ehReativacao = jaRespondeu && horasDecorridas > 24
 
-    const statusConversa = !jaRespondeu
-      ? "PRIMEIRA_RESPOSTA"
-      : ehReativacao
-        ? "REATIVACAO"
-        : "EM_ANDAMENTO"
+    // LYNEDES-103 Sprint 2: detectar lead que retornou de um ciclo anterior
+    const ehRetorno = Boolean(conversa.eh_retorno)
+    const cicloAtual = conversa.ciclo_atual || 1
+
+    const statusConversa = ehRetorno
+      ? "RETORNO_NOVO_CICLO"
+      : !jaRespondeu
+        ? "PRIMEIRA_RESPOSTA"
+        : ehReativacao
+          ? "REATIVACAO"
+          : "EM_ANDAMENTO"
+
+    const infoRetorno = ehRetorno
+      ? `\n- ATENÇÃO: lead RETORNANDO (ciclo ${cicloAtual}). NÃO se reapresente. Cumprimente como quem reconhece: "Que bom ter você de volta${nomeCliente ? `, ${nomeCliente}` : ""}! Como posso ajudar dessa vez?"`
+      : ""
 
     let contextoExtra = `\n\nCONTEXTO DA CONVERSA:${nomeVerificado}
 - Número WhatsApp: ${conversa.numero_cliente}
-- Status da conversa: ${statusConversa}`
+- Status da conversa: ${statusConversa}${infoRetorno}`
 
     // Adicionar qualificação existente se houver
     if (conversa.qualificacao) {

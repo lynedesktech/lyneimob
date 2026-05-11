@@ -1,0 +1,19 @@
+﻿=== ITEM 11 — TOGGLE IA + AUTO-BLOCK ===
+
+[1/4] GET inicial:
+[HTTP 200] {"ai_enabled":true}
+
+[2/4] POST desligar (enabled=false):
+[HTTP 200] {"status":"ok","ai_enabled":false}
+
+[3/4] GET apos desligar:
+[HTTP 200] {"ai_enabled":false}
+
+[4/4] POST religar (enabled=true) — devolver estado original:
+[HTTP 200] {"status":"ok","ai_enabled":true}
+
+[BONUS] Auto-block — POST bloquear contato fake:
+[HTTP 200] {"status":"ok","chatId":"5511999000111","orgId":"qa-test","action":"block"}
+
+[BONUS] Auto-unblock — desbloquear:
+[HTTP 200] {"status":"ok","chatId":"5511999000111","orgId":"qa-test","action":"unblock"}

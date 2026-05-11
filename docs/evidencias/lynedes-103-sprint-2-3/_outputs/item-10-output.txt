@@ -1,0 +1,50 @@
+=== ITEM 10 — CICLOS DE RETORNO (validado end-to-end via tunnel cloudflared) ===
+
+Cenario:
+1. Conversa 76d286cf-5791-44dc-a970-099029f76617 tinha status=em_andamento, ciclo=1, retorno=false
+2. Eu marquei manualmente status=arquivado (simulando encerramento)
+3. Gabriel mandou nova mensagem do mesmo numero (5527997178981)
+4. Webhook caiu no dev local (via tunnel) que rodava codigo da branch sprint-2-3
+
+ESTADO ANTES da nova mensagem:
+{
+  id: '76d286cf-5791-44dc-a970-099029f76617',
+  status: 'arquivado',
+  ciclo_atual: 1,
+  eh_retorno: false,
+  ultima_mensagem_em: '2026-05-04T11:52:12.742+00:00'
+}
+
+LOGS do webhook handler (dev server):
+[WhatsApp Webhook] Evento recebido: messages
+[WhatsApp Webhook] Evento aceito: messages
+[WhatsApp Webhook] Zod OK, processando...
+[WhatsApp Webhook] Config encontrada, org: 1f03e678-c473-4dd3-9673-7ccbe44b6299
+[Conversa] Retorno detectado para 5527997178981 — ciclo 2 aberto
+POST /api/webhooks/whatsapp 200 in 844ms
+
+ESTADO DEPOIS da nova mensagem:
+{
+  id: '76d286cf-5791-44dc-a970-099029f76617',
+  status: 'em_andamento',     <- reaberta (era 'arquivado')
+  ciclo_atual: 2,             <- INCREMENTADO (era 1)
+  eh_retorno: true,           <- FLAG SETADA (era false)
+  ultima_mensagem_em: '2026-05-04T12:14:40.453+00:00'
+}
+
+MENSAGEM gravada na MESMA conversa (NAO criou nova):
+{ conv: '76d286cf', dir: 'recebida', cont: 'Oi', criado: '12:16:05' }
+
+CONFIRMA QUE A FEATURE FUNCIONA:
+- Detectou conversa anterior arquivada do mesmo numero
+- Reabriu (status=em_andamento) em vez de criar nova
+- Incrementou ciclo_atual (1 -> 2)
+- Marcou eh_retorno=true (pra prompt SDR usar saudacao diferente)
+
+Bugs achados durante o teste (registrados pra fix):
+1. Schema Zod do webhook (src/types/whatsapp.ts:160) define
+   message.content como z.string() mas a Uazapi as vezes manda como object.
+   Em prod, isso retornaria 400 e a Sprint 2/3 nao funcionaria.
+   Fix: trocar pra z.union([z.string(), z.object({}).passthrough()]).
+2. Middleware (src/middleware.ts) bloqueia hosts nao-localhost/vercel.app
+   com 404. Pra teste local via tunnel precisa allowlist temporaria.
