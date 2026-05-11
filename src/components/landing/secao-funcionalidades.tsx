@@ -13,7 +13,7 @@ const funcionalidades = [
     titulo: "Gestão completa",
     descricao:
       "Gerencie imóveis, clientes, negócios e atividades em um só lugar. Tudo organizado pra você focar no que importa: vender.",
-    cor: "bg-primary/10 text-primary",
+    cor: "bg-accent text-accent-foreground",
   },
   {
     icone: Sparkles,
