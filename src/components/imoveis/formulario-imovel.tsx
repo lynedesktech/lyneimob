@@ -368,6 +368,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 <FieldLabel htmlFor="codigo_interno">Código interno</FieldLabel>
                 <Input
                   id="codigo_interno"
+                  data-testid="imovel-codigo"
                   placeholder="Gerado automaticamente (ex: IMO-001)"
                   value={codigoInternoValue}
                   onChange={(e) => setCodigoInternoValue(e.target.value)}
@@ -377,6 +378,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 <FieldLabel htmlFor="titulo">Título do anúncio *</FieldLabel>
                 <Input
                   id="titulo"
+                  data-testid="imovel-titulo"
                   placeholder="Ex: Apartamento 3 quartos no Centro"
                   value={tituloValue}
                   onChange={(e) => setTituloValue(e.target.value)}
@@ -499,6 +501,7 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
                 <FieldLabel htmlFor="cidade">Cidade *</FieldLabel>
                 <Input
                   id="cidade"
+                  data-testid="imovel-cidade"
                   placeholder="São Paulo"
                   value={cidadeValue}
                   onChange={(e) => !preenchidoPorCep && setCidadeValue(e.target.value)}
@@ -754,12 +757,12 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
             Cancelar
           </Button>
           {etapa < ETAPAS.length ? (
-            <Button type="button" onClick={proximaEtapa}>
+            <Button type="button" data-testid="wizard-proximo" onClick={proximaEtapa}>
               Próximo
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           ) : (
-            <Button type="button" onClick={handleSalvar} disabled={pendente}>
+            <Button type="button" data-testid="imovel-salvar" onClick={handleSalvar} disabled={pendente}>
               {pendente ? (imovel ? "Salvando..." : "Cadastrando...") : imovel ? "Salvar alterações" : "Cadastrar imóvel"}
             </Button>
           )}

@@ -106,14 +106,29 @@ export async function processarComAgente(
     if (configTyped.horario_atendimento) {
       const foraDoHorario = verificarForaHorario(configTyped.horario_atendimento)
       if (foraDoHorario) {
-        const mensagemFora = configTyped.mensagem_fora_horario
-          || "Olá! No momento estamos fora do horário de atendimento. Retornaremos em breve!"
+        // Enviar mensagem de ausência só uma vez por dia pra evitar spam
+        const { redis } = await import("@/lib/redis")
+        const chaveAusencia = `absence_sent:${organizacaoId}:${conversa.numero_cliente}`
+        const jaEnviou = redis ? await redis.get(chaveAusencia) : null
 
-        const { enviarHumanizado } = await import("./humanizar")
-        await enviarHumanizado(configTyped, conversa.numero_cliente, mensagemFora)
+        if (!jaEnviou) {
+          const mensagemFora = configTyped.mensagem_fora_horario
+            || "Olá! No momento estamos fora do horário de atendimento. Retornaremos em breve!"
 
-        // Salvar mensagem enviada no banco
-        await salvarMensagemEnviada(supabase, conversaId, organizacaoId, mensagemFora)
+          const { enviarHumanizado } = await import("./humanizar")
+          await enviarHumanizado(configTyped, conversa.numero_cliente, mensagemFora)
+
+          // Salvar mensagem enviada no banco
+          await salvarMensagemEnviada(supabase, conversaId, organizacaoId, mensagemFora)
+
+          // Marca envio por 20h pra não repetir no mesmo dia
+          if (redis) {
+            await redis.set(chaveAusencia, "1", { ex: 20 * 60 * 60 })
+          }
+          console.log(`[Agente SDR] Mensagem de ausência enviada pra ${conversa.numero_cliente} (fora do horário)`)
+        } else {
+          console.log(`[Agente SDR] Conversa ${conversaId}: fora do horário, mas ausência já foi enviada hoje`)
+        }
         return
       }
     }

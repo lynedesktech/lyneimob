@@ -18,9 +18,9 @@
         "node",
         "build/index.js"
       ],
-      "cwd": "C:\\Users\\Lynedesk\\Desktop\\Tech\\gamma-mcp-server",
+      "cwd": "<caminho-local-do-gamma-mcp-server>",
       "env": {
-        "GAMMA_API_KEY": "sk-gamma-sXSFAVwAzQu6EtK3JlEqDx5bpWu0ClfHJkprVO8a88"
+        "GAMMA_API_KEY": "<sua-chave-gamma>"
       }
     },
     "shadcn": {
@@ -53,7 +53,20 @@
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--access-token",
-        "sbp_075b8bf7068e19ed19f2a4b56a0988605361fe57"
+        "<seu-token-supabase>"
+      ]
+    },
+    "linear": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://mcp.linear.app/mcp",
+        "--header",
+        "Authorization: Bearer <seu-token-linear>"
       ]
     }
   }

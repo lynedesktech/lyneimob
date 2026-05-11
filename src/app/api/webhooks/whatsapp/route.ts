@@ -228,14 +228,16 @@ export async function POST(request: Request) {
 
     // Agendar debounce via endpoint separado (invocação serverless independente)
     // O after() só precisa sobreviver ~100ms pra enviar o fetch
+    // LYNEDES-148: auth via INTERNAL_API_SECRET (com fallback pra service-role enquanto migracao roda)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const internalSecret = process.env.INTERNAL_API_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY!
     after(async () => {
       try {
         await fetch(`${appUrl}/api/interno/processar-debounce`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-internal-secret": process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            "Authorization": `Bearer ${internalSecret}`,
           },
           body: JSON.stringify({ conversaId, organizacaoId, numeroCliente }),
         })

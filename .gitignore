@@ -48,6 +48,9 @@ Agente IA.json
 # configuracoes locais
 .claude/settings.local.json
 
+# config de MCPs (contem tokens) - usar .mcp.json.example como modelo
+.mcp.json
+
 # playwright mcp (logs de debug)
 .playwright-mcp/
 

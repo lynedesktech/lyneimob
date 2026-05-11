@@ -66,10 +66,37 @@ function calcularDelayLeitura(): number {
 }
 
 /**
- * Quebra uma mensagem longa em partes menores e naturais
- * Tenta quebrar em parágrafos ou frases, não no meio de palavras
+ * Quebra uma mensagem longa em partes menores e naturais.
+ * Prioridade:
+ *   1. Split por `---` em linha própria (delimitador explícito da IA)
+ *   2. Split por parágrafo duplo (\n\n)
+ *   3. Split por frase (. ! ?)
+ *   4. Split por linha simples
+ *   5. Corte por tamanho (último recurso)
  */
 export function quebrarMensagem(texto: string, maxCaracteres = 500): string[] {
+  // Prioridade 1: split por --- em linha própria (delimitador explícito da IA)
+  if (/(?:^|\n)\s*---\s*(?:\n|$)/.test(texto)) {
+    const blocos = texto
+      .split(/(?:^|\n)\s*---\s*(?:\n|$)/)
+      .map((b) => b.trim())
+      .filter((b) => b.length > 0)
+    // Se algum bloco ainda ficou grande demais, aplica quebra secundária
+    const resultado: string[] = []
+    for (const bloco of blocos) {
+      if (bloco.length <= maxCaracteres) {
+        resultado.push(bloco)
+      } else {
+        resultado.push(...quebrarMensagemSemDelimitador(bloco, maxCaracteres))
+      }
+    }
+    return resultado
+  }
+
+  return quebrarMensagemSemDelimitador(texto, maxCaracteres)
+}
+
+function quebrarMensagemSemDelimitador(texto: string, maxCaracteres: number): string[] {
   if (texto.length <= maxCaracteres) {
     return [texto]
   }
