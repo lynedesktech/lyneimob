@@ -1,16 +1,22 @@
-# Relatorios de progresso — LyneImob / Duna Real Estate
+# Relatorios — LyneImob / Duna Real Estate
 
-Cada arquivo deste diretorio cobre uma sessao/dia de trabalho e e otimizado pra:
-- Voce ler em ~3 min
-- Repassar pro Eduardo sem editar muito
-- Ter trilha clara do que ja foi feito
+Dois tipos de arquivo aqui:
 
-## Como usar
+## Pra mostrar ao Eduardo (executivos)
 
-- 1 arquivo por dia (formato `YYYY-MM-DD.md`)
-- Cada arquivo tem 3 secoes: **Entregas**, **Bugs corrigidos**, **Proximos passos**
-- O relatorio mais recente fica linkado abaixo
+Arquivos `para-eduardo-YYYY-MM-DD.md` — linguagem de negocio, sem jargao tecnico.
+Foco em **o que mudou pro Angelo**, **bugs resolvidos** e **proximos passos**.
 
-## Indice
+- [04/05/2026](./para-eduardo-2026-05-04.md)
 
-- [04/05/2026 — Sprint 2/3 do agente, fixes do Angelo, dark mode](./2026-05-04.md)
+## Pra mim trabalhar (tecnicos)
+
+`progresso.md` — log cumulativo, formato `data | acao | commit/PR`.
+Cada linha eh 1 mudanca commitada. Sem narrativa.
+
+- [progresso.md](./progresso.md)
+
+## Como gerar o proximo
+
+No fim do dia, eu (Claude) atualizo os dois automaticamente. O do Eduardo
+fica sempre na pasta — basta abrir o arquivo do dia, ler, e mandar pra ele.
