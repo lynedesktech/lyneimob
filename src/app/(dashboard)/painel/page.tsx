@@ -6,6 +6,7 @@ import { PainelCorretor } from "@/components/dashboard/painel-corretor"
 import { PainelSuperAdmin } from "@/components/painel/painel-super-admin"
 import { PainelInvestidor } from "@/components/painel/painel-investidor"
 import { obterUsuarioAutenticado, obterDadosUsuario } from "@/lib/supabase/queries"
+import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 import type { AtividadeHojeItem } from "@/components/dashboard/lista-atividades-hoje"
 import type { EtapaFunil } from "@/components/dashboard/grafico-funil"
 import type { PontoMensal } from "@/components/dashboard/grafico-evolucao"
@@ -18,7 +19,11 @@ export default async function DashboardPage() {
 
   const nomeUsuario = usuario?.nome ?? "Usuário"
   const cargo = usuario?.cargo ?? "corretor"
-  const perfilPlataforma = (usuario?.perfil_plataforma ?? (usuario?.super_admin ? "super_admin" : null)) as PerfilPlataforma
+  const perfilPlataformaRaw = (usuario?.perfil_plataforma ?? (usuario?.super_admin ? "super_admin" : null)) as PerfilPlataforma
+  // Em modo produto unico (Duna): ignora perfis de plataforma — todo mundo
+  // ve o painel normal da org (admin/corretor), sem "Visao da Plataforma"
+  // nem painel investidor/desenvolvedor.
+  const perfilPlataforma = (MODO_PRODUTO_UNICO ? null : perfilPlataformaRaw) as PerfilPlataforma
   const isCorretor = cargo === "corretor" && !perfilPlataforma
 
   // Perfis de plataforma veem painel específico
