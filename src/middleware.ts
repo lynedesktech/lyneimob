@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { atualizarSessao } from "@/lib/supabase/middleware"
 import { resolverDominioCustomizado } from "@/lib/dominio-customizado"
+import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 
 // Extrair hostname do domínio principal (sem protocolo e sem porta)
 function obterDominioPrincipal(): string {
@@ -18,6 +19,11 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
   // Remover porta para comparação (ex: "localhost:3000" → "localhost")
   const hostnameBase = hostname.split(":")[0]
+
+  // Em modo produto unico (Duna), nao tem cadastro de novas contas
+  if (MODO_PRODUTO_UNICO && request.nextUrl.pathname === "/cadastro") {
+    return NextResponse.redirect(new URL("/login", request.url), 308)
+  }
 
   // Se é o domínio principal ou domínio Vercel → fluxo normal (auth, dashboard, etc.)
   const ehVercel = hostnameBase.endsWith(".vercel.app")
