@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/auto-close-conversas",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/reconciliar-conversas",
+      "schedule": "0 5 * * *"
     }
   ]
 }
