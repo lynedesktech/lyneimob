@@ -39,7 +39,7 @@ export function CardModuloAjuda({
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
             {icone}
           </div>
           <div>
@@ -62,7 +62,7 @@ export function CardModuloAjuda({
             />
           ) : (
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-foreground">
                 <Play className="h-6 w-6 ml-0.5" />
               </div>
               <span className="text-sm font-medium">Vídeo em breve</span>

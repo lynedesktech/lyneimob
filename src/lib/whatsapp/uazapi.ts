@@ -102,6 +102,34 @@ export async function verificarStatusUazapi(
   return resposta.json()
 }
 
+/**
+ * LYNEDES-103 Sprint 3: configura privacidade da instância anti-bot
+ * - online: "all" (sempre aparece online)
+ * - last: "none" (esconde "visto por ultimo")
+ * - readreceipts: "all" (manda confirmacao de leitura)
+ *
+ * Sem isso, o "visto por ultimo" do numero fica visivel e parece bot.
+ */
+export async function configurarPrivacidadeUazapi(
+  url: string,
+  token: string
+): Promise<void> {
+  const resposta = await fetch(montarUrlBase(url, "/instance/privacy"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", token },
+    body: JSON.stringify({
+      online: "all",
+      last: "none",
+      readreceipts: "all",
+    }),
+  })
+
+  if (!resposta.ok) {
+    const erro = await resposta.text().catch(() => "Erro desconhecido")
+    throw new Error(`Erro ao configurar privacidade: ${erro}`)
+  }
+}
+
 /** Desconecta a instância (requer novo QR para reconectar) */
 export async function desconectarInstanciaUazapi(
   url: string,

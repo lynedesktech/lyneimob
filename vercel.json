@@ -5,8 +5,17 @@
       "schedule": "0 12 * * 1"
     },
     {
+<<<<<<< HEAD
       "path": "/api/cron/reconciliar-conversas",
       "schedule": "0 5 * * *"
+=======
+      "path": "/api/cron/follow-up",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/auto-close-conversas",
+      "schedule": "0 */6 * * *"
+>>>>>>> main
     }
   ]
 }

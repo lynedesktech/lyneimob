@@ -1,0 +1,32 @@
+=== ITEM 13 — BURST COOLDOWN (validado via tunnel cloudflared) ===
+
+Cenario:
+- Webhook redirecionado pra dev local (port 3001) via tunnel cloudflared
+- Mensagem normal mandada pelo Gabriel ("oi"-style)
+- Threshold reduzido temporariamente pra 1 (defalt eh 5) so pra forcar
+  o cooldown a disparar com qualquer 2+ bubbles. Em PROD, o threshold
+  permanece 5 — comportamento natural com respostas longas (6+ bubbles).
+- maxCaracteres tambem reduzido temp pra 80 (default 500) pra fragmentar
+  resposta media em multiplas bubbles.
+
+LOGS do dev server (filtrado):
+
+[WhatsApp Webhook] Evento aceito: messages
+[WhatsApp Webhook] Zod OK, processando...
+[WhatsApp Webhook] Config encontrada, org: 1f03e678-c473-4dd3-9673-7ccbe44b6299
+POST /api/webhooks/whatsapp 200 in 393ms
+[Debounce] Processando lote da conversa 76d286cf-5791-44dc-a970-099029f76617
+[Humanizar] Burst cooldown apos 1 segmentos — pausando 5000ms      <<< EVIDENCIA
+
+Conclusao:
+- A logica do cooldown EXECUTA como esperado quando atinge o threshold
+- A pausa de 5000ms (5s) e respeitada
+- Em PROD com threshold=5, o cooldown so dispara em respostas longas
+  (6+ bubbles), conforme intencao da feature
+
+Apos a captura, todos os valores foram revertidos pros defaults:
+- BURST_THRESHOLD = 5
+- maxCaracteres default = 500
+- middleware sem allowlist temp
+- NEXT_PUBLIC_APP_URL = http://localhost:3000
+- webhook restaurado pra Railway producao

@@ -46,7 +46,7 @@ export function CardLead({ lead }: CardLeadProps) {
                 ? "bg-destructive/10 text-destructive"
                 : lead.status === "descartado"
                   ? "bg-muted text-muted-foreground"
-                  : "bg-primary/10 text-primary"
+                  : "bg-accent text-accent-foreground"
           }`}>
             <User className="h-5 w-5" />
           </div>

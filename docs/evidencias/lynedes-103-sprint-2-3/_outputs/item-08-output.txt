@@ -1,0 +1,10 @@
+﻿=== ITEM 8 — CRON FOLLOW-UP ===
+
+[1/2] Sem auth (deve dar 401):
+[HTTP 401] {"erro":"Nao autorizado"}
+
+[2/2] Com auth correta (Bearer CRON_SECRET):
+[HTTP 200] {"status":"ok","enviados":1,"pulados":12,"total_avaliadas":14}
+
+Hora UTC: 2026-05-04 08 | Hora SP esperada: 08 (UTC-3)
+Janela do cron: 8h-18h SP. Schedule no vercel.json: '0 * * * *' (de hora em hora).

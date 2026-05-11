@@ -107,17 +107,34 @@ class RateLimiter:
                 del self._worker_tasks[chat_id]
 
     async def _wait_for_clearance(self, chat_id: str) -> None:
-        """Bloqueia ate que os limites de taxa permitam envio."""
+        """Bloqueia ate que os limites de taxa permitam envio.
+
+        LYNEDES-103 Sprint 3: limites alinhados com config (anti-bloqueio Meta):
+        - Por contato: 8 msgs/min
+        - Global: 60 msgs/min
+        - Gap minimo entre envios: 2s
+        - Burst cooldown: 5s apos 5 segmentos
+        """
         max_retries = 30
 
-        for _ in range(max_retries):
+        for attempt in range(max_retries):
             contact_count = await redis_client.rate_count_contact(chat_id)
             if contact_count >= settings.rate_limit_per_contact_per_minute:
+                if attempt == 0:
+                    logger.info(
+                        f"[RATE] Limite por contato atingido para {chat_id} "
+                        f"({contact_count}/{settings.rate_limit_per_contact_per_minute}/min). Aguardando."
+                    )
                 await asyncio.sleep(2.0)
                 continue
 
             global_count = await redis_client.rate_count_global()
             if global_count >= settings.rate_limit_global_per_minute:
+                if attempt == 0:
+                    logger.warning(
+                        f"[RATE] Limite global atingido "
+                        f"({global_count}/{settings.rate_limit_global_per_minute}/min). Aguardando."
+                    )
                 await asyncio.sleep(3.0)
                 continue
 
