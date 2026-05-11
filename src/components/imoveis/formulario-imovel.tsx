@@ -100,7 +100,9 @@ function IndicadorProgresso({ etapa, irParaEtapa }: { etapa: number; irParaEtapa
       {ETAPAS.map((passo, i) => {
         const concluido = etapa > passo.numero
         const atual = etapa === passo.numero
-        const clicavel = passo.numero < etapa
+        // Navegacao livre — qualquer etapa eh clicavel pra ir direto.
+        // Validacao continua acontecendo no salvar (etapas 1 e 2 obrigatorias).
+        const clicavel = passo.numero !== etapa
         return (
           <div key={passo.numero} className="flex items-center">
             <button
@@ -299,6 +301,11 @@ export function FormularioImovel({ imovel }: FormularioImovelProps) {
     formData.set("vagas", String(parseOpcaoNumerica(vagasValue)))
     if (areaTotalValue) formData.set("area_total", areaTotalValue)
     if (areaConstruidaValue) formData.set("area_construida", areaConstruidaValue)
+
+    // Bug fix: valores estavam fora do FormData, por isso preco/condominio/iptu sumiam
+    if (valorValue != null) formData.set("valor", String(valorValue))
+    if (valorCondominioValue != null) formData.set("valor_condominio", String(valorCondominioValue))
+    if (valorIptuValue != null) formData.set("valor_iptu", String(valorIptuValue))
 
     if (editando && imovel) {
       formData.set("id", imovel.id)

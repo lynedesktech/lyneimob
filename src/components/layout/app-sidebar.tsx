@@ -213,7 +213,7 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
                             render={<Link href={item.href} />}
                             isActive={ativo}
                             tooltip={item.titulo}
-                            className={ativo ? "font-semibold text-sidebar-primary" : ""}
+                            className={ativo ? "font-semibold" : ""}
                           >
                             <item.icone />
                             <span>{item.titulo}</span>
