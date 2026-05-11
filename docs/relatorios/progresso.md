@@ -24,6 +24,8 @@ Sem transcricao detalhada — pra ver o que mudou de fato, abrir o commit/PR lin
 | ~21h | Subir --sidebar-accent pra 0.5 e --accent pra 0.45 — contraste mais nitido no dark mode | commit `7e21800` |
 | ~21h | Deploy prod via Vercel CLI (CI estava bloqueando por lint) | https://lyneimob.vercel.app |
 | ~22h | Duna Fase 2: bloquear /cadastro via middleware, esconder banner de trial e link Financeiro do menu | PR #35 mergeado + deploy |
+| ~22h | Validacao Playwright contra prod: Fase 1+2 OK. Achado bonus: painel ainda mostrava "Visao da Plataforma" pra super_admin (9 orgs, 15 usuarios, etc) | 7 prints em docs/evidencias/duna-fase-1-2/ |
+| ~22h | Fix: painel forca perfilPlataforma=null em modo produto unico — toda condicional de painel investidor/desenvolvedor/super_admin desliga | commit `a908295` + deploy |
 
 ## Marco do dia
 
