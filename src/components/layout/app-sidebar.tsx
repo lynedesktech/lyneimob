@@ -32,6 +32,7 @@ import {
 import { UsuarioMenu } from "@/components/layout/usuario-menu"
 import type { Acao, PerfilPlataforma } from "@/lib/permissoes"
 import { temPermissao } from "@/lib/permissoes"
+import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 
 type Cargo = "admin" | "corretor" | "gerente"
 
@@ -131,8 +132,13 @@ export function AppSidebar({ usuario, organizacao }: AppSidebarProps) {
   const perfilPlataforma = usuario.perfil_plataforma ?? (usuario.super_admin ? "super_admin" : null)
 
   // Selecionar sidebar baseada no perfil de plataforma
+  // Em modo produto unico (Duna), todo mundo ve a sidebar normal da org —
+  // perfis de plataforma (super_admin/desenvolvedor/investidor) nao
+  // tem mais menu proprio.
   let todosGrupos: GrupoNavegacao[]
-  if (perfilPlataforma === "super_admin") {
+  if (MODO_PRODUTO_UNICO) {
+    todosGrupos = gruposNavegacao
+  } else if (perfilPlataforma === "super_admin") {
     todosGrupos = gruposSuperAdmin
   } else if (perfilPlataforma === "desenvolvedor") {
     todosGrupos = gruposDesenvolvedor
