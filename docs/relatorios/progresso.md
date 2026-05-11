@@ -18,6 +18,8 @@ Sem transcricao detalhada — pra ver o que mudou de fato, abrir o commit/PR lin
 | ~19h | LYNEDES-146 hardening do webhook de portais (error_code + log estruturado) | PR #28 mergeado |
 | ~19h | LYNEDES-150 cron diario de reconciliacao callback Railway (5h UTC, varre conversas orfas e dispara callback) | PR #33 mergeado |
 | ~19h | PR #23 (docs estrategia SaaS Eduardo) fechado sem merge — pivot pra produto unico Duna |
+| ~20h | Fix raiz do dark mode: --accent subiu de 0.269 pra 0.35 no globals.css. Resolve invisibilidade dos icones dos cards na origem | PR #34 mergeado |
+| ~20h | Duna Fase 1: flag MODO_PRODUTO_UNICO + bloqueio de /admin/* e /financeiro + sidebar so com grupos da org | PR #34 mergeado |
 
 ## Marco do dia
 
