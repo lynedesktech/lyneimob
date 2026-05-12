@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { LogOut, User, ChevronsUpDown, CreditCard } from "lucide-react"
+import { LogOut, User, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { sair } from "@/actions/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,7 +19,6 @@ import {
   SidebarMenuItem,
   SidebarMenu,
 } from "@/components/ui/sidebar"
-import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 
 interface UsuarioMenuProps {
   usuario: {
@@ -54,9 +53,6 @@ function AvatarUsuario({ usuario, className }: { usuario: UsuarioMenuProps["usua
 
 export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
   const router = useRouter()
-  const perfilPlataforma = usuario.perfil_plataforma ?? (usuario.super_admin ? "super_admin" : null)
-  // Em modo produto unico (Duna), sem billing — esconde Financeiro do menu
-  const mostrarFinanceiro = !MODO_PRODUTO_UNICO && (!perfilPlataforma || perfilPlataforma === "super_admin")
 
   return (
     <SidebarMenu>
@@ -109,12 +105,6 @@ export function UsuarioMenu({ usuario }: UsuarioMenuProps) {
                 <User className="mr-2 h-4 w-4" />
                 <span>Minha conta</span>
               </DropdownMenuItem>
-              {mostrarFinanceiro && (
-                <DropdownMenuItem onClick={() => router.push("/financeiro")}>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  <span>Financeiro</span>
-                </DropdownMenuItem>
-              )}
             </DropdownMenuGroup>
 
             <DropdownMenuSeparator />
