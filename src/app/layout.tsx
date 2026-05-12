@@ -19,11 +19,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "LyneImob — Gestão Imobiliária Inteligente",
-    template: "%s | LyneImob",
+    default: "Duna Real Estate — Gestão Imobiliária",
+    template: "%s | Duna Real Estate",
   },
   description:
-    "Plataforma de gestão imobiliária com IA integrada para corretores e imobiliárias. Gerencie imóveis, clientes, negócios e loteamentos com inteligência artificial.",
+    "Plataforma de gestão imobiliária da Duna Real Estate. Imóveis, clientes, negócios, agenda e agente WhatsApp com IA num só lugar.",
   keywords: [
     "gestão imobiliária",
     "CRM imobiliário",

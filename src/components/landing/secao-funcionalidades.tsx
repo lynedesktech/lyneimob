@@ -20,35 +20,35 @@ const funcionalidades = [
     titulo: "IA em todos os módulos",
     descricao:
       "Descrições de imóveis, análise de perfil de clientes, sugestões de ação em negócios — a IA trabalha junto com você.",
-    cor: "bg-accent-blue/10 text-accent-blue",
+    cor: "bg-accent-blue/25 text-accent-blue dark:bg-accent-blue/30",
   },
   {
     icone: KanbanSquare,
     titulo: "Pipeline visual",
     descricao:
       "Acompanhe seus negócios em um Kanban intuitivo com drag-and-drop. Veja onde cada venda está e o que fazer pra avançar.",
-    cor: "bg-success/10 text-success",
+    cor: "bg-success/25 text-success dark:bg-success/30",
   },
   {
     icone: MessageCircle,
     titulo: "Agente SDR por WhatsApp",
     descricao:
       "Um agente de IA que responde seus leads 24/7 pelo WhatsApp, qualifica e agenda visitas automaticamente.",
-    cor: "bg-success/10 text-success",
+    cor: "bg-success/25 text-success dark:bg-success/30",
   },
   {
     icone: Globe,
     titulo: "Site público personalizado",
     descricao:
       "Seu site de imóveis pronto em minutos. Personalize cores, logo, sobre nós — sem precisar de desenvolvedor.",
-    cor: "bg-warning/10 text-warning",
+    cor: "bg-warning/25 text-warning dark:bg-warning/30",
   },
   {
     icone: Link2,
     titulo: "Integração com portais",
     descricao:
       "Feed XML automático para portais como ZAP, OLX e VivaReal. Receba leads diretamente na plataforma por webhook.",
-    cor: "bg-info/10 text-info",
+    cor: "bg-info/25 text-info dark:bg-info/30",
   },
 ]
 
