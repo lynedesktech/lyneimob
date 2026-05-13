@@ -8,7 +8,6 @@ Arquivos `para-eduardo-YYYY-MM-DD.md` — linguagem de negocio, sem jargao tecni
 Foco em **o que mudou pro Angelo**, **bugs resolvidos** e **proximos passos**.
 
 - [04/05/2026](./para-eduardo-2026-05-04.md)
-- [15/05/2026 (semana 05–15/05)](./para-eduardo-2026-05-15.md)
 
 ## Pra mim trabalhar (tecnicos)
 
