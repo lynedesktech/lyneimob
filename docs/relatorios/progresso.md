@@ -27,6 +27,19 @@ Sem transcricao detalhada — pra ver o que mudou de fato, abrir o commit/PR lin
 | ~22h | Validacao Playwright contra prod: Fase 1+2 OK. Achado bonus: painel ainda mostrava "Visao da Plataforma" pra super_admin (9 orgs, 15 usuarios, etc) | 7 prints em docs/evidencias/duna-fase-1-2/ |
 | ~22h | Fix: painel forca perfilPlataforma=null em modo produto unico — toda condicional de painel investidor/desenvolvedor/super_admin desliga | commit `a908295` + deploy |
 
+## 2026-05-12
+
+| Hora | Acao | Onde |
+|------|------|------|
+| ~09h | Duna Fase 3: deletar Stripe/billing — 8 arquivos/pastas, 1774 linhas removidas. verificar-limites.ts adaptado pra sempre liberar (10 callsites) | PR #36 mergeado + deploy |
+| ~10h | Cores azuis apagadas em LIGHT mode na landing — bg-{accent-blue,success,warning,info}/10 -> /25 + dark:/30 | PR #37 (auto-deploy) |
+| ~11h | Landing LyneImob movida pra /lyneimob — / agora redireciona pra /login ou /painel | commit em main |
+| ~11h | Tentativa de favicon com logo Duna (logo-preto.png) — saiu horizontal feio | reverter |
+| ~12h | Favicon programatico via next/og — quadrado preto "D" branco. Apaguei public/favicon.ico que tinha prioridade | commit `d3e8988` |
+| ~13h | Reverter title navegador + favicon: CRM volta a marca LyneImob (Duna so no site publico via dominio proprio) | commit `b2aa73f` |
+| ~14h | Prompt SDR V33: merge da estrutura humanizadora da Gaby/Smart Imob com regras especificas do LyneImob/Duna (alto padrao Ceara, terrenos/casas/coberturas, sem MCMV/Tanac do Smart) | commit `0e0f608` + deploy |
+| ~15h | Atualizar relatorio executivo pro Eduardo cobrindo semana 05-15/05 | docs/relatorios/para-eduardo-2026-05-15.md |
+
 ## Marco do dia
 
 - **7 PRs mergeados** em main (29, 30, 22, 31, 32, 28, 33)
