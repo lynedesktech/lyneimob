@@ -233,6 +233,17 @@ export async function salvarConfigAgenteWhatsapp(
     corretor_padrao_id: (formData.get("corretor_padrao_id") as string) || null,
   }
 
+  console.log("[salvarConfigAgenteWhatsapp] formData recebido:", {
+    ativo: formData.get("ativo"),
+    nome_agente: formData.get("nome_agente"),
+    prompt_personalizado: formData.get("prompt_personalizado"),
+    horario_atendimento_raw: formData.get("horario_atendimento"),
+    mensagem_fora_horario: formData.get("mensagem_fora_horario"),
+    corretor_padrao_id: formData.get("corretor_padrao_id"),
+    todasChaves: Array.from(formData.keys()),
+  })
+  console.log("[salvarConfigAgenteWhatsapp] camposAgente:", camposAgente)
+
   // Verificar se já existe config
   const { data: existente } = await supabase
     .from("config_whatsapp")
