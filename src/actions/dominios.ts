@@ -2,7 +2,7 @@
 
 import dns from "node:dns/promises"
 import { revalidatePath } from "next/cache"
-import { criarClienteServer } from "@/lib/supabase/server"
+import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { verificarPermissao } from "@/lib/permissoes"
 import { schemaDominio } from "@/types/dominios"
 import type { EstadoFormulario } from "@/types/formulario"
@@ -54,7 +54,7 @@ export async function salvarDominio(
 
   const dominio = resultado.data
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   // Verificar se já existe domínio para esta organização
   const { data: existente } = await supabase
@@ -133,7 +133,7 @@ export async function verificarDns(
   )
   if (permissao.erro) return permissao
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   // Buscar domínio da organização
   const { data: dominio } = await supabase
@@ -221,7 +221,7 @@ export async function removerDominio(
   )
   if (permissao.erro) return permissao
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   // Buscar domínio da organização
   const { data: dominio } = await supabase
