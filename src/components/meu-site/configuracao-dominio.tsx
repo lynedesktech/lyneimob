@@ -104,7 +104,7 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
                   placeholder="www.suaimobiliaria.com.br"
                   className="flex-1"
                 />
-                <Button type="submit" disabled={salvando || !dominioInput}>
+                <Button type="submit" disabled={salvando}>
                   <Globe className="mr-1.5 h-3.5 w-3.5" />
                   {salvando ? "Salvando..." : "Salvar"}
                 </Button>
