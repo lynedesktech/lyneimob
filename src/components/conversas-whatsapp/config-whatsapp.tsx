@@ -32,28 +32,31 @@ const DIAS_SEMANA: { key: string; abrev: string; label: string }[] = [
   { key: "domingo", abrev: "Dom", label: "Domingo" },
 ]
 
-const HORARIO_VAZIO: Record<string, ConfigDia> = {
-  segunda: { ativo: true, inicio: "08:00", fim: "18:00" },
-  terca: { ativo: true, inicio: "08:00", fim: "18:00" },
-  quarta: { ativo: true, inicio: "08:00", fim: "18:00" },
-  quinta: { ativo: true, inicio: "08:00", fim: "18:00" },
-  sexta: { ativo: true, inicio: "08:00", fim: "18:00" },
-  sabado: { ativo: false, inicio: "09:00", fim: "13:00" },
-  domingo: { ativo: false, inicio: "09:00", fim: "12:00" },
+// Estado base: todos os dias desmarcados. Reflete fielmente o que esta
+// no banco em vez de impor um padrao Mon-Fri ativo (que confundia o
+// usuario achando que estava salvo quando era so a UI inicial).
+function gerarHorarioBase(): Record<string, ConfigDia> {
+  return {
+    segunda: { ativo: false, inicio: "08:00", fim: "18:00" },
+    terca: { ativo: false, inicio: "08:00", fim: "18:00" },
+    quarta: { ativo: false, inicio: "08:00", fim: "18:00" },
+    quinta: { ativo: false, inicio: "08:00", fim: "18:00" },
+    sexta: { ativo: false, inicio: "08:00", fim: "18:00" },
+    sabado: { ativo: false, inicio: "09:00", fim: "13:00" },
+    domingo: { ativo: false, inicio: "09:00", fim: "12:00" },
+  }
 }
 
 function carregarHorarioDoConfig(horario: Record<string, { inicio: string; fim: string }> | null): Record<string, ConfigDia> {
-  if (!horario) return HORARIO_VAZIO
+  const base = gerarHorarioBase()
+  if (!horario) return base
 
-  const resultado = { ...HORARIO_VAZIO }
-  for (const [key, def] of Object.entries(HORARIO_VAZIO)) {
+  for (const key of Object.keys(base)) {
     if (horario[key]) {
-      resultado[key] = { ativo: true, inicio: horario[key].inicio, fim: horario[key].fim }
-    } else {
-      resultado[key] = { ...def, ativo: false }
+      base[key] = { ativo: true, inicio: horario[key].inicio, fim: horario[key].fim }
     }
   }
-  return resultado
+  return base
 }
 
 // ============================================================
@@ -74,7 +77,7 @@ export function ConfigWhatsapp() {
   const [nomeAgente, setNomeAgente] = useState("")
   const [promptPersonalizado, setPromptPersonalizado] = useState("")
   const [mensagemFora, setMensagemFora] = useState("")
-  const [horario, setHorario] = useState<Record<string, ConfigDia>>(HORARIO_VAZIO)
+  const [horario, setHorario] = useState<Record<string, ConfigDia>>(gerarHorarioBase)
   const [corretorId, setCorretorId] = useState("")
 
   const [estado, formAction] = useActionState<EstadoFormulario, FormData>(
