@@ -56,14 +56,12 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const pathname = request.nextUrl.pathname
 
-  // Se o pathname JA comeca com /{slug} (links internos do site publico
-  // geram com slug embutido), redireciona pra versao sem slug pra URL
-  // bonita no dominio customizado, evitando duplicacao /slug/slug/...
+  // Links do site publico ja incluem o slug (/{slug}/imoveis/...). Quando
+  // o path ja comeca com /{slug}, deixa Next.js rotear direto (sem rewrite),
+  // evitando o /slug/slug/... e tambem o delay de um redirect.
   const prefixoSlug = `/${resultado.slug}`
   if (pathname === prefixoSlug || pathname.startsWith(prefixoSlug + "/")) {
-    const semSlug = pathname.slice(prefixoSlug.length) || "/"
-    url.pathname = semSlug
-    return NextResponse.redirect(url, 308)
+    return NextResponse.next()
   }
 
   // Reescrever internamente: /imoveis → /slug/imoveis
