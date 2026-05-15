@@ -40,8 +40,12 @@ export async function middleware(request: NextRequest) {
     return await atualizarSessao(request)
   }
 
-  // Hostname diferente do principal → pode ser domínio customizado
-  const resultado = await resolverDominioCustomizado(hostnameBase)
+  // Hostname diferente do principal → pode ser domínio customizado.
+  // Tenta primeiro como digitado, depois sem "www." (apex = sem www no banco).
+  let resultado = await resolverDominioCustomizado(hostnameBase)
+  if (!resultado && hostnameBase.startsWith("www.")) {
+    resultado = await resolverDominioCustomizado(hostnameBase.slice(4))
+  }
 
   if (!resultado) {
     // Domínio não reconhecido → retornar 404
