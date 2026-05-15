@@ -56,6 +56,16 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const pathname = request.nextUrl.pathname
 
+  // Se o pathname JA comeca com /{slug} (links internos do site publico
+  // geram com slug embutido), redireciona pra versao sem slug pra URL
+  // bonita no dominio customizado, evitando duplicacao /slug/slug/...
+  const prefixoSlug = `/${resultado.slug}`
+  if (pathname === prefixoSlug || pathname.startsWith(prefixoSlug + "/")) {
+    const semSlug = pathname.slice(prefixoSlug.length) || "/"
+    url.pathname = semSlug
+    return NextResponse.redirect(url, 308)
+  }
+
   // Reescrever internamente: /imoveis → /slug/imoveis
   // A raiz / vira /slug (home do site público)
   url.pathname = `/${resultado.slug}${pathname}`
