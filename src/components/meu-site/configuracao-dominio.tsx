@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
+import { useActionState, useEffect, useState, useTransition } from "react"
 import {
   Globe,
   CheckCircle2,
@@ -44,7 +44,9 @@ type Props = {
 export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
   const [dominioInput, setDominioInput] = useState("")
 
-  // Actions
+  // Actions — chamadas via onClick em vez de form action porque
+  // este componente eh renderizado dentro de outra <form>
+  // (FormularioConfiguracoesSite) e form aninhada nao funciona em HTML.
   const [estadoSalvar, actionSalvar, salvando] = useActionState(
     salvarDominio,
     {}
@@ -57,6 +59,26 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
     removerDominio,
     {}
   )
+  const [, startTransition] = useTransition()
+  const [novoDominio, setNovoDominio] = useState("")
+
+  function dispararSalvar(valor: string) {
+    if (!valor.trim()) {
+      toast.error("Digite um domínio antes de salvar.")
+      return
+    }
+    const fd = new FormData()
+    fd.set("dominio", valor.trim())
+    startTransition(() => actionSalvar(fd))
+  }
+
+  function dispararVerificar() {
+    startTransition(() => actionVerificar(new FormData()))
+  }
+
+  function dispararRemover() {
+    startTransition(() => actionRemover(new FormData()))
+  }
 
   // Toast feedback para cada action
   useEffect(() => {
@@ -92,7 +114,7 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
       <CardContent className="space-y-6">
         {!dominio ? (
           /* ========== SEM DOMÍNIO CONFIGURADO ========== */
-          <form action={actionSalvar} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="dominio">Seu domínio</Label>
               <div className="flex gap-2">
@@ -101,10 +123,20 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
                   name="dominio"
                   value={dominioInput}
                   onChange={(e) => setDominioInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      dispararSalvar(dominioInput)
+                    }
+                  }}
                   placeholder="www.suaimobiliaria.com.br"
                   className="flex-1"
                 />
-                <Button type="submit" disabled={salvando}>
+                <Button
+                  type="button"
+                  onClick={() => dispararSalvar(dominioInput)}
+                  disabled={salvando}
+                >
                   <Globe className="mr-1.5 h-3.5 w-3.5" />
                   {salvando ? "Salvando..." : "Salvar"}
                 </Button>
@@ -144,7 +176,7 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
                 </div>
               </div>
             </div>
-          </form>
+          </div>
         ) : (
           /* ========== DOMÍNIO CONFIGURADO ========== */
           <div className="space-y-6">
@@ -266,31 +298,38 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
             {/* Ações */}
             <div className="flex flex-wrap gap-2">
               {/* Verificar DNS */}
-              <form action={actionVerificar}>
-                <Button
-                  type="submit"
-                  variant={
-                    dominio.status === "pendente" ? "default" : "outline"
-                  }
-                  size="sm"
-                  disabled={verificando}
-                >
-                  <RefreshCw
-                    className={`mr-1.5 h-3.5 w-3.5 ${verificando ? "animate-spin" : ""}`}
-                  />
-                  {verificando ? "Verificando..." : "Verificar DNS"}
-                </Button>
-              </form>
+              <Button
+                type="button"
+                onClick={dispararVerificar}
+                variant={
+                  dominio.status === "pendente" ? "default" : "outline"
+                }
+                size="sm"
+                disabled={verificando}
+              >
+                <RefreshCw
+                  className={`mr-1.5 h-3.5 w-3.5 ${verificando ? "animate-spin" : ""}`}
+                />
+                {verificando ? "Verificando..." : "Verificar DNS"}
+              </Button>
 
               {/* Alterar domínio */}
-              <form action={actionSalvar} className="flex gap-2">
+              <div className="flex gap-2">
                 <Input
-                  name="dominio"
+                  value={novoDominio}
+                  onChange={(e) => setNovoDominio(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      dispararSalvar(novoDominio)
+                    }
+                  }}
                   placeholder="Novo domínio..."
                   className="h-8 w-52 text-sm"
                 />
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={() => dispararSalvar(novoDominio)}
                   variant="outline"
                   size="sm"
                   disabled={salvando}
@@ -298,7 +337,7 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
                   <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
                   {salvando ? "Salvando..." : "Alterar"}
                 </Button>
-              </form>
+              </div>
 
               {/* Remover domínio */}
               <Dialog>
@@ -324,15 +363,14 @@ export function ConfiguracaoDominio({ dominio, appHostname }: Props) {
                     <DialogClose render={<Button variant="outline" />}>
                       Cancelar
                     </DialogClose>
-                    <form action={actionRemover}>
-                      <Button
-                        type="submit"
-                        variant="destructive"
-                        disabled={removendo}
-                      >
-                        {removendo ? "Removendo..." : "Sim, remover"}
-                      </Button>
-                    </form>
+                    <Button
+                      type="button"
+                      onClick={dispararRemover}
+                      variant="destructive"
+                      disabled={removendo}
+                    >
+                      {removendo ? "Removendo..." : "Sim, remover"}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
