@@ -96,15 +96,14 @@ export function ConfigWhatsapp() {
     }
   }, [config])
 
-  // Toast de feedback + invalidar cache após salvar
+  // Toast de feedback + invalidar cache após salvar (mantém na pagina)
   useEffect(() => {
     if (estado.sucesso) {
       toast.success(estado.sucesso)
       queryClient.invalidateQueries({ queryKey: ["config-whatsapp"] })
-      router.push("/configuracoes")
     }
     if (estado.erro) toast.error(estado.erro)
-  }, [estado, queryClient, router])
+  }, [estado, queryClient])
 
   function serializarHorario() {
     const resultado: Record<string, { inicio: string; fim: string }> = {}

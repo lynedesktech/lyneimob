@@ -81,18 +81,26 @@ export async function salvarDominio(
       return { erro: "Erro ao atualizar domínio. Tente novamente." }
     }
   } else {
-    // Inserir novo domínio
-    const { error } = await supabase.from("dominios_customizados").insert({
+    const { data: criado, error } = await supabase.from("dominios_customizados").insert({
       organizacao_id: usuario.organizacao_id,
       dominio,
       status: "pendente",
-    })
+    }).select("id")
 
     if (error) {
+      console.error("[salvarDominio] insert error", error)
       if (error.code === "23505") {
         return { erro: "Este domínio já está sendo usado por outra imobiliária." }
       }
-      return { erro: "Erro ao salvar domínio. Tente novamente." }
+      return { erro: `Erro ao salvar domínio: ${error.message}` }
+    }
+    if (!criado || criado.length === 0) {
+      console.error("[salvarDominio] insert afetou 0 linhas — RLS bloqueou", {
+        organizacao_id: usuario.organizacao_id,
+        cargo: usuario.cargo,
+        dominio,
+      })
+      return { erro: "Não foi possível salvar (sem permissão de escrita). Avise o suporte." }
     }
   }
 
