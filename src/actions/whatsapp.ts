@@ -241,22 +241,42 @@ export async function salvarConfigAgenteWhatsapp(
     .single()
 
   if (existente) {
-    const { error } = await supabase
+    const { data: atualizadas, error } = await supabase
       .from("config_whatsapp")
       .update(camposAgente)
       .eq("id", existente.id)
+      .select("id")
 
-    if (error) return { erro: "Erro ao salvar configurações. Tente novamente." }
+    if (error) {
+      console.error("[salvarConfigAgenteWhatsapp] update error", error)
+      return { erro: `Erro ao salvar configurações: ${error.message}` }
+    }
+    if (!atualizadas || atualizadas.length === 0) {
+      console.error("[salvarConfigAgenteWhatsapp] update afetou 0 linhas — RLS provavelmente bloqueou", {
+        organizacao_id: usuario.organizacao_id,
+        config_id: existente.id,
+        cargo: usuario.cargo,
+      })
+      return { erro: "Não foi possível salvar (sem permissão de escrita). Avise o suporte." }
+    }
   } else {
-    // Inserir mesmo sem credenciais técnicas (serão preenchidas ao conectar)
-    const { error } = await supabase.from("config_whatsapp").insert({
-      ...camposAgente,
-      organizacao_id: usuario.organizacao_id,
-      uazapi_url: "",
-      uazapi_token: "",
-    })
+    const { data: inseridas, error } = await supabase
+      .from("config_whatsapp")
+      .insert({
+        ...camposAgente,
+        organizacao_id: usuario.organizacao_id,
+        uazapi_url: "",
+        uazapi_token: "",
+      })
+      .select("id")
 
-    if (error) return { erro: "Erro ao salvar configurações. Tente novamente." }
+    if (error) {
+      console.error("[salvarConfigAgenteWhatsapp] insert error", error)
+      return { erro: `Erro ao salvar configurações: ${error.message}` }
+    }
+    if (!inseridas || inseridas.length === 0) {
+      return { erro: "Não foi possível criar configuração (sem permissão). Avise o suporte." }
+    }
   }
 
   revalidatePath("/conversas")

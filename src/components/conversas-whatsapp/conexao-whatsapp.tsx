@@ -163,15 +163,34 @@ export function ConexaoWhatsapp({ children }: ConexaoWhatsappProps) {
             ))}
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => conectar()}
-            disabled={conectando}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${conectando ? "animate-spin" : ""}`} />
-            Gerar novo QR Code
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <Button
+              variant="outline"
+              onClick={() => conectar()}
+              disabled={conectando}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${conectando ? "animate-spin" : ""}`} />
+              Gerar novo QR Code
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => desconectar()}
+              disabled={desconectando}
+            >
+              {desconectando ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelando...
+                </>
+              ) : (
+                "Cancelar e voltar"
+              )}
+            </Button>
+          </div>
         </div>
+
+        {/* Configuração do agente continua acessível enquanto aguarda QR */}
+        {children}
       </div>
     )
   }
