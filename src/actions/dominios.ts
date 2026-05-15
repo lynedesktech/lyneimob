@@ -147,29 +147,29 @@ export async function verificarDns(
   }
 
   const hostnameApp = obterHostnameApp()
+  // IPs da Vercel pra apex domain (CNAME no raiz eh proibido pelo DNS,
+  // por isso apex usa A pra um IP fixo do Vercel)
+  const IPS_VERCEL = ["76.76.21.21"]
 
-  // Verificar CNAME via DNS
+  async function marcarVerificado() {
+    await supabase
+      .from("dominios_customizados")
+      .update({
+        status: "verificado",
+        verificado_em: new Date().toISOString(),
+      })
+      .eq("id", dominio.id)
+    revalidatePath("/configuracoes/meu-site")
+    return { sucesso: "DNS verificado com sucesso! Seu domínio está ativo." }
+  }
+
+  // Tenta CNAME (para subdominios como www.exemplo.com)
   try {
     const registros = await dns.resolveCname(dominio.dominio)
     const cnameCorreto = registros.some(
       (registro) => registro.toLowerCase() === hostnameApp.toLowerCase()
     )
-
-    if (cnameCorreto) {
-      // DNS verificado com sucesso
-      await supabase
-        .from("dominios_customizados")
-        .update({
-          status: "verificado",
-          verificado_em: new Date().toISOString(),
-        })
-        .eq("id", dominio.id)
-
-      revalidatePath("/configuracoes/meu-site")
-      return { sucesso: "DNS verificado com sucesso! Seu domínio está ativo." }
-    }
-
-    // CNAME encontrado mas aponta para lugar errado
+    if (cnameCorreto) return marcarVerificado()
     return {
       erro:
         "O CNAME do seu domínio aponta para " +
@@ -179,24 +179,29 @@ export async function verificarDns(
         ". Corrija no seu provedor de DNS.",
     }
   } catch {
-    // DNS não encontrado ou sem CNAME
-    // Tentar verificar via registro A (caso o domínio aponte diretamente)
+    // Sem CNAME — tenta registro A (raiz/apex)
     try {
-      await dns.resolve4(dominio.dominio)
+      const ips = await dns.resolve4(dominio.dominio)
+      const ipCorreto = ips.some((ip) => IPS_VERCEL.includes(ip))
+      if (ipCorreto) return marcarVerificado()
       return {
         erro:
-          "Seu domínio tem registro A, mas precisa de um registro CNAME apontando para " +
+          "Seu domínio tem registro A apontando para " +
+          ips.join(", ") +
+          ", mas deveria apontar para " +
+          IPS_VERCEL.join(", ") +
+          " (IP do Vercel) ou usar CNAME para " +
           hostnameApp +
-          ". Remova o registro A e crie um CNAME.",
+          ".",
       }
     } catch {
       return {
         erro:
-          "DNS ainda não configurado. Crie um registro CNAME apontando " +
+          "DNS ainda não configurado ou aguardando propagação. Configure um CNAME apontando " +
           dominio.dominio +
           " para " +
           hostnameApp +
-          ". A propagação de DNS pode levar até 48 horas.",
+          " (subdomínios) ou um registro A para 76.76.21.21 (domínio raiz). A propagação pode levar até 48 horas.",
       }
     }
   }
