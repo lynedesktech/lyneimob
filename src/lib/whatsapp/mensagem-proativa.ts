@@ -123,21 +123,24 @@ CONTEXTO DA CONVERSA:
 
 INSTRUÇÃO ESPECIAL: Este é um envio proativo. O cliente acabou de demonstrar interesse num portal imobiliário (${portal}). Envie a PRIMEIRA mensagem de apresentação. Seja simpático, mencione o imóvel${infoImovel ? "" : " se souber"} e pergunte se ainda tem interesse ou se quer agendar uma visita. Mensagem curta e natural.`
 
-    const { getOpenAI } = await import("@/lib/openai")
-    const resposta = await getOpenAI().chat.completions.create({
-      model: "gpt-4o-mini",
+    const { getAnthropic } = await import("@/lib/anthropic")
+    const resposta = await getAnthropic().messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 500,
+      system: systemPrompt + contextoExtra,
       messages: [
-        { role: "system", content: systemPrompt + contextoExtra },
         {
           role: "user",
           content: "[SISTEMA: Lead de portal acabou de chegar. Envie a primeira mensagem de apresentação ao cliente.]",
         },
       ],
-      temperature: 0.7,
-      max_tokens: 500,
     })
 
-    const mensagemGerada = resposta.choices[0]?.message?.content?.trim()
+    const blocoTexto = resposta.content.find((b) => b.type === "text")
+    const mensagemGerada = blocoTexto && blocoTexto.type === "text"
+      ? blocoTexto.text.trim()
+      : ""
+
     if (!mensagemGerada) {
       console.error(`[Proativo] IA não retornou mensagem para lead ${leadId}`)
       return

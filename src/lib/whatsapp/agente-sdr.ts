@@ -1,5 +1,5 @@
+import type Anthropic from "@anthropic-ai/sdk"
 import type { ConfigWhatsapp, HorarioAtendimento } from "@/types/whatsapp"
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 // ============================================================
 // Orquestrador do agente SDR WhatsApp
@@ -133,11 +133,11 @@ export async function processarComAgente(
       }
     }
 
-    // 4. Verificar rate limit da OpenAI
-    const { verificarLimiteOpenAI } = await import("@/lib/rate-limit")
-    const limite = await verificarLimiteOpenAI(organizacaoId)
+    // 4. Verificar rate limit da Anthropic
+    const { verificarLimiteIA } = await import("@/lib/rate-limit")
+    const limite = await verificarLimiteIA(organizacaoId)
     if (!limite.permitido) {
-      console.warn(`[Agente SDR] IA NÃO RESPONDEU — Rate limit OpenAI atingido para org ${organizacaoId}. Restante: ${limite.restante}`)
+      console.warn(`[Agente SDR] IA NÃO RESPONDEU — Rate limit Anthropic atingido para org ${organizacaoId}. Restante: ${limite.restante}`)
       return
     }
 
@@ -271,12 +271,17 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
       }
     }
 
-    // 8. Montar messages array
-    const messages: ChatCompletionMessageParam[] = [
-      { role: "system", content: systemPrompt + contextoExtra },
-    ]
+    // 8. Identificar mensagens novas (não na memória)
+    const mensagensNovas = identificarMensagensNovas(
+      mensagensOrdenadas,
+      memoriaExistente.length
+    )
 
-    // Adicionar memória (histórico anterior)
+    // Montar messages array no formato Anthropic
+    // System prompt vai SEPARADO (não em messages[])
+    const messages: Anthropic.MessageParam[] = []
+
+    // Adicionar memória (histórico anterior) — pares user/assistant
     for (const msg of memoriaExistente) {
       messages.push({
         role: msg.papel === "usuario" ? "user" : "assistant",
@@ -285,29 +290,19 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
     }
 
     // Adicionar mensagens novas (do lote do debounce)
-    // Identificar mensagens que ainda não estão na memória
-    const mensagensNovas = identificarMensagensNovas(
-      mensagensOrdenadas,
-      memoriaExistente.length
-    )
-
     for (const msg of mensagensNovas) {
       if (msg.direcao === "recebida") {
         // O conteudo já vem processado pelo debounce (Whisper, Vision, pdf-parse)
-        // Usar o conteudo processado diretamente — não substituir por placeholders genéricos
         const conteudo = msg.conteudo?.trim()
         let conteudoFormatado: string
 
         if (msg.tipo_conteudo === "audio") {
-          // Se o debounce transcreveu, conteudo tem a transcrição. Senão, fallback.
           conteudoFormatado = conteudo
             ? `[mensagem de voz do cliente]: ${conteudo}`
             : "[cliente enviou áudio que não foi possível transcrever]"
         } else if (msg.tipo_conteudo === "imagem") {
-          // conteudo pode ter legenda + análise Vision
           conteudoFormatado = conteudo || "[cliente enviou uma imagem]"
         } else if (msg.tipo_conteudo === "documento") {
-          // conteudo pode ter o texto extraído do PDF/doc
           conteudoFormatado = conteudo || "[cliente enviou um documento]"
         } else if (msg.tipo_conteudo === "video") {
           conteudoFormatado = conteudo || "[cliente enviou um vídeo]"
@@ -320,17 +315,36 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
       }
     }
 
-    // Se não há mensagens novas do usuário, não processar
-    const temMensagemUsuario = messages.some(
-      (m) => m.role === "user"
-    )
-    if (!temMensagemUsuario) {
+    // Anthropic exige que a primeira mensagem seja "user". Se a memória
+    // começa com assistant (acontece em casos raros), removemos até bater.
+    while (messages.length > 0 && messages[0].role !== "user") {
+      messages.shift()
+    }
+
+    if (messages.length === 0) {
       console.log(`[Agente SDR] IA NÃO RESPONDEU — Conversa ${conversaId}: nenhuma mensagem nova do usuário para processar`)
       return
     }
 
-    // 9. Chamar OpenAI com tools
-    const { getOpenAI } = await import("@/lib/openai")
+    // 9. Escolher modelo Claude (Haiku padrão, Sonnet quando complexo)
+    const { getAnthropic, escolherModelo, detectarFluxoComplexo } = await import("@/lib/anthropic")
+
+    const textosUltimasUser = messages
+      .filter((m) => m.role === "user" && typeof m.content === "string")
+      .slice(-3)
+      .map((m) => m.content as string)
+
+    const ultimaMsgRecebida = mensagensNovas[mensagensNovas.length - 1]
+    const modelo = escolherModelo({
+      numTurnos: messages.length,
+      ultimaMensagemTemImagem: ultimaMsgRecebida?.tipo_conteudo === "imagem",
+      toolErrouAntes: false,
+      fluxoComplexo: detectarFluxoComplexo(textosUltimasUser),
+    })
+
+    console.log(`[Agente SDR] Conversa ${conversaId}: usando modelo ${modelo}`)
+
+    // 10. Loop agentic Anthropic com tools
     const { definicaoToolsSdr, executarTool } = await import("./tools-sdr")
 
     const contextoTool = {
@@ -342,68 +356,70 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
     }
 
     let respostaFinal: string | null = null
+    const anthropic = getAnthropic()
 
     for (let iteracao = 0; iteracao < MAX_ITERACOES_TOOLS + 1; iteracao++) {
-      const resposta = await getOpenAI().chat.completions.create({
-        model: "gpt-4o-mini",
-        messages,
+      const resposta = await anthropic.messages.create({
+        model: modelo,
+        max_tokens: 1024,
+        system: systemPrompt + contextoExtra,
         tools: definicaoToolsSdr,
-        temperature: 0.7,
-        max_tokens: 1000,
+        messages,
       })
 
-      const escolha = resposta.choices[0]
-      if (!escolha) break
+      // Coletar tool_use blocks da resposta
+      const blocosTexto: string[] = []
+      const blocosToolUse: Array<{ id: string; name: string; input: Record<string, unknown> }> = []
 
-      const mensagemIA = escolha.message
-
-      // Se a IA quer chamar tools
-      if (mensagemIA.tool_calls && mensagemIA.tool_calls.length > 0 && iteracao < MAX_ITERACOES_TOOLS) {
-        // Adicionar mensagem da IA com tool_calls
-        messages.push(mensagemIA)
-
-        // Executar cada tool (filtrar apenas function calls)
-        for (const toolCall of mensagemIA.tool_calls) {
-          if (toolCall.type !== "function") continue
-
-          let args: Record<string, unknown>
-          try {
-            args = JSON.parse(toolCall.function.arguments) as Record<string, unknown>
-          } catch {
-            console.error(`[Agente SDR] JSON inválido nos argumentos da tool ${toolCall.function.name}:`, toolCall.function.arguments)
-            messages.push({
-              role: "tool",
-              tool_call_id: toolCall.id,
-              content: "Erro: argumentos inválidos. Tente novamente.",
-            })
-            continue
-          }
-
-          const resultado = await executarTool(
-            toolCall.function.name,
-            args,
-            contextoTool
-          )
-
-          // Adicionar resultado do tool
-          messages.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: resultado,
+      for (const bloco of resposta.content) {
+        if (bloco.type === "text") {
+          blocosTexto.push(bloco.text)
+        } else if (bloco.type === "tool_use") {
+          blocosToolUse.push({
+            id: bloco.id,
+            name: bloco.name,
+            input: bloco.input as Record<string, unknown>,
           })
         }
+      }
 
-        // Continuar o loop para a IA processar os resultados
+      // Se a IA quer chamar tools
+      if (blocosToolUse.length > 0 && iteracao < MAX_ITERACOES_TOOLS) {
+        // Anexar mensagem da assistente completa (preserva blocos tool_use)
+        messages.push({ role: "assistant", content: resposta.content })
+
+        // Executar cada tool e montar bloco user com tool_result
+        const blocosToolResult: Anthropic.ToolResultBlockParam[] = []
+        for (const tu of blocosToolUse) {
+          try {
+            const resultado = await executarTool(tu.name, tu.input, contextoTool)
+            blocosToolResult.push({
+              type: "tool_result",
+              tool_use_id: tu.id,
+              content: resultado,
+            })
+          } catch (erro) {
+            console.error(`[Agente SDR] Erro na tool ${tu.name}:`, erro)
+            blocosToolResult.push({
+              type: "tool_result",
+              tool_use_id: tu.id,
+              content: `Erro ao executar ${tu.name}. Tente outra abordagem.`,
+              is_error: true,
+            })
+          }
+        }
+
+        messages.push({ role: "user", content: blocosToolResult })
         continue
       }
 
-      // Resposta final (sem tool calls ou iteração máxima)
-      respostaFinal = mensagemIA.content?.trim() || null
+      // Resposta final (sem tool_use ou iteração máxima)
+      respostaFinal = blocosTexto.join("\n").trim() || null
       break
     }
 
     if (!respostaFinal) {
-      console.error(`[Agente SDR] IA NÃO RESPONDEU — OpenAI retornou resposta vazia para conversa ${conversaId}`)
+      console.error(`[Agente SDR] IA NÃO RESPONDEU — Claude retornou resposta vazia para conversa ${conversaId}`)
       return
     }
 

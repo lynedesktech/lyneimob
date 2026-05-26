@@ -83,6 +83,37 @@ function formatarImovelCompleto(i: Record<string, unknown>): string {
 
 const CAMPOS_IMOVEL_COMPLETO = "id, titulo, codigo_interno, tipo, finalidade, status, descricao, logradouro, numero, bairro, cidade, estado, cep, valor, valor_aluguel, valor_condominio, valor_iptu, quartos, suites, banheiros, vagas, area_total, area_construida"
 
+/**
+ * Monta URL pública do imóvel no site da imobiliária.
+ * Usa dominio customizado quando configurado, senão cai no app principal.
+ */
+async function montarUrlImovel(organizacaoId: string, imovelId: string): Promise<string> {
+  const { criarClienteAdmin } = await import("@/lib/supabase/admin")
+  const supabase = criarClienteAdmin()
+
+  // Tenta domínio customizado verificado
+  const { data: dominio } = await supabase
+    .from("dominios_customizados")
+    .select("dominio, status")
+    .eq("organizacao_id", organizacaoId)
+    .eq("status", "verificado")
+    .single()
+
+  if (dominio?.dominio) {
+    return `https://${dominio.dominio}/imoveis/${imovelId}`
+  }
+
+  // Fallback: dominio principal + slug
+  const { data: org } = await supabase
+    .from("organizacoes")
+    .select("slug")
+    .eq("id", organizacaoId)
+    .single()
+
+  const base = process.env.NEXT_PUBLIC_APP_URL || "https://lyneimob.vercel.app"
+  return `${base}/${org?.slug || "imobiliaria"}/imoveis/${imovelId}`
+}
+
 export async function executarBuscarImovelPorIdentificacao(
   args: Record<string, unknown>,
   contexto: ContextoTool
@@ -104,7 +135,8 @@ export async function executarBuscarImovelPorIdentificacao(
       .single()
 
     if (error || !data) return "Imóvel não encontrado com esse ID."
-    return `Imóvel encontrado:\n${formatarImovelCompleto(data as unknown as Record<string, unknown>)}`
+    const url = await montarUrlImovel(contexto.organizacaoId, id)
+    return `Imóvel encontrado:\n${formatarImovelCompleto(data as unknown as Record<string, unknown>)}\nLink do site: ${url}\n\nIMPORTANTE: para mandar o card visual (foto + botão) ao cliente, chame a tool enviar_card_imovel com este ID.`
   }
 
   // Busca por código interno (ex: IMO-001, IMO 01)
@@ -119,7 +151,8 @@ export async function executarBuscarImovelPorIdentificacao(
       .single()
 
     if (!error && data) {
-      return `Imóvel encontrado:\n${formatarImovelCompleto(data as unknown as Record<string, unknown>)}`
+      const url = await montarUrlImovel(contexto.organizacaoId, (data as Record<string, unknown>).id as string)
+      return `Imóvel encontrado:\n${formatarImovelCompleto(data as unknown as Record<string, unknown>)}\nLink do site: ${url}\n\nIMPORTANTE: para mandar o card visual (foto + botão) ao cliente, chame a tool enviar_card_imovel com este ID.`
     }
 
     // Fallback: tentar busca mais flexível sem hifens
@@ -135,7 +168,8 @@ export async function executarBuscarImovelPorIdentificacao(
     })
 
     if (imovelMatch) {
-      return `Imóvel encontrado:\n${formatarImovelCompleto(imovelMatch as unknown as Record<string, unknown>)}`
+      const url = await montarUrlImovel(contexto.organizacaoId, (imovelMatch as Record<string, unknown>).id as string)
+      return `Imóvel encontrado:\n${formatarImovelCompleto(imovelMatch as unknown as Record<string, unknown>)}\nLink do site: ${url}\n\nIMPORTANTE: para mandar o card visual (foto + botão) ao cliente, chame a tool enviar_card_imovel com este ID.`
     }
 
     return `Nenhum imóvel encontrado com o código "${codigo}".`
@@ -154,7 +188,8 @@ export async function executarBuscarImovelPorIdentificacao(
     if (!data || data.length === 0) return `Nenhum imóvel encontrado com o nome "${nome}".`
 
     if (data.length === 1) {
-      return `Imóvel encontrado:\n${formatarImovelCompleto(data[0] as unknown as Record<string, unknown>)}`
+      const url = await montarUrlImovel(contexto.organizacaoId, (data[0] as Record<string, unknown>).id as string)
+      return `Imóvel encontrado:\n${formatarImovelCompleto(data[0] as unknown as Record<string, unknown>)}\nLink do site: ${url}\n\nIMPORTANTE: para mandar o card visual (foto + botão) ao cliente, chame a tool enviar_card_imovel com este ID.`
     }
 
     const lista = data.map((i: Record<string, unknown>) => `- ${i.titulo} (Cód: ${i.codigo_interno || "sem código"}) — ID: ${i.id}`)
@@ -201,16 +236,20 @@ export async function executarBuscarImoveis(
   if (error) return `Erro ao buscar imóveis: ${error.message}`
   if (!imoveis || imoveis.length === 0) return "Nenhum imóvel encontrado com esses critérios."
 
-  const lista = imoveis.map((i) => {
+  const linhas: string[] = []
+  for (const i of imoveis) {
     const preco = i.valor
       ? `Venda: R$ ${Number(i.valor).toLocaleString("pt-BR")}`
       : i.valor_aluguel
         ? `Aluguel: R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
         : "Preço sob consulta"
-    return `- [${i.id}] ${i.titulo} (Cód: ${i.codigo_interno || "?"}) | ${i.tipo} | ${i.bairro || ""}, ${i.cidade}-${i.estado} | ${preco} | ${i.quartos || 0}q/${i.suites || 0}s/${i.banheiros || 0}b/${i.vagas || 0}v | ${i.area_total || "?"}m² total, ${i.area_construida || "?"}m² constr.${i.valor_condominio ? ` | Cond: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}` : ""}`
-  })
+    const url = await montarUrlImovel(contexto.organizacaoId, i.id as string)
+    linhas.push(
+      `- [${i.id}] ${i.titulo} (Cód: ${i.codigo_interno || "?"}) | ${i.tipo} | ${i.bairro || ""}, ${i.cidade}-${i.estado} | ${preco} | ${i.quartos || 0}q/${i.suites || 0}s/${i.banheiros || 0}b/${i.vagas || 0}v | ${i.area_total || "?"}m² total, ${i.area_construida || "?"}m² constr.${i.valor_condominio ? ` | Cond: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}` : ""} | ${url}`
+    )
+  }
 
-  return `Encontrei ${imoveis.length} imóvel(is):\n${lista.join("\n")}`
+  return `Encontrei ${imoveis.length} imóvel(is):\n${linhas.join("\n")}\n\nIMPORTANTE: pra mandar um card visual rico (foto + botão "Visitar no site") de QUALQUER um destes imóveis, chame a tool enviar_card_imovel com o ID.`
 }
 
 export async function executarCriarCliente(
@@ -553,5 +592,110 @@ async function moverNegocioParaNovoLead(
   } catch (err) {
     console.error("[Mover Negócio] Erro ao mover negócio:", err instanceof Error ? err.message : err)
     // Não falha a operação principal se a movimentação falhar
+  }
+}
+
+// ============================================================
+// Enviar card visual de imóvel (foto + caption rica + link)
+// Não usa o canal de mensagem do agente — manda direto via Uazapi
+// ============================================================
+
+export async function executarEnviarCardImovel(
+  args: Record<string, unknown>,
+  contexto: ContextoTool
+): Promise<string> {
+  const imovelId = args.imovel_id as string | undefined
+  if (!imovelId) return "Erro: imovel_id é obrigatório."
+
+  const { criarClienteAdmin } = await import("@/lib/supabase/admin")
+  const supabase = criarClienteAdmin()
+
+  // Buscar imóvel + fotos + config WhatsApp em paralelo
+  const [imovelRes, configRes] = await Promise.all([
+    supabase
+      .from("imoveis")
+      .select(`
+        ${CAMPOS_IMOVEL_COMPLETO},
+        imovel_fotos (url, ordem, eh_capa)
+      `)
+      .eq("organizacao_id", contexto.organizacaoId)
+      .eq("id", imovelId)
+      .single(),
+    supabase
+      .from("config_whatsapp")
+      .select("*")
+      .eq("organizacao_id", contexto.organizacaoId)
+      .single(),
+  ])
+
+  if (imovelRes.error || !imovelRes.data) {
+    return `Erro: imóvel ${imovelId} não encontrado.`
+  }
+  if (configRes.error || !configRes.data) {
+    return "Erro: config WhatsApp não encontrada."
+  }
+
+  const imovel = imovelRes.data as Record<string, unknown> & {
+    imovel_fotos?: Array<{ url: string; ordem: number; eh_capa: boolean }>
+  }
+  const config = configRes.data as unknown as import("@/types/whatsapp").ConfigWhatsapp
+
+  // Pegar foto de capa, ou primeira disponivel
+  const fotos = imovel.imovel_fotos || []
+  const fotoCapa = fotos.find((f) => f.eh_capa) || fotos.sort((a, b) => a.ordem - b.ordem)[0]
+  const url = await montarUrlImovel(contexto.organizacaoId, imovelId)
+
+  // Montar caption rica
+  const valor = imovel.valor as number | null
+  const valorAluguel = imovel.valor_aluguel as number | null
+  const preco = valor
+    ? `💰 R$ ${Number(valor).toLocaleString("pt-BR")}`
+    : valorAluguel
+      ? `💰 R$ ${Number(valorAluguel).toLocaleString("pt-BR")}/mês`
+      : "💰 Sob consulta"
+
+  const enderecoLinha = [imovel.bairro, imovel.cidade, imovel.estado]
+    .filter(Boolean)
+    .join(", ")
+
+  const caption = `🏡 *${imovel.titulo}*
+📍 ${enderecoLinha}
+${preco}
+
+🛏 ${imovel.quartos || 0} quarto(s) ${imovel.suites ? `(${imovel.suites} suíte)` : ""}
+🚿 ${imovel.banheiros || 0} banheiro(s)
+🚗 ${imovel.vagas || 0} vaga(s)
+📐 ${imovel.area_total ? `${imovel.area_total}m² totais` : "área sob consulta"}
+
+🔗 Veja mais fotos e detalhes:
+${url}`
+
+  const { enviarImagem, enviarTexto } = await import("./uazapi")
+
+  try {
+    if (fotoCapa?.url) {
+      // Manda foto com caption
+      await enviarImagem(config, contexto.numeroCliente, fotoCapa.url, caption)
+    } else {
+      // Sem foto → manda só o texto
+      await enviarTexto(config, contexto.numeroCliente, caption)
+    }
+
+    // Salvar mensagem no banco (registro da mensagem enviada)
+    await supabase
+      .from("mensagens_whatsapp")
+      .insert({
+        conversa_id: contexto.conversaId,
+        organizacao_id: contexto.organizacaoId,
+        direcao: "enviada",
+        tipo_conteudo: fotoCapa?.url ? "imagem" : "texto",
+        conteudo: caption,
+        conteudo_original: caption,
+      })
+
+    return `Card do imóvel "${imovel.titulo}" enviado com foto e link "Visitar no site" pro cliente. Não é necessário repetir essas informações em texto — apenas pergunte se ele tem interesse ou se quer ver mais opções.`
+  } catch (erro) {
+    console.error("[enviar_card_imovel] Erro:", erro)
+    return `Erro ao enviar card: ${erro instanceof Error ? erro.message : "desconhecido"}. Tente passar os detalhes por texto.`
   }
 }

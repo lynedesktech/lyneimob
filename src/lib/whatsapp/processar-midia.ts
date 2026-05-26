@@ -30,7 +30,7 @@ export async function transcreverAudio(
 }
 
 /**
- * Analisa imagem do WhatsApp usando GPT-4o-mini Vision
+ * Analisa imagem do WhatsApp usando Claude Haiku 4.5 (vision)
  * Retorna descrição objetiva em português
  */
 export async function analisarImagem(
@@ -38,33 +38,39 @@ export async function analisarImagem(
   messageId: string
 ): Promise<string> {
   const buffer = await baixarMidia(config, messageId)
-
-  // Converter para base64 data URL
   const base64 = buffer.toString("base64")
-  const dataUrl = `data:image/jpeg;base64,${base64}`
 
-  const { getOpenAI } = await import("@/lib/openai")
-  const resposta = await getOpenAI().chat.completions.create({
-    model: "gpt-4o-mini",
+  const { getAnthropic } = await import("@/lib/anthropic")
+  const resposta = await getAnthropic().messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: 400,
     messages: [
       {
         role: "user",
         content: [
           {
-            type: "text",
-            text: "Descreva esta imagem de forma objetiva e concisa em português brasileiro. Se for uma foto de imóvel, destaque os detalhes relevantes (tipo, cômodo, acabamento, estado).",
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: "image/jpeg",
+              data: base64,
+            },
           },
           {
-            type: "image_url",
-            image_url: { url: dataUrl },
+            type: "text",
+            text: "Descreva esta imagem de forma objetiva e concisa em português brasileiro. Se for uma foto de imóvel, destaque os detalhes relevantes (tipo, cômodo, acabamento, estado de conservação).",
           },
         ],
       },
     ],
-    max_tokens: 300,
   })
 
-  return resposta.choices[0]?.message?.content || "Imagem recebida (não foi possível analisar)"
+  // Extrair texto do primeiro bloco de texto da resposta
+  const blocoTexto = resposta.content.find((b) => b.type === "text")
+  if (blocoTexto && blocoTexto.type === "text") {
+    return blocoTexto.text
+  }
+  return "Imagem recebida (não foi possível analisar)"
 }
 
 /**
