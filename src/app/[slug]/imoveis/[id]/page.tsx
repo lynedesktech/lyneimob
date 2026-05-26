@@ -38,8 +38,9 @@ export async function generateMetadata({
   const imovel = await buscarImovelPublico(org.id, id)
   if (!imovel) return {}
 
-  const titulo = imovel.titulo_ia || imovel.titulo
-  const descricao = imovel.descricao_ia || imovel.descricao || `Imóvel disponível na ${org.nome}`
+  // Texto manual tem prioridade sobre o gerado por IA (bug do Angelo)
+  const titulo = imovel.titulo || imovel.titulo_ia
+  const descricao = imovel.descricao || imovel.descricao_ia || `Imóvel disponível na ${org.nome}`
   const fotoCapa = imovel.imovel_fotos?.find((f: { eh_capa: boolean }) => f.eh_capa) || imovel.imovel_fotos?.[0]
 
   return {
@@ -79,8 +80,9 @@ export default async function DetalheImovelPage({
     bairro: imovel.bairro,
   })
 
-  const titulo = imovel.titulo_ia || imovel.titulo
-  const descricao = imovel.descricao_ia || imovel.descricao
+  // Texto manual tem prioridade sobre o gerado por IA
+  const titulo = imovel.titulo || imovel.titulo_ia
+  const descricao = imovel.descricao || imovel.descricao_ia
 
   const precoVenda = imovel.valor
   const precoAluguel = imovel.valor_aluguel

@@ -68,16 +68,22 @@ export async function gerarDescricaoIA(
           role: "system",
           content:
             "Você é um redator especializado em anúncios imobiliários no Brasil. " +
-            "Escreva descrições atrativas, profissionais e detalhadas. " +
-            "Use português brasileiro. Não invente informações que não foram fornecidas. " +
-            "Destaque os pontos fortes do imóvel. Escreva em 2-4 parágrafos.",
+            "Escreva descrições atrativas, profissionais e detalhadas em português brasileiro. " +
+            "Destaque pontos fortes. 2 a 4 parágrafos.\n\n" +
+            "REGRAS INEGOCIÁVEIS — VIOLAR SIGNIFICA RESPOSTA INVÁLIDA:\n" +
+            "1. NUNCA invente bairro, cidade ou estado. Use EXATAMENTE o que está no contexto.\n" +
+            "2. NUNCA mencione 'beira-mar', 'frente-mar', 'pé na areia' ou similar a menos que isso esteja literalmente na descrição atual ou nos campos fornecidos.\n" +
+            "3. NUNCA mencione característica não listada (piscina, jardim, vista, varanda, etc).\n" +
+            "4. Se faltar uma informação, OMITA — nunca chute.\n" +
+            "5. Se há 'Descrição atual', use ela como verdade-base e construa em cima — nunca contradiga.\n" +
+            "6. Estado/UF: use EXATAMENTE o que veio no contexto. Se for 'CE' escreva Ceará, se for 'ES' Espírito Santo. NUNCA troque.",
         },
         {
           role: "user",
           content: `Gere uma descrição atrativa para este imóvel:\n\n${montarContextoImovel(imovel)}`,
         },
       ],
-      temperature: 0.7,
+      temperature: 0.5,
       max_tokens: 1000,
     })
 

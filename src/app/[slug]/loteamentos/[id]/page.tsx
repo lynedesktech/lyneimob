@@ -39,8 +39,10 @@ export async function generateMetadata({
   return {
     title: loteamento.nome,
     description:
-      loteamento.descricao_ia ||
+      // Descricao manual tem prioridade sobre a gerada por IA.
+      // (Bug reportado pelo Angelo: IA estava sobrescrevendo edicao manual)
       loteamento.descricao ||
+      loteamento.descricao_ia ||
       `Loteamento disponível na ${org.nome}`,
   }
 }
@@ -65,7 +67,8 @@ export default async function DetalheLoteamentoPage({
 
   const outros = await buscarOutrosLoteamentos(organizacao.id, loteamento.id)
 
-  const descricao = loteamento.descricao_ia || loteamento.descricao
+  // Descricao manual tem prioridade sobre a gerada por IA
+  const descricao = loteamento.descricao || loteamento.descricao_ia
 
   // Valor mínimo dos lotes disponíveis
   const lotesDisponiveis = loteamento.lotes.filter(

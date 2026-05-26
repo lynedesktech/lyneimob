@@ -63,16 +63,35 @@ export async function criarImovel(
 
   const supabase = await criarClienteServer()
 
-  // Auto-gerar código interno se não fornecido
+  // Auto-gerar codigo interno se nao fornecido.
+  // Padrao pedido pelo Angelo: prefixo por tipo + sequencial.
+  // CA casa, AP apartamento, TE terreno, CB cobertura, KT kitnet, CO cobertura/condo
+  // SC sala_comercial, GA galpao, LJ loja, FZ fazenda, ST sitio
   let codigoInterno = dados.data.codigo_interno
   if (!codigoInterno) {
+    const prefixoPorTipo: Record<string, string> = {
+      casa: "CA",
+      apartamento: "AP",
+      terreno: "TE",
+      cobertura: "CB",
+      kitnet: "KT",
+      sala_comercial: "SC",
+      galpao: "GA",
+      loja: "LJ",
+      fazenda: "FZ",
+      sitio: "ST",
+    }
+    const prefixo = prefixoPorTipo[dados.data.tipo as string] ?? "IMO"
+
+    // Sequencial por prefixo dentro da organizacao
     const { count } = await supabase
       .from("imoveis")
       .select("id", { count: "exact", head: true })
       .eq("organizacao_id", usuario.organizacao_id)
+      .ilike("codigo_interno", `${prefixo}-%`)
 
     const sequencial = (count ?? 0) + 1
-    codigoInterno = `IMO-${String(sequencial).padStart(3, "0")}`
+    codigoInterno = `${prefixo}-${String(sequencial).padStart(3, "0")}`
   }
 
   // Campos do Zod schema correspondem 1:1 às colunas do banco live
