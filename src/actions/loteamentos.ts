@@ -56,11 +56,21 @@ export async function criarLoteamento(
 
   const supabase = await criarClienteServer()
 
+  // Auto-gerar codigo_interno LT-NNN sequencial por organizacao
+  // (Angelo: loteamento sem codigo dificultava IA e corretor identificarem)
+  const { count: countLot } = await supabase
+    .from("loteamentos")
+    .select("id", { count: "exact", head: true })
+    .eq("organizacao_id", usuario.organizacao_id)
+    .ilike("codigo_interno", "LT-%")
+  const codigoInterno = `LT-${String((countLot ?? 0) + 1).padStart(3, "0")}`
+
   const { data: loteamento, error } = await supabase
     .from("loteamentos")
     .insert({
       ...dados.data,
       organizacao_id: usuario.organizacao_id,
+      codigo_interno: codigoInterno,
     })
     .select("id")
     .single()
