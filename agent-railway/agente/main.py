@@ -14,7 +14,7 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -548,6 +548,55 @@ async def health_check() -> JSONResponse:
             "global": settings.rate_limit_global_per_minute,
         },
     })
+
+
+# ─────────────────── Admin: limpar memoria de uma conversa ───────────────────
+
+
+@app.post("/admin/limpar-memoria/{conversa_id}")
+async def admin_limpar_memoria(
+    conversa_id: str,
+    authorization: str | None = Header(default=None),
+) -> JSONResponse:
+    """Limpa memoria Redis de uma conversa especifica. Protegido por INTERNAL_API_SECRET."""
+    secret = settings.internal_api_secret or settings.supabase_service_key
+    if not authorization or not authorization.startswith("Bearer ") or authorization[7:] != secret:
+        return JSONResponse({"erro": "Nao autorizado"}, status_code=401)
+
+    r = await redis_client.get_redis()
+    chaves = [
+        f"memoria:whatsapp:{conversa_id}",
+        f"buffer:{conversa_id}",
+        f"lock:{conversa_id}",
+        f"lock:agente:{conversa_id}",
+    ]
+    apagadas = 0
+    for k in chaves:
+        try:
+            v = await r.delete(k)
+            apagadas += int(v or 0)
+        except Exception:
+            pass
+
+    # Scan extra por chaves contendo o conversa_id
+    cursor = 0
+    encontradas = []
+    try:
+        while True:
+            cursor, batch = await r.scan(cursor=cursor, match=f"*{conversa_id}*", count=100)
+            encontradas.extend([k if isinstance(k, str) else k.decode() for k in batch])
+            if cursor == 0:
+                break
+        for k in encontradas:
+            try:
+                v = await r.delete(k)
+                apagadas += int(v or 0)
+            except Exception:
+                pass
+    except Exception as e:
+        return JSONResponse({"erro": f"scan falhou: {e}", "apagadas": apagadas})
+
+    return JSONResponse({"ok": True, "apagadas": apagadas, "chaves_encontradas": encontradas})
 
 
 # ─────────────────── Runner ───────────────────
