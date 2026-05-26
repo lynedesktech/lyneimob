@@ -670,15 +670,29 @@ ${preco}
 🔗 Veja mais fotos e detalhes:
 ${url}`
 
+  // Buscar última mensagem recebida pra citar (efeito reply do WhatsApp)
+  const { data: ultimaMsg } = await supabase
+    .from("mensagens_whatsapp")
+    .select("message_id_whatsapp")
+    .eq("conversa_id", contexto.conversaId)
+    .eq("direcao", "recebida")
+    .order("criado_em", { ascending: false })
+    .limit(1)
+    .single()
+
+  const replyid = ultimaMsg?.message_id_whatsapp || undefined
+
   const { enviarImagem, enviarTexto } = await import("./uazapi")
 
   try {
     if (fotoCapa?.url) {
-      // Manda foto com caption
-      await enviarImagem(config, contexto.numeroCliente, fotoCapa.url, caption)
+      await enviarImagem(config, contexto.numeroCliente, fotoCapa.url, caption, {
+        ...(replyid ? { replyid } : {}),
+      })
     } else {
-      // Sem foto → manda só o texto
-      await enviarTexto(config, contexto.numeroCliente, caption)
+      await enviarTexto(config, contexto.numeroCliente, caption, {
+        ...(replyid ? { replyid } : {}),
+      })
     }
 
     // Salvar mensagem no banco (registro da mensagem enviada)

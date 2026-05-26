@@ -153,7 +153,7 @@ export async function processarComAgente(
     // 5. Buscar mensagens recentes não respondidas
     const { data: mensagensRecentes } = await supabase
       .from("mensagens_whatsapp")
-      .select("direcao, conteudo, tipo_conteudo, criado_em")
+      .select("direcao, conteudo, tipo_conteudo, criado_em, message_id_whatsapp")
       .eq("conversa_id", conversaId)
       .order("criado_em", { ascending: false })
       .limit(30)
@@ -423,9 +423,16 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
       return
     }
 
-    // 10. Enviar resposta humanizada
+    // 10. Enviar resposta humanizada citando a última mensagem do cliente
+    // (efeito "responder" do WhatsApp aparece em cima da resposta)
+    const ultimaMsgClienteId = [...mensagensNovas]
+      .reverse()
+      .find((m) => m.direcao === "recebida" && m.message_id_whatsapp)
+      ?.message_id_whatsapp
     const { enviarHumanizado } = await import("./humanizar")
-    await enviarHumanizado(configTyped, conversa.numero_cliente, respostaFinal)
+    await enviarHumanizado(configTyped, conversa.numero_cliente, respostaFinal, {
+      ...(ultimaMsgClienteId ? { replyid: ultimaMsgClienteId } : {}),
+    })
 
     // 11. Salvar mensagem enviada no banco
     await salvarMensagemEnviada(supabase, conversaId, organizacaoId, respostaFinal)
@@ -484,6 +491,7 @@ function identificarMensagensNovas(
     conteudo: string | null
     tipo_conteudo: string
     criado_em: string
+    message_id_whatsapp?: string | null
   }>,
   tamanhoMemoria: number
 ): Array<{
@@ -491,6 +499,7 @@ function identificarMensagensNovas(
   conteudo: string | null
   tipo_conteudo: string
   criado_em: string
+  message_id_whatsapp?: string | null
 }> {
   // Se não tem memória, pegar as mensagens recebidas mais recentes
   if (tamanhoMemoria === 0) {

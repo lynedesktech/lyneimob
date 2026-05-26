@@ -196,13 +196,14 @@ export async function enviarTexto(
   config: ConfigWhatsapp,
   numero: string,
   texto: string,
-  opcoes?: { delay?: number; readmessages?: boolean }
+  opcoes?: { delay?: number; readmessages?: boolean; replyid?: string }
 ): Promise<void> {
   await requisicaoUazapi(config, "/send/text", {
     number: numero,
     text: texto,
     ...(opcoes?.delay !== undefined ? { delay: opcoes.delay } : {}),
     ...(opcoes?.readmessages ? { readmessages: true } : {}),
+    ...(opcoes?.replyid ? { replyid: opcoes.replyid } : {}),
   })
 }
 
@@ -210,12 +211,14 @@ export async function enviarImagem(
   config: ConfigWhatsapp,
   numero: string,
   url: string,
-  legenda?: string
+  legenda?: string,
+  opcoes?: { replyid?: string }
 ): Promise<void> {
   await requisicaoUazapi(config, "/send/media", {
     number: numero,
     media: url,
     caption: legenda || "",
+    ...(opcoes?.replyid ? { replyid: opcoes.replyid } : {}),
   })
 }
 

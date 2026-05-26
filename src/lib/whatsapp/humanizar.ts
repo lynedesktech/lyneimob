@@ -186,7 +186,8 @@ const BURST_COOLDOWN_MS = 5_000
 export async function enviarHumanizado(
   config: ConfigWhatsapp,
   numero: string,
-  texto: string
+  texto: string,
+  opcoes?: { replyid?: string }
 ): Promise<void> {
   const partes = quebrarMensagem(texto)
 
@@ -207,9 +208,11 @@ export async function enviarHumanizado(
     // Esperar o tempo proporcional ao texto (simula digitação)
     await aguardar(delayDigitacao)
 
-    // Enviar a mensagem
+    // Enviar a mensagem. Só a PRIMEIRA parte cita a mensagem do cliente —
+    // as continuações da quebra natural ficam sem citação pra não poluir.
     await enviarTexto(config, numero, parte, {
-      readmessages: i === 0, // Marca como lida na primeira parte
+      readmessages: i === 0,
+      ...(i === 0 && opcoes?.replyid ? { replyid: opcoes.replyid } : {}),
     })
 
     // Se tem mais partes, espera antes da próxima
