@@ -1,4 +1,4 @@
-"""Processamento de midia: audio (Whisper), imagem (Vision), documentos (PDF/Word)."""
+"""Processamento de midia: audio (Whisper), imagem (Claude vision), documentos (PDF/Word)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 import httpx
+from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 
 from agente.config import settings
@@ -16,6 +17,7 @@ from agente.config import settings
 logger = logging.getLogger(__name__)
 
 _openai: AsyncOpenAI | None = None
+_anthropic: AsyncAnthropic | None = None
 
 
 def _get_openai() -> AsyncOpenAI:
@@ -23,6 +25,13 @@ def _get_openai() -> AsyncOpenAI:
     if _openai is None:
         _openai = AsyncOpenAI(api_key=settings.openai_api_key)
     return _openai
+
+
+def _get_anthropic() -> AsyncAnthropic:
+    global _anthropic
+    if _anthropic is None:
+        _anthropic = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    return _anthropic
 
 
 async def download_file(url: str, timeout: int = 30) -> bytes:
@@ -85,7 +94,7 @@ async def transcribe_audio(api_url: str, token: str, message_id_full: str) -> st
 
 
 async def analyze_image(api_url: str, token: str, message_id_full: str) -> str:
-    """Baixa imagem do UAZAPI e analisa com GPT-4o Vision."""
+    """Baixa imagem do UAZAPI e analisa com Claude Haiku 4.5 vision."""
     try:
         data = await download_media_from_uazapi(api_url, token, message_id_full)
         file_url = data.get("fileURL", "")
@@ -101,36 +110,45 @@ async def analyze_image(api_url: str, token: str, message_id_full: str) -> str:
             mime = "image/png"
         elif ".webp" in lower_url:
             mime = "image/webp"
+        elif ".gif" in lower_url:
+            mime = "image/gif"
 
-        client = _get_openai()
-        response = await client.chat.completions.create(
-            model=settings.vision_model,
+        client = _get_anthropic()
+        response = await client.messages.create(
+            model=settings.anthropic_model_default,  # Haiku 4.5 — vision bom + barato
+            max_tokens=500,
             messages=[
                 {
                     "role": "user",
                     "content": [
                         {
-                            "type": "text",
-                            "text": (
-                                "Voce e uma assistente imobiliaria. Analise esta imagem. "
-                                "Se for uma foto de imovel, descreva o tipo, estado, "
-                                "caracteristicas visiveis (quartos, area, acabamento). "
-                                "Se for um documento, extraia o texto relevante. "
-                                "Se nao for nenhum desses, descreva brevemente o que ve."
-                            ),
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime,
+                                "data": b64,
+                            },
                         },
                         {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime};base64,{b64}",
-                            },
+                            "type": "text",
+                            "text": (
+                                "Voce e uma assistente imobiliaria cearense. Analise esta "
+                                "imagem em portugues brasileiro de forma objetiva e concisa. "
+                                "Se for foto de imovel, destaque o tipo, comodo, acabamento "
+                                "e estado de conservacao. Se for documento, extraia o texto "
+                                "relevante. Se nao for nenhum dos dois, descreva brevemente."
+                            ),
                         },
                     ],
                 }
             ],
-            max_tokens=1000,
         )
-        return response.choices[0].message.content or "[nao consegui analisar a imagem]"
+
+        # Anthropic retorna content como lista de blocos
+        for block in response.content:
+            if block.type == "text":
+                return block.text or "[nao consegui analisar a imagem]"
+        return "[nao consegui analisar a imagem]"
 
     except Exception as e:
         logger.error(f"Erro ao analisar imagem: {e}")

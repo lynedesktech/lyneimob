@@ -79,8 +79,12 @@ class RateLimiter:
                     await send_presence(api_url, token, chat_id, "composing")
                     await asyncio.sleep(typing_duration)
 
+                    # Citar mensagem do cliente apenas no PRIMEIRO segmento
+                    # pra ter efeito "reply" sem poluir com varias citacoes
+                    reply_id = msg_id_full if i == 0 else None
                     await send_segment(
-                        api_url, token, chat_id, segment.type, segment.output
+                        api_url, token, chat_id, segment.type, segment.output,
+                        reply_id=reply_id,
                     )
 
                     await redis_client.rate_record(chat_id)

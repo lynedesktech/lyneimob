@@ -1,9 +1,10 @@
-"""Tools (function calling) do agente SDR — definicoes + executores."""
+"""Tools do agente SDR — definicoes Anthropic + executores."""
 
 from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any
 
 from agente.services import supabase_client as db
@@ -11,157 +12,150 @@ from agente.services import supabase_client as db
 logger = logging.getLogger(__name__)
 
 # ============================================================
-# Definicao dos tools (OpenAI function calling)
+# Definicao dos tools (Anthropic Claude tool use)
 # ============================================================
 
 CAMPOS_IMOVEL_COMPLETO = "id,titulo,codigo_interno,tipo,finalidade,status,descricao,logradouro,numero,bairro,cidade,estado,cep,valor,valor_aluguel,valor_condominio,valor_iptu,quartos,suites,banheiros,vagas,area_total,area_construida"
 
 TOOLS_DEFINITION: list[dict] = [
     {
-        "type": "function",
-        "function": {
-            "name": "buscar_imovel_por_identificacao",
-            "description": "Buscar um imovel especifico pelo nome, codigo interno ou ID. Retorna TODOS os detalhes do imovel. Use quando o cliente mencionar um imovel especifico pelo nome ou codigo, ou quando precisar dos detalhes completos.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "nome": {"type": "string", "description": "Nome ou parte do titulo do imovel"},
-                    "codigo": {"type": "string", "description": "Codigo interno do imovel (ex: IMO-001)"},
-                    "id": {"type": "string", "description": "ID UUID do imovel no sistema"},
-                },
-                "required": [],
+        "name": "buscar_imovel_por_identificacao",
+        "description": "Buscar um imovel especifico pelo nome, codigo interno ou ID. Retorna TODOS os detalhes do imovel + URL publica do site. Use quando o cliente mencionar um imovel especifico pelo nome ou codigo.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "nome": {"type": "string", "description": "Nome ou parte do titulo do imovel"},
+                "codigo": {"type": "string", "description": "Codigo interno do imovel (ex: IMO-001)"},
+                "id": {"type": "string", "description": "ID UUID do imovel no sistema"},
             },
+            "required": [],
         },
     },
     {
-        "type": "function",
-        "function": {
-            "name": "buscar_imoveis",
-            "description": "Buscar imoveis disponiveis no sistema que correspondam aos criterios do cliente. Use para recomendar opcoes ou encontrar similares.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "tipo": {
-                        "type": "string",
-                        "enum": [
-                            "apartamento", "casa", "terreno", "sala_comercial",
-                            "galpao", "cobertura", "kitnet", "fazenda", "sitio", "loja",
-                        ],
-                        "description": "Tipo do imovel",
-                    },
-                    "finalidade": {
-                        "type": "string",
-                        "enum": ["venda", "aluguel"],
-                        "description": "Se o cliente quer comprar ou alugar",
-                    },
-                    "cidade": {"type": "string", "description": "Cidade do imovel"},
-                    "bairro": {"type": "string", "description": "Bairro do imovel"},
-                    "preco_min": {"type": "number", "description": "Preco minimo em reais"},
-                    "preco_max": {"type": "number", "description": "Preco maximo em reais"},
-                    "quartos_min": {"type": "integer", "description": "Quantidade minima de quartos"},
+        "name": "buscar_imoveis",
+        "description": "Buscar imoveis disponiveis no sistema que correspondam aos criterios do cliente. Retorna lista com IDs e dados resumidos + URL publica de cada imovel.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tipo": {
+                    "type": "string",
+                    "enum": [
+                        "apartamento", "casa", "terreno", "sala_comercial",
+                        "galpao", "cobertura", "kitnet", "fazenda", "sitio", "loja",
+                    ],
+                    "description": "Tipo do imovel",
                 },
-                "required": [],
+                "finalidade": {
+                    "type": "string",
+                    "enum": ["venda", "aluguel"],
+                    "description": "Se o cliente quer comprar ou alugar",
+                },
+                "cidade": {"type": "string", "description": "Cidade do imovel"},
+                "bairro": {"type": "string", "description": "Bairro do imovel"},
+                "preco_min": {"type": "number", "description": "Preco minimo em reais"},
+                "preco_max": {"type": "number", "description": "Preco maximo em reais"},
+                "quartos_min": {"type": "integer", "description": "Quantidade minima de quartos"},
             },
+            "required": [],
         },
     },
     {
-        "type": "function",
-        "function": {
-            "name": "atualizar_cliente",
-            "description": "Atualizar os dados do cliente na plataforma. O cliente ja existe — esta ferramenta preenche o nome e informacoes coletadas.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "nome": {"type": "string", "description": "Nome completo do cliente"},
-                    "email": {"type": "string", "description": "Email do cliente (se informado)"},
-                    "tipo": {
-                        "type": "string",
-                        "enum": ["comprador", "vendedor", "locatario", "proprietario"],
-                        "description": "Tipo de interesse do cliente",
-                    },
-                    "observacoes": {"type": "string", "description": "Observacoes relevantes"},
+        "name": "enviar_card_imovel",
+        "description": "USE SEMPRE QUE RECOMENDAR UM IMOVEL ESPECIFICO. Manda DIRETO via WhatsApp um card visual: foto principal + caption com endereco, preco, quartos/suites/banheiros/vagas, area + link clicavel pro site da Duna. Muito mais bonito que descrever em texto. Pode chamar varias vezes pra mostrar varias opcoes. Depois NAO repita os dados em texto — o cliente ja vai ver no card.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "imovel_id": {
+                    "type": "string",
+                    "description": "ID UUID do imovel (obtido por buscar_imoveis ou buscar_imovel_por_identificacao)",
                 },
-                "required": ["nome", "tipo"],
             },
+            "required": ["imovel_id"],
         },
     },
     {
-        "type": "function",
-        "function": {
-            "name": "atualizar_negocio",
-            "description": "Atualizar o negocio no pipeline com titulo, tipo e valor.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "titulo": {"type": "string", "description": "Titulo do negocio"},
-                    "cliente_id": {"type": "string", "description": "ID do cliente"},
-                    "imovel_id": {"type": "string", "description": "ID do imovel de interesse"},
-                    "tipo": {"type": "string", "enum": ["venda", "aluguel"], "description": "Tipo do negocio"},
-                    "valor": {"type": "number", "description": "Valor estimado em reais"},
+        "name": "atualizar_cliente",
+        "description": "Atualizar os dados do cliente na plataforma. O cliente ja existe — esta ferramenta preenche o nome e informacoes coletadas.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "nome": {"type": "string", "description": "Nome completo do cliente"},
+                "email": {"type": "string", "description": "Email do cliente (se informado)"},
+                "tipo": {
+                    "type": "string",
+                    "enum": ["comprador", "vendedor", "locatario", "proprietario"],
+                    "description": "Tipo de interesse do cliente",
                 },
-                "required": ["titulo", "cliente_id", "tipo"],
+                "observacoes": {"type": "string", "description": "Observacoes relevantes"},
             },
+            "required": ["nome", "tipo"],
         },
     },
     {
-        "type": "function",
-        "function": {
-            "name": "criar_atividade",
-            "description": "Agendar uma atividade para o corretor (visita, ligacao, follow-up).",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "titulo": {"type": "string", "description": "Titulo da atividade"},
-                    "tipo": {
-                        "type": "string",
-                        "enum": ["ligacao", "email", "visita", "reuniao", "follow_up", "proposta", "outro"],
-                        "description": "Tipo da atividade",
-                    },
-                    "data_vencimento": {"type": "string", "description": "Data e hora ISO (ex: 2026-03-16T10:00:00)"},
-                    "cliente_id": {"type": "string", "description": "ID do cliente vinculado"},
-                    "negocio_id": {"type": "string", "description": "ID do negocio vinculado"},
-                    "descricao": {"type": "string", "description": "Descricao para o corretor"},
-                },
-                "required": ["titulo", "tipo", "data_vencimento"],
+        "name": "atualizar_negocio",
+        "description": "Atualizar o negocio no pipeline com titulo, tipo e valor.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "titulo": {"type": "string", "description": "Titulo do negocio"},
+                "cliente_id": {"type": "string", "description": "ID do cliente"},
+                "imovel_id": {"type": "string", "description": "ID do imovel de interesse"},
+                "tipo": {"type": "string", "enum": ["venda", "aluguel"], "description": "Tipo do negocio"},
+                "valor": {"type": "number", "description": "Valor estimado em reais"},
             },
+            "required": ["titulo", "cliente_id", "tipo"],
         },
     },
     {
-        "type": "function",
-        "function": {
-            "name": "salvar_qualificacao",
-            "description": "Salvar dados de qualificacao extraidos da conversa. Pode chamar varias vezes — os dados sao mesclados.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "tipo_imovel": {"type": "string", "description": "Tipo de imovel desejado"},
-                    "finalidade": {"type": "string", "description": "Finalidade (comprar, alugar, vender)"},
-                    "bairros": {"type": "array", "items": {"type": "string"}, "description": "Bairros de interesse"},
-                    "faixa_preco": {
-                        "type": "object",
-                        "properties": {"min": {"type": "number"}, "max": {"type": "number"}},
-                        "description": "Faixa de preco em reais",
-                    },
-                    "urgencia": {"type": "string", "enum": ["alta", "media", "baixa"], "description": "Urgencia"},
-                    "observacoes": {"type": "string", "description": "Observacoes adicionais"},
+        "name": "criar_atividade",
+        "description": "Agendar uma atividade para o corretor (visita, ligacao, follow-up).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "titulo": {"type": "string", "description": "Titulo da atividade"},
+                "tipo": {
+                    "type": "string",
+                    "enum": ["ligacao", "email", "visita", "reuniao", "follow_up", "proposta", "outro"],
+                    "description": "Tipo da atividade",
                 },
-                "required": [],
+                "data_vencimento": {"type": "string", "description": "Data e hora ISO (ex: 2026-03-16T10:00:00)"},
+                "cliente_id": {"type": "string", "description": "ID do cliente vinculado"},
+                "negocio_id": {"type": "string", "description": "ID do negocio vinculado"},
+                "descricao": {"type": "string", "description": "Descricao para o corretor"},
             },
+            "required": ["titulo", "tipo", "data_vencimento"],
         },
     },
     {
-        "type": "function",
-        "function": {
-            "name": "encaminhar_corretor",
-            "description": "Encaminhar a conversa para um corretor humano.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "motivo": {"type": "string", "description": "Motivo do encaminhamento"},
-                    "resumo": {"type": "string", "description": "Resumo da conversa para o corretor (2-3 frases)"},
+        "name": "salvar_qualificacao",
+        "description": "Salvar dados de qualificacao extraidos da conversa. Pode chamar varias vezes — os dados sao mesclados.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tipo_imovel": {"type": "string", "description": "Tipo de imovel desejado"},
+                "finalidade": {"type": "string", "description": "Finalidade (comprar, alugar, vender)"},
+                "bairros": {"type": "array", "items": {"type": "string"}, "description": "Bairros de interesse"},
+                "faixa_preco": {
+                    "type": "object",
+                    "properties": {"min": {"type": "number"}, "max": {"type": "number"}},
+                    "description": "Faixa de preco em reais",
                 },
-                "required": ["motivo", "resumo"],
+                "urgencia": {"type": "string", "enum": ["alta", "media", "baixa"], "description": "Urgencia"},
+                "observacoes": {"type": "string", "description": "Observacoes adicionais"},
             },
+            "required": [],
+        },
+    },
+    {
+        "name": "encaminhar_corretor",
+        "description": "Encaminhar a conversa para um corretor humano.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "motivo": {"type": "string", "description": "Motivo do encaminhamento"},
+                "resumo": {"type": "string", "description": "Resumo da conversa para o corretor (2-3 frases)"},
+            },
+            "required": ["motivo", "resumo"],
         },
     },
 ]
@@ -179,12 +173,46 @@ class ToolContext:
         numero_cliente: str,
         cliente_id: str | None = None,
         negocio_id: str | None = None,
+        api_url: str | None = None,
+        token: str | None = None,
     ):
         self.conversa_id = conversa_id
         self.org_id = org_id
         self.numero_cliente = numero_cliente
         self.cliente_id = cliente_id
         self.negocio_id = negocio_id
+        # Credenciais Uazapi pra enviar mensagens proativas (card de imovel)
+        self.api_url = api_url
+        self.token = token
+
+
+# ============================================================
+# Helper: monta URL publica do imovel no site
+# ============================================================
+
+
+async def _montar_url_imovel(org_id: str, imovel_id: str) -> str:
+    """Monta URL publica do imovel — usa dominio customizado verificado se houver."""
+    # Tenta dominio customizado verificado
+    dominio = await db.select(
+        "dominios_customizados",
+        columns="dominio,status",
+        filters={"organizacao_id": f"eq.{org_id}", "status": "eq.verificado"},
+        single=True,
+    )
+    if dominio and dominio.get("dominio"):
+        return f"https://{dominio['dominio']}/imoveis/{imovel_id}"
+
+    # Fallback: dominio principal + slug
+    org = await db.select(
+        "organizacoes",
+        columns="slug",
+        filters={"id": f"eq.{org_id}"},
+        single=True,
+    )
+    base = os.environ.get("NEXTJS_APP_URL", "https://lyneimob.vercel.app").rstrip("/")
+    slug = (org or {}).get("slug") or "imobiliaria"
+    return f"{base}/{slug}/imoveis/{imovel_id}"
 
 
 # ============================================================
@@ -267,7 +295,13 @@ async def executar_buscar_imovel_por_identificacao(args: dict, ctx: ToolContext)
         )
         if not result:
             return "Imovel nao encontrado com esse ID."
-        return f"Imovel encontrado:\n{_formatar_imovel_completo(result)}"
+        url = await _montar_url_imovel(ctx.org_id, imovel_id)
+        return (
+            f"Imovel encontrado:\n{_formatar_imovel_completo(result)}\n"
+            f"Link do site: {url}\n\n"
+            "IMPORTANTE: para mandar o card visual (foto + link) ao cliente, "
+            "chame a tool enviar_card_imovel com este ID."
+        )
 
     # Busca por codigo interno
     if codigo:
@@ -280,7 +314,13 @@ async def executar_buscar_imovel_por_identificacao(args: dict, ctx: ToolContext)
             single=True,
         )
         if result:
-            return f"Imovel encontrado:\n{_formatar_imovel_completo(result)}"
+            url = await _montar_url_imovel(ctx.org_id, result["id"])
+            return (
+                f"Imovel encontrado:\n{_formatar_imovel_completo(result)}\n"
+                f"Link do site: {url}\n\n"
+                "IMPORTANTE: para mandar o card visual (foto + link) ao cliente, "
+                "chame a tool enviar_card_imovel com este ID."
+            )
 
         # Fallback: busca flexivel sem hifens
         todos = await db.select(
@@ -292,7 +332,13 @@ async def executar_buscar_imovel_por_identificacao(args: dict, ctx: ToolContext)
         for i in (todos or []):
             cod = str(i.get("codigo_interno", "")).replace("-", "").replace(" ", "").upper()
             if cod == codigo_sem_hifen or codigo_sem_hifen in cod:
-                return f"Imovel encontrado:\n{_formatar_imovel_completo(i)}"
+                url = await _montar_url_imovel(ctx.org_id, i["id"])
+                return (
+                    f"Imovel encontrado:\n{_formatar_imovel_completo(i)}\n"
+                    f"Link do site: {url}\n\n"
+                    "IMPORTANTE: para mandar o card visual (foto + link), "
+                    "chame a tool enviar_card_imovel com este ID."
+                )
 
         return f'Nenhum imovel encontrado com o codigo "{codigo}".'
 
@@ -307,7 +353,13 @@ async def executar_buscar_imovel_por_identificacao(args: dict, ctx: ToolContext)
         if not result:
             return f'Nenhum imovel encontrado com o nome "{nome}".'
         if len(result) == 1:
-            return f"Imovel encontrado:\n{_formatar_imovel_completo(result[0])}"
+            url = await _montar_url_imovel(ctx.org_id, result[0]["id"])
+            return (
+                f"Imovel encontrado:\n{_formatar_imovel_completo(result[0])}\n"
+                f"Link do site: {url}\n\n"
+                "IMPORTANTE: para mandar o card visual (foto + link), "
+                "chame a tool enviar_card_imovel com este ID."
+            )
         linhas = [f"- {i.get('titulo','')} (Cod: {i.get('codigo_interno','?')}) — ID: {i.get('id','')}" for i in result]
         return f"Encontrei {len(result)} imoveis:\n" + "\n".join(linhas) + "\n\nUse o ID para buscar os detalhes completos."
 
@@ -375,14 +427,20 @@ async def executar_buscar_imoveis(args: dict, ctx: ToolContext) -> str:
         cond = ""
         if i.get("valor_condominio"):
             cond = f" | Cond: R$ {float(i['valor_condominio']):,.0f}".replace(",", ".")
+        url = await _montar_url_imovel(ctx.org_id, i["id"])
         linhas.append(
             f"- [{i['id']}] {i.get('titulo','')} (Cod: {cod}) | {i.get('tipo','')} | "
             f"{i.get('bairro','')}, {i.get('cidade','')}-{i.get('estado','')} | "
             f"{preco} | {quartos}q/{suites}s/{banheiros}b/{vagas}v | "
-            f"{area_t}m2 total, {area_c}m2 constr.{cond}"
+            f"{area_t}m2 total, {area_c}m2 constr.{cond} | {url}"
         )
 
-    return f"Encontrei {len(imoveis)} imovel(is):\n" + "\n".join(linhas)
+    return (
+        f"Encontrei {len(imoveis)} imovel(is):\n"
+        + "\n".join(linhas)
+        + "\n\nIMPORTANTE: pra mandar um card visual rico (foto + link) de QUALQUER um, "
+        "chame a tool enviar_card_imovel com o ID. Muito mais bonito que descrever em texto."
+    )
 
 
 async def executar_atualizar_cliente(args: dict, ctx: ToolContext) -> str:
@@ -530,12 +588,125 @@ async def executar_encaminhar_corretor(args: dict, ctx: ToolContext) -> str:
 
 
 # ============================================================
+# Tool: enviar card visual rico do imovel via WhatsApp (foto + link)
+# ============================================================
+
+
+async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
+    """Envia card visual (foto + caption rica + link site) direto pro cliente."""
+    imovel_id = args.get("imovel_id")
+    if not imovel_id:
+        return "Erro: imovel_id eh obrigatorio."
+
+    if not ctx.api_url or not ctx.token:
+        return "Erro: credenciais Uazapi nao disponiveis no contexto."
+
+    # Buscar imovel + fotos
+    imovel = await db.select(
+        "imoveis",
+        columns=f"{CAMPOS_IMOVEL_COMPLETO},imovel_fotos(url,ordem,eh_capa)",
+        filters={"organizacao_id": f"eq.{ctx.org_id}", "id": f"eq.{imovel_id}"},
+        single=True,
+    )
+    if not imovel:
+        return f"Erro: imovel {imovel_id} nao encontrado."
+
+    fotos = imovel.get("imovel_fotos") or []
+    foto_capa = next((f for f in fotos if f.get("eh_capa")), None)
+    if not foto_capa and fotos:
+        # Ordena por 'ordem' e pega a primeira
+        foto_capa = sorted(fotos, key=lambda f: f.get("ordem", 0))[0]
+
+    url = await _montar_url_imovel(ctx.org_id, imovel_id)
+
+    # Montar caption rica
+    valor = imovel.get("valor")
+    valor_aluguel = imovel.get("valor_aluguel")
+    if valor:
+        preco = f"💰 R$ {float(valor):,.0f}".replace(",", ".")
+    elif valor_aluguel:
+        preco = f"💰 R$ {float(valor_aluguel):,.0f}/mes".replace(",", ".")
+    else:
+        preco = "💰 Sob consulta"
+
+    endereco = ", ".join(filter(None, [
+        imovel.get("bairro"), imovel.get("cidade"), imovel.get("estado")
+    ]))
+
+    quartos = imovel.get("quartos") or 0
+    suites = imovel.get("suites") or 0
+    suites_txt = f" ({suites} suite)" if suites else ""
+    area_txt = (
+        f"{imovel['area_total']}m² totais"
+        if imovel.get("area_total")
+        else "area sob consulta"
+    )
+
+    caption = (
+        f"🏡 *{imovel.get('titulo','')}*\n"
+        f"📍 {endereco}\n"
+        f"{preco}\n\n"
+        f"🛏 {quartos} quarto(s){suites_txt}\n"
+        f"🚿 {imovel.get('banheiros',0)} banheiro(s)\n"
+        f"🚗 {imovel.get('vagas',0)} vaga(s)\n"
+        f"📐 {area_txt}\n\n"
+        f"🔗 Veja mais fotos e detalhes:\n{url}"
+    )
+
+    # Buscar message_id da ultima mensagem do cliente pra responder (efeito reply)
+    ultima_msg = await db.select(
+        "mensagens_whatsapp",
+        columns="message_id_whatsapp",
+        filters={
+            "conversa_id": f"eq.{ctx.conversa_id}",
+            "direcao": "eq.recebida",
+        },
+        order="criado_em.desc",
+        limit=1,
+        single=True,
+    )
+    reply_id = (ultima_msg or {}).get("message_id_whatsapp")
+
+    # Enviar via Uazapi
+    from agente.services import whatsapp
+
+    try:
+        if foto_capa and foto_capa.get("url"):
+            await whatsapp.send_media(
+                ctx.api_url, ctx.token, ctx.numero_cliente,
+                foto_capa["url"], media_type="image", caption=caption,
+                reply_id=reply_id,
+            )
+        else:
+            await whatsapp.send_text(
+                ctx.api_url, ctx.token, ctx.numero_cliente, caption,
+                reply_id=reply_id,
+            )
+
+        # Salvar mensagem no banco (registro)
+        await db.salvar_mensagem(
+            ctx.conversa_id, ctx.org_id, "enviada", caption,
+            tipo_conteudo="imagem" if foto_capa else "texto",
+        )
+
+        return (
+            f"Card do imovel '{imovel.get('titulo','')}' enviado com foto e link "
+            "pro cliente. NAO repita esses dados em texto — pergunte apenas "
+            "se ele tem interesse ou quer ver mais opcoes."
+        )
+    except Exception as e:
+        logger.error(f"[enviar_card_imovel] Erro: {e}", exc_info=True)
+        return f"Erro ao enviar card: {e}. Tente passar os detalhes por texto."
+
+
+# ============================================================
 # Dispatcher
 # ============================================================
 
 _EXECUTORES = {
     "buscar_imovel_por_identificacao": executar_buscar_imovel_por_identificacao,
     "buscar_imoveis": executar_buscar_imoveis,
+    "enviar_card_imovel": executar_enviar_card_imovel,
     "atualizar_cliente": executar_atualizar_cliente,
     "atualizar_negocio": executar_atualizar_negocio,
     "criar_atividade": executar_criar_atividade,

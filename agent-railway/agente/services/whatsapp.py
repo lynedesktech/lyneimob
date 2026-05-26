@@ -41,14 +41,20 @@ async def send_presence(
         logger.warning(f"Erro ao enviar presenca: {e}")
 
 
-async def send_text(api_url: str, token: str, chat_id: str, text: str) -> None:
-    """Envia mensagem de texto."""
+async def send_text(
+    api_url: str, token: str, chat_id: str, text: str,
+    reply_id: str | None = None,
+) -> None:
+    """Envia mensagem de texto. reply_id opcional pra citar mensagem (efeito reply)."""
     try:
+        body: dict = {"number": chat_id, "text": text}
+        if reply_id:
+            body["replyid"] = reply_id
         async with httpx.AsyncClient(timeout=15) as client:
             await client.post(
                 f"{api_url}/send/text",
                 headers={"token": token, "Content-Type": "application/json"},
-                json={"number": chat_id, "text": text},
+                json=body,
             )
     except Exception as e:
         logger.error(f"Erro ao enviar texto: {e}")
@@ -61,8 +67,9 @@ async def send_media(
     media_url: str,
     media_type: str = "image",
     caption: str = "",
+    reply_id: str | None = None,
 ) -> None:
-    """Envia midia (image, document, video)."""
+    """Envia midia (image, document, video). reply_id opcional pra citar mensagem."""
     try:
         body: dict = {
             "number": chat_id,
@@ -71,6 +78,8 @@ async def send_media(
         }
         if caption:
             body["text"] = caption
+        if reply_id:
+            body["replyid"] = reply_id
 
         async with httpx.AsyncClient(timeout=30) as client:
             await client.post(
@@ -83,14 +92,15 @@ async def send_media(
 
 
 async def send_segment(
-    api_url: str, token: str, chat_id: str, segment_type: str, content: str
+    api_url: str, token: str, chat_id: str, segment_type: str, content: str,
+    reply_id: str | None = None,
 ) -> None:
-    """Envia um segmento conforme seu tipo."""
+    """Envia um segmento conforme seu tipo. reply_id apenas no primeiro segmento."""
     if segment_type == "imagem":
-        await send_media(api_url, token, chat_id, content, "image")
+        await send_media(api_url, token, chat_id, content, "image", reply_id=reply_id)
     elif segment_type == "pdf":
-        await send_media(api_url, token, chat_id, content, "document")
+        await send_media(api_url, token, chat_id, content, "document", reply_id=reply_id)
     elif segment_type == "video":
-        await send_media(api_url, token, chat_id, content, "video")
+        await send_media(api_url, token, chat_id, content, "video", reply_id=reply_id)
     else:
-        await send_text(api_url, token, chat_id, content)
+        await send_text(api_url, token, chat_id, content, reply_id=reply_id)

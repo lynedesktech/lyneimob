@@ -4,5 +4,6 @@ httpx
 redis
 pydantic-settings
 openai
+anthropic
 pypdf2
 python-docx

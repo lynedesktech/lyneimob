@@ -5,11 +5,18 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
 
-    # --- OpenAI ---
+    # --- OpenAI (Whisper continua aqui — Anthropic nao tem STT) ---
     openai_api_key: str = ""
-    openai_model: str = "gpt-4.1-mini"
+    openai_model: str = "gpt-4.1-mini"  # fallback, nao mais usado no agente
     whisper_model: str = "whisper-1"
-    vision_model: str = "gpt-4o-mini"
+    vision_model: str = "gpt-4o-mini"  # fallback, vision migrou pra Claude
+
+    # --- Anthropic (Claude) — LLM principal do agente ---
+    anthropic_api_key: str = ""
+    # Modelo padrao: Haiku 4.5 (rapido + barato)
+    anthropic_model_default: str = "claude-haiku-4-5"
+    # Modelo complexo: Sonnet 4.6 (vision, conversa longa, fluxos sensiveis)
+    anthropic_model_complex: str = "claude-sonnet-4-6"
 
     # --- Redis ---
     redis_url: str = "redis://localhost:6379"

@@ -1,4 +1,9 @@
-"""Agente IA com function calling — loop de conversacao OpenAI."""
+"""Agente IA com tool use — loop de conversacao Anthropic Claude.
+
+Migrado de OpenAI (gpt-4.1-mini) pra Claude:
+- Haiku 4.5 padrao (rapido + barato)
+- Sonnet 4.6 quando imagem / conversa longa / fluxo complexo
+"""
 
 from __future__ import annotations
 
@@ -6,7 +11,7 @@ import json
 import logging
 from datetime import datetime, timezone, timedelta
 
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 
 from agente.config import settings
 from agente.core.prompt import montar_prompt_sdr
@@ -16,13 +21,41 @@ from agente.services import supabase_client as db
 
 logger = logging.getLogger(__name__)
 
-# LYNEDES-103 Sprint 3: aumentado de 3 para 7
-# Fluxos complexos (buscar imovel + qualificar + agendar + encaminhar) precisam de mais iteracoes
+# Fluxos complexos (buscar + qualificar + agendar + encaminhar) precisam de iteracoes
 MAX_TOOL_ITERATIONS = 7
 
+# Sinais textuais que indicam fluxo complexo (escala pra Sonnet)
+SINAIS_FLUXO_COMPLEXO = (
+    "agendar", "agendamento", "visita", "visitar",
+    "marcar", "horario", "horário",
+    "negociar", "negociação", "negociacao", "proposta", "financiamento",
+    "documento", "contrato", "comprar agora",
+    "falar com", "atendente", "corretor",
+)
 
-def _get_openai() -> AsyncOpenAI:
-    return AsyncOpenAI(api_key=settings.openai_api_key)
+
+def _get_anthropic() -> AsyncAnthropic:
+    return AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+
+def _escolher_modelo(
+    num_turnos: int,
+    ultima_mensagem_tem_imagem: bool,
+    textos_recentes: list[str],
+) -> str:
+    """Roteamento Haiku/Sonnet conforme contexto.
+
+    REGRA: a decisao eh feita no INICIO da resposta. Trocar modelo no
+    meio invalida o prompt cache.
+    """
+    if ultima_mensagem_tem_imagem:
+        return settings.anthropic_model_complex
+    if num_turnos > 10:
+        return settings.anthropic_model_complex
+    corpus = " ".join(textos_recentes).lower()
+    if any(s in corpus for s in SINAIS_FLUXO_COMPLEXO):
+        return settings.anthropic_model_complex
+    return settings.anthropic_model_default
 
 
 async def run_agent(
@@ -32,7 +65,7 @@ async def run_agent(
     api_url: str,
     token: str,
 ) -> str | None:
-    """Executa o agente SDR com function calling.
+    """Executa o agente SDR com Claude tool use.
 
     Returns:
         Resposta final do agente como string, ou None se nao houver resposta.
@@ -78,7 +111,6 @@ async def run_agent(
             mensagem_fora = config.get("mensagem_fora_horario") or (
                 "Ola! No momento estamos fora do horario de atendimento. Retornaremos em breve!"
             )
-            # Salvar mensagem no banco
             await db.salvar_mensagem(conversa_id, org_id, "enviada", mensagem_fora)
             await db.atualizar_conversa(conversa_id, {"ultima_mensagem_em": datetime.now(timezone.utc).isoformat()})
             return mensagem_fora
@@ -94,7 +126,7 @@ async def run_agent(
     # 6. Buscar memoria do Redis
     memoria = await redis_client.memory_get(conversa_id)
 
-    # 7. Montar prompt
+    # 7. Montar system prompt
     nome_agente = config.get("nome_agente", "") or f"Assistente {nome_org}"
     prompt_personalizado = config.get("prompt_personalizado")
     system_prompt = montar_prompt_sdr(nome_agente, nome_org, prompt_personalizado)
@@ -159,12 +191,12 @@ async def run_agent(
     contexto_extra += f"\n- Canal de origem: {str(origem_lead).upper()}"
 
     # Imovel de interesse
-    imovel_id = conversa.get("imovel_interesse_id")
-    if imovel_id:
+    imovel_id_interesse = conversa.get("imovel_interesse_id")
+    if imovel_id_interesse:
         imovel = await db.select(
             "imoveis",
             columns="titulo,tipo,bairro,valor,valor_aluguel",
-            filters={"id": f"eq.{imovel_id}"},
+            filters={"id": f"eq.{imovel_id_interesse}"},
             single=True,
         )
         if imovel:
@@ -176,14 +208,15 @@ async def run_agent(
                 preco = f"R$ {float(valor_aluguel):,.0f}/mes".replace(",", ".")
             else:
                 preco = "preco sob consulta"
-            contexto_extra += f"\n- Imovel de interesse: {imovel.get('titulo','')} | {imovel.get('tipo','')} | {imovel.get('bairro','')} | {preco}"
+            contexto_extra += (
+                f"\n- Imovel de interesse: {imovel.get('titulo','')} | "
+                f"{imovel.get('tipo','')} | {imovel.get('bairro','')} | {preco}"
+            )
 
-    # 9. Montar messages array
-    messages: list[dict] = [
-        {"role": "system", "content": system_prompt + contexto_extra},
-    ]
+    # 9. Montar messages array (formato Anthropic: SEM system aqui, vai separado)
+    messages: list[dict] = []
 
-    # Adicionar memoria
+    # Adicionar memoria (historico anterior)
     for msg in memoria:
         papel = msg.get("papel", "usuario")
         conteudo = msg.get("conteudo", "")
@@ -194,10 +227,14 @@ async def run_agent(
     # Identificar mensagens novas
     mensagens_novas = _identificar_mensagens_novas(mensagens_recentes, len(memoria))
 
+    ultima_tem_imagem = False
+    textos_recentes_user: list[str] = []
     for msg in mensagens_novas:
         if msg.get("direcao") == "recebida":
             tipo = msg.get("tipo_conteudo", "texto")
             conteudo = msg.get("conteudo", "")
+            if tipo == "imagem":
+                ultima_tem_imagem = True
             if tipo == "audio":
                 conteudo_formatado = f"[mensagem de voz do cliente]: {conteudo}" if conteudo else "[cliente enviou audio que nao foi possivel transcrever]"
             elif tipo == "imagem":
@@ -207,19 +244,34 @@ async def run_agent(
             else:
                 conteudo_formatado = conteudo or "[mensagem sem conteudo]"
             messages.append({"role": "user", "content": conteudo_formatado})
+            textos_recentes_user.append(conteudo or "")
 
-    # Se nao ha mensagens novas do usuario, nao processar
-    if not any(m["role"] == "user" for m in messages):
+    # Anthropic exige que a primeira mensagem seja "user"
+    while messages and messages[0]["role"] != "user":
+        messages.pop(0)
+
+    if not messages:
+        logger.info(f"[AGENT] Conversa {conversa_id}: nenhuma mensagem nova do usuario")
         return None
 
-    # 10. OpenAI com tools
-    client = _get_openai()
+    # 10. Escolher modelo (Haiku/Sonnet)
+    modelo = _escolher_modelo(
+        num_turnos=len(messages),
+        ultima_mensagem_tem_imagem=ultima_tem_imagem,
+        textos_recentes=textos_recentes_user[-3:],
+    )
+    logger.info(f"[AGENT] Conversa {conversa_id}: usando modelo {modelo}")
+
+    # 11. Loop agentic Anthropic com tools
+    client = _get_anthropic()
     tool_context = ToolContext(
         conversa_id=conversa_id,
         org_id=org_id,
         numero_cliente=numero_cliente,
         cliente_id=conversa.get("cliente_id"),
         negocio_id=negocio_id,
+        api_url=api_url,
+        token=token,
     )
 
     tool_summary: list[str] = []
@@ -227,77 +279,93 @@ async def run_agent(
 
     for iteration in range(MAX_TOOL_ITERATIONS + 1):
         try:
-            response = await client.chat.completions.create(
-                model=settings.openai_model,
-                messages=messages,
+            response = await client.messages.create(
+                model=modelo,
+                max_tokens=1024,
+                system=system_prompt + contexto_extra,
                 tools=TOOLS_DEFINITION,
-                tool_choice="auto",
-                temperature=0.7,
-                max_tokens=1000,
+                messages=messages,
             )
         except Exception as e:
-            logger.error(f"Erro OpenAI (iteracao {iteration}): {e}")
+            logger.error(f"Erro Anthropic (iteracao {iteration}): {e}")
             return "Estou com uma instabilidade no momento. Pode tentar novamente em alguns segundos?"
 
-        choice = response.choices[0]
-        assistant_message = choice.message
+        # Coletar blocos de texto e tool_use
+        blocos_texto: list[str] = []
+        blocos_tool_use: list[dict] = []
 
-        if not assistant_message.tool_calls:
-            resposta_final = assistant_message.content or ""
+        for block in response.content:
+            if block.type == "text":
+                blocos_texto.append(block.text)
+            elif block.type == "tool_use":
+                blocos_tool_use.append({
+                    "id": block.id,
+                    "name": block.name,
+                    "input": block.input,
+                })
+
+        # Sem tool_use ou no limite → resposta final
+        if not blocos_tool_use or iteration >= MAX_TOOL_ITERATIONS:
+            resposta_final = "\n".join(blocos_texto).strip() or None
+            if iteration >= MAX_TOOL_ITERATIONS and blocos_tool_use:
+                logger.warning(
+                    f"[AGENT] MAX_TOOL_ITERATIONS atingido para conversa {conversa_id}"
+                )
             break
 
-        # Processar tool calls
+        # Anexar resposta do assistente (formato Anthropic preserva content blocks)
         messages.append({
             "role": "assistant",
-            "content": assistant_message.content or "",
-            "tool_calls": [
-                {
-                    "id": tc.id,
-                    "type": "function",
-                    "function": {
-                        "name": tc.function.name,
-                        "arguments": tc.function.arguments,
-                    },
-                }
-                for tc in assistant_message.tool_calls
+            "content": [
+                {"type": "text", "text": b.text} if b.type == "text"
+                else {"type": "tool_use", "id": b.id, "name": b.name, "input": b.input}
+                for b in response.content
             ],
         })
 
-        for tool_call in assistant_message.tool_calls:
-            tool_name = tool_call.function.name
-            try:
-                tool_args = json.loads(tool_call.function.arguments)
-            except json.JSONDecodeError:
-                tool_args = {}
-
+        # Executar tools e montar bloco user com tool_result
+        tool_results = []
+        for tu in blocos_tool_use:
+            tool_name = tu["name"]
+            tool_args = tu["input"] if isinstance(tu["input"], dict) else {}
             logger.info(f"[AGENT] Tool call: {tool_name}({json.dumps(tool_args, ensure_ascii=False)[:200]})")
 
-            result = await execute_tool(tool_name, tool_args, tool_context)
-            tool_summary.append(tool_name)
+            try:
+                result = await execute_tool(tool_name, tool_args, tool_context)
+                tool_summary.append(tool_name)
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": tu["id"],
+                    "content": str(result),
+                })
+            except Exception as e:
+                logger.error(f"[AGENT] Erro na tool {tool_name}: {e}", exc_info=True)
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": tu["id"],
+                    "content": f"Erro ao executar {tool_name}. Tente outra abordagem.",
+                    "is_error": True,
+                })
 
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": str(result),
-            })
-
-        if iteration >= MAX_TOOL_ITERATIONS:
-            logger.warning(
-                f"[AGENT] MAX_TOOL_ITERATIONS atingido para conversa {conversa_id} "
-                f"(limite: {MAX_TOOL_ITERATIONS}). Encerrando loop de tools."
-            )
-            break
+        messages.append({"role": "user", "content": tool_results})
 
     if not resposta_final:
-        logger.warning(f"[AGENT] Maximo de iteracoes atingido para {conversa_id}")
+        logger.warning(f"[AGENT] Resposta final vazia para conversa {conversa_id}")
         resposta_final = "Vou verificar com a equipe e te retorno em breve!"
 
-    # 11. Salvar memoria
-    user_msgs = [m.get("conteudo", "") for m in mensagens_novas if m.get("direcao") == "recebida" and m.get("conteudo")]
+    # 12. Salvar memoria
+    user_msgs = [
+        m.get("conteudo", "")
+        for m in mensagens_novas
+        if m.get("direcao") == "recebida" and m.get("conteudo")
+    ]
     for msg_text in user_msgs:
         await redis_client.memory_add(conversa_id, "usuario", msg_text)
     if tool_summary:
-        await redis_client.memory_add(conversa_id, "assistente", f"[Acoes executadas: {'; '.join(tool_summary)}]")
+        await redis_client.memory_add(
+            conversa_id, "assistente",
+            f"[Acoes executadas: {'; '.join(tool_summary)}]"
+        )
     await redis_client.memory_add(conversa_id, "assistente", resposta_final)
 
     return resposta_final
@@ -310,12 +378,8 @@ async def run_agent(
 
 def _verificar_fora_horario(horario: dict) -> bool:
     """Verifica se horario atual esta fora do atendimento."""
-    tz = timezone(timedelta(hours=-3))  # America/Sao_Paulo (simplificado)
+    tz = timezone(timedelta(hours=-3))  # America/Sao_Paulo
     agora = datetime.now(tz)
-    dias_semana = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"]
-    dia_atual = dias_semana[agora.weekday() + 1 if agora.weekday() < 6 else 0]  # weekday() 0=Mon
-
-    # Corrigir: Python weekday() 0=segunda, 6=domingo
     dia_map = {0: "segunda", 1: "terca", 2: "quarta", 3: "quinta", 4: "sexta", 5: "sabado", 6: "domingo"}
     dia_atual = dia_map[agora.weekday()]
 
@@ -338,7 +402,6 @@ def _identificar_mensagens_novas(
     if tamanho_memoria == 0:
         return [m for m in mensagens if m.get("direcao") == "recebida"]
 
-    # Mensagens recebidas apos a ultima resposta enviada
     indice_ultima_enviada = -1
     for i in range(len(mensagens) - 1, -1, -1):
         if mensagens[i].get("direcao") == "enviada":
