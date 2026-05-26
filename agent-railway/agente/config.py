@@ -13,9 +13,10 @@ class Settings(BaseSettings):
 
     # --- Anthropic (Claude) — LLM principal do agente ---
     anthropic_api_key: str = ""
-    # Modelo padrao: Haiku 4.5 (rapido + barato)
-    anthropic_model_default: str = "claude-haiku-4-5"
-    # Modelo complexo: Sonnet 4.6 (vision, conversa longa, fluxos sensiveis)
+    # Modelo padrao: Sonnet 4.6 — necessario pra conversa natural cearense.
+    # Haiku eh seco demais pra carregar a persona com calor.
+    anthropic_model_default: str = "claude-sonnet-4-6"
+    # Modelo complexo: tambem Sonnet (poderia escalar pra Opus se precisar)
     anthropic_model_complex: str = "claude-sonnet-4-6"
 
     # --- Redis ---
