@@ -537,7 +537,11 @@ async def health_check() -> JSONResponse:
         "status": "healthy" if redis_ok else "degraded",
         "service": "lyneimob-agent",
         "redis": "connected" if redis_ok else "disconnected",
-        "model": settings.openai_model,
+        "llm": "anthropic",
+        "model_default": settings.anthropic_model_default,
+        "model_complex": settings.anthropic_model_complex,
+        "vision": "claude (haiku 4.5)",
+        "stt": f"openai whisper ({settings.whisper_model})",
         "buffer_seconds": settings.buffer_wait_seconds,
         "rate_limit": {
             "per_contact": settings.rate_limit_per_contact_per_minute,
