@@ -74,16 +74,15 @@ export async function GET(request: Request) {
         await redis.set(chaveDia, "1", { ex: 60 * 60 * 24 })
       }
 
-      // Validar que a ultima mensagem foi enviada pela IA (nao do lead)
-      const { data: ultimaMsg } = await supabase
+      // Buscar ultimas 15 msgs pra contexto + validar que ultima foi da IA
+      const { data: msgsHistorico } = await supabase
         .from("mensagens_whatsapp")
-        .select("direcao")
+        .select("direcao, tipo_conteudo, conteudo, criado_em")
         .eq("conversa_id", conversa.id)
         .order("criado_em", { ascending: false })
-        .limit(1)
-        .single()
+        .limit(15)
 
-      if (!ultimaMsg || ultimaMsg.direcao !== "enviada") {
+      if (!msgsHistorico || msgsHistorico.length === 0 || msgsHistorico[0].direcao !== "enviada") {
         pulados++
         continue
       }
@@ -101,10 +100,77 @@ export async function GET(request: Request) {
         continue
       }
 
-      // Gerar follow-up simples e enviar humanizado
-      const nome = conversa.nome_cliente?.split(" ")[0] || ""
-      const saudacao = nome ? `Oi ${nome}` : "Oi"
-      const mensagem = `${saudacao}, tudo bem? Vi que estavamos conversando por aqui. Posso te ajudar com mais alguma coisa?`
+      // Buscar nome da org pra contexto da IA
+      const { data: org } = await supabase
+        .from("organizacoes")
+        .select("nome")
+        .eq("id", conversa.organizacao_id)
+        .single()
+
+      const nomeOrg = org?.nome || "Imobiliaria"
+      const configTyped = config as unknown as ConfigWhatsapp
+      const nomeAgente = configTyped.nome_agente || `Assistente ${nomeOrg}`
+      const nomeCliente = conversa.nome_cliente?.split(" ")[0] || ""
+
+      // Montar historico cronologico pra Claude
+      const historico = msgsHistorico
+        .reverse()
+        .map((m) => {
+          const quem = m.direcao === "enviada" ? "Voce" : (nomeCliente || "Cliente")
+          const txt = (m.conteudo || "").slice(0, 300)
+          return `${quem}: ${txt}`
+        })
+        .join("\n")
+
+      // Gerar mensagem de re-engajamento contextual com Claude Haiku
+      let mensagem = ""
+      try {
+        const { getAnthropic } = await import("@/lib/anthropic")
+        const sys = `Voce e ${nomeAgente}, atendente humana cearense da imobiliaria ${nomeOrg}.
+Mulher, calorosa, fala "tu" e "voce" misturando, usa expressoes como "olha so", "show", "belezinha", "tô aqui pra te ajudar".
+
+Sua tarefa AGORA: gerar uma UNICA mensagem curta e natural pra re-engajar o cliente que parou de responder ha algumas horas.
+
+Regras:
+- Maximo 2 linhas curtas no WhatsApp. Nao escreva textao.
+- Retome o assunto que voces estavam conversando (use o historico abaixo).
+- NUNCA force venda. So puxa conversa, mostra interesse genuino.
+- ${nomeCliente ? `Use o nome "${nomeCliente}" UMA vez se fizer sentido natural.` : "Nao use nome, voce ainda nao sabe."}
+- NUNCA comece com "Claro!", "Otimo!", "Perfeito!".
+- Nao fale "vi que paramos", "notei que voce nao respondeu", "estava aqui pensando em voce". Soa esquisito.
+- Tente puxar uma resposta facil: pergunta curta ou comentario que convide a responder.
+- Variar formato: as vezes pergunta, as vezes comentario, as vezes ambos.
+
+Responda APENAS com o texto da mensagem. Sem prefixo, sem aspas, sem markdown.`
+
+        const userPrompt = `Historico das ultimas conversas com ${nomeCliente || "o cliente"}:
+
+${historico}
+
+Gere agora uma mensagem curta de re-engajamento.`
+
+        const resposta = await getAnthropic().messages.create({
+          model: "claude-haiku-4-5",
+          max_tokens: 200,
+          system: sys,
+          messages: [{ role: "user", content: userPrompt }],
+        })
+        const bloco = resposta.content.find((b) => b.type === "text")
+        if (bloco && bloco.type === "text") {
+          mensagem = bloco.text.trim().replace(/^["']|["']$/g, "")
+        }
+      } catch (erroIa) {
+        console.error(
+          `[Follow-up] Erro gerando texto via Claude para conversa ${conversa.id}:`,
+          erroIa instanceof Error ? erroIa.message : erroIa
+        )
+      }
+
+      // Fallback se a IA falhou
+      if (!mensagem) {
+        const sauda = nomeCliente ? `Oi ${nomeCliente}` : "Oi"
+        mensagem = `${sauda}, tudo certo por ai? Tô aqui se precisar de mais alguma coisa.`
+      }
 
       const { enviarHumanizado } = await import("@/lib/whatsapp/humanizar")
       await enviarHumanizado(config as unknown as ConfigWhatsapp, conversa.numero_cliente, mensagem)
