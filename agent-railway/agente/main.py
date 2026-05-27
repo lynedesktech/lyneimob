@@ -76,12 +76,11 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
         if not message:
             return None
 
-        # DEBUG: log payload completo apenas pra mensagens que parecem ter reply/quote
-        # (qualquer key contendo 'quot', 'reply', 'context', 'stanza')
+        # DEBUG TEMPORARIO: log payload completo de TODA mensagem recebida.
+        # Removo depois de descobrir o nome do campo de reply no Uazapi.
         import json as _json
-        msg_str = _json.dumps(message)[:3000]
-        if any(k in msg_str.lower() for k in ["quot", "reply", "context", "stanza", "participant"]):
-            logger.info(f"[WEBHOOK-REPLY-DEBUG] msg payload (3KB): {msg_str}")
+        logger.info(f"[WEBHOOK-FULL-DEBUG] body.message keys: {list(message.keys())}")
+        logger.info(f"[WEBHOOK-FULL-DEBUG] payload (4KB): {_json.dumps(message)[:4000]}")
 
         chat_id_raw = message.get("chatid", message.get("chatId", ""))
         chat_id = (
