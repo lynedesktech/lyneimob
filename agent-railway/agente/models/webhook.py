@@ -21,3 +21,6 @@ class WebhookMessage(BaseModel):
     from_me: bool = False
     was_sent_by_api: bool = False
     message_type: str = ""
+    # Reply / citacao: quando user responde citando outra mensagem
+    quoted_message_id: str = ""
+    quoted_content: str = ""

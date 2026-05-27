@@ -642,16 +642,18 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
         else "area sob consulta"
     )
 
-    caption = (
+    # Caption do card (sem o link — o link vira botao CTA)
+    caption_sem_link = (
         f"🏡 *{imovel.get('titulo','')}*\n"
         f"📍 {endereco}\n"
         f"{preco}\n\n"
         f"🛏 {quartos} quarto(s){suites_txt}\n"
         f"🚿 {imovel.get('banheiros',0)} banheiro(s)\n"
         f"🚗 {imovel.get('vagas',0)} vaga(s)\n"
-        f"📐 {area_txt}\n\n"
-        f"🔗 Veja mais fotos e detalhes:\n{url}"
+        f"📐 {area_txt}"
     )
+    # Caption com link no texto (fallback se botao falhar)
+    caption = f"{caption_sem_link}\n\n🔗 Veja mais fotos e detalhes:\n{url}"
 
     # Buscar message_id da ultima mensagem do cliente pra responder (efeito reply)
     ultima_msg = await db.select(
@@ -671,12 +673,23 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
     from agente.services import whatsapp
 
     try:
+        enviado_como_botao = False
         if foto_capa and foto_capa.get("url"):
-            await whatsapp.send_media(
+            # Tenta primeiro com botao CTA (URL clicavel mais bonito)
+            enviado_como_botao = await whatsapp.send_image_with_cta_button(
                 ctx.api_url, ctx.token, ctx.numero_cliente,
-                foto_capa["url"], media_type="image", caption=caption,
+                foto_capa["url"], caption_sem_link,
+                button_text="Ver no site",
+                button_url=url,
                 reply_id=reply_id,
             )
+            if not enviado_como_botao:
+                # Fallback: media com URL no texto
+                await whatsapp.send_media(
+                    ctx.api_url, ctx.token, ctx.numero_cliente,
+                    foto_capa["url"], media_type="image", caption=caption,
+                    reply_id=reply_id,
+                )
         else:
             await whatsapp.send_text(
                 ctx.api_url, ctx.token, ctx.numero_cliente, caption,
@@ -685,7 +698,8 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
 
         # Salvar mensagem no banco (registro)
         await db.salvar_mensagem(
-            ctx.conversa_id, ctx.org_id, "enviada", caption,
+            ctx.conversa_id, ctx.org_id, "enviada",
+            caption_sem_link if enviado_como_botao else caption,
             tipo_conteudo="imagem" if foto_capa else "texto",
         )
 

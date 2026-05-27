@@ -109,6 +109,38 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
         if isinstance(media_content, dict):
             document_url = media_content.get("URL", "")
 
+        # Extrair info de mensagem citada (quando user faz reply).
+        # Uazapi expoe em varios formatos possiveis — tentamos todos defensivamente.
+        quoted_id = ""
+        quoted_text = ""
+        ctx = message.get("contextInfo") or message.get("context_info") or {}
+        if isinstance(ctx, dict):
+            quoted_id = ctx.get("stanzaId") or ctx.get("quotedMessageId") or ctx.get("quoted_message_id") or ""
+            qm = ctx.get("quotedMessage") or ctx.get("quoted_message") or {}
+            if isinstance(qm, dict):
+                quoted_text = (
+                    qm.get("text")
+                    or qm.get("caption")
+                    or qm.get("conversation")
+                    or ""
+                )
+                qm_content = qm.get("content")
+                if not quoted_text and isinstance(qm_content, dict):
+                    quoted_text = qm_content.get("text") or qm_content.get("caption") or ""
+                elif not quoted_text and isinstance(qm_content, str):
+                    quoted_text = qm_content
+        # Alguns gateways expoem direto no nivel da message
+        if not quoted_id:
+            quoted_id = message.get("quotedMessageId") or message.get("replyId") or ""
+        if not quoted_text:
+            q = message.get("quotedMessage") or message.get("quoted") or message.get("reply") or {}
+            if isinstance(q, dict):
+                quoted_text = (
+                    q.get("text") or q.get("content") or q.get("caption") or q.get("conversation") or ""
+                )
+                if isinstance(q.get("content"), dict):
+                    quoted_text = q["content"].get("text") or q["content"].get("caption") or ""
+
         return WebhookMessage(
             message_id=message.get("messageid", message.get("messageId", "")),
             message_id_full=message.get("id", ""),
@@ -124,6 +156,8 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
             from_me=message.get("fromMe", False),
             was_sent_by_api=message.get("wasSentByApi", False),
             message_type=message.get("messageType", ""),
+            quoted_message_id=quoted_id or "",
+            quoted_content=(quoted_text or "").strip()[:500],
         )
     except Exception as e:
         logger.error(f"Erro ao parsear webhook: {e}")
@@ -401,6 +435,24 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         token=token,
         message_id_full=msg.message_id_full,
     )
+
+    # 7b. Se for um reply citando mensagem anterior, prefixar o conteudo
+    # com a citacao pra que o agente entenda do que o cliente esta falando.
+    # Tenta resolver o conteudo da mensagem citada via DB (se quoted_text vazio).
+    if msg.quoted_message_id or msg.quoted_content:
+        citacao = msg.quoted_content.strip()
+        if not citacao and msg.quoted_message_id:
+            try:
+                ref = await db.buscar_mensagem_por_id_whatsapp(msg.quoted_message_id)
+                if ref:
+                    citacao = (ref.get("conteudo") or "").strip()[:400]
+            except Exception:
+                pass
+        if citacao:
+            processed_content = (
+                f"[Cliente respondeu citando uma mensagem sua anterior: \"{citacao[:300]}\"]\n"
+                f"{processed_content}"
+            )
 
     # 8. Salvar mensagem no banco
     await db.salvar_mensagem(

@@ -91,6 +91,47 @@ async def send_media(
         logger.error(f"Erro ao enviar midia ({media_type}): {e}")
 
 
+async def send_image_with_cta_button(
+    api_url: str,
+    token: str,
+    chat_id: str,
+    image_url: str,
+    caption: str,
+    button_text: str,
+    button_url: str,
+    reply_id: str | None = None,
+) -> bool:
+    """Envia imagem com caption + botao CTA com URL clicavel.
+    Usa /send/menu da Uazapi. Retorna True se sucesso, False se falhou
+    (caller faz fallback pra send_media com URL no texto)."""
+    try:
+        body: dict = {
+            "number": chat_id,
+            "type": "button",
+            "text": caption,
+            "file": image_url,
+            "choices": [
+                {"type": "url", "text": button_text, "url": button_url}
+            ],
+        }
+        if reply_id:
+            body["replyid"] = reply_id
+
+        async with httpx.AsyncClient(timeout=20) as client:
+            r = await client.post(
+                f"{api_url}/send/menu",
+                headers={"token": token, "Content-Type": "application/json"},
+                json=body,
+            )
+            if r.status_code >= 400:
+                logger.warning(f"send_menu (button) HTTP {r.status_code}: {r.text[:200]}")
+                return False
+            return True
+    except Exception as e:
+        logger.warning(f"send_image_with_cta_button falhou: {e}")
+        return False
+
+
 async def send_segment(
     api_url: str, token: str, chat_id: str, segment_type: str, content: str,
     reply_id: str | None = None,

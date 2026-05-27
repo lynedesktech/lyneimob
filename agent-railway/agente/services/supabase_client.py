@@ -250,3 +250,18 @@ async def verificar_mensagem_duplicada(message_id_whatsapp: str) -> bool:
         limit=1,
     )
     return bool(result)
+
+
+async def buscar_mensagem_por_id_whatsapp(message_id_whatsapp: str) -> dict | None:
+    """Busca uma mensagem pelo message_id_whatsapp (usado pra resolver replies/citacoes)."""
+    if not message_id_whatsapp:
+        return None
+    result = await select(
+        "mensagens_whatsapp",
+        columns="id,direcao,conteudo,tipo_conteudo,message_id_whatsapp,criado_em",
+        filters={"message_id_whatsapp": f"eq.{message_id_whatsapp}"},
+        limit=1,
+    )
+    if isinstance(result, list) and result:
+        return result[0]
+    return None
