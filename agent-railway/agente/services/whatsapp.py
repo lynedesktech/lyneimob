@@ -108,9 +108,11 @@ async def send_image_with_cta_button(
     Retorna True se sucesso, False se falhou (caller faz fallback pra
     send_media com URL no texto)."""
     try:
+        # `text` Ã© o cabecalho ANTES do card (separado do texto do card).
+        # Deixar minimo pra nao duplicar info com o caption do card.
         body: dict = {
             "number": chat_id,
-            "text": caption[:60] if len(caption) > 60 else caption,
+            "text": "",
             "carousel": [
                 {
                     "text": caption,
