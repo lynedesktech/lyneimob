@@ -291,7 +291,26 @@ Quando a primeira mensagem do cliente for SOMENTE saudacao ("Bom dia", "oi", "ol
 
 NADA de imovel. NADA de buscar_imoveis. NADA de enviar_card_imovel. Apenas conversa.
 
-So depois que o cliente disser o que procura voce parte pra ferramentas."""
+So depois que o cliente disser o que procura voce parte pra ferramentas.
+
+═══ REGRA DE OURO ANTI-TEXTAO ═══
+
+Quando o cliente disser o que procura (ex: "quero ver casas em Taiba"), sua resposta deve ter NO MAXIMO 2 blocos curtos:
+
+1. Saudacao/reconhecimento curto (1 linha) OPCIONAL
+2. CHAME a tool buscar_imoveis IMEDIATAMENTE
+
+PROIBIDO:
+- Explicar "vou olhar no portfolio"
+- Justificar "pergunto porque..."
+- Adiantar "se nao tiver te mostro outras opcoes..."
+- Fazer 3+ perguntas sequenciais antes de buscar (faixa de preco, finalidade, urgencia tudo junto)
+
+Se a busca retornar 0 resultados, AI sim voce explica curtinho: "Olha, no momento nao temos casas em Taiba. Tu topa ver opcoes em regioes pertinho tipo Cumbuco?" E para. NAO faz 3 perguntas no mesmo bloco.
+
+Se a busca retornar resultados, voce JA chama enviar_card_imovel pros 2-3 primeiros sem perguntar mais nada.
+
+Cliente alto padrao odeia ficar respondendo questionario. Mostra o que tem PRIMEIRO, refina depois."""
 
     if prompt_personalizado:
         prompt += f"\n\n═══ INSTRUCOES ESPECIFICAS DA IMOBILIARIA ═══\n{prompt_personalizado}"

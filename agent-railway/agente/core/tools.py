@@ -342,42 +342,64 @@ async def executar_buscar_imovel_por_identificacao(args: dict, ctx: ToolContext)
 
         return f'Nenhum imovel encontrado com o codigo "{codigo}".'
 
-    # Busca por nome/titulo
+    # Busca por nome/titulo: traz todos da org e filtra local (tolerante a acento/plural)
     if nome:
         result = await db.select(
             "imoveis",
             columns=CAMPOS_IMOVEL_COMPLETO,
-            filters={"organizacao_id": f"eq.{ctx.org_id}", "titulo": f"ilike.*{nome}*"},
-            limit=3,
+            filters={"organizacao_id": f"eq.{ctx.org_id}"},
+            limit=100,
         )
         if not result:
             return f'Nenhum imovel encontrado com o nome "{nome}".'
-        if len(result) == 1:
-            url = await _montar_url_imovel(ctx.org_id, result[0]["id"])
+
+        nome_norm = _normalize(nome)
+        matches = [
+            i for i in result
+            if nome_norm in _normalize(i.get("titulo")) or
+               nome_norm in _normalize(i.get("descricao")) or
+               nome_norm in _normalize(i.get("bairro")) or
+               nome_norm in _normalize(i.get("cidade"))
+        ]
+        if not matches:
+            return f'Nenhum imovel encontrado com o nome "{nome}".'
+        if len(matches) == 1:
+            url = await _montar_url_imovel(ctx.org_id, matches[0]["id"])
             return (
-                f"Imovel encontrado:\n{_formatar_imovel_completo(result[0])}\n"
+                f"Imovel encontrado:\n{_formatar_imovel_completo(matches[0])}\n"
                 f"Link do site: {url}\n\n"
                 "IMPORTANTE: para mandar o card visual (foto + link), "
                 "chame a tool enviar_card_imovel com este ID."
             )
-        linhas = [f"- {i.get('titulo','')} (Cod: {i.get('codigo_interno','?')}) — ID: {i.get('id','')}" for i in result]
-        return f"Encontrei {len(result)} imoveis:\n" + "\n".join(linhas) + "\n\nUse o ID para buscar os detalhes completos."
+        linhas = [f"- {i.get('titulo','')} (Cod: {i.get('codigo_interno','?')}) — ID: {i.get('id','')}" for i in matches[:5]]
+        return f"Encontrei {len(matches)} imoveis:\n" + "\n".join(linhas) + "\n\nUse o ID para buscar os detalhes completos."
 
     return "Informe o nome, codigo ou ID do imovel para buscar."
 
 
+def _normalize(s: str | None) -> str:
+    """Lowercase + remove acentos + remove S no fim (plural simples)."""
+    import unicodedata
+    if not s:
+        return ""
+    txt = unicodedata.normalize("NFD", str(s))
+    txt = "".join(c for c in txt if unicodedata.category(c) != "Mn").lower().strip()
+    # Remove S/ES final (plural simples: "taibas" -> "taiba", "praias" -> "praia")
+    if txt.endswith("s") and len(txt) > 3:
+        txt = txt[:-1]
+    return txt
+
+
 async def executar_buscar_imoveis(args: dict, ctx: ToolContext) -> str:
-    """Busca imoveis no Supabase com filtros."""
+    """Busca imoveis no Supabase. Match local tolerante a acento/plural/case."""
+    # Filtros server-side: so o que e exato (org, status, tipo, quartos).
+    # Bairro/cidade filtramos local pra ser tolerante a acentos e plural.
     filters: dict[str, str] = {
         "organizacao_id": f"eq.{ctx.org_id}",
         "status": "eq.disponivel",
     }
     if args.get("tipo"):
         filters["tipo"] = f"eq.{args['tipo']}"
-    if args.get("cidade"):
-        filters["cidade"] = f"ilike.*{args['cidade']}*"
-    if args.get("bairro"):
-        filters["bairro"] = f"ilike.*{args['bairro']}*"
     if args.get("quartos_min"):
         filters["quartos"] = f"gte.{args['quartos_min']}"
 
@@ -386,14 +408,38 @@ async def executar_buscar_imoveis(args: dict, ctx: ToolContext) -> str:
         columns=CAMPOS_IMOVEL_COMPLETO,
         filters=filters,
         order="created_at.desc",
-        limit=10,
+        limit=50,
     )
 
     if not result:
         return "Nenhum imovel encontrado com esses criterios."
 
-    # Filtros de preco client-side (PostgREST nao suporta OR facilmente)
     imoveis = result
+
+    # Match local de bairro/cidade (tolerante a acento/plural/case).
+    # Tambem aceita match no titulo e logradouro pra cobrir "praia de taiba" no titulo.
+    bairro_q = _normalize(args.get("bairro"))
+    cidade_q = _normalize(args.get("cidade"))
+
+    def casa_localidade(im: dict) -> bool:
+        if not bairro_q and not cidade_q:
+            return True
+        campos = [
+            _normalize(im.get("bairro")),
+            _normalize(im.get("cidade")),
+            _normalize(im.get("logradouro")),
+            _normalize(im.get("titulo")),
+            _normalize(im.get("descricao")),
+        ]
+        if bairro_q and not any(bairro_q in c for c in campos):
+            return False
+        if cidade_q and not any(cidade_q in c for c in campos):
+            return False
+        return True
+
+    imoveis = [i for i in imoveis if casa_localidade(i)]
+
+    # Filtros de preco/finalidade client-side
     if args.get("finalidade"):
         fin = args["finalidade"]
         imoveis = [i for i in imoveis if i.get("finalidade") in (fin, "venda_e_aluguel")]
