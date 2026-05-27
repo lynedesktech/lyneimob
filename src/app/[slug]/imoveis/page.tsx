@@ -70,9 +70,9 @@ export default async function ListagemImoveisPage({
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Imóveis disponíveis</h1>
+    <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl font-bold sm:text-2xl">Imóveis disponíveis</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {total} {total === 1 ? "imóvel encontrado" : "imóveis encontrados"}
         </p>

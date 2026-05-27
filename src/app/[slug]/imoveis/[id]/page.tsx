@@ -139,7 +139,7 @@ export default async function DetalheImovelPage({
   ].filter(Boolean) as { icone: React.ElementType; label: string }[]
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
       {/* Voltar */}
       <Link
         href={`/${slug}/imoveis`}
@@ -149,24 +149,24 @@ export default async function DetalheImovelPage({
         Voltar para imóveis
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
         {/* Coluna principal (2/3) */}
         <div className="lg:col-span-2">
           {/* Galeria */}
           <GaleriaImovel fotos={imovel.imovel_fotos} titulo={titulo} />
 
-          {/* Título e preço */}
+          {/* Título e preço — empilhado em mobile, lado-a-lado em sm+ */}
           <div className="mt-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold">{titulo}</h1>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl font-bold leading-tight sm:text-2xl">{titulo}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Cód. {imovel.codigo_interno}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="sm:text-right">
                 {precoVenda && (
-                  <p className="text-2xl font-bold text-[var(--site-primaria)]">
+                  <p className="text-2xl font-bold leading-tight text-[var(--site-primaria)] sm:text-2xl">
                     {formatarPreco(precoVenda)}
                   </p>
                 )}
@@ -183,9 +183,9 @@ export default async function DetalheImovelPage({
               </div>
             </div>
 
-            {/* Custos adicionais */}
+            {/* Custos adicionais — flex-wrap pra não estourar em mobile */}
             {(imovel.iptu || imovel.condominio) && (
-              <div className="mt-3 flex gap-4 text-sm text-muted-foreground">
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                 {imovel.iptu && <span>IPTU: {formatarPreco(imovel.iptu)}</span>}
                 {imovel.condominio && (
                   <span>Condomínio: {formatarPreco(imovel.condominio)}</span>
@@ -231,9 +231,9 @@ export default async function DetalheImovelPage({
           )}
         </div>
 
-        {/* Sidebar — Contato (1/3) */}
+        {/* Sidebar — Contato (1/3). Sticky so em lg+, em mobile vai no fluxo normal */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 space-y-4 rounded-lg border bg-background p-6">
+          <div className="space-y-4 rounded-lg border bg-background p-5 sm:p-6 lg:sticky lg:top-24">
             <h3 className="text-lg font-semibold">Interessado?</h3>
             <p className="text-sm text-muted-foreground">
               Entre em contato com a {organizacao.nome} para mais informações
