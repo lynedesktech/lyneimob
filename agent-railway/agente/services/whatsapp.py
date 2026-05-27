@@ -101,29 +101,42 @@ async def send_image_with_cta_button(
     button_url: str,
     reply_id: str | None = None,
 ) -> bool:
-    """Envia imagem com caption + botao CTA com URL clicavel.
-    Usa /send/menu da Uazapi. Retorna True se sucesso, False se falhou
-    (caller faz fallback pra send_media com URL no texto)."""
+    """Envia imagem com caption + botao CTA URL clicavel via /send/carousel.
+
+    Pela doc oficial Uazapi, o /send/carousel suporta um array de cards com
+    imagem, texto e botoes estruturados (id=URL, text=label, type=URL).
+    Retorna True se sucesso, False se falhou (caller faz fallback pra
+    send_media com URL no texto)."""
     try:
         body: dict = {
             "number": chat_id,
-            "type": "button",
-            "text": caption,
-            "file": image_url,
-            "choices": [
-                {"type": "url", "text": button_text, "url": button_url}
+            "text": caption[:60] if len(caption) > 60 else caption,
+            "carousel": [
+                {
+                    "text": caption,
+                    "image": image_url,
+                    "buttons": [
+                        {
+                            "id": button_url,
+                            "text": button_text,
+                            "type": "URL",
+                        }
+                    ],
+                }
             ],
         }
         if reply_id:
             body["replyid"] = reply_id
 
-        async with httpx.AsyncClient(timeout=20) as client:
+        async with httpx.AsyncClient(timeout=25) as client:
             r = await client.post(
-                f"{api_url}/send/menu",
+                f"{api_url}/send/carousel",
                 headers={"token": token, "Content-Type": "application/json"},
                 json=body,
             )
-            logger.info(f"[SEND_MENU_BUTTON] HTTP {r.status_code} body_sent={body} resposta={r.text[:300]}")
+            logger.info(
+                f"[SEND_CAROUSEL_BUTTON] HTTP {r.status_code} resposta={r.text[:300]}"
+            )
             if r.status_code >= 400:
                 return False
             return True

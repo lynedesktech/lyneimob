@@ -76,11 +76,6 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
         if not message:
             return None
 
-        # DEBUG TEMPORARIO: log payload completo de TODA mensagem recebida.
-        # Removo depois de descobrir o nome do campo de reply no Uazapi.
-        import json as _json
-        logger.info(f"[WEBHOOK-FULL-DEBUG] body.message keys: {list(message.keys())}")
-        logger.info(f"[WEBHOOK-FULL-DEBUG] payload (4KB): {_json.dumps(message)[:4000]}")
 
         chat_id_raw = message.get("chatid", message.get("chatId", ""))
         chat_id = (
@@ -116,36 +111,11 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
             document_url = media_content.get("URL", "")
 
         # Extrair info de mensagem citada (quando user faz reply).
-        # Uazapi expoe em varios formatos possiveis — tentamos todos defensivamente.
-        quoted_id = ""
+        # Pela doc oficial Uazapi: `message.quoted` eh a string com o ID da
+        # mensagem citada. O conteudo nao vem junto — temos que buscar no banco.
+        raw_quoted = message.get("quoted", "")
+        quoted_id = raw_quoted if isinstance(raw_quoted, str) else ""
         quoted_text = ""
-        ctx = message.get("contextInfo") or message.get("context_info") or {}
-        if isinstance(ctx, dict):
-            quoted_id = ctx.get("stanzaId") or ctx.get("quotedMessageId") or ctx.get("quoted_message_id") or ""
-            qm = ctx.get("quotedMessage") or ctx.get("quoted_message") or {}
-            if isinstance(qm, dict):
-                quoted_text = (
-                    qm.get("text")
-                    or qm.get("caption")
-                    or qm.get("conversation")
-                    or ""
-                )
-                qm_content = qm.get("content")
-                if not quoted_text and isinstance(qm_content, dict):
-                    quoted_text = qm_content.get("text") or qm_content.get("caption") or ""
-                elif not quoted_text and isinstance(qm_content, str):
-                    quoted_text = qm_content
-        # Alguns gateways expoem direto no nivel da message
-        if not quoted_id:
-            quoted_id = message.get("quotedMessageId") or message.get("replyId") or ""
-        if not quoted_text:
-            q = message.get("quotedMessage") or message.get("quoted") or message.get("reply") or {}
-            if isinstance(q, dict):
-                quoted_text = (
-                    q.get("text") or q.get("content") or q.get("caption") or q.get("conversation") or ""
-                )
-                if isinstance(q.get("content"), dict):
-                    quoted_text = q["content"].get("text") or q["content"].get("caption") or ""
 
         return WebhookMessage(
             message_id=message.get("messageid", message.get("messageId", "")),
