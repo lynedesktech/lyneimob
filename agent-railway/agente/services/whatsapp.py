@@ -123,12 +123,12 @@ async def send_image_with_cta_button(
                 headers={"token": token, "Content-Type": "application/json"},
                 json=body,
             )
+            logger.info(f"[SEND_MENU_BUTTON] HTTP {r.status_code} body_sent={body} resposta={r.text[:300]}")
             if r.status_code >= 400:
-                logger.warning(f"send_menu (button) HTTP {r.status_code}: {r.text[:200]}")
                 return False
             return True
     except Exception as e:
-        logger.warning(f"send_image_with_cta_button falhou: {e}")
+        logger.warning(f"send_image_with_cta_button falhou: {e}", exc_info=True)
         return False
 
 

@@ -76,6 +76,13 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
         if not message:
             return None
 
+        # DEBUG: log payload completo apenas pra mensagens que parecem ter reply/quote
+        # (qualquer key contendo 'quot', 'reply', 'context', 'stanza')
+        import json as _json
+        msg_str = _json.dumps(message)[:3000]
+        if any(k in msg_str.lower() for k in ["quot", "reply", "context", "stanza", "participant"]):
+            logger.info(f"[WEBHOOK-REPLY-DEBUG] msg payload (3KB): {msg_str}")
+
         chat_id_raw = message.get("chatid", message.get("chatId", ""))
         chat_id = (
             chat_id_raw.replace("@s.whatsapp.net", "")
