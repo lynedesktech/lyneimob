@@ -658,10 +658,13 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
         return f"Erro: imovel {imovel_id} nao encontrado."
 
     fotos = imovel.get("imovel_fotos") or []
+    fotos_ordenadas = sorted(fotos, key=lambda f: (not f.get("eh_capa"), f.get("ordem", 0)))
     foto_capa = next((f for f in fotos if f.get("eh_capa")), None)
-    if not foto_capa and fotos:
-        # Ordena por 'ordem' e pega a primeira
-        foto_capa = sorted(fotos, key=lambda f: f.get("ordem", 0))[0]
+    if not foto_capa and fotos_ordenadas:
+        foto_capa = fotos_ordenadas[0]
+    # Fotos extras (excluindo a capa) - ate 3 mais
+    extras = [f for f in fotos_ordenadas if foto_capa is None or f.get("url") != foto_capa.get("url")]
+    fotos_extras_urls = [f["url"] for f in extras[:3] if f.get("url")]
 
     url = await _montar_url_imovel(ctx.org_id, imovel_id)
 
@@ -721,16 +724,18 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
     try:
         enviado_como_botao = False
         if foto_capa and foto_capa.get("url"):
-            # Tenta primeiro com botao CTA (URL clicavel mais bonito)
-            enviado_como_botao = await whatsapp.send_image_with_cta_button(
+            # Carrossel: capa com info completa + ate 3 fotos extras
+            enviado_como_botao = await whatsapp.send_property_carousel(
                 ctx.api_url, ctx.token, ctx.numero_cliente,
-                foto_capa["url"], caption_sem_link,
+                cover_image=foto_capa["url"],
+                extra_images=fotos_extras_urls,
+                caption=caption_sem_link,
                 button_text="Ver no site",
                 button_url=url,
                 reply_id=reply_id,
             )
             if not enviado_como_botao:
-                # Fallback: media com URL no texto
+                # Fallback: media simples com URL no texto
                 await whatsapp.send_media(
                     ctx.api_url, ctx.token, ctx.numero_cliente,
                     foto_capa["url"], media_type="image", caption=caption,

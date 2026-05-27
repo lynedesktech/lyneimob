@@ -91,6 +91,66 @@ async def send_media(
         logger.error(f"Erro ao enviar midia ({media_type}): {e}")
 
 
+def _make_card(text: str, image_url: str, button_text: str, button_url: str) -> dict:
+    """Monta 1 card do carrossel: imagem + texto + botao URL clicavel."""
+    return {
+        "text": text,
+        "image": image_url,
+        "buttons": [
+            {"id": button_url, "text": button_text, "type": "URL"},
+        ],
+    }
+
+
+async def send_property_carousel(
+    api_url: str,
+    token: str,
+    chat_id: str,
+    cover_image: str,
+    extra_images: list[str],
+    caption: str,
+    button_text: str,
+    button_url: str,
+    reply_id: str | None = None,
+) -> bool:
+    """Envia carrossel de imovel: capa com info completa + ate 3 fotos extras.
+
+    Cada card no carrossel mostra uma foto + botao 'Ver no site'. A capa tem
+    a descricao completa (preco, quartos, etc); as fotos extras tem caption
+    minima pra nao poluir."""
+    try:
+        cards: list[dict] = [_make_card(caption, cover_image, button_text, button_url)]
+        for idx, img in enumerate(extra_images[:3], start=2):
+            if not img:
+                continue
+            mini_caption = f"📸 Foto {idx} do imovel"
+            cards.append(_make_card(mini_caption, img, button_text, button_url))
+
+        body: dict = {
+            "number": chat_id,
+            "text": "",
+            "carousel": cards,
+        }
+        if reply_id:
+            body["replyid"] = reply_id
+
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(
+                f"{api_url}/send/carousel",
+                headers={"token": token, "Content-Type": "application/json"},
+                json=body,
+            )
+            logger.info(
+                f"[SEND_PROPERTY_CAROUSEL] HTTP {r.status_code} cards={len(cards)} resposta={r.text[:300]}"
+            )
+            if r.status_code >= 400:
+                return False
+            return True
+    except Exception as e:
+        logger.warning(f"send_property_carousel falhou: {e}", exc_info=True)
+        return False
+
+
 async def send_image_with_cta_button(
     api_url: str,
     token: str,
@@ -114,17 +174,7 @@ async def send_image_with_cta_button(
             "number": chat_id,
             "text": "",
             "carousel": [
-                {
-                    "text": caption,
-                    "image": image_url,
-                    "buttons": [
-                        {
-                            "id": button_url,
-                            "text": button_text,
-                            "type": "URL",
-                        }
-                    ],
-                }
+                _make_card(caption, image_url, button_text, button_url),
             ],
         }
         if reply_id:
