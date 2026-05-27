@@ -112,6 +112,7 @@ async def send_property_carousel(
     button_text: str,
     button_url: str,
     reply_id: str | None = None,
+    intro_text: str = "",
 ) -> bool:
     """Envia carrossel de imovel: capa com info completa + ate 3 fotos extras.
 
@@ -128,7 +129,7 @@ async def send_property_carousel(
 
         body: dict = {
             "number": chat_id,
-            "text": "",
+            "text": intro_text or "",
             "carousel": cards,
         }
         if reply_id:
@@ -141,7 +142,7 @@ async def send_property_carousel(
                 json=body,
             )
             logger.info(
-                f"[SEND_PROPERTY_CAROUSEL] HTTP {r.status_code} cards={len(cards)} resposta={r.text[:300]}"
+                f"[SEND_PROPERTY_CAROUSEL] HTTP {r.status_code} cards={len(cards)} intro={bool(intro_text)} resposta={r.text[:300]}"
             )
             if r.status_code >= 400:
                 return False

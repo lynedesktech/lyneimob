@@ -310,6 +310,16 @@ Se a busca retornar 0 resultados, AI sim voce explica curtinho: "Olha, no moment
 
 Se a busca retornar resultados, voce JA chama enviar_card_imovel pros 2-3 primeiros sem perguntar mais nada.
 
+REGRA DE ORDEM (intro_text):
+- Na PRIMEIRA chamada de enviar_card_imovel da sequencia, passe `intro_text` com saudacao + contexto curto (max 200 chars). Ex: "Bom dia, Gabriel! Taiba e uma joia, viu. Separei essas duas opcoes pra ti."
+- Nas chamadas SEGUINTES da MESMA sequencia (segundo/terceiro imovel), `intro_text` DEVE ficar vazio — senao a intro repete.
+- Depois dos cards, sua mensagem de texto FINAL deve ser uma pergunta curta: "Qual te chamou mais atencao?" ou similar.
+
+Ordem final no WhatsApp do cliente:
+1. Saudacao + contexto (vem como `intro_text` ACIMA do primeiro carrossel)
+2. Carrossel(eis) com fotos + dados + botao
+3. Pergunta de follow-up (sua resposta de texto final)
+
 Cliente alto padrao odeia ficar respondendo questionario. Mostra o que tem PRIMEIRO, refina depois."""
 
     if prompt_personalizado:

@@ -61,13 +61,17 @@ TOOLS_DEFINITION: list[dict] = [
     },
     {
         "name": "enviar_card_imovel",
-        "description": "USE SEMPRE QUE RECOMENDAR UM IMOVEL ESPECIFICO. Manda DIRETO via WhatsApp um card visual: foto principal + caption com endereco, preco, quartos/suites/banheiros/vagas, area + link clicavel pro site da Duna. Muito mais bonito que descrever em texto. Pode chamar varias vezes pra mostrar varias opcoes. Depois NAO repita os dados em texto — o cliente ja vai ver no card.",
+        "description": "USE SEMPRE QUE RECOMENDAR UM IMOVEL ESPECIFICO. Manda DIRETO via WhatsApp um carrossel: foto principal + ate 3 fotos extras + caption com endereco, preco, quartos/suites/banheiros/vagas, area + botao 'Ver no site'. Muito mais bonito que descrever em texto. Pode chamar varias vezes pra mostrar varias opcoes. Use intro_text APENAS NA PRIMEIRA chamada da sequencia (a saudacao/contexto que vem ACIMA do carrossel). Nas chamadas seguintes da mesma sequencia, deixe intro_text vazio. Depois NAO repita os dados em texto — o cliente ja ve no card.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "imovel_id": {
                     "type": "string",
                     "description": "ID UUID do imovel (obtido por buscar_imoveis ou buscar_imovel_por_identificacao)",
+                },
+                "intro_text": {
+                    "type": "string",
+                    "description": "Texto que aparece ACIMA do carrossel. Use SO na primeira chamada da sequencia pra dar contexto cearense feminino. Max 200 chars. Ex: 'Bom dia, Gabriel! Taiba e uma joia, viu. Separei essas duas opcoes pra ti.' Nas chamadas seguintes da mesma sequencia, deixe vazio.",
                 },
             },
             "required": ["imovel_id"],
@@ -725,6 +729,7 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
         enviado_como_botao = False
         if foto_capa and foto_capa.get("url"):
             # Carrossel: capa com info completa + ate 3 fotos extras
+            intro = (args.get("intro_text") or "").strip()[:300]
             enviado_como_botao = await whatsapp.send_property_carousel(
                 ctx.api_url, ctx.token, ctx.numero_cliente,
                 cover_image=foto_capa["url"],
@@ -733,6 +738,7 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
                 button_text="Ver no site",
                 button_url=url,
                 reply_id=reply_id,
+                intro_text=intro,
             )
             if not enviado_como_botao:
                 # Fallback: media simples com URL no texto
