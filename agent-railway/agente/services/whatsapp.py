@@ -91,14 +91,31 @@ async def send_media(
         logger.error(f"Erro ao enviar midia ({media_type}): {e}")
 
 
-def _make_card(text: str, image_url: str, button_text: str, button_url: str) -> dict:
-    """Monta 1 card do carrossel: imagem + texto + botao URL clicavel."""
+def _make_card(
+    text: str,
+    image_url: str,
+    button_text: str,
+    button_url: str,
+    interest_reply: str | None = None,
+) -> dict:
+    """Monta 1 card do carrossel.
+
+    botoes:
+    - 'Ver no site': URL clicavel (link do imovel no site publico)
+    - 'Tenho interesse': REPLY (quando clicado, envia o `interest_reply`
+      como mensagem do cliente pro chat — agente responde focada nele).
+    """
+    buttons: list[dict] = [
+        {"id": button_url, "text": button_text, "type": "URL"},
+    ]
+    if interest_reply:
+        buttons.append(
+            {"id": interest_reply, "text": "Tenho interesse", "type": "REPLY"},
+        )
     return {
         "text": text,
         "image": image_url,
-        "buttons": [
-            {"id": button_url, "text": button_text, "type": "URL"},
-        ],
+        "buttons": buttons,
     }
 
 
@@ -111,29 +128,35 @@ async def send_property_carousel(
     caption: str,
     button_text: str,
     button_url: str,
-    reply_id: str | None = None,
+    interest_reply: str | None = None,
     intro_text: str = "",
 ) -> bool:
     """Envia carrossel de imovel: capa com info completa + ate 3 fotos extras.
 
-    Cada card no carrossel mostra uma foto + botao 'Ver no site'. A capa tem
-    a descricao completa (preco, quartos, etc); as fotos extras tem caption
-    minima pra nao poluir."""
+    Cada card no carrossel tem 2 botoes:
+    - 'Ver no site' (URL)
+    - 'Tenho interesse' (REPLY — envia interest_reply pro chat)
+
+    A capa tem a descricao completa (preco, quartos, etc); as fotos extras
+    tem caption minima pra nao poluir. Carrossel NAO usa reply_id pra nao
+    poluir o chat com varias citacoes; o reply fica so na resposta final."""
     try:
-        cards: list[dict] = [_make_card(caption, cover_image, button_text, button_url)]
+        cards: list[dict] = [
+            _make_card(caption, cover_image, button_text, button_url, interest_reply)
+        ]
         for idx, img in enumerate(extra_images[:3], start=2):
             if not img:
                 continue
             mini_caption = f"📸 Foto {idx} do imovel"
-            cards.append(_make_card(mini_caption, img, button_text, button_url))
+            cards.append(
+                _make_card(mini_caption, img, button_text, button_url, interest_reply)
+            )
 
         body: dict = {
             "number": chat_id,
             "text": intro_text or "",
             "carousel": cards,
         }
-        if reply_id:
-            body["replyid"] = reply_id
 
         async with httpx.AsyncClient(timeout=30) as client:
             r = await client.post(

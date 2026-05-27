@@ -728,8 +728,14 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
     try:
         enviado_como_botao = False
         if foto_capa and foto_capa.get("url"):
-            # Carrossel: capa com info completa + ate 3 fotos extras
+            # Carrossel: capa com info completa + ate 3 fotos extras + 2 botoes
             intro = (args.get("intro_text") or "").strip()[:300]
+            codigo = imovel.get("codigo_interno") or imovel_id[:8]
+            titulo_curto = (imovel.get("titulo") or "").split(",")[0][:50]
+            interest_reply = f"Tenho interesse no imovel {codigo}"
+            if titulo_curto:
+                interest_reply = f"Tenho interesse: {titulo_curto} ({codigo})"
+
             enviado_como_botao = await whatsapp.send_property_carousel(
                 ctx.api_url, ctx.token, ctx.numero_cliente,
                 cover_image=foto_capa["url"],
@@ -737,7 +743,7 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
                 caption=caption_sem_link,
                 button_text="Ver no site",
                 button_url=url,
-                reply_id=reply_id,
+                interest_reply=interest_reply,
                 intro_text=intro,
             )
             if not enviado_como_botao:
