@@ -24,17 +24,18 @@ def _get_openai() -> AsyncOpenAI:
 async def gerar_audio_base64(
     texto: str,
     voz: str = "shimmer",
-    modelo: str = "tts-1-hd",
+    modelo: str = "gpt-4o-mini-tts",
 ) -> str | None:
     """Gera audio TTS e retorna em base64 (data URI) pronto pra mandar via Uazapi.
 
-    Vozes femininas OpenAI:
-    - shimmer: suave, calorosa, mais natural pra atendimento (escolhida)
-    - nova: mais energica, jovem
-    - alloy: neutra (poderia passar por feminina ou masculina)
+    Modelo padrao: gpt-4o-mini-tts (modelo mais novo, MUITO melhor em PT-BR
+    que o tts-1/tts-1-hd, e aceita instrucoes de tom via parametro `instructions`).
 
-    Modelo: tts-1 (rapido) ou tts-1-hd (qualidade). HD eh mais natural mas
-    tem custo um pouco maior. Vamos com HD pra impressao premium.
+    Vozes femininas OpenAI:
+    - shimmer: suave, calorosa (escolhida)
+    - nova: mais energica, jovem
+    - alloy: neutra
+    - coral: nova voz expressiva (gpt-4o-mini-tts)
 
     Formato de saida: opus (compativel com PTT do WhatsApp).
     """
@@ -46,13 +47,20 @@ async def gerar_audio_base64(
 
     try:
         client = _get_openai()
-        # response_format=opus eh o melhor pra PTT do WhatsApp
+        instrucoes_tom = (
+            "Voz feminina jovem brasileira, sotaque cearense suave de Fortaleza, "
+            "tom caloroso, acolhedor e proximo, como conversa de WhatsApp. "
+            "Fale natural, com pequenas pausas onde faria sentido na fala. "
+            "NAO seja roboticamente animada. Soe como uma atendente real, "
+            "humana, simpatica e profissional."
+        )
         response = await client.audio.speech.create(
             model=modelo,
             voice=voz,
-            input=texto[:4000],  # OpenAI limita a 4096 chars
+            input=texto[:4000],
             response_format="opus",
             speed=1.0,
+            instructions=instrucoes_tom,
         )
         # response.content eh bytes
         audio_bytes = response.content
