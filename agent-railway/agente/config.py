@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     whisper_model: str = "whisper-1"
     vision_model: str = "gpt-4o-mini"  # fallback, vision migrou pra Claude
 
+    # --- ElevenLabs (TTS premium PT-BR) ---
+    elevenlabs_api_key: str = ""
+    elevenlabs_voice_id: str = "GDzHdQOi6jjf8zaXhCYD"  # Raquel - Expressive PT-BR
+    elevenlabs_model: str = "eleven_multilingual_v2"
+
     # --- Anthropic (Claude) — LLM principal do agente ---
     anthropic_api_key: str = ""
     # Modelo padrao: Sonnet 4.6 — necessario pra conversa natural cearense.

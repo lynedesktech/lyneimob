@@ -1,10 +1,11 @@
-"""Text-to-Speech via OpenAI. Gera audio em formato OGG/opus pra mandar como PTT."""
+"""Text-to-Speech via ElevenLabs (premium PT-BR) com fallback OpenAI."""
 
 from __future__ import annotations
 
 import base64
 import logging
 
+import httpx
 from openai import AsyncOpenAI
 
 from agente.config import settings
@@ -21,52 +22,85 @@ def _get_openai() -> AsyncOpenAI:
     return _openai
 
 
-async def gerar_audio_base64(
-    texto: str,
-    voz: str = "shimmer",
-    modelo: str = "gpt-4o-mini-tts",
-) -> str | None:
-    """Gera audio TTS e retorna em base64 (data URI) pronto pra mandar via Uazapi.
-
-    Modelo padrao: gpt-4o-mini-tts (modelo mais novo, MUITO melhor em PT-BR
-    que o tts-1/tts-1-hd, e aceita instrucoes de tom via parametro `instructions`).
-
-    Vozes femininas OpenAI:
-    - shimmer: suave, calorosa (escolhida)
-    - nova: mais energica, jovem
-    - alloy: neutra
-    - coral: nova voz expressiva (gpt-4o-mini-tts)
-
-    Formato de saida: opus (compativel com PTT do WhatsApp).
-    """
-    if not texto or not texto.strip():
+async def _gerar_via_elevenlabs(texto: str) -> str | None:
+    """Gera audio via ElevenLabs (voz Raquel, multilingual_v2)."""
+    if not settings.elevenlabs_api_key:
         return None
+    try:
+        voice_id = settings.elevenlabs_voice_id
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        # output_format=opus_48000_32 — opus pra WhatsApp PTT
+        params = {"output_format": "opus_48000_32"}
+        headers = {
+            "xi-api-key": settings.elevenlabs_api_key,
+            "Content-Type": "application/json",
+            "Accept": "audio/ogg",
+        }
+        body = {
+            "text": texto,
+            "model_id": settings.elevenlabs_model,
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.75,
+                "style": 0.3,
+                "use_speaker_boost": True,
+            },
+        }
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(url, headers=headers, params=params, json=body)
+            if r.status_code >= 400:
+                logger.warning(
+                    f"[TTS_11L] HTTP {r.status_code} body={r.text[:300]}"
+                )
+                return None
+            audio_bytes = r.content
+            b64 = base64.b64encode(audio_bytes).decode("ascii")
+            return f"data:audio/ogg;base64,{b64}"
+    except Exception as e:
+        logger.error(f"[TTS_11L] falhou: {e}", exc_info=True)
+        return None
+
+
+async def _gerar_via_openai(texto: str) -> str | None:
+    """Fallback: OpenAI gpt-4o-mini-tts."""
     if not settings.openai_api_key:
-        logger.warning("[TTS] OPENAI_API_KEY nao configurada")
         return None
-
     try:
         client = _get_openai()
-        instrucoes_tom = (
-            "Voz feminina jovem brasileira, sotaque cearense suave de Fortaleza, "
-            "tom caloroso, acolhedor e proximo, como conversa de WhatsApp. "
-            "Fale natural, com pequenas pausas onde faria sentido na fala. "
-            "NAO seja roboticamente animada. Soe como uma atendente real, "
-            "humana, simpatica e profissional."
-        )
         response = await client.audio.speech.create(
-            model=modelo,
-            voice=voz,
+            model="gpt-4o-mini-tts",
+            voice="shimmer",
             input=texto[:4000],
             response_format="opus",
             speed=1.0,
-            instructions=instrucoes_tom,
+            instructions=(
+                "Voz feminina jovem brasileira, sotaque cearense suave, "
+                "calorosa e proxima. Soe natural, nao roboticamente animada."
+            ),
         )
-        # response.content eh bytes
-        audio_bytes = response.content
-        b64 = base64.b64encode(audio_bytes).decode("ascii")
-        # Uazapi aceita base64 puro ou data URI; vou usar data URI pra seguranca
+        b64 = base64.b64encode(response.content).decode("ascii")
         return f"data:audio/ogg;base64,{b64}"
     except Exception as e:
-        logger.error(f"[TTS] Erro gerando audio: {e}", exc_info=True)
+        logger.error(f"[TTS_OAI] falhou: {e}", exc_info=True)
         return None
+
+
+async def gerar_audio_base64(texto: str, **_ignored) -> str | None:
+    """Gera audio TTS e retorna data URI base64. Tenta ElevenLabs primeiro,
+    cai pra OpenAI se nao tiver chave ou falhar."""
+    if not texto or not texto.strip():
+        return None
+    texto = texto.strip()
+
+    audio = await _gerar_via_elevenlabs(texto)
+    if audio:
+        logger.info("[TTS] audio gerado via ElevenLabs")
+        return audio
+
+    audio = await _gerar_via_openai(texto)
+    if audio:
+        logger.info("[TTS] audio gerado via OpenAI (fallback)")
+        return audio
+
+    logger.warning("[TTS] nenhum provider configurado")
+    return None
