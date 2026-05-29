@@ -78,20 +78,6 @@ TOOLS_DEFINITION: list[dict] = [
         },
     },
     {
-        "name": "enviar_audio",
-        "description": "Envia uma resposta em AUDIO (mensagem de voz) ao inves de texto. Use quando: (1) o cliente mandou audio pra voce (responde no mesmo formato), (2) for uma explicacao mais pessoal/calorosa (ex: contar do imovel, conversar sobre a Taiba), (3) saudacao inicial calorosa. NAO use pra confirmacoes curtas tipo 'ok' ou pra pergunta de qualificacao seca. Maximo ~500 caracteres pra audio nao ficar muito longo (cliente cansa). NUNCA chame essa tool junto com enviar_card_imovel na mesma resposta — escolha um ou outro.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "texto": {
-                    "type": "string",
-                    "description": "Texto a ser convertido em audio. Maximo 500 chars. Escreva exatamente como deve ser falado (sem markdown, sem emoji, sem `---`). Use 'voce' (NUNCA tu).",
-                },
-            },
-            "required": ["texto"],
-        },
-    },
-    {
         "name": "atualizar_cliente",
         "description": "Atualizar os dados do cliente na plataforma. O cliente ja existe — esta ferramenta preenche o nome e informacoes coletadas.",
         "input_schema": {
