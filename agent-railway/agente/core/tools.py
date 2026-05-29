@@ -78,6 +78,20 @@ TOOLS_DEFINITION: list[dict] = [
         },
     },
     {
+        "name": "enviar_audio",
+        "description": "Envia uma resposta em AUDIO (mensagem de voz) ao inves de texto. Use quando: (1) o cliente mandou audio pra voce (responde no mesmo formato), (2) for uma explicacao mais pessoal/calorosa (ex: contar do imovel, conversar sobre a Taiba), (3) saudacao inicial calorosa. NAO use pra confirmacoes curtas tipo 'ok' ou pra pergunta de qualificacao seca. Maximo ~500 caracteres pra audio nao ficar muito longo (cliente cansa). NUNCA chame essa tool junto com enviar_card_imovel na mesma resposta — escolha um ou outro.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "texto": {
+                    "type": "string",
+                    "description": "Texto a ser convertido em audio. Maximo 500 chars. Escreva exatamente como deve ser falado (sem markdown, sem emoji, sem `---`). Use 'voce' (NUNCA tu).",
+                },
+            },
+            "required": ["texto"],
+        },
+    },
+    {
         "name": "atualizar_cliente",
         "description": "Atualizar os dados do cliente na plataforma. O cliente ja existe — esta ferramenta preenche o nome e informacoes coletadas.",
         "input_schema": {
@@ -780,10 +794,59 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
 # Dispatcher
 # ============================================================
 
+async def executar_enviar_audio(args: dict, ctx: ToolContext) -> str:
+    """Gera audio TTS do texto e envia como mensagem de voz (PTT)."""
+    texto = (args.get("texto") or "").strip()
+    if not texto:
+        return "Erro: texto vazio. Nao enviei audio."
+    # Limitar pra audio nao ficar absurdo
+    texto = texto[:500]
+
+    from agente.services import tts as tts_service
+    from agente.services import whatsapp
+
+    audio_b64 = await tts_service.gerar_audio_base64(texto)
+    if not audio_b64:
+        return "Erro: nao consegui gerar o audio agora. Responda por texto."
+
+    # Buscar reply_id da ultima msg do cliente (efeito reply)
+    ultima = await db.select(
+        "mensagens_whatsapp",
+        columns="message_id_whatsapp",
+        filters={"conversa_id": f"eq.{ctx.conversa_id}", "direcao": "eq.recebida"},
+        order="criado_em.desc",
+        limit=1,
+        single=True,
+    )
+    reply_id = (ultima or {}).get("message_id_whatsapp")
+
+    ok = await whatsapp.send_voice_note(
+        ctx.api_url, ctx.token, ctx.numero_cliente,
+        audio_data=audio_b64,
+        reply_id=reply_id,
+    )
+    if not ok:
+        return "Erro: o WhatsApp recusou o audio. Responda por texto."
+
+    # Registra no banco como mensagem de audio enviada
+    await db.salvar_mensagem(
+        ctx.conversa_id, ctx.org_id, "enviada",
+        f"[audio: {texto[:120]}]",
+        tipo_conteudo="audio",
+    )
+
+    return (
+        "Audio enviado pro cliente com sucesso. NAO repita esse mesmo conteudo "
+        "em texto agora — o cliente acabou de ouvir. Continue a conversa "
+        "normalmente esperando a resposta dele."
+    )
+
+
 _EXECUTORES = {
     "buscar_imovel_por_identificacao": executar_buscar_imovel_por_identificacao,
     "buscar_imoveis": executar_buscar_imoveis,
     "enviar_card_imovel": executar_enviar_card_imovel,
+    "enviar_audio": executar_enviar_audio,
     "atualizar_cliente": executar_atualizar_cliente,
     "atualizar_negocio": executar_atualizar_negocio,
     "criar_atividade": executar_criar_atividade,

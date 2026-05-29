@@ -91,6 +91,39 @@ async def send_media(
         logger.error(f"Erro ao enviar midia ({media_type}): {e}")
 
 
+async def send_voice_note(
+    api_url: str,
+    token: str,
+    chat_id: str,
+    audio_data: str,
+    reply_id: str | None = None,
+) -> bool:
+    """Envia mensagem de voz (PTT) via Uazapi.
+
+    audio_data pode ser URL HTTP ou data URI base64 (data:audio/ogg;base64,...).
+    type=ptt faz aparecer como audio gravado no WhatsApp."""
+    try:
+        body: dict = {
+            "number": chat_id,
+            "type": "ptt",
+            "file": audio_data,
+        }
+        if reply_id:
+            body["replyid"] = reply_id
+
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(
+                f"{api_url}/send/media",
+                headers={"token": token, "Content-Type": "application/json"},
+                json=body,
+            )
+            logger.info(f"[SEND_VOICE_PTT] HTTP {r.status_code} resposta={r.text[:300]}")
+            return r.status_code < 400
+    except Exception as e:
+        logger.error(f"send_voice_note falhou: {e}", exc_info=True)
+        return False
+
+
 def _make_card(
     text: str,
     image_url: str,
