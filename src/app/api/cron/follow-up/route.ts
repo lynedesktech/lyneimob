@@ -57,12 +57,14 @@ export async function GET(request: Request) {
   }
 
   const { redis } = await import("@/lib/redis")
+  const MAX_FOLLOWUPS_POR_CONVERSA = 3
   let enviados = 0
   let pulados = 0
+  let bloqueados_limite = 0
 
   for (const conversa of conversas) {
     try {
-      // Limite: 1 follow-up por conversa por dia
+      // Anti-spam: limite total de follow-ups por conversa (sem resposta do lead = para)
       if (redis) {
         const chaveDia = `followup:${conversa.id}:${new Date().toISOString().slice(0, 10)}`
         const jaEnviado = await redis.get(chaveDia)
@@ -70,8 +72,13 @@ export async function GET(request: Request) {
           pulados++
           continue
         }
-        // TTL ate o fim do dia
-        await redis.set(chaveDia, "1", { ex: 60 * 60 * 24 })
+
+        const chaveContador = `followup:count:${conversa.id}`
+        const totalEnviados = parseInt((await redis.get(chaveContador)) as string || "0", 10)
+        if (totalEnviados >= MAX_FOLLOWUPS_POR_CONVERSA) {
+          bloqueados_limite++
+          continue
+        }
       }
 
       // Buscar ultimas 15 msgs pra contexto + validar que ultima foi da IA
@@ -82,7 +89,16 @@ export async function GET(request: Request) {
         .order("criado_em", { ascending: false })
         .limit(15)
 
-      if (!msgsHistorico || msgsHistorico.length === 0 || msgsHistorico[0].direcao !== "enviada") {
+      if (!msgsHistorico || msgsHistorico.length === 0) {
+        pulados++
+        continue
+      }
+
+      // Se a ultima msg foi do CLIENTE, ele voltou a responder — zera contador de follow-ups
+      if (msgsHistorico[0].direcao !== "enviada") {
+        if (redis) {
+          await redis.del(`followup:count:${conversa.id}`)
+        }
         pulados++
         continue
       }
@@ -122,24 +138,65 @@ export async function GET(request: Request) {
         })
         .join("\n")
 
+      // Buscar follow-ups anteriores enviados nessa conversa pra NAO repetir padrao
+      const { data: followupsAnteriores } = await supabase
+        .from("mensagens_whatsapp")
+        .select("conteudo")
+        .eq("conversa_id", conversa.id)
+        .eq("direcao", "enviada")
+        .order("criado_em", { ascending: false })
+        .limit(5)
+      const ultimosTextos =
+        followupsAnteriores
+          ?.map((m) => (m.conteudo || "").slice(0, 200))
+          .filter(Boolean) || []
+
+      // Angulos rotativos pra variar follow-up — escolha pseudoaleatoria por dia + conversa
+      const ANGULOS = [
+        "Comente brevemente algo positivo sobre a Praia da Taiba ou Caucaia que combine com o perfil dele, e termine com pergunta leve sobre preferencia (regiao, tipo).",
+        "Pergunta direta e leve sobre o que ele esta priorizando agora (regiao, valor, tipo de imovel) — sem pressao.",
+        "Comentario curto reconhecendo que decisao de imovel leva tempo, oferecendo ajuda pra esclarecer duvida especifica.",
+        "Provocacao gentil de curiosidade: mencione que tem opcao nova/interessante e pergunte se ele quer dar uma olhada.",
+        "Pergunta sobre prazo/momento dele (esta procurando pra agora, pros proximos meses?) — ajuda a calibrar.",
+        "Comentario humano sobre a regiao (clima, valorizacao, ou momento do mercado) puxando opiniao dele.",
+        "Retomada simples do ultimo assunto da conversa (cite algo especifico que foi mencionado).",
+        "Mensagem curta de presenca: mostra que voce esta disponivel sem cobrar resposta. Pergunta opcional no fim.",
+      ]
+      // Hash determinista do conversa.id + dia pra escolher angulo (evita repetir mesmo angulo no mesmo dia)
+      const hoje = new Date().toISOString().slice(0, 10)
+      const semente = `${conversa.id}-${hoje}`
+      let hash = 0
+      for (let i = 0; i < semente.length; i++) {
+        hash = (hash * 31 + semente.charCodeAt(i)) | 0
+      }
+      const anguloEscolhido = ANGULOS[Math.abs(hash) % ANGULOS.length]
+
       // Gerar mensagem de re-engajamento contextual com Claude Haiku
       let mensagem = ""
       try {
         const { getAnthropic } = await import("@/lib/anthropic")
-        const sys = `Voce e ${nomeAgente}, atendente humana cearense da imobiliaria ${nomeOrg}.
-Mulher, calorosa, fala "tu" e "voce" misturando, usa expressoes como "olha so", "show", "belezinha", "tô aqui pra te ajudar".
+        const sys = `Voce e ${nomeAgente}, atendente humana da imobiliaria ${nomeOrg}, mulher cearense de Fortaleza, calorosa e profissional.
 
-Sua tarefa AGORA: gerar uma UNICA mensagem curta e natural pra re-engajar o cliente que parou de responder ha algumas horas.
+REGRA DE TRATAMENTO INEGOCIAVEL: SEMPRE use "voce". NUNCA "tu", "ti", "teu", "tua". Cliente alto padrao da ${nomeOrg} espera respeito.
 
-Regras:
-- Maximo 2 linhas curtas no WhatsApp. Nao escreva textao.
-- Retome o assunto que voces estavam conversando (use o historico abaixo).
-- NUNCA force venda. So puxa conversa, mostra interesse genuino.
-- ${nomeCliente ? `Use o nome "${nomeCliente}" UMA vez se fizer sentido natural.` : "Nao use nome, voce ainda nao sabe."}
-- NUNCA comece com "Claro!", "Otimo!", "Perfeito!".
-- Nao fale "vi que paramos", "notei que voce nao respondeu", "estava aqui pensando em voce". Soa esquisito.
-- Tente puxar uma resposta facil: pergunta curta ou comentario que convide a responder.
-- Variar formato: as vezes pergunta, as vezes comentario, as vezes ambos.
+Sua tarefa AGORA: gerar UMA UNICA mensagem de re-engajamento (follow-up) pra cliente que parou de responder ha algumas horas.
+
+ANGULO DESSA MENSAGEM (siga ele): ${anguloEscolhido}
+
+Regras de escrita:
+- Maximo 2 linhas curtas estilo WhatsApp. Sem textao.
+- ${nomeCliente ? `Pode usar o nome "${nomeCliente}" no inicio se ficar natural — NAO obrigatorio.` : "Nao use nome, voce ainda nao sabe."}
+- NUNCA comece com "Claro!", "Otimo!", "Perfeito!", "Olha so" (esses ja foram usados).
+- NUNCA escreva "vi que paramos", "notei que voce sumiu", "estava pensando em voce", "passei pra saber" — soam falsas.
+- NUNCA force venda. Conversa genuina, nao cobranca.
+- Sem emojis (cliente alto padrao acha esquisito).
+- Sem travessao (—). Use ponto ou virgula.
+
+CRITICO — EVITAR REPETICAO:
+Voce JA mandou essas mensagens recentes nessa conversa. NAO repita expressoes, aberturas nem estrutura delas:
+${ultimosTextos.length > 0 ? ultimosTextos.map((t, i) => `${i + 1}. "${t}"`).join("\n") : "(nenhuma mensagem anterior registrada)"}
+
+Se a ultima mensagem ja foi um follow-up, varia COMPLETAMENTE: aborde outro angulo, use outras palavras, mude o tom.
 
 Responda APENAS com o texto da mensagem. Sem prefixo, sem aspas, sem markdown.`
 
@@ -147,7 +204,7 @@ Responda APENAS com o texto da mensagem. Sem prefixo, sem aspas, sem markdown.`
 
 ${historico}
 
-Gere agora uma mensagem curta de re-engajamento.`
+Gere agora a mensagem de re-engajamento seguindo o angulo definido. Lembre: SEMPRE "voce", nunca repetir as mensagens anteriores listadas.`
 
         const resposta = await getAnthropic().messages.create({
           model: "claude-haiku-4-5",
@@ -166,10 +223,18 @@ Gere agora uma mensagem curta de re-engajamento.`
         )
       }
 
-      // Fallback se a IA falhou
+      // Fallback se a IA falhou: pool de variacoes (escolhido pelo hash do dia+conversa)
       if (!mensagem) {
-        const sauda = nomeCliente ? `Oi ${nomeCliente}` : "Oi"
-        mensagem = `${sauda}, tudo certo por ai? Tô aqui se precisar de mais alguma coisa.`
+        const nomePrefix = nomeCliente ? `${nomeCliente}, ` : ""
+        const FALLBACKS = [
+          `${nomePrefix}consegui pensar em algumas opcoes que podem combinar com voce. Quer dar uma olhada?`,
+          `${nomeCliente ? `Oi ${nomeCliente}!` : "Oi!"} Como esta o seu dia? Posso te ajudar com algo nesse momento?`,
+          `${nomePrefix}lembrei de voce hoje. Continua interessado em conhecer opcoes na Taiba ou Caucaia?`,
+          `${nomePrefix}fica a vontade pra retomar quando puder. Estou por aqui se quiser tirar alguma duvida.`,
+          `${nomeCliente ? `${nomeCliente}, ` : ""}qual seria o melhor momento pra gente conversar sobre o imovel?`,
+          `${nomePrefix}voce ja teve a chance de pensar no que falamos? Posso te ajudar a destrinchar alguma parte?`,
+        ]
+        mensagem = FALLBACKS[Math.abs(hash) % FALLBACKS.length]
       }
 
       const { enviarHumanizado } = await import("@/lib/whatsapp/humanizar")
@@ -191,6 +256,15 @@ Gere agora uma mensagem curta de re-engajamento.`
         .update({ ultima_mensagem_em: new Date().toISOString() })
         .eq("id", conversa.id)
 
+      // Registrar envio: trava do dia + incrementar contador total
+      if (redis) {
+        const chaveDia = `followup:${conversa.id}:${new Date().toISOString().slice(0, 10)}`
+        await redis.set(chaveDia, "1", { ex: 60 * 60 * 24 })
+        const chaveContador = `followup:count:${conversa.id}`
+        await redis.incr(chaveContador)
+        await redis.expire(chaveContador, 60 * 60 * 24 * 60) // 60 dias
+      }
+
       enviados++
       console.log(
         `[Follow-up] Enviado para ${conversa.numero_cliente} (org ${conversa.organizacao_id}, conversa ${conversa.id})`
@@ -207,6 +281,7 @@ Gere agora uma mensagem curta de re-engajamento.`
     status: "ok",
     enviados,
     pulados,
+    bloqueados_limite,
     total_avaliadas: conversas.length,
   })
 }
