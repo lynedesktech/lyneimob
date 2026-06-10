@@ -4,18 +4,28 @@ import type { ConfigWhatsapp } from "@/types/whatsapp"
 
 // ============================================================
 // LYNEDES-103 Sprint 2 — Follow-up automatico
-// Cron a cada 1h durante horario comercial (Vercel)
+// Cron rodado seg/qua/sex nas "golden hours" do Angelo (Duna):
+//   - Almoco: 12h-13h30 BRT
+//   - Inicio da noite: 18h-20h BRT
+// Schedule no vercel.json: "0 12,13,18,19 * * 1,3,5"
 // Busca conversas em_andamento/qualificado com ultima msg do lead > 2h
 // Gera follow-up contextual via IA
-// Limite: 1 follow-up por conversa por dia (flag Redis)
+// Limite total: 6 follow-ups por conversa (cobre ~2 semanas de cadencia 3x/sem)
 // NAO faz follow-up em "encaminhado" (corretor assume)
 // ============================================================
 
 export const maxDuration = 60
 
 const HORAS_SEM_RESPOSTA = 2
-const HORA_INICIO = 8 // horario comercial (-3 BRT)
-const HORA_FIM = 18
+// Janelas validas em horario de Sao Paulo (-3 BRT)
+// Defesa em profundidade: o cron Vercel ja agenda nesses horarios,
+// mas se for chamado fora deles (manual, teste), ignora.
+const JANELAS_VALIDAS = [
+  { inicio: 12, fim: 14 }, // 12h-13h59 -> golden hour do almoco
+  { inicio: 18, fim: 20 }, // 18h-19h59 -> golden hour da noite
+]
+// Dias da semana validos (0=domingo, 1=segunda, ..., 6=sabado)
+const DIAS_VALIDOS = [1, 3, 5] // seg, qua, sex
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization")
@@ -25,15 +35,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ erro: "Nao autorizado" }, { status: 401 })
   }
 
-  // Limitar ao horario comercial (-3 BRT)
-  const horaBR = new Date().toLocaleString("en-US", {
-    timeZone: "America/Sao_Paulo",
-    hour: "2-digit",
-    hour12: false,
-  })
-  const horaAtual = parseInt(horaBR, 10)
-  if (horaAtual < HORA_INICIO || horaAtual >= HORA_FIM) {
-    return NextResponse.json({ status: "fora_horario", hora: horaAtual })
+  // Defesa em profundidade: validar dia da semana + janela horaria (golden hours)
+  const agoraBR = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+  )
+  const diaSemana = agoraBR.getDay()
+  const horaAtual = agoraBR.getHours()
+  if (!DIAS_VALIDOS.includes(diaSemana)) {
+    return NextResponse.json({ status: "fora_dia", dia_semana: diaSemana })
+  }
+  const dentroJanela = JANELAS_VALIDAS.some(
+    (j) => horaAtual >= j.inicio && horaAtual < j.fim
+  )
+  if (!dentroJanela) {
+    return NextResponse.json({ status: "fora_janela", hora: horaAtual })
   }
 
   const supabase = criarClienteAdmin()
@@ -57,7 +72,8 @@ export async function GET(request: Request) {
   }
 
   const { redis } = await import("@/lib/redis")
-  const MAX_FOLLOWUPS_POR_CONVERSA = 3
+  // 6 = ~2 semanas de cadencia 3x/semana antes de desistir do lead
+  const MAX_FOLLOWUPS_POR_CONVERSA = 6
   let enviados = 0
   let pulados = 0
   let bloqueados_limite = 0
@@ -151,16 +167,22 @@ export async function GET(request: Request) {
           ?.map((m) => (m.conteudo || "").slice(0, 200))
           .filter(Boolean) || []
 
-      // Angulos rotativos pra variar follow-up — escolha pseudoaleatoria por dia + conversa
+      // Angulos rotativos pra variar follow-up (12 opcoes) — escolha pseudoaleatoria por dia + conversa
+      // Angelo (Duna) pediu: continuar de onde parou + estimular o cliente (visita, info nova)
+      // NUNCA usar variacoes de "to aqui se precisar" — soa robotico e repetitivo.
       const ANGULOS = [
-        "Comente brevemente algo positivo sobre a Praia da Taiba ou Caucaia que combine com o perfil dele, e termine com pergunta leve sobre preferencia (regiao, tipo).",
-        "Pergunta direta e leve sobre o que ele esta priorizando agora (regiao, valor, tipo de imovel) — sem pressao.",
-        "Comentario curto reconhecendo que decisao de imovel leva tempo, oferecendo ajuda pra esclarecer duvida especifica.",
-        "Provocacao gentil de curiosidade: mencione que tem opcao nova/interessante e pergunte se ele quer dar uma olhada.",
-        "Pergunta sobre prazo/momento dele (esta procurando pra agora, pros proximos meses?) — ajuda a calibrar.",
-        "Comentario humano sobre a regiao (clima, valorizacao, ou momento do mercado) puxando opiniao dele.",
-        "Retomada simples do ultimo assunto da conversa (cite algo especifico que foi mencionado).",
-        "Mensagem curta de presenca: mostra que voce esta disponivel sem cobrar resposta. Pergunta opcional no fim.",
+        "RETOMADA: cite algo ESPECIFICO da ultima troca (um imovel mencionado, uma duvida levantada, uma preferencia falada) e pergunte se ele teve chance de pensar.",
+        "ESTIMULO POR VISITA: convide pra visitar fisicamente o imovel ou regiao. Ex: 'Quer que eu organize uma visita pra voce conhecer pessoalmente?'",
+        "ESTIMULO POR INFO NOVA: traga uma curiosidade ou dado novo da regiao/mercado que possa interessar (sem inventar valor especifico). Ex: 'Apareceu uma novidade aqui que talvez te interesse...'",
+        "ENTENDIMENTO DA DOR: pergunta inteligente sobre o motivo da busca (necessidade, emocao, investimento, mudanca de vida) — sem soar entrevista.",
+        "PERGUNTA DE PRIORIDADE: o que esta pesando mais agora na decisao (valor? regiao? prazo? metragem?).",
+        "ABERTURA DE DUVIDA: se algum ponto ficou nebuloso, oferece esclarecer especificamente. Ex: 'Ficou alguma duvida sobre [topico mencionado antes]?'",
+        "PROVOCACAO DE CURIOSIDADE: insinue que tem opcao que combina com o perfil dele, sem entregar tudo. Ex: 'Tem uma opcao aqui que me lembrou voce, posso te mostrar?'",
+        "PERGUNTA DE PRAZO: 'Voce esta pensando em decidir nos proximos 30 dias, ou ainda esta na fase de comparar?' — calibra urgencia.",
+        "PERGUNTA SOBRE ESTILO DE VIDA: o que ele faz, como vive — pra calibrar a oferta. Ex: 'Esse imovel seria pra morar, veranear, ou investir?'",
+        "COMENTARIO DE AUTORIDADE LEVE: traga uma observacao de quem conhece a regiao a fundo. Ex: 'Pra quem busca tranquilidade, a Taiba tem um aspecto que poucos lugares conseguem manter...'",
+        "COMENTARIO DE OPORTUNIDADE: comente sobre o momento do mercado de forma genuina, sem ser apelativo. Ex: 'O mercado da Taiba esta numa fase interessante de valorizacao consistente.'",
+        "CONVITE PRA CONTINUAR: pergunte se ele quer continuar a conversa por aqui ou prefere agendar uma ligacao/call pra falar com mais calma.",
       ]
       // Hash determinista do conversa.id + dia pra escolher angulo (evita repetir mesmo angulo no mesmo dia)
       const hoje = new Date().toISOString().slice(0, 10)
@@ -175,28 +197,46 @@ export async function GET(request: Request) {
       let mensagem = ""
       try {
         const { getAnthropic } = await import("@/lib/anthropic")
-        const sys = `Voce e ${nomeAgente}, atendente humana da imobiliaria ${nomeOrg}, mulher cearense de Fortaleza, calorosa e profissional.
+        const sys = `Voce e ${nomeAgente}, atendente humana da imobiliaria ${nomeOrg}, mulher cearense de Fortaleza, calorosa e profissional, especialista na Praia da Taiba e em Caucaia.
 
-REGRA DE TRATAMENTO INEGOCIAVEL: SEMPRE use "voce". NUNCA "tu", "ti", "teu", "tua". Cliente alto padrao da ${nomeOrg} espera respeito.
+REGRA DE TRATAMENTO INEGOCIAVEL: SEMPRE use "voce". NUNCA "tu", "ti", "teu", "tua", "contigo". Cliente alto padrao da ${nomeOrg} espera tratamento respeitoso.
 
 Sua tarefa AGORA: gerar UMA UNICA mensagem de re-engajamento (follow-up) pra cliente que parou de responder ha algumas horas.
 
-ANGULO DESSA MENSAGEM (siga ele): ${anguloEscolhido}
+ANGULO OBRIGATORIO DESSA MENSAGEM (siga rigorosamente): ${anguloEscolhido}
+
+FILOSOFIA DA DUNA (orientacao do dono):
+- Antes de empurrar imovel, ENTENDER o cliente: motivo (dor, necessidade ou emocao), estilo de vida, localizacao atual, perfil.
+- A compra de imovel quase sempre tem uma historia por tras. Demonstre interesse genuino nessa historia.
+- Mostre autoridade leve (quem conhece a regiao) sem ser arrogante. Nunca soe como vendedora aflita.
 
 Regras de escrita:
 - Maximo 2 linhas curtas estilo WhatsApp. Sem textao.
 - ${nomeCliente ? `Pode usar o nome "${nomeCliente}" no inicio se ficar natural — NAO obrigatorio.` : "Nao use nome, voce ainda nao sabe."}
-- NUNCA comece com "Claro!", "Otimo!", "Perfeito!", "Olha so" (esses ja foram usados).
-- NUNCA escreva "vi que paramos", "notei que voce sumiu", "estava pensando em voce", "passei pra saber" — soam falsas.
-- NUNCA force venda. Conversa genuina, nao cobranca.
 - Sem emojis (cliente alto padrao acha esquisito).
 - Sem travessao (—). Use ponto ou virgula.
+- Sem markdown, sem negrito.
 
-CRITICO — EVITAR REPETICAO:
-Voce JA mandou essas mensagens recentes nessa conversa. NAO repita expressoes, aberturas nem estrutura delas:
+⛔ FRASES E ABERTURAS PROIBIDAS (banidas pelo dono da imobiliaria):
+- "To aqui se precisar"
+- "Estou aqui se precisar"
+- "Estou disponivel"
+- "Fica a vontade pra retomar"
+- "Tudo certo por ai?"
+- "Como esta o seu dia?"
+- "Lembrei de voce"
+- "Passei pra saber"
+- "Vi que paramos"
+- "Notei que voce nao respondeu"
+- "Estava pensando em voce"
+- Comecos com "Claro!", "Otimo!", "Perfeito!", "Olha so"
+NAO use NENHUMA dessas. Sao consideradas robotizadas e repetitivas pela imobiliaria.
+
+CRITICO — NAO REPETIR PADRAO DAS ULTIMAS MENSAGENS:
+Voce JA mandou essas mensagens recentes nessa conversa:
 ${ultimosTextos.length > 0 ? ultimosTextos.map((t, i) => `${i + 1}. "${t}"`).join("\n") : "(nenhuma mensagem anterior registrada)"}
 
-Se a ultima mensagem ja foi um follow-up, varia COMPLETAMENTE: aborde outro angulo, use outras palavras, mude o tom.
+NUNCA repita expressoes, aberturas, estrutura, nem mencione assuntos que ja foram cobertos da mesma forma. Varia COMPLETAMENTE.
 
 Responda APENAS com o texto da mensagem. Sem prefixo, sem aspas, sem markdown.`
 
@@ -224,15 +264,19 @@ Gere agora a mensagem de re-engajamento seguindo o angulo definido. Lembre: SEMP
       }
 
       // Fallback se a IA falhou: pool de variacoes (escolhido pelo hash do dia+conversa)
+      // ATENCAO: NENHUMA dessas frases pode conter "to aqui se precisar", "como esta o seu dia",
+      // "lembrei de voce", "fica a vontade". Todas banidas pelo dono da imobiliaria.
       if (!mensagem) {
         const nomePrefix = nomeCliente ? `${nomeCliente}, ` : ""
         const FALLBACKS = [
-          `${nomePrefix}consegui pensar em algumas opcoes que podem combinar com voce. Quer dar uma olhada?`,
-          `${nomeCliente ? `Oi ${nomeCliente}!` : "Oi!"} Como esta o seu dia? Posso te ajudar com algo nesse momento?`,
-          `${nomePrefix}lembrei de voce hoje. Continua interessado em conhecer opcoes na Taiba ou Caucaia?`,
-          `${nomePrefix}fica a vontade pra retomar quando puder. Estou por aqui se quiser tirar alguma duvida.`,
-          `${nomeCliente ? `${nomeCliente}, ` : ""}qual seria o melhor momento pra gente conversar sobre o imovel?`,
-          `${nomePrefix}voce ja teve a chance de pensar no que falamos? Posso te ajudar a destrinchar alguma parte?`,
+          `${nomePrefix}pensei numa duvida que vale a pena explorar: o que esta pesando mais na sua decisao agora, a regiao ou o valor?`,
+          `${nomeCliente ? `${nomeCliente}, ` : ""}entre as opcoes que conversamos, alguma fez mais sentido com o que voce procura?`,
+          `${nomePrefix}voce ja teve a chance de pensar no que falamos? Posso te ajudar a destrinchar algum ponto especifico.`,
+          `${nomePrefix}essa decisao costuma envolver bastante reflexao. Tem algum aspecto que voce gostaria de aprofundar antes de decidir?`,
+          `${nomePrefix}quer que eu organize uma visita pra voce conhecer o imovel pessoalmente? As vezes ver no local muda tudo.`,
+          `${nomeCliente ? `${nomeCliente}, ` : ""}me conta uma coisa: voce esta pensando mais em moradia, veraneio ou investimento? Isso ajuda a refinar as opcoes.`,
+          `${nomePrefix}qual seria o melhor momento pra gente conversar com mais calma sobre as opcoes que combinam com voce?`,
+          `${nomePrefix}tem alguma novidade da regiao que talvez te interesse. Quer que eu compartilhe?`,
         ]
         mensagem = FALLBACKS[Math.abs(hash) % FALLBACKS.length]
       }

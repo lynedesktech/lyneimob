@@ -350,8 +350,17 @@ async def run_agent(
         messages.append({"role": "user", "content": tool_results})
 
     if not resposta_final:
-        logger.warning(f"[AGENT] Resposta final vazia para conversa {conversa_id}")
-        resposta_final = "Vou verificar com a equipe e te retorno em breve!"
+        # Se a Claude ja enviou conteudo via tools de side-effect (audio/card),
+        # nao tem nada pra enviar como texto — silencio eh correto.
+        tools_de_envio = {"enviar_audio", "enviar_card_imovel"}
+        if any(t in tools_de_envio for t in tool_summary):
+            logger.info(
+                f"[AGENT] Resposta texto vazia mas tools de envio ja despacharam: {tool_summary}"
+            )
+            resposta_final = ""
+        else:
+            logger.warning(f"[AGENT] Resposta final vazia para conversa {conversa_id}")
+            resposta_final = "Me da so um segundinho, ja te respondo."
 
     # 12. Salvar memoria
     user_msgs = [
