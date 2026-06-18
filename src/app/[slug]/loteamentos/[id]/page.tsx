@@ -9,6 +9,7 @@ import {
 import { GaleriaImovel } from "@/components/site/galeria-imovel"
 import { CardLoteamentoPublico } from "@/components/site/card-loteamento-publico"
 import { formatarTelefone } from "@/lib/formatadores"
+import { normalizarTelefoneWhatsApp } from "@/lib/whatsapp/normalizar-telefone"
 import { TabelaLotesPublico } from "@/components/site/tabela-lotes-publico"
 import { ResumoLotesPublico } from "@/components/site/resumo-lotes-publico"
 import { AnimacaoScroll } from "@/components/site/animacao-scroll"
@@ -80,7 +81,9 @@ export default async function DetalheLoteamentoPage({
       : null
 
   // Link do WhatsApp com mensagem pré-preenchida
-  const whatsappNumero = organizacao.whatsapp_numero?.replace(/\D/g, "")
+  const whatsappNumero = organizacao.whatsapp_numero
+    ? normalizarTelefoneWhatsApp(organizacao.whatsapp_numero)
+    : undefined
   const whatsappMensagem = encodeURIComponent(
     `Olá! Tenho interesse no loteamento "${loteamento.nome}". Podemos conversar?`
   )
@@ -113,9 +116,9 @@ export default async function DetalheLoteamentoPage({
         Voltar para loteamentos
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Coluna principal (2/3) */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           {/* Galeria */}
           <GaleriaImovel fotos={fotosGaleria} titulo={loteamento.nome} />
 
@@ -161,7 +164,7 @@ export default async function DetalheLoteamentoPage({
           {descricao && (
             <div className="mt-6">
               <h2 className="mb-3 text-lg font-semibold">Sobre o loteamento</h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              <p className="whitespace-pre-line break-words text-sm leading-relaxed text-muted-foreground">
                 {descricao}
               </p>
             </div>
@@ -183,7 +186,7 @@ export default async function DetalheLoteamentoPage({
         </div>
 
         {/* Sidebar — Contato (1/3) */}
-        <div className="lg:col-span-1">
+        <div className="min-w-0 lg:col-span-1">
           <div className="sticky top-24 space-y-4 rounded-lg border bg-background p-6">
             <h3 className="text-lg font-semibold">Interessado?</h3>
             <p className="text-sm text-muted-foreground">

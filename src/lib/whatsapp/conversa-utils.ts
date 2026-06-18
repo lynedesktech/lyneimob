@@ -7,26 +7,9 @@ import { criarClienteAdmin } from "@/lib/supabase/admin"
 
 type SupabaseAdmin = ReturnType<typeof criarClienteAdmin>
 
-/**
- * Normaliza telefone para formato WhatsApp: apenas dígitos com DDI 55
- * Ex: "(11) 99999-9999" → "5511999999999"
- */
-export function normalizarTelefoneWhatsApp(telefone: string): string {
-  // Remove tudo que não é dígito
-  let limpo = telefone.replace(/\D/g, "")
-
-  // Remove zero à esquerda (0xx)
-  if (limpo.startsWith("0")) {
-    limpo = limpo.substring(1)
-  }
-
-  // Adiciona DDI 55 se não tem
-  if (!limpo.startsWith("55")) {
-    limpo = "55" + limpo
-  }
-
-  return limpo
-}
+// Re-exporta a normalização (módulo puro, sem dependência de servidor) —
+// mantém compatibilidade com quem importa normalizarTelefoneWhatsApp daqui.
+export { normalizarTelefoneWhatsApp } from "./normalizar-telefone"
 
 /**
  * Busca conversa existente ou cria uma nova.

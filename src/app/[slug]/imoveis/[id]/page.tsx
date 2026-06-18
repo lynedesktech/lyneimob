@@ -9,6 +9,7 @@ import {
 import { GaleriaImovel } from "@/components/site/galeria-imovel"
 import { CardImovelPublico } from "@/components/site/card-imovel-publico"
 import { formatarTelefone } from "@/lib/formatadores"
+import { normalizarTelefoneWhatsApp } from "@/lib/whatsapp/normalizar-telefone"
 import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import {
   MapPin,
@@ -88,7 +89,9 @@ export default async function DetalheImovelPage({
   const precoAluguel = imovel.valor_aluguel
 
   // Link do WhatsApp com mensagem pré-preenchida
-  const whatsappNumero = organizacao.whatsapp_numero?.replace(/\D/g, "")
+  const whatsappNumero = organizacao.whatsapp_numero
+    ? normalizarTelefoneWhatsApp(organizacao.whatsapp_numero)
+    : undefined
   const whatsappMensagem = encodeURIComponent(
     `Olá! Tenho interesse no imóvel "${titulo}" (Cód. ${imovel.codigo_interno}). Podemos conversar?`
   )
@@ -149,9 +152,9 @@ export default async function DetalheImovelPage({
         Voltar para imóveis
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         {/* Coluna principal (2/3) */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           {/* Galeria */}
           <GaleriaImovel fotos={imovel.imovel_fotos} titulo={titulo} />
 
@@ -224,7 +227,7 @@ export default async function DetalheImovelPage({
           {descricao && (
             <div className="mt-6">
               <h2 className="mb-3 text-lg font-semibold">Descrição</h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+              <p className="whitespace-pre-line break-words text-sm leading-relaxed text-muted-foreground">
                 {descricao}
               </p>
             </div>
@@ -232,7 +235,7 @@ export default async function DetalheImovelPage({
         </div>
 
         {/* Sidebar — Contato (1/3). Sticky so em lg+, em mobile vai no fluxo normal */}
-        <div className="lg:col-span-1">
+        <div className="min-w-0 lg:col-span-1">
           <div className="space-y-4 rounded-lg border bg-background p-5 sm:p-6 lg:sticky lg:top-24">
             <h3 className="text-lg font-semibold">Interessado?</h3>
             <p className="text-sm text-muted-foreground">
