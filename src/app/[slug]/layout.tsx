@@ -89,7 +89,7 @@ export default async function SiteLayout({
           organizacao={organizacao}
           temLoteamentos={totalLoteamentos > 0}
         />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 overflow-x-clip">{children}</main>
         <FooterSite organizacao={organizacao} />
         {organizacao.whatsapp_numero && (
           <BotaoWhatsappFlutuante

@@ -3,6 +3,7 @@ import { buscarOrganizacaoPorSlug } from "@/lib/site/buscar-dados-site"
 import { FormularioContato } from "@/components/site/formulario-contato"
 import { Phone, Mail, MapPin, MessageCircle, Clock } from "lucide-react"
 import { formatarTelefone } from "@/lib/formatadores"
+import { normalizarTelefoneWhatsApp } from "@/lib/whatsapp/normalizar-telefone"
 import { AnimacaoScroll } from "@/components/site/animacao-scroll"
 import type { Metadata } from "next"
 
@@ -60,7 +61,9 @@ export default async function ContatoPage({
         .join(", ")
     : null
 
-  const whatsappNumero = organizacao.whatsapp_numero?.replace(/\D/g, "")
+  const whatsappNumero = organizacao.whatsapp_numero
+    ? normalizarTelefoneWhatsApp(organizacao.whatsapp_numero)
+    : undefined
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -71,7 +74,7 @@ export default async function ContatoPage({
         </p>
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-5">
         {/* Formulário (3/5) */}
         <AnimacaoScroll className="lg:col-span-3" direcao="left">
           <div className="rounded-lg border bg-background p-6 sm:p-8">

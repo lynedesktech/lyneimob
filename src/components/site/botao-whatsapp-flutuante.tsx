@@ -1,6 +1,7 @@
 "use client"
 
 import { MessageCircle } from "lucide-react"
+import { normalizarTelefoneWhatsApp } from "@/lib/whatsapp/normalizar-telefone"
 
 type Props = {
   whatsappNumero: string
@@ -8,7 +9,7 @@ type Props = {
 }
 
 export function BotaoWhatsappFlutuante({ whatsappNumero, nomeEmpresa }: Props) {
-  const numero = whatsappNumero.replace(/\D/g, "")
+  const numero = normalizarTelefoneWhatsApp(whatsappNumero)
   const url = `https://wa.me/${numero}?text=${encodeURIComponent(
     `Olá! Estou visitando o site da ${nomeEmpresa} e gostaria de mais informações.`
   )}`
