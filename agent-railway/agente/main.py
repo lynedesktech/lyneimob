@@ -117,6 +117,52 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
         quoted_id = raw_quoted if isinstance(raw_quoted, str) else ""
         quoted_text = ""
 
+        # Click-to-WhatsApp Ad context (Meta/Instagram/Facebook):
+        # Lead vindo de anuncio chega com metadata do anuncio. Os fields podem
+        # estar em varios caminhos dependendo da versao da Uazapi/Baileys:
+        #   - message.contextInfo.externalAdReply (Baileys padrao)
+        #   - message.advertising
+        #   - message.ad / message.adReply
+        #   - body.message.externalAdReply (fora do node 'message')
+        ad_info = {}
+        ctx_info = message.get("contextInfo") or message.get("context") or {}
+        if isinstance(ctx_info, dict):
+            ad_info = ctx_info.get("externalAdReply") or ctx_info.get("external_ad_reply") or {}
+        if not ad_info:
+            ad_info = (
+                message.get("externalAdReply")
+                or message.get("external_ad_reply")
+                or message.get("advertising")
+                or message.get("adReply")
+                or message.get("ad")
+                or {}
+            )
+        if not isinstance(ad_info, dict):
+            ad_info = {}
+        ad_title = (ad_info.get("title") or ad_info.get("headline") or "").strip()
+        ad_body = (ad_info.get("body") or ad_info.get("description") or "").strip()
+        ad_source_id = (
+            ad_info.get("sourceId")
+            or ad_info.get("source_id")
+            or ad_info.get("ctwaClid")
+            or ad_info.get("ctwa_clid")
+            or ""
+        )
+        ad_source_url = (
+            ad_info.get("sourceUrl") or ad_info.get("source_url") or ad_info.get("url") or ""
+        )
+        ad_source_type = (
+            ad_info.get("sourceType") or ad_info.get("source_type") or ""
+        )
+        ad_media_type = (
+            ad_info.get("mediaType") or ad_info.get("media_type") or ""
+        )
+        if ad_title or ad_source_id:
+            logger.info(
+                f"[AD_CONTEXT] Lead de anuncio Meta — title='{ad_title[:80]}' "
+                f"source_id='{str(ad_source_id)[:40]}' source_type='{ad_source_type}'"
+            )
+
         return WebhookMessage(
             message_id=message.get("messageid", message.get("messageId", "")),
             message_id_full=message.get("id", ""),
@@ -134,6 +180,12 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
             message_type=message.get("messageType", ""),
             quoted_message_id=quoted_id or "",
             quoted_content=(quoted_text or "").strip()[:500],
+            ad_title=ad_title[:300],
+            ad_body=ad_body[:500],
+            ad_source_id=str(ad_source_id)[:200],
+            ad_source_url=str(ad_source_url)[:500],
+            ad_source_type=str(ad_source_type)[:50],
+            ad_media_type=str(ad_media_type)[:50],
         )
     except Exception as e:
         logger.error(f"Erro ao parsear webhook: {e}")
@@ -411,6 +463,35 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         token=token,
         message_id_full=msg.message_id_full,
     )
+
+    # 7a. Se a mensagem veio de um anuncio Meta (Click-to-WhatsApp Ad),
+    # prefixar o conteudo com o contexto do anuncio E salvar origem_lead na conversa.
+    # Isso faz a agente reconhecer lead-quente e ja focar no imovel anunciado.
+    if msg.ad_title or msg.ad_source_id:
+        ctx_anuncio = (
+            f"[CONTEXTO DO ANUNCIO META que trouxe o cliente aqui]\n"
+            f"Titulo: \"{msg.ad_title}\"\n"
+        )
+        if msg.ad_body:
+            ctx_anuncio += f"Descricao: \"{msg.ad_body}\"\n"
+        if msg.ad_source_type:
+            ctx_anuncio += f"Tipo: {msg.ad_source_type}\n"
+        ctx_anuncio += (
+            "[INSTRUCAO PARA VOCE]: o cliente CLICOU nesse anuncio e veio falar com voce. "
+            "Ele JA TEM interesse no empreendimento mencionado no titulo. NAO peca codigo do imovel. "
+            "NAO trate como lead frio. Reconheca o interesse, confirme o empreendimento pelo nome, "
+            "e ja parta pra apresentar detalhes ou marcar visita.\n\n"
+        )
+        processed_content = ctx_anuncio + processed_content
+
+        # Marca a conversa como vinda de anuncio (so se for nova, pra nao sobrescrever)
+        if is_nova:
+            try:
+                await db.atualizar_conversa(conversa_id, {
+                    "origem_lead": "anuncio_meta",
+                })
+            except Exception as e:
+                logger.warning(f"[AD_CONTEXT] Nao foi possivel salvar origem_lead: {e}")
 
     # 7b. Se for um reply citando mensagem anterior, prefixar o conteudo
     # com a citacao pra que o agente entenda do que o cliente esta falando.

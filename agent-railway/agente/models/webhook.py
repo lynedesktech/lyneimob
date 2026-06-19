@@ -24,3 +24,11 @@ class WebhookMessage(BaseModel):
     # Reply / citacao: quando user responde citando outra mensagem
     quoted_message_id: str = ""
     quoted_content: str = ""
+    # Click-to-WhatsApp Ad (Meta/Instagram/Facebook)
+    # Quando a primeira mensagem vem de um anuncio, esses campos sao preenchidos
+    ad_title: str = ""           # Ex: "Condominio Guaruja em Caucaia/CE"
+    ad_body: str = ""            # Corpo do anuncio
+    ad_source_id: str = ""       # ID do anuncio na Meta
+    ad_source_url: str = ""      # URL do anuncio
+    ad_source_type: str = ""     # "ad", "post"
+    ad_media_type: str = ""      # image/video
