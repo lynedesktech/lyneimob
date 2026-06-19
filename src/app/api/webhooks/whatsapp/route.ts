@@ -271,14 +271,16 @@ export async function POST(request: Request) {
 function detectarConteudo(msg: {
   type?: string
   text?: string
-  content?: string
+  content?: string | { [x: string]: unknown }
   mediaType?: string
 }): {
   tipo: TipoConteudo
   conteudo: string | null
 } {
   const tipo = (msg.type || "").toLowerCase()
-  const texto = msg.text || msg.content || null
+  // content pode vir como objeto (mídia); só aproveitamos quando for texto
+  const conteudoTexto = typeof msg.content === "string" ? msg.content : null
+  const texto = msg.text || conteudoTexto || null
 
   if (tipo === "text" || tipo === "conversation") return { tipo: "texto", conteudo: texto }
   if (tipo === "audio" || tipo === "audiomessage" || tipo === "ptt") return { tipo: "audio", conteudo: null }
