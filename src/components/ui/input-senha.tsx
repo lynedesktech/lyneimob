@@ -4,8 +4,7 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
 
-interface InputSenhaProps
-  extends Omit<React.ComponentProps<typeof Input>, "type"> {}
+type InputSenhaProps = Omit<React.ComponentProps<typeof Input>, "type">
 
 export function InputSenha(props: InputSenhaProps) {
   const [visivel, setVisivel] = useState(false)

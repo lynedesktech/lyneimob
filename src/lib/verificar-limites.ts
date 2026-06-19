@@ -26,19 +26,21 @@ export async function verificarTrialAtivo(): Promise<ResultadoLimite> {
   return LIBERADO
 }
 
-export async function verificarLimiteImoveis(): Promise<ResultadoLimite> {
+// O parametro _organizacaoId e aceito (e ignorado) so pra manter compatibilidade
+// com os callsites herdados da fase SaaS. Em modo produto unico tudo libera.
+export async function verificarLimiteImoveis(_organizacaoId?: string): Promise<ResultadoLimite> {
   return LIBERADO
 }
 
-export async function verificarLimiteCorretores(): Promise<ResultadoLimite> {
+export async function verificarLimiteCorretores(_organizacaoId?: string): Promise<ResultadoLimite> {
   return LIBERADO
 }
 
-export async function verificarLimiteLoteamentos(): Promise<ResultadoLimite> {
+export async function verificarLimiteLoteamentos(_organizacaoId?: string): Promise<ResultadoLimite> {
   return LIBERADO
 }
 
-export async function verificarLimiteConversasIA(): Promise<ResultadoLimite> {
+export async function verificarLimiteConversasIA(_organizacaoId?: string): Promise<ResultadoLimite> {
   return LIBERADO
 }
 

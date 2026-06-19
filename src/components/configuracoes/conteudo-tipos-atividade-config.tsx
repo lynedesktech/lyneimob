@@ -256,7 +256,7 @@ function DialogExcluirTipo({
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
           Tem certeza que quer excluir o tipo{" "}
-          <strong className="text-foreground">"{tipo.nome}"</strong>?
+          <strong className="text-foreground">&quot;{tipo.nome}&quot;</strong>?
           Não é possível excluir se houver atividades usando este tipo.
         </p>
         <DialogFooter>

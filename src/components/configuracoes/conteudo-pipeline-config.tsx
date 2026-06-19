@@ -281,7 +281,7 @@ function DialogExcluirEtapa({
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
           Tem certeza que quer excluir a etapa{" "}
-          <strong className="text-foreground">"{etapa.nome}"</strong>?
+          <strong className="text-foreground">&quot;{etapa.nome}&quot;</strong>?
           Negócios em aberto nessa etapa impedem a exclusão.
         </p>
         <DialogFooter>

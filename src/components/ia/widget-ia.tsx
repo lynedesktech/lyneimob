@@ -65,9 +65,6 @@ export function WidgetIA() {
   const [resultado, setResultado] = useState<string | null>(null)
   const [executando, setExecutando] = useState(false)
 
-  // Não renderizar em rotas ocultas
-  if (deveOcultarWidget(pathname)) return null
-
   // Determinar ações disponíveis
   const acoes = entidade
     ? obterAcoesVisiveis(entidade.modulo, entidade.dados)
@@ -133,6 +130,10 @@ export function WidgetIA() {
     },
     [entidade]
   )
+
+  // Não renderizar em rotas ocultas — depois dos hooks, pra respeitar as
+  // regras do React (hooks sempre na mesma ordem, sem return antes deles).
+  if (deveOcultarWidget(pathname)) return null
 
   return (
     <>

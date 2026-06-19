@@ -1,12 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Liberacao temporaria — projeto tem erros pre-existentes de lint/types
-  // herdados da fase SaaS. Vamos limpar gradualmente, mas sem bloquear
-  // deploy do produto unico Duna.
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // typescript.ignoreBuildErrors mantido como rede de seguranca do deploy.
+  // (No Next 16 a opcao "eslint" da config foi removida — o build nao roda
+  // mais ESLint; o lint roda separado no CI via "npm run lint".)
   typescript: {
     ignoreBuildErrors: true,
   },

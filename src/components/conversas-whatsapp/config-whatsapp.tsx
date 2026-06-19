@@ -185,7 +185,7 @@ export function ConfigWhatsapp() {
               onChange={(e) => setNomeAgente(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Como o agente se apresenta nas conversas. Deixe em branco para usar "Assistente [Nome da Imobiliária]".
+              Como o agente se apresenta nas conversas. Deixe em branco para usar &quot;Assistente [Nome da Imobiliária]&quot;.
             </p>
           </div>
 

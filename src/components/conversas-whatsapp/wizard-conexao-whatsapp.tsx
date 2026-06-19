@@ -136,7 +136,7 @@ function Etapa1Credenciais({ onAvancar }: { onAvancar: () => void }) {
             required
           />
           <p className="text-xs text-muted-foreground">
-            Encontre no painel da Uazapi, em "Configurações" ou "API"
+            Encontre no painel da Uazapi, em &quot;Configurações&quot; ou &quot;API&quot;
           </p>
         </div>
 

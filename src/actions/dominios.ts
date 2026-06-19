@@ -146,6 +146,9 @@ export async function verificarDns(
     return { erro: "Nenhum domínio configurado. Salve um domínio primeiro." }
   }
 
+  // Captura o id num const pra usar dentro da closure marcarVerificado
+  // (o TypeScript nao preserva a checagem de null dentro de funcoes aninhadas)
+  const dominioId = dominio.id
   const hostnameApp = obterHostnameApp()
   // IPs da Vercel pra apex domain (CNAME no raiz eh proibido pelo DNS,
   // por isso apex usa A pra um IP fixo do Vercel)
@@ -158,7 +161,7 @@ export async function verificarDns(
         status: "verificado",
         verificado_em: new Date().toISOString(),
       })
-      .eq("id", dominio.id)
+      .eq("id", dominioId)
     revalidatePath("/configuracoes/meu-site")
     return { sucesso: "DNS verificado com sucesso! Seu domínio está ativo." }
   }
