@@ -74,7 +74,7 @@ export default async function SobrePage({
                     />
                     <h2 className="text-xl font-bold">Nossa História</h2>
                   </div>
-                  <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
+                  <p className="whitespace-pre-line break-words text-muted-foreground leading-relaxed">
                     {sobre.historia}
                   </p>
                 </section>
@@ -96,7 +96,7 @@ export default async function SobrePage({
                         </div>
                         <h3 className="font-semibold">Missão</h3>
                       </div>
-                      <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
+                      <p className="whitespace-pre-line break-words text-sm text-muted-foreground leading-relaxed">
                         {sobre.missao}
                       </p>
                     </div>
@@ -113,7 +113,7 @@ export default async function SobrePage({
                         </div>
                         <h3 className="font-semibold">Visão</h3>
                       </div>
-                      <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
+                      <p className="whitespace-pre-line break-words text-sm text-muted-foreground leading-relaxed">
                         {sobre.visao}
                       </p>
                     </div>
@@ -130,7 +130,7 @@ export default async function SobrePage({
                         </div>
                         <h3 className="font-semibold">Valores</h3>
                       </div>
-                      <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
+                      <p className="whitespace-pre-line break-words text-sm text-muted-foreground leading-relaxed">
                         {sobre.valores}
                       </p>
                     </div>

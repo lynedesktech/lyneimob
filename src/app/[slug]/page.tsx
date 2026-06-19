@@ -144,7 +144,7 @@ export default async function HomePage({
               </h2>
 
               {configs.sobre.historia ? (
-                <p className="mt-4 whitespace-pre-line text-muted-foreground leading-relaxed">
+                <p className="mt-4 whitespace-pre-line break-words text-muted-foreground leading-relaxed">
                   {configs.sobre.historia}
                 </p>
               ) : (
