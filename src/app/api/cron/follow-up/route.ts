@@ -4,10 +4,13 @@ import type { ConfigWhatsapp } from "@/types/whatsapp"
 
 // ============================================================
 // LYNEDES-103 Sprint 2 — Follow-up automatico
-// Cron rodado seg/qua/sex nas "golden hours" do Angelo (Duna):
-//   - Almoco: 12h-13h30 BRT
-//   - Inicio da noite: 18h-20h BRT
-// Schedule no vercel.json: "0 12,13,18,19 * * 1,3,5"
+// Cron rodado seg/qua/sex nas "golden hours" da Duna:
+//   - Almoco: 12h-13h59 BRT
+//   - Inicio da noite: 18h-19h59 BRT
+// IMPORTANTE: os crons da Vercel rodam em UTC. Por isso o schedule no
+// vercel.json esta em UTC ("0 15,16,21,22 * * 1,3,5"), que corresponde a
+// 12h, 13h, 18h e 19h em Brasilia (UTC-3). A validacao JANELAS_VALIDAS
+// abaixo confere o horario ja convertido pra Sao Paulo.
 // Busca conversas em_andamento/qualificado com ultima msg do lead > 2h
 // Gera follow-up contextual via IA
 // Limite total: 6 follow-ups por conversa (cobre ~2 semanas de cadencia 3x/sem)
@@ -51,6 +54,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ status: "fora_janela", hora: horaAtual })
   }
 
+  // Respeita o desligamento global da IA (mesmo gate do agente ao vivo).
+  // Se a IA esta desligada, nao envia follow-up de jeito nenhum.
+  const { isIAGlobalEnabled, isContactBlocked } = await import("@/lib/whatsapp/ia-toggle")
+  if (!(await isIAGlobalEnabled())) {
+    return NextResponse.json({ status: "ia_desativada" })
+  }
+
   const supabase = criarClienteAdmin()
   const limiteIso = new Date(Date.now() - HORAS_SEM_RESPOSTA * 60 * 60 * 1000).toISOString()
 
@@ -80,6 +90,13 @@ export async function GET(request: Request) {
 
   for (const conversa of conversas) {
     try {
+      // Pula contatos onde um humano assumiu manualmente (bloqueio de 30 dias).
+      // Evita a IA mandar follow-up por cima do corretor.
+      if (await isContactBlocked(conversa.numero_cliente, conversa.organizacao_id)) {
+        pulados++
+        continue
+      }
+
       // Anti-spam: limite total de follow-ups por conversa (sem resposta do lead = para)
       if (redis) {
         const chaveDia = `followup:${conversa.id}:${new Date().toISOString().slice(0, 10)}`
