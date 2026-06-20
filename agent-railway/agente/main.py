@@ -23,6 +23,8 @@ from agente.core.agent import run_agent
 from agente.models.webhook import WebhookMessage
 from agente.services import redis_client
 from agente.services import supabase_client as db
+from agente.services.alerter import enviar_alerta as alerter_enviar
+from agente.services.analyzer import analisar_resposta
 from agente.services.media import process_media
 from agente.services.rate_limiter import rate_limiter
 from agente.services.whatsapp import mark_as_read
@@ -228,6 +230,59 @@ async def identificar_org(msg: WebhookMessage) -> dict | None:
     return None
 
 
+# ─────────────────── Analisador de qualidade ───────────────────
+
+
+async def _analisar_e_alertar(
+    conversa_id: str,
+    org_id: str,
+    chat_id: str,
+    api_url: str,
+    token: str,
+    full_response: str,
+) -> None:
+    """Analisa qualidade da resposta da agente e dispara alerta pra Gabriel
+    quando detecta violacoes (uso de 'tu', cidade fora do portfolio, frases
+    banidas, etc). Roda em background — qualquer erro nao impacta o usuario."""
+    try:
+        conversa = await db.select(
+            "conversas_whatsapp",
+            columns="origem_lead,imovel_interesse_id",
+            filters={"id": f"eq.{conversa_id}"},
+            single=True,
+        ) or {}
+
+        violacoes = analisar_resposta(
+            full_response,
+            contexto={
+                "origem_lead": conversa.get("origem_lead"),
+                "imovel_interesse_id": conversa.get("imovel_interesse_id"),
+            },
+        )
+        if not violacoes:
+            return
+
+        org = await db.select(
+            "organizacoes",
+            columns="nome",
+            filters={"id": f"eq.{org_id}"},
+            single=True,
+        ) or {}
+        org_nome = org.get("nome") or "Imobiliaria"
+
+        await alerter_enviar(
+            api_url=api_url,
+            token=token,
+            conversa_id=conversa_id,
+            org_nome=org_nome,
+            numero_cliente=chat_id,
+            mensagem_agente=full_response,
+            violacoes=violacoes,
+        )
+    except Exception as e:
+        logger.warning(f"[ANALYZER] Falha analisando resposta {conversa_id[:8]}: {e}")
+
+
 # ─────────────────── Processamento ───────────────────
 
 
@@ -305,6 +360,19 @@ async def process_buffered_messages(
             await db.atualizar_conversa(conversa_id, {
                 "ultima_mensagem_em": datetime.now(timezone.utc).isoformat(),
             })
+
+            # Analisar qualidade da resposta e alertar Gabriel se necessario.
+            # Roda em background pra nao atrasar o proximo passo do agente.
+            asyncio.create_task(
+                _analisar_e_alertar(
+                    conversa_id=conversa_id,
+                    org_id=org_id,
+                    chat_id=chat_id,
+                    api_url=api_url,
+                    token=token,
+                    full_response=full_response,
+                )
+            )
 
         finally:
             await redis_client.release_lock(lock_key)
