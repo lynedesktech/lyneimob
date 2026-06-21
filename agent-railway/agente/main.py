@@ -443,6 +443,34 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
     except Exception:
         return JSONResponse({"status": "invalid_json"}, status_code=400)
 
+    # DEBUG temporario: loga payload bruto pra inspecionar contexto de
+    # Click-to-WhatsApp Ad. Se aparecer no log, sabemos onde Uazapi entrega.
+    try:
+        import json as _json
+        msg_obj = body.get("message") or {}
+        if isinstance(msg_obj, dict):
+            # Procura qualquer chave que tenha "ad" ou "context" no nome
+            chaves_suspeitas = [
+                k for k in msg_obj.keys()
+                if "ad" in k.lower() or "context" in k.lower() or "referral" in k.lower()
+            ]
+            if chaves_suspeitas:
+                logger.info(
+                    f"[WEBHOOK_RAW_AD] chaves={chaves_suspeitas} "
+                    f"valores={_json.dumps({k: msg_obj.get(k) for k in chaves_suspeitas}, ensure_ascii=False)[:1500]}"
+                )
+            # Tambem loga payload completo na primeira mensagem (chat ainda nao salvo)
+            content_str = msg_obj.get("content", "")
+            if isinstance(content_str, dict):
+                content_str = content_str.get("text", "")
+            content_str = str(content_str)[:80].lower()
+            if any(s in content_str for s in ["interesse", "informaç", "informac", "saber"]):
+                logger.info(
+                    f"[WEBHOOK_RAW_FULL] payload={_json.dumps(msg_obj, ensure_ascii=False)[:2500]}"
+                )
+    except Exception:
+        pass
+
     msg = parse_webhook(body)
     if not msg:
         return JSONResponse({"status": "ignored"})
