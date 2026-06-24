@@ -175,11 +175,13 @@ export async function processarComAgente(
     const systemPrompt = montarPromptSdr(configTyped, nomeOrganizacao)
 
     // Montar contexto da conversa para a IA
-    // O nome só é incluído quando o cliente foi formalmente registrado no sistema
-    // (cliente_id existe), evitando usar o nome do perfil do WhatsApp que pode ser qualquer coisa
-    const nomeCliente = conversa.nome_cliente || null
+    // O pushName do WhatsApp pode ser QUALQUER coisa ("Deus", emoji, nome de empresa).
+    // Sanitizamos pra um primeiro nome plausível; se não for, o nome NÃO entra no contexto
+    // e o agente trata como desconhecido (pergunta "com quem tenho o prazer de falar?").
+    const { extrairPrimeiroNomeValido } = await import("./nome-contato")
+    const nomeCliente = extrairPrimeiroNomeValido(conversa.nome_cliente)
     const jaRespondeu = mensagensOrdenadas.some((m) => m.direcao === "enviada")
-    const nomeVerificado = conversa.cliente_id && nomeCliente ? `\n- Nome do cliente: ${nomeCliente}` : ""
+    const nomeVerificado = nomeCliente ? `\n- Nome do cliente: ${nomeCliente}` : ""
 
     // Detectar reativação: já respondemos antes, mas última mensagem foi há mais de 24h
     const agora = new Date()
@@ -258,16 +260,21 @@ export async function processarComAgente(
           : i.valor_aluguel
             ? `R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
             : "preço sob consulta"
-        contextoExtra += `\n\nDETALHES COMPLETOS DO IMÓVEL DE INTERESSE:
-- ID: ${i.id}
-- Título: ${i.titulo}
-- Código interno: ${i.codigo_interno || "sem código"}
-- Tipo: ${i.tipo} | Finalidade: ${i.finalidade}
-- Endereço: ${[i.logradouro, i.numero, i.bairro, i.cidade, i.estado].filter(Boolean).join(", ")}
-- Preço: ${preco}${i.valor_condominio ? ` | Condomínio: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}/mês` : ""}${i.valor_iptu ? ` | IPTU: R$ ${Number(i.valor_iptu).toLocaleString("pt-BR")}/ano` : ""}
-- Quartos: ${i.quartos || 0} | Suítes: ${i.suites || 0} | Banheiros: ${i.banheiros || 0} | Vagas: ${i.vagas || 0}
-- Área total: ${i.area_total ? `${i.area_total}m²` : "não informada"} | Área construída: ${i.area_construida ? `${i.area_construida}m²` : "não informada"}${i.descricao ? `\n- Descrição: ${i.descricao}` : ""}
-Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cliente sobre ele sem precisar chamar ferramentas.`
+        const { linhasComodosFicha } = await import("./formatador-imovel")
+        const partesFicha = [
+          `- ID: ${i.id}`,
+          `- Título: ${i.titulo}`,
+          i.codigo_interno ? `- Código interno: ${i.codigo_interno}` : null,
+          `- Tipo: ${i.tipo} | Finalidade: ${i.finalidade}`,
+          `- Endereço: ${[i.logradouro, i.numero, i.bairro, i.cidade, i.estado].filter(Boolean).join(", ")}`,
+          `- Preço: ${preco}${i.valor_condominio ? ` | Condomínio: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}/mês` : ""}${i.valor_iptu ? ` | IPTU: R$ ${Number(i.valor_iptu).toLocaleString("pt-BR")}/ano` : ""}`,
+          // Cômodos só quando > 0 e NUNCA para terreno/lote (fonte única — formatador-imovel.ts)
+          ...linhasComodosFicha(i).map((l) => `- ${l}`),
+          i.area_total ? `- Área total: ${i.area_total}m²` : null,
+          i.area_construida ? `- Área construída: ${i.area_construida}m²` : null,
+          i.descricao ? `- Descrição: ${i.descricao}` : null,
+        ].filter(Boolean)
+        contextoExtra += `\n\nDETALHES COMPLETOS DO IMÓVEL DE INTERESSE:\n${partesFicha.join("\n")}\nVocê tem TODAS as informações deste imóvel. Responda qualquer pergunta do cliente sobre ele sem precisar chamar ferramentas.`
       }
     }
 
@@ -362,6 +369,9 @@ Você tem TODAS as informações deste imóvel. Responda qualquer pergunta do cl
       const resposta = await anthropic.messages.create({
         model: modelo,
         max_tokens: 1024,
+        // Temperatura moderada-baixa: respostas factuais (preço, área, imóvel) ficam
+        // mais consistentes e o agente improvisa menos "resposta aleatória".
+        temperature: 0.5,
         system: systemPrompt + contextoExtra,
         tools: definicaoToolsSdr,
         messages,
