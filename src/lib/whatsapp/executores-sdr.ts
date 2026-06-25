@@ -1,4 +1,5 @@
 import { obterProximoCorretor } from "@/lib/distribuicao-leads"
+import { linhasComodosCard, linhasComodosFicha, comodosCompacto } from "./formatador-imovel"
 
 // ============================================================
 // Executores dos tools do agente SDR
@@ -66,16 +67,14 @@ function formatarImovelCompleto(i: Record<string, unknown>): string {
     `Finalidade: ${i.finalidade}`,
     `Status: ${i.status}`,
     `Endereço: ${[i.logradouro, i.numero, i.bairro, i.cidade, i.estado].filter(Boolean).join(", ")}`,
-    `CEP: ${i.cep || "não informado"}`,
+    i.cep ? `CEP: ${i.cep}` : null,
     `Preço: ${preco}`,
     i.valor_condominio ? `Condomínio: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}/mês` : null,
     i.valor_iptu ? `IPTU: R$ ${Number(i.valor_iptu).toLocaleString("pt-BR")}/ano` : null,
-    `Quartos: ${i.quartos || 0}`,
-    `Suítes: ${i.suites || 0}`,
-    `Banheiros: ${i.banheiros || 0}`,
-    `Vagas: ${i.vagas || 0}`,
-    `Área total: ${i.area_total ? `${i.area_total}m²` : "não informada"}`,
-    `Área construída: ${i.area_construida ? `${i.area_construida}m²` : "não informada"}`,
+    // Cômodos só aparecem quando > 0 (e nunca para terreno/lote) — ver formatador-imovel.ts
+    ...linhasComodosFicha(i),
+    i.area_total ? `Área total: ${i.area_total}m²` : null,
+    i.area_construida ? `Área construída: ${i.area_construida}m²` : null,
     i.descricao ? `Descrição: ${i.descricao}` : null,
   ]
   return partes.filter(Boolean).join("\n")
@@ -244,9 +243,23 @@ export async function executarBuscarImoveis(
         ? `Aluguel: R$ ${Number(i.valor_aluguel).toLocaleString("pt-BR")}/mês`
         : "Preço sob consulta"
     const url = await montarUrlImovel(contexto.organizacaoId, i.id as string)
-    linhas.push(
-      `- [${i.id}] ${i.titulo} (Cód: ${i.codigo_interno || "?"}) | ${i.tipo} | ${i.bairro || ""}, ${i.cidade}-${i.estado} | ${preco} | ${i.quartos || 0}q/${i.suites || 0}s/${i.banheiros || 0}b/${i.vagas || 0}v | ${i.area_total || "?"}m² total, ${i.area_construida || "?"}m² constr.${i.valor_condominio ? ` | Cond: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}` : ""} | ${url}`
-    )
+    // Monta a linha por partes, omitindo cômodos/áreas vazias (terreno não vira "0q/0s/0b/0v")
+    const comodos = comodosCompacto(i)
+    const areas = [
+      i.area_total ? `${i.area_total}m² total` : null,
+      i.area_construida ? `${i.area_construida}m² constr.` : null,
+    ].filter(Boolean).join(", ")
+    const partes = [
+      `[${i.id}] ${i.titulo} (Cód: ${i.codigo_interno || "?"})`,
+      String(i.tipo),
+      [i.bairro, `${i.cidade}-${i.estado}`].filter(Boolean).join(", "),
+      preco,
+      comodos || null,
+      areas || null,
+      i.valor_condominio ? `Cond: R$ ${Number(i.valor_condominio).toLocaleString("pt-BR")}` : null,
+      String(url),
+    ].filter(Boolean)
+    linhas.push(`- ${partes.join(" | ")}`)
   }
 
   return `Encontrei ${imoveis.length} imóvel(is):\n${linhas.join("\n")}\n\nIMPORTANTE: pra mandar um card visual rico (foto + botão "Visitar no site") de QUALQUER um destes imóveis, chame a tool enviar_card_imovel com o ID.`
@@ -658,17 +671,22 @@ export async function executarEnviarCardImovel(
     .filter(Boolean)
     .join(", ")
 
-  const caption = `🏡 *${imovel.titulo}*
-📍 ${enderecoLinha}
-${preco}
+  // Detalhes condicionais: terreno/lote NÃO mostra quarto/banheiro/vaga,
+  // e qualquer campo zerado some (ver formatador-imovel.ts)
+  const linhasDetalhe = linhasComodosCard(imovel)
+  if (imovel.area_total) linhasDetalhe.push(`📐 ${imovel.area_total}m² totais`)
 
-🛏 ${imovel.quartos || 0} quarto(s) ${imovel.suites ? `(${imovel.suites} suíte)` : ""}
-🚿 ${imovel.banheiros || 0} banheiro(s)
-🚗 ${imovel.vagas || 0} vaga(s)
-📐 ${imovel.area_total ? `${imovel.area_total}m² totais` : "área sob consulta"}
+  const partesCaption = [
+    `🏡 *${imovel.titulo}*`,
+    `📍 ${enderecoLinha}`,
+    preco,
+  ]
+  if (linhasDetalhe.length > 0) {
+    partesCaption.push("", ...linhasDetalhe)
+  }
+  partesCaption.push("", "🔗 Veja mais fotos e detalhes:", url)
 
-🔗 Veja mais fotos e detalhes:
-${url}`
+  const caption = partesCaption.join("\n")
 
   // Buscar última mensagem recebida pra citar (efeito reply do WhatsApp)
   const { data: ultimaMsg } = await supabase

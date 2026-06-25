@@ -4,6 +4,7 @@ import { schemaPayloadUazapi } from "@/types/whatsapp"
 import type { TipoConteudo, ConfigWhatsapp } from "@/types/whatsapp"
 import { extrairNumero, ehGrupo, marcarComoLida } from "@/lib/whatsapp/uazapi"
 import { buscarOuCriarConversa, criarClienteENegocioInicial } from "@/lib/whatsapp/conversa-utils"
+import { extrairPrimeiroNomeValido } from "@/lib/whatsapp/nome-contato"
 
 // ============================================================
 // Webhook WhatsApp — recebe mensagens da Uazapi
@@ -60,6 +61,9 @@ export async function POST(request: Request) {
     const messageId = messageData.messageid
     const messageIdFull = messageData.id || messageId // ID completo para download de mídia
     const pushName = messageData.senderName || payload.chat?.wa_contactName || null
+    // Só persiste o pushName quando ele é plausível como nome de pessoa ("Deus", emoji,
+    // nome de empresa → null). Mantém o nome COMPLETO quando válido (não trunca pra 1º nome).
+    const pushNamePlausivel = extrairPrimeiroNomeValido(pushName) ? pushName : null
     const instanceIdent = payload.instanceName || payload.instance
 
     // LYNEDES-103 Sprint 2: auto-block quando humano responde manualmente
@@ -167,13 +171,13 @@ export async function POST(request: Request) {
       supabase,
       organizacaoId,
       numeroCliente,
-      pushName
+      pushNamePlausivel
     )
 
     // Se conversa nova e agente está ativo → criar cliente + negócio automaticamente
     if (isNova && config.ativo) {
       // Usar pushName do WhatsApp como nome do contato; se vazio, formatar número como fallback
-      const nomeContato = pushName || formatarNumeroFallback(numeroCliente)
+      const nomeContato = pushNamePlausivel || formatarNumeroFallback(numeroCliente)
       await criarClienteENegocioInicial(supabase, organizacaoId, numeroCliente, conversaId, config, {
         nomeCliente: nomeContato,
       })
@@ -212,7 +216,7 @@ export async function POST(request: Request) {
       .from("conversas_whatsapp")
       .update({
         ultima_mensagem_em: new Date().toISOString(),
-        nome_cliente: pushName || undefined,
+        nome_cliente: pushNamePlausivel || undefined,
       })
       .eq("id", conversaId)
 

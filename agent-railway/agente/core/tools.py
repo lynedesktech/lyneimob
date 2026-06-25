@@ -8,6 +8,11 @@ import os
 from typing import Any
 
 from agente.services import supabase_client as db
+from agente.utils.imovel_formatter import (
+    comodos_compacto,
+    linhas_comodos_card,
+    linhas_comodos_ficha,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -249,14 +254,12 @@ def _formatar_imovel_completo(i: dict) -> str:
         partes.append(f"Condominio: R$ {float(i['valor_condominio']):,.0f}/mes".replace(",", "."))
     if i.get("valor_iptu"):
         partes.append(f"IPTU: R$ {float(i['valor_iptu']):,.0f}/ano".replace(",", "."))
-    partes.extend([
-        f"Quartos: {i.get('quartos',0)}",
-        f"Suites: {i.get('suites',0)}",
-        f"Banheiros: {i.get('banheiros',0)}",
-        f"Vagas: {i.get('vagas',0)}",
-        f"Area total: {str(i['area_total']) + 'm2' if i.get('area_total') else 'nao informada'}",
-        f"Area construida: {str(i['area_construida']) + 'm2' if i.get('area_construida') else 'nao informada'}",
-    ])
+    # Comodos so quando > 0 e NUNCA para terreno/lote (fonte unica — imovel_formatter.py)
+    partes.extend(linhas_comodos_ficha(i))
+    if i.get("area_total"):
+        partes.append(f"Area total: {i['area_total']}m2")
+    if i.get("area_construida"):
+        partes.append(f"Area construida: {i['area_construida']}m2")
     if i.get("descricao"):
         partes.append(f"Descricao: {i['descricao']}")
     return "\n".join(partes)
@@ -468,22 +471,27 @@ async def executar_buscar_imoveis(args: dict, ctx: ToolContext) -> str:
         else:
             preco = "Preco sob consulta"
         cod = i.get("codigo_interno") or "?"
-        quartos = i.get("quartos", 0)
-        suites = i.get("suites", 0)
-        banheiros = i.get("banheiros", 0)
-        vagas = i.get("vagas", 0)
-        area_t = i.get("area_total") or "?"
-        area_c = i.get("area_construida") or "?"
-        cond = ""
-        if i.get("valor_condominio"):
-            cond = f" | Cond: R$ {float(i['valor_condominio']):,.0f}".replace(",", ".")
         url = await _montar_url_imovel(ctx.org_id, i["id"])
-        linhas.append(
-            f"- [{i['id']}] {i.get('titulo','')} (Cod: {cod}) | {i.get('tipo','')} | "
-            f"{i.get('bairro','')}, {i.get('cidade','')}-{i.get('estado','')} | "
-            f"{preco} | {quartos}q/{suites}s/{banheiros}b/{vagas}v | "
-            f"{area_t}m2 total, {area_c}m2 constr.{cond} | {url}"
-        )
+        # Monta a linha por partes, omitindo comodos/areas vazias (terreno nao vira "0q/0s/0b/0v")
+        comodos = comodos_compacto(i)
+        areas = ", ".join(filter(None, [
+            f"{i['area_total']}m2 total" if i.get("area_total") else None,
+            f"{i['area_construida']}m2 constr." if i.get("area_construida") else None,
+        ]))
+        partes_linha = [
+            f"[{i['id']}] {i.get('titulo','')} (Cod: {cod})",
+            str(i.get("tipo", "")),
+            f"{i.get('bairro','')}, {i.get('cidade','')}-{i.get('estado','')}",
+            preco,
+        ]
+        if comodos:
+            partes_linha.append(comodos)
+        if areas:
+            partes_linha.append(areas)
+        if i.get("valor_condominio"):
+            partes_linha.append(f"Cond: R$ {float(i['valor_condominio']):,.0f}".replace(",", "."))
+        partes_linha.append(str(url))
+        linhas.append("- " + " | ".join(partes_linha))
 
     return (
         f"Encontrei {len(imoveis)} imovel(is):\n"
@@ -686,25 +694,23 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
         imovel.get("bairro"), imovel.get("cidade"), imovel.get("estado")
     ]))
 
-    quartos = imovel.get("quartos") or 0
-    suites = imovel.get("suites") or 0
-    suites_txt = f" ({suites} suite)" if suites else ""
-    area_txt = (
-        f"{imovel['area_total']}m² totais"
-        if imovel.get("area_total")
-        else "area sob consulta"
-    )
+    # Detalhes condicionais: terreno/lote NAO mostra quarto/banheiro/vaga;
+    # campo zerado some (fonte unica — imovel_formatter.py)
+    linhas_detalhe = linhas_comodos_card(imovel)
+    if imovel.get("area_total"):
+        linhas_detalhe.append(f"📐 {imovel['area_total']}m² totais")
+
+    partes_caption = [
+        f"🏡 *{imovel.get('titulo','')}*",
+        f"📍 {endereco}",
+        preco,
+    ]
+    if linhas_detalhe:
+        partes_caption.append("")
+        partes_caption.extend(linhas_detalhe)
 
     # Caption do card (sem o link — o link vira botao CTA)
-    caption_sem_link = (
-        f"🏡 *{imovel.get('titulo','')}*\n"
-        f"📍 {endereco}\n"
-        f"{preco}\n\n"
-        f"🛏 {quartos} quarto(s){suites_txt}\n"
-        f"🚿 {imovel.get('banheiros',0)} banheiro(s)\n"
-        f"🚗 {imovel.get('vagas',0)} vaga(s)\n"
-        f"📐 {area_txt}"
-    )
+    caption_sem_link = "\n".join(partes_caption)
     # Caption com link no texto (fallback se botao falhar)
     caption = f"{caption_sem_link}\n\n🔗 Veja mais fotos e detalhes:\n{url}"
 

@@ -159,7 +159,8 @@ export async function GET(request: Request) {
       const nomeOrg = org?.nome || "Imobiliaria"
       const configTyped = config as unknown as ConfigWhatsapp
       const nomeAgente = configTyped.nome_agente || `Assistente ${nomeOrg}`
-      const nomeCliente = conversa.nome_cliente?.split(" ")[0] || ""
+      const { extrairPrimeiroNomeValido } = await import("@/lib/whatsapp/nome-contato")
+      const nomeCliente = extrairPrimeiroNomeValido(conversa.nome_cliente) || ""
 
       // Montar historico cronologico pra Claude
       const historico = msgsHistorico

@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse
 
 from agente.config import settings
 from agente.core.agent import run_agent
+from agente.core.sanitizer import extrair_primeiro_nome_valido
 from agente.models.webhook import WebhookMessage
 from agente.services import redis_client
 from agente.services import supabase_client as db
@@ -476,6 +477,9 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         return JSONResponse({"status": "ignored"})
 
     chat_id = msg.chat_id
+    # pushName cru ("Deus", emoji, empresa) nao deve ser persistido como nome.
+    # Mantem o nome COMPLETO quando e plausivel; senao None (CRM mostra "Sem nome"/numero).
+    nome_contato = msg.nome if extrair_primeiro_nome_valido(msg.nome) else None
 
     # Identificar organizacao
     config = await identificar_org(msg)
@@ -532,7 +536,7 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
     conversa = await db.buscar_conversa_ativa(org_id, chat_id)
     is_nova = False
     if not conversa:
-        conversa = await db.criar_conversa(org_id, chat_id, msg.nome)
+        conversa = await db.criar_conversa(org_id, chat_id, nome_contato)
         is_nova = True
         if not conversa:
             logger.error(f"[WEBHOOK] Falha ao criar conversa para {chat_id}")
@@ -544,7 +548,7 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
     if is_nova:
         background_tasks.add_task(
             criar_cliente_negocio_via_nextjs,
-            conversa_id, org_id, chat_id, msg.nome or ""
+            conversa_id, org_id, chat_id, nome_contato or ""
         )
 
     # 6. Marcar como lida
