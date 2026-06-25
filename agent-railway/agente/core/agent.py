@@ -15,6 +15,7 @@ from anthropic import AsyncAnthropic
 
 from agente.config import settings
 from agente.core.prompt import montar_prompt_sdr
+from agente.core.sanitizer import extrair_primeiro_nome_valido
 from agente.core.tools import TOOLS_DEFINITION, ToolContext, execute_tool
 from agente.services import redis_client
 from agente.services import supabase_client as db
@@ -132,11 +133,12 @@ async def run_agent(
     system_prompt = montar_prompt_sdr(nome_agente, nome_org, prompt_personalizado)
 
     # 8. Montar contexto extra
-    nome_cliente = conversa.get("nome_cliente") or ""
+    # pushName cru pode ser qualquer coisa ("Deus", emoji, empresa). Sanitiza:
+    # se nao for nome de pessoa plausivel, NAO entra no contexto e o agente
+    # pergunta o nome em vez de chamar o cliente de "Deus".
+    nome_cliente = extrair_primeiro_nome_valido(conversa.get("nome_cliente"))
     ja_respondeu = any(m.get("direcao") == "enviada" for m in mensagens_recentes)
-    nome_verificado = ""
-    if conversa.get("cliente_id") and nome_cliente:
-        nome_verificado = f"\n- Nome do cliente: {nome_cliente}"
+    nome_verificado = f"\n- Nome do cliente: {nome_cliente}" if nome_cliente else ""
 
     # Detectar reativacao
     agora = datetime.now(timezone.utc)
@@ -282,6 +284,9 @@ async def run_agent(
             response = await client.messages.create(
                 model=modelo,
                 max_tokens=1024,
+                # Temperatura moderada-baixa: respostas factuais (preco, area, imovel)
+                # ficam mais consistentes e o agente improvisa menos "resposta aleatoria".
+                temperature=0.5,
                 system=system_prompt + contexto_extra,
                 tools=TOOLS_DEFINITION,
                 messages=messages,
