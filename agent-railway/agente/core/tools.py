@@ -7,6 +7,7 @@ import logging
 import os
 from typing import Any
 
+from agente.services import redis_client
 from agente.services import supabase_client as db
 from agente.utils.imovel_formatter import (
     comodos_compacto,
@@ -674,6 +675,17 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
     if not ctx.api_url or not ctx.token:
         return "Erro: credenciais Uazapi nao disponiveis no contexto."
 
+    # TRAVA ANTI-REENVIO: nao manda o mesmo card 2x na conversa. Responder "Sim"
+    # nao re-dispara o carrossel. Isso tambem corta a saudacao repetida que vinha
+    # no intro_text do card reenviado.
+    if await redis_client.card_ja_enviado(ctx.conversa_id, imovel_id):
+        return (
+            "O card desse imovel JA foi enviado nesta conversa. NAO reenvie o card. "
+            "Continue em TEXTO, reagindo ao que o cliente acabou de dizer, SEM saudar de "
+            "novo e SEM repetir o que ja foi dito. Se ele demonstrou interesse, avance pro "
+            "proximo passo (entender o uso, tirar uma duvida, ou oferecer visita/corretor)."
+        )
+
     # Buscar imovel + fotos
     imovel = await db.select(
         "imoveis",
@@ -787,6 +799,7 @@ async def executar_enviar_card_imovel(args: dict, ctx: ToolContext) -> str:
             tipo_conteudo="imagem" if foto_capa else "texto",
         )
 
+        await redis_client.marcar_card_enviado(ctx.conversa_id, imovel_id)
         return (
             f"Card do imovel '{imovel.get('titulo','')}' enviado com foto e link "
             "pro cliente. NAO repita esses dados em texto — pergunte apenas "

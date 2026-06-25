@@ -128,6 +128,23 @@ async def memory_clear(conversa_id: str) -> None:
     await r.delete(f"memoria:whatsapp:{conversa_id}")
 
 
+# ─────────────────── Cards de imovel ja enviados (anti-reenvio) ───────────────────
+
+
+async def card_ja_enviado(conversa_id: str, imovel_id: str) -> bool:
+    """True se o card desse imovel ja foi enviado nesta conversa."""
+    r = await get_redis()
+    return bool(await r.sismember(f"cards:{conversa_id}", imovel_id))
+
+
+async def marcar_card_enviado(conversa_id: str, imovel_id: str) -> None:
+    """Registra que o card desse imovel foi enviado nesta conversa."""
+    r = await get_redis()
+    key = f"cards:{conversa_id}"
+    await r.sadd(key, imovel_id)
+    await r.expire(key, settings.memory_ttl_seconds)
+
+
 # ─────────────────── Rate Limiting (anti-bloqueio) ───────────────────
 
 

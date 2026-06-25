@@ -163,6 +163,12 @@ async def run_agent(
     contexto_extra = f"\n\nCONTEXTO DA CONVERSA:{nome_verificado}"
     contexto_extra += f"\n- Numero WhatsApp: {numero_cliente}"
     contexto_extra += f"\n- Status da conversa: {status_conversa}"
+    if ja_respondeu and not eh_reativacao:
+        contexto_extra += (
+            "\n- ATENCAO: voce JA saudou e JA se apresentou nesta conversa. E PROIBIDO "
+            "saudar de novo (Bom dia/Boa tarde/Oi), reapresentar, ou reenviar card ja "
+            "mandado. Apenas CONTINUE de onde parou, reagindo a ultima mensagem do cliente."
+        )
 
     # Qualificacao existente
     qualificacao = conversa.get("qualificacao")
