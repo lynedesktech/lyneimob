@@ -45,7 +45,7 @@ TOOLS_DEFINITION: list[dict] = [
                 "tipo": {
                     "type": "string",
                     "enum": [
-                        "apartamento", "casa", "terreno", "sala_comercial",
+                        "apartamento", "casa", "terreno", "lote", "loteamento", "sala_comercial",
                         "galpao", "cobertura", "kitnet", "fazenda", "sitio", "loja",
                     ],
                     "description": "Tipo do imovel",
@@ -60,6 +60,7 @@ TOOLS_DEFINITION: list[dict] = [
                 "preco_min": {"type": "number", "description": "Preco minimo em reais"},
                 "preco_max": {"type": "number", "description": "Preco maximo em reais"},
                 "quartos_min": {"type": "integer", "description": "Quantidade minima de quartos"},
+                "termo": {"type": "string", "description": "Texto livre pra casar pelo NOME do empreendimento/imovel. Procura no titulo, descricao, bairro, cidade e codigo. Use quando o cliente cita um nome (ex: 'Guaruja', 'Reserva Mar') e voce nao achou pela busca por identificacao."},
             },
             "required": [],
         },
@@ -76,7 +77,7 @@ TOOLS_DEFINITION: list[dict] = [
                 },
                 "intro_text": {
                     "type": "string",
-                    "description": "Texto que aparece ACIMA do carrossel. Use SO na primeira chamada da sequencia pra dar contexto cearense feminino. Max 200 chars. Ex: 'Bom dia, Gabriel! Taiba e uma joia, viu. Separei essas duas opcoes pra ti.' Nas chamadas seguintes da mesma sequencia, deixe vazio.",
+                    "description": "Texto que aparece ACIMA do carrossel. Use SO na primeira chamada da sequencia pra dar contexto cearense feminino. Max 200 chars. Ex: 'Bom dia, Gabriel! Taiba e uma joia, viu. Separei essas duas opcoes pra voce.' Nas chamadas seguintes da mesma sequencia, deixe vazio. SEMPRE 'voce', NUNCA 'ti'.",
                 },
             },
             "required": ["imovel_id"],
@@ -427,6 +428,7 @@ async def executar_buscar_imoveis(args: dict, ctx: ToolContext) -> str:
     # Tambem aceita match no titulo e logradouro pra cobrir "praia de taiba" no titulo.
     bairro_q = _normalize(args.get("bairro"))
     cidade_q = _normalize(args.get("cidade"))
+    termo_q = _normalize(args.get("termo"))
 
     def casa_localidade(im: dict) -> bool:
         if not bairro_q and not cidade_q:
@@ -444,7 +446,20 @@ async def executar_buscar_imoveis(args: dict, ctx: ToolContext) -> str:
             return False
         return True
 
-    imoveis = [i for i in imoveis if casa_localidade(i)]
+    def casa_termo(im: dict) -> bool:
+        # Casa o nome do empreendimento mesmo que so apareca na descricao
+        if not termo_q:
+            return True
+        campos = [
+            _normalize(im.get("titulo")),
+            _normalize(im.get("descricao")),
+            _normalize(im.get("bairro")),
+            _normalize(im.get("cidade")),
+            _normalize(im.get("codigo_interno")),
+        ]
+        return any(termo_q in c for c in campos)
+
+    imoveis = [i for i in imoveis if casa_localidade(i) and casa_termo(i)]
 
     # Filtros de preco/finalidade client-side
     if args.get("finalidade"):

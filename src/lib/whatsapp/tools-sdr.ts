@@ -51,7 +51,7 @@ export const definicaoToolsSdr: Anthropic.Tool[] = [
         tipo: {
           type: "string",
           enum: [
-            "apartamento", "casa", "terreno", "sala_comercial",
+            "apartamento", "casa", "terreno", "lote", "loteamento", "sala_comercial",
             "galpao", "cobertura", "kitnet", "fazenda", "sitio", "loja",
           ],
           description: "Tipo do imóvel",
