@@ -128,9 +128,21 @@ def parse_webhook(body: dict) -> WebhookMessage | None:
         #   - message.ad / message.adReply
         #   - body.message.externalAdReply (fora do node 'message')
         ad_info = {}
-        ctx_info = message.get("contextInfo") or message.get("context") or {}
-        if isinstance(ctx_info, dict):
-            ad_info = ctx_info.get("externalAdReply") or ctx_info.get("external_ad_reply") or {}
+        # contextInfo (com o externalAdReply do anuncio) pode vir em message.contextInfo
+        # OU DENTRO de message.content quando content e um dict — a Uazapi/Baileys
+        # entrega de formas diferentes. Lead de anuncio Meta real chega em
+        # message.content.contextInfo.externalAdReply, entao temos que olhar os dois.
+        candidatos_ctx = [message.get("contextInfo"), message.get("context")]
+        _content_obj = message.get("content")
+        if isinstance(_content_obj, dict):
+            candidatos_ctx.append(_content_obj.get("contextInfo"))
+            candidatos_ctx.append(_content_obj.get("context"))
+        for _ctx in candidatos_ctx:
+            if isinstance(_ctx, dict):
+                ear = _ctx.get("externalAdReply") or _ctx.get("external_ad_reply")
+                if isinstance(ear, dict) and ear:
+                    ad_info = ear
+                    break
         if not ad_info:
             ad_info = (
                 message.get("externalAdReply")
