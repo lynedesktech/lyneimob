@@ -172,6 +172,39 @@ export async function GET(request: Request) {
         })
         .join("\n")
 
+      // FREIO: nao fazer follow-up de quem NAO e lead comprador.
+      // Ex: cliente disse que nao quer comprar, quer VENDER um imovel, se despediu
+      // ou encerrou. A IA classifica; se "PARAR", encerra a conversa (status
+      // finalizado) pra nunca mais entrar no follow-up.
+      try {
+        const { getAnthropic } = await import("@/lib/anthropic")
+        const classif = await getAnthropic().messages.create({
+          model: "claude-haiku-4-5",
+          max_tokens: 6,
+          system: `Voce decide se vale CONTINUAR fazendo follow-up com um lead de imobiliaria. Responda APENAS uma palavra: PARAR ou SEGUIR.
+Responda PARAR se, no historico, o cliente: disse que NAO quer comprar; quer VENDER um imovel dele (nao comprar); se despediu ou encerrou a conversa ("obrigada, era so isso", "voce e um amor, obrigado pela atencao"); disse que nao tem interesse; pediu pra parar; ou claramente NAO e um lead comprador.
+Responda SEGUIR se e um comprador em potencial que apenas parou de responder e ainda pode fechar negocio.`,
+          messages: [{ role: "user", content: `Historico:\n${historico}` }],
+        })
+        const blocoClassif = classif.content.find((b) => b.type === "text")
+        const veredito = blocoClassif && blocoClassif.type === "text" ? blocoClassif.text.toUpperCase() : ""
+        if (veredito.includes("PARAR")) {
+          await supabase
+            .from("conversas_whatsapp")
+            .update({ status: "finalizado" })
+            .eq("id", conversa.id)
+          pulados++
+          console.log(`[Follow-up] PARAR: conversa ${conversa.id} encerrada (lead nao-comprador/encerrou)`)
+          continue
+        }
+      } catch (erroClassif) {
+        // Se a classificacao falhar, NAO bloqueia o follow-up (segue o fluxo normal).
+        console.error(
+          `[Follow-up] Erro na classificacao da conversa ${conversa.id}:`,
+          erroClassif instanceof Error ? erroClassif.message : erroClassif
+        )
+      }
+
       // Buscar follow-ups anteriores enviados nessa conversa pra NAO repetir padrao
       const { data: followupsAnteriores } = await supabase
         .from("mensagens_whatsapp")
