@@ -49,6 +49,7 @@ export {
   labelsStatusLoteamento,
   labelsStatusLote,
   coresStatusLote,
+  obterLandingPageLoteamento,
 } from "./loteamentos"
 
 /** Converte um Record de labels em array de opções para <Select> */
