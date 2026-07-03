@@ -8,7 +8,10 @@ import {
 } from "@/components/ui/card"
 import { MapPin, Layers, LandPlot } from "lucide-react"
 import { formatarPreco } from "@/lib/site/buscar-dados-site"
-import { labelsStatusLoteamento } from "@/lib/constantes"
+import {
+  labelsStatusLoteamento,
+  obterLandingPageLoteamento,
+} from "@/lib/constantes"
 import type { Loteamento, LoteamentoFoto } from "@/types/database"
 
 type LoteamentoComDados = Loteamento & {
@@ -33,9 +36,12 @@ export function CardLoteamentoPublico({ loteamento, slug }: Props) {
       ? Math.min(...lotesComValor.map((l) => l.valor))
       : null
 
-  return (
-    <Link href={`/${slug}/loteamentos/${loteamento.id}`}>
-      <Card className="group overflow-hidden transition-all hover:shadow-lg">
+  // Loteamento com landing page dedicada → clique vai pra ela
+  // em vez da página padrão de detalhes
+  const landingPage = obterLandingPageLoteamento(loteamento.nome)
+
+  const conteudoCard = (
+    <Card className="group overflow-hidden transition-all hover:shadow-lg">
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
           {fotoUrl ? (
             <Image
@@ -96,6 +102,13 @@ export function CardLoteamentoPublico({ loteamento, slug }: Props) {
           </div>
         </CardContent>
       </Card>
-    </Link>
+  )
+
+  if (landingPage) {
+    return <a href={landingPage}>{conteudoCard}</a>
+  }
+
+  return (
+    <Link href={`/${slug}/loteamentos/${loteamento.id}`}>{conteudoCard}</Link>
   )
 }

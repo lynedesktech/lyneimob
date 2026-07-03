@@ -40,6 +40,14 @@ export async function middleware(request: NextRequest) {
     return await atualizarSessao(request)
   }
 
+  // Subdomínio dedicado da landing page do Guarujá Condominium (Duna).
+  // Serve o arquivo estático em public/lp/guaruja.html pra qualquer path.
+  if (hostnameBase === "guaruja.dunarealestate.com.br") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/lp/guaruja.html"
+    return NextResponse.rewrite(url)
+  }
+
   // Hostname diferente do principal → pode ser domínio customizado.
   // Tenta primeiro como digitado, depois sem "www." (apex = sem www no banco).
   let resultado = await resolverDominioCustomizado(hostnameBase)
