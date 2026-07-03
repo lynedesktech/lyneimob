@@ -172,7 +172,20 @@ export async function processarComAgente(
 
     // 7. Montar system prompt
     const { montarPromptSdr } = await import("./prompt-sdr")
-    const systemPrompt = montarPromptSdr(configTyped, nomeOrganizacao)
+    let systemPrompt = montarPromptSdr(configTyped, nomeOrganizacao)
+
+    // 7b. Modo campanha Guarujá: lead que veio do anúncio/landing page do
+    // Guarujá Condominium. O Guarujá é loteamento (fora do catálogo de
+    // imóveis das tools), então o conhecimento vai embutido no prompt.
+    const { detectarLeadGuaruja, blocoModoCampanhaGuaruja } = await import("./campanha-guaruja")
+    const textosConversa = [
+      ...mensagensOrdenadas.map((m) => m.conteudo),
+      ...memoriaExistente.map((m) => m.conteudo),
+    ]
+    if (detectarLeadGuaruja(textosConversa)) {
+      systemPrompt += "\n\n" + blocoModoCampanhaGuaruja()
+      console.log(`[Agente SDR] Conversa ${conversaId}: MODO CAMPANHA GUARUJÁ ativo`)
+    }
 
     // Montar contexto da conversa para a IA
     // O pushName do WhatsApp pode ser QUALQUER coisa ("Deus", emoji, nome de empresa).

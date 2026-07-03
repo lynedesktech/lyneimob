@@ -14,6 +14,7 @@ from datetime import datetime, timezone, timedelta
 from anthropic import AsyncAnthropic
 
 from agente.config import settings
+from agente.core.campanha_guaruja import bloco_modo_campanha_guaruja, detectar_lead_guaruja
 from agente.core.prompt import montar_prompt_sdr
 from agente.core.sanitizer import extrair_primeiro_nome_valido
 from agente.core.tools import TOOLS_DEFINITION, ToolContext, execute_tool
@@ -131,6 +132,15 @@ async def run_agent(
     nome_agente = config.get("nome_agente", "") or f"Assistente {nome_org}"
     prompt_personalizado = config.get("prompt_personalizado")
     system_prompt = montar_prompt_sdr(nome_agente, nome_org, prompt_personalizado)
+
+    # 7b. Modo campanha Guaruja: lead que veio do anuncio/landing page do
+    # Guaruja Condominium. O Guaruja e loteamento (fora do catalogo de
+    # imoveis das tools), entao o conhecimento vai embutido no prompt.
+    textos_conversa = [m.get("conteudo") or "" for m in mensagens_recentes]
+    textos_conversa += [m.get("conteudo") or "" for m in memoria]
+    if detectar_lead_guaruja(textos_conversa):
+        system_prompt += "\n\n" + bloco_modo_campanha_guaruja()
+        logger.info(f"[AGENT] Conversa {conversa_id}: MODO CAMPANHA GUARUJA ativo")
 
     # 8. Montar contexto extra
     # pushName cru pode ser qualquer coisa ("Deus", emoji, empresa). Sanitiza:
