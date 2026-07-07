@@ -26,6 +26,15 @@ logger = logging.getLogger(__name__)
 # Fluxos complexos (buscar + qualificar + agendar + encaminhar) precisam de iteracoes
 MAX_TOOL_ITERATIONS = 7
 
+
+class FalhaLLM(Exception):
+    """Erro na chamada da Anthropic apos os retries internos do SDK.
+
+    Quem chama (process_buffered_messages) decide o que fazer: retry
+    silencioso e, se falhar de novo, alerta pro Gabriel — NUNCA mensagem
+    de erro robotica pro cliente.
+    """
+
 # Sinais textuais que indicam fluxo complexo (escala pra Sonnet)
 SINAIS_FLUXO_COMPLEXO = (
     "agendar", "agendamento", "visita", "visitar",
@@ -66,11 +75,22 @@ async def run_agent(
     numero_cliente: str,
     api_url: str,
     token: str,
+    textos_buffer: list[str] | None = None,
 ) -> str | None:
     """Executa o agente SDR com Claude tool use.
 
+    Args:
+        textos_buffer: conteudo das mensagens que dispararam este
+            processamento (vindas do buffer Redis). Usado como fallback
+            quando o diff por timestamp do banco nao acha mensagem nova
+            (acontece quando o cliente manda mensagem enquanto a resposta
+            anterior ainda esta sendo digitada/salva).
+
     Returns:
         Resposta final do agente como string, ou None se nao houver resposta.
+
+    Raises:
+        FalhaLLM: erro na API da Anthropic apos os retries internos do SDK.
     """
     # 1. Buscar config WhatsApp
     config = await db.select(
@@ -247,6 +267,7 @@ async def run_agent(
 
     ultima_tem_imagem = False
     textos_recentes_user: list[str] = []
+    textos_para_memoria: list[str] = []
     for msg in mensagens_novas:
         if msg.get("direcao") == "recebida":
             tipo = msg.get("tipo_conteudo", "texto")
@@ -263,6 +284,29 @@ async def run_agent(
                 conteudo_formatado = conteudo or "[mensagem sem conteudo]"
             messages.append({"role": "user", "content": conteudo_formatado})
             textos_recentes_user.append(conteudo or "")
+            if conteudo:
+                textos_para_memoria.append(conteudo)
+
+    # FALLBACK ANTI-CORRIDA: se o diff por timestamp nao achou mensagem nova
+    # (cliente mandou mensagem enquanto a resposta anterior ainda era enviada
+    # e salva DEPOIS dela no banco), usa o conteudo do buffer — que e
+    # exatamente o que disparou este processamento. Sem isso, o historico
+    # termina com fala do assistente e a Anthropic recusa com 400
+    # ("conversation must end with a user message"), alem da mensagem do
+    # cliente se perder sem resposta.
+    if not textos_para_memoria and textos_buffer:
+        for texto in textos_buffer:
+            texto = (texto or "").strip()
+            if not texto:
+                continue
+            messages.append({"role": "user", "content": texto})
+            textos_recentes_user.append(texto)
+            textos_para_memoria.append(texto)
+        if textos_para_memoria:
+            logger.info(
+                f"[AGENT] Conversa {conversa_id}: diff nao achou mensagem nova, "
+                f"usando {len(textos_para_memoria)} texto(s) do buffer (anti-corrida)"
+            )
 
     # Anthropic exige que a primeira mensagem seja "user"
     while messages and messages[0]["role"] != "user":
@@ -270,6 +314,16 @@ async def run_agent(
 
     if not messages:
         logger.info(f"[AGENT] Conversa {conversa_id}: nenhuma mensagem nova do usuario")
+        return None
+
+    # Guarda final: o historico DEVE terminar com fala do cliente. Se mesmo
+    # com o fallback do buffer terminar com o assistente, melhor silencio
+    # do que erro 400 + frase robotica pro cliente.
+    if messages[-1]["role"] != "user":
+        logger.warning(
+            f"[AGENT] Conversa {conversa_id}: historico termina com assistente "
+            f"mesmo apos fallback — abortando resposta em silencio"
+        )
         return None
 
     # 10. Escolher modelo (Haiku/Sonnet)
@@ -308,8 +362,12 @@ async def run_agent(
                 messages=messages,
             )
         except Exception as e:
+            # O SDK ja tentou 2x internamente (erros transientes). Chegar aqui
+            # significa falha real — sobe pra process_buffered_messages fazer
+            # retry silencioso e alertar o Gabriel se persistir. NUNCA mandar
+            # frase de erro robotica pro cliente.
             logger.error(f"Erro Anthropic (iteracao {iteration}): {e}")
-            return "Estou com uma instabilidade no momento. Pode tentar novamente em alguns segundos?"
+            raise FalhaLLM(str(e)) from e
 
         # Coletar blocos de texto e tool_use
         blocos_texto: list[str] = []
@@ -383,13 +441,9 @@ async def run_agent(
             logger.warning(f"[AGENT] Resposta final vazia para conversa {conversa_id}")
             resposta_final = "Me da so um segundinho, ja te respondo."
 
-    # 12. Salvar memoria
-    user_msgs = [
-        m.get("conteudo", "")
-        for m in mensagens_novas
-        if m.get("direcao") == "recebida" and m.get("conteudo")
-    ]
-    for msg_text in user_msgs:
+    # 12. Salvar memoria (textos_para_memoria cobre tanto o diff do banco
+    # quanto o fallback do buffer — nunca perde a mensagem do cliente)
+    for msg_text in textos_para_memoria:
         await redis_client.memory_add(conversa_id, "usuario", msg_text)
     if tool_summary:
         await redis_client.memory_add(

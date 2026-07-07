@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import random
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from agente.config import settings
+
+# Fuso do cliente (America/Sao_Paulo). datetime.now() sem fuso usaria a hora
+# do SERVIDOR (UTC no Railway) — e ai o "modo madrugada" ligava as 19h locais.
+FUSO_BRASIL = timezone(timedelta(hours=-3))
 
 
 def calculate_typing_duration(text: str) -> float:
@@ -34,7 +38,7 @@ def calculate_inter_segment_delay(text: str, segment_index: int) -> float:
     if segment_index == 0:
         base *= 0.7
 
-    hour = datetime.now().hour
+    hour = datetime.now(FUSO_BRASIL).hour
     if hour >= 22 or hour < 7:
         base *= random.uniform(1.2, 1.6)
 

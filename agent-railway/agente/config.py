@@ -47,6 +47,9 @@ class Settings(BaseSettings):
 
     # --- Buffer (agrupamento de mensagens) ---
     buffer_wait_seconds: int = 20
+    # Conversa NOVA espera menos: lead quente de anuncio nao pode ficar 20s
+    # sem resposta na primeira mensagem
+    buffer_wait_first_seconds: int = 8
     buffer_ttl_seconds: int = 300
 
     # --- Bloqueio (quando humano responde manualmente) ---

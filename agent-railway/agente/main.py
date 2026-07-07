@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from agente.config import settings
-from agente.core.agent import run_agent
+from agente.core.agent import FalhaLLM, run_agent
 from agente.core.campanha_guaruja import detectar_lead_guaruja
 from agente.core.sanitizer import extrair_primeiro_nome_valido
 from agente.models.webhook import WebhookMessage
@@ -47,7 +47,7 @@ logger = logging.getLogger("lyneimob-agent")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("LyneMob Agent iniciando")
-    logger.info(f"   Modelo: {settings.openai_model}")
+    logger.info(f"   Modelo: {settings.anthropic_model_default} (Anthropic)")
     logger.info(f"   Redis: {settings.redis_url}")
     logger.info(f"   Buffer: {settings.buffer_wait_seconds}s")
     logger.info(f"   Rate limit: {settings.rate_limit_per_contact_per_minute}/min por contato")
@@ -284,6 +284,22 @@ async def _analisar_e_alertar(
         if not violacoes:
             return
 
+        # Persistir TODAS as violacoes (sem o rate-limit dos alertas) —
+        # historico mensuravel pra saber se os ajustes de prompt estao
+        # reduzindo os erros de verdade. Requer migration 041.
+        for v in violacoes:
+            try:
+                await db.insert("violacoes_qualidade_ia", {
+                    "organizacao_id": org_id,
+                    "conversa_id": conversa_id,
+                    "tipo": v.get("tipo", "desconhecido"),
+                    "severidade": v.get("severidade", "baixa"),
+                    "detalhe": v.get("detalhe", ""),
+                    "mensagem_agente": full_response[:2000],
+                })
+            except Exception:
+                pass  # tabela pode nao existir ate a migration rodar
+
         org = await db.select(
             "organizacoes",
             columns="nome",
@@ -312,13 +328,22 @@ async def process_buffered_messages(
     msg: WebhookMessage,
     config: dict,
     conversa_id: str,
+    espera_segundos: int | None = None,
 ) -> None:
-    """Processa mensagens agrupadas do buffer e envia resposta via IA."""
+    """Processa mensagens agrupadas do buffer e envia resposta via IA.
+
+    espera_segundos: tempo de buffer antes de processar. Conversa nova usa
+    espera menor (lead de anuncio quente nao pode esperar 20s pela primeira
+    resposta); conversa em andamento usa o buffer padrao pra agrupar
+    mensagens picadas.
+    """
     org_id = config["organizacao_id"]
     chat_id = msg.chat_id
 
     try:
-        await asyncio.sleep(settings.buffer_wait_seconds)
+        await asyncio.sleep(
+            espera_segundos if espera_segundos is not None else settings.buffer_wait_seconds
+        )
 
         last_id = await redis_client.buffer_last_id(chat_id, org_id)
         if last_id and last_id != msg.message_id:
@@ -330,9 +355,11 @@ async def process_buffered_messages(
 
         await redis_client.buffer_delete(chat_id, org_id)
 
-        # Lock de processamento
+        # Lock de processamento. TTL 240s: precisa cobrir o pior caso
+        # (7 iteracoes de tool + Sonnet + retry silencioso de 45s) — com 90s
+        # o lock expirava no meio e permitia processamento duplo.
         lock_key = f"lock:agente:{conversa_id}"
-        if not await redis_client.acquire_lock(lock_key, ttl=90):
+        if not await redis_client.acquire_lock(lock_key, ttl=240):
             logger.info(f"[AGENT] Conversa {conversa_id} ja em processamento")
             return
 
@@ -350,13 +377,48 @@ async def process_buffered_messages(
                 f"[AGENT] Processando {len(buffer)} msg(s) de {chat_id} (conversa: {conversa_id})"
             )
 
-            response = await run_agent(
-                conversa_id=conversa_id,
-                org_id=org_id,
-                numero_cliente=chat_id,
-                api_url=api_url,
-                token=token,
-            )
+            textos_buffer = [b.get("messageContent", "") for b in buffer]
+
+            # Falha na IA: retry silencioso apos 45s. Se falhar de novo,
+            # NADA vai pro cliente (a mensagem dele continua pendente no
+            # banco e entra na proxima resposta) e o Gabriel recebe alerta.
+            response = None
+            for tentativa in range(2):
+                try:
+                    response = await run_agent(
+                        conversa_id=conversa_id,
+                        org_id=org_id,
+                        numero_cliente=chat_id,
+                        api_url=api_url,
+                        token=token,
+                        textos_buffer=textos_buffer,
+                    )
+                    break
+                except FalhaLLM as e:
+                    if tentativa == 0:
+                        logger.warning(
+                            f"[AGENT] Falha LLM na conversa {conversa_id[:8]} — "
+                            f"retry silencioso em 45s: {e}"
+                        )
+                        await asyncio.sleep(45)
+                    else:
+                        logger.error(
+                            f"[AGENT] Falha LLM persistente na conversa {conversa_id[:8]} — "
+                            f"silencio + alerta pro Gabriel: {e}"
+                        )
+                        try:
+                            from agente.services.alerter import NUMERO_ALERTA
+                            from agente.services.whatsapp import send_text
+                            await send_text(
+                                api_url, token, NUMERO_ALERTA,
+                                f"⚠️ *Agente falhou 2x ao responder*\n"
+                                f"Conversa: `{conversa_id[:8]}` | Lead: {chat_id}\n"
+                                f"O cliente NAO recebeu resposta — vale assumir manualmente.\n"
+                                f"Erro: {str(e)[:200]}",
+                            )
+                        except Exception as e2:
+                            logger.error(f"[AGENT] Falha ate no alerta: {e2}")
+                        return
 
             if not response:
                 return
@@ -605,14 +667,16 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         )
         processed_content = ctx_anuncio + processed_content
 
-        # Marca a conversa como vinda de anuncio (so se for nova, pra nao sobrescrever)
-        if is_nova:
-            try:
-                await db.atualizar_conversa(conversa_id, {
-                    "origem_lead": "anuncio_meta",
-                })
-            except Exception as e:
-                logger.warning(f"[AD_CONTEXT] Nao foi possivel salvar origem_lead: {e}")
+        # Marca a conversa como vinda de anuncio SEMPRE que o contexto de
+        # anuncio chegar — mesmo em conversa reaproveitada. Lead que clicou
+        # no anuncio e lead de campanha, nao importa se ja falou antes.
+        # (Requer migration 041: a constraint antiga rejeitava 'anuncio_meta')
+        try:
+            await db.atualizar_conversa(conversa_id, {
+                "origem_lead": "anuncio_meta",
+            })
+        except Exception as e:
+            logger.warning(f"[AD_CONTEXT] Nao foi possivel salvar origem_lead: {e}")
 
     # 7b. Se for um reply citando mensagem anterior, prefixar o conteudo
     # com a citacao pra que o agente entenda do que o cliente esta falando.
@@ -656,7 +720,10 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         message_id=msg.message_id,
     )
 
-    background_tasks.add_task(process_buffered_messages, msg, config, conversa_id)
+    # Conversa nova = lead quente esperando a primeira resposta: buffer curto.
+    # Conversa em andamento: buffer padrao (agrupa mensagens picadas).
+    espera = settings.buffer_wait_first_seconds if is_nova else settings.buffer_wait_seconds
+    background_tasks.add_task(process_buffered_messages, msg, config, conversa_id, espera)
 
     return JSONResponse({"status": "buffered"})
 

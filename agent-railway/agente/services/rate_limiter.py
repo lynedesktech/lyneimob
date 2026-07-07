@@ -109,6 +109,13 @@ class RateLimiter:
         finally:
             if chat_id in self._worker_tasks:
                 del self._worker_tasks[chat_id]
+            # Anti-corrida: se chegou item na fila ENTRE o "queue.empty()"
+            # e a remocao do worker, ele ficaria orfao ate a proxima
+            # mensagem. Respawna o worker pra drenar.
+            if not queue.empty():
+                self._worker_tasks[chat_id] = asyncio.create_task(
+                    self._worker(chat_id)
+                )
 
     async def _wait_for_clearance(self, chat_id: str) -> None:
         """Bloqueia ate que os limites de taxa permitam envio.

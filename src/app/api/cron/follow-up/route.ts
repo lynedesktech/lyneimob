@@ -244,11 +244,33 @@ Responda SEGUIR se e um comprador em potencial que apenas parou de responder e a
       }
       const anguloEscolhido = ANGULOS[Math.abs(hash) % ANGULOS.length]
 
+      // Anti-robô: espalhar envios entre as duas horas de cada golden hour
+      // (12h/13h e 18h/19h). Sem isso TODOS os follow-ups saem às 12:00 em
+      // ponto, que é assinatura de automação. Cada lead tem uma hora
+      // "preferida" determinística; na outra hora ele é pulado.
+      const horaPreferidaImpar = (Math.abs(hash) >> 4) % 2 === 1
+      if ((horaAtual % 2 === 1) !== horaPreferidaImpar) {
+        pulados++
+        continue
+      }
+
+      // Modo campanha Guarujá: o follow-up deve girar em torno do Guarujá
+      // com os fatos oficiais, sem inventar outros imóveis
+      const { detectarLeadGuaruja } = await import("@/lib/whatsapp/campanha-guaruja")
+      const ehLeadGuaruja = detectarLeadGuaruja(
+        msgsHistorico.map((m) => m.conteudo)
+      )
+      const contextoGuaruja = ehLeadGuaruja
+        ? `
+
+CONTEXTO OBRIGATORIO: esse lead veio da campanha do GUARUJA CONDOMINIUM (condominio fechado de lotes em Caucaia, a 12 km do Cumbuco). Fatos que voce PODE usar: lotes de 150m2 a partir de R$ 112.500, entrada de 10%, parcelas a partir de R$ 699,90 sem juros direto com a incorporadora, entrega prevista dez/2028, pagina oficial https://guaruja.dunarealestate.com.br . O follow-up deve girar em torno do Guaruja. NAO mencione outros imoveis nem invente dados fora desses.`
+        : ""
+
       // Gerar mensagem de re-engajamento contextual com Claude Haiku
       let mensagem = ""
       try {
         const { getAnthropic } = await import("@/lib/anthropic")
-        const sys = `Voce e ${nomeAgente}, atendente humana da imobiliaria ${nomeOrg}, mulher cearense de Fortaleza, calorosa e profissional, especialista na Praia da Taiba e em Caucaia.
+        const sys = `Voce e ${nomeAgente}, atendente humana da imobiliaria ${nomeOrg}, mulher cearense de Fortaleza, calorosa e profissional, especialista na Praia da Taiba e em Caucaia.${contextoGuaruja}
 
 REGRA DE TRATAMENTO INEGOCIAVEL: SEMPRE use "voce". NUNCA "tu", "ti", "teu", "tua", "contigo". Cliente alto padrao da ${nomeOrg} espera tratamento respeitoso.
 
@@ -264,6 +286,7 @@ FILOSOFIA DA DUNA (orientacao do dono):
 Regras de escrita:
 - Maximo 2 linhas curtas estilo WhatsApp. Sem textao.
 - ${nomeCliente ? `Pode usar o nome "${nomeCliente}" no inicio se ficar natural — NAO obrigatorio.` : "Nao use nome, voce ainda nao sabe."}
+- NUNCA comece com saudacao (Bom dia/Boa tarde/Boa noite/Oi/Ola) — voce JA se apresentou nessa conversa; saudar de novo e marca de robo.
 - Sem emojis (cliente alto padrao acha esquisito).
 - Sem travessao (—). Use ponto ou virgula.
 - Sem markdown, sem negrito.
@@ -327,7 +350,7 @@ Gere agora a mensagem de re-engajamento seguindo o angulo definido. Lembre: SEMP
           `${nomePrefix}quer que eu organize uma visita pra voce conhecer o imovel pessoalmente? As vezes ver no local muda tudo.`,
           `${nomeCliente ? `${nomeCliente}, ` : ""}me conta uma coisa: voce esta pensando mais em moradia, veraneio ou investimento? Isso ajuda a refinar as opcoes.`,
           `${nomePrefix}qual seria o melhor momento pra gente conversar com mais calma sobre as opcoes que combinam com voce?`,
-          `${nomePrefix}tem alguma novidade da regiao que talvez te interesse. Quer que eu compartilhe?`,
+          `${nomePrefix}surgiu uma novidade na regiao que pode te interessar. Quer que eu te conte?`,
         ]
         mensagem = FALLBACKS[Math.abs(hash) % FALLBACKS.length]
       }
