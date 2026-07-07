@@ -72,9 +72,18 @@ async def enviar_alerta(
         linhas.append(f"{emoji} {v['detalhe']}")
     linhas.append("")
     linhas.append("*Mensagem da agente:*")
-    # Limita citacao pra nao estourar tamanho do WhatsApp
-    mensagem_curta = mensagem_agente.strip()[:600]
-    linhas.append(f'"{mensagem_curta}"')
+    # Limita citacao pra nao estourar tamanho do WhatsApp.
+    # IMPORTANTE: o corte e SO nesta previa — o cliente recebeu a mensagem
+    # inteira. Sem o aviso explicito, o corte parece erro da agente.
+    completa = mensagem_agente.strip()
+    if len(completa) > 600:
+        linhas.append(f'"{completa[:600]}(...)"')
+        linhas.append(
+            f"_(previa cortada so neste alerta — a mensagem real tem "
+            f"{len(completa)} caracteres e foi enviada INTEIRA ao cliente)_"
+        )
+    else:
+        linhas.append(f'"{completa}"')
 
     texto = "\n".join(linhas)
 

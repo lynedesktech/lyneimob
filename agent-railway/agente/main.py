@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse
 
 from agente.config import settings
 from agente.core.agent import run_agent
+from agente.core.campanha_guaruja import detectar_lead_guaruja
 from agente.core.sanitizer import extrair_primeiro_nome_valido
 from agente.models.webhook import WebhookMessage
 from agente.services import redis_client
@@ -265,11 +266,19 @@ async def _analisar_e_alertar(
             single=True,
         ) or {}
 
+        # Modo campanha Guaruja: "Cumbuco" e mencao legitima (esta na landing
+        # page oficial do empreendimento), entao o analyzer precisa saber
+        # em que modo a conversa esta antes de flagrar cidade fora.
+        mensagens = await db.buscar_mensagens_recentes(conversa_id, 15)
+        textos = [m.get("conteudo") or "" for m in mensagens] + [full_response]
+        modo_guaruja = detectar_lead_guaruja(textos)
+
         violacoes = analisar_resposta(
             full_response,
             contexto={
                 "origem_lead": conversa.get("origem_lead"),
                 "imovel_interesse_id": conversa.get("imovel_interesse_id"),
+                "modo_guaruja": modo_guaruja,
             },
         )
         if not violacoes:

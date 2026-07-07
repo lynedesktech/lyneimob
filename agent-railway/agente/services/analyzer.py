@@ -118,7 +118,12 @@ def analisar_resposta(mensagem: str, contexto: dict | None = None) -> list[dict]
             break
 
     # 2. Cidades fora do portfolio — ALTA
+    # Excecao: no modo campanha Guaruja, "Cumbuco" e mencao legitima —
+    # a landing page oficial vende "a 12 km da Praia do Cumbuco".
+    modo_guaruja = bool(contexto.get("modo_guaruja"))
     for cidade in CIDADES_FORA_PORTFOLIO:
+        if cidade == "cumbuco" and modo_guaruja:
+            continue
         if re.search(rf"\b{re.escape(cidade)}\b", msg_lower):
             violacoes.append({
                 "tipo": "cidade_fora",
