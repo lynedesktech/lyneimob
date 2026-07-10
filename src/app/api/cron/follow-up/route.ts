@@ -87,6 +87,8 @@ export async function GET(request: Request) {
   let enviados = 0
   let pulados = 0
   let bloqueados_limite = 0
+  let sem_ia = 0
+  let alertaFalhaEnviado = false
 
   for (const conversa of conversas) {
     try {
@@ -320,39 +322,61 @@ ${historico}
 
 Gere agora a mensagem de re-engajamento seguindo o angulo definido. Lembre: SEMPRE "voce", nunca repetir as mensagens anteriores listadas.`
 
-        const resposta = await getAnthropic().messages.create({
-          model: "claude-haiku-4-5",
-          max_tokens: 200,
-          system: sys,
-          messages: [{ role: "user", content: userPrompt }],
-        })
-        const bloco = resposta.content.find((b) => b.type === "text")
-        if (bloco && bloco.type === "text") {
-          mensagem = bloco.text.trim().replace(/^["']|["']$/g, "")
+        // Sonnet no lugar do Haiku: portugues bem mais natural pra voz da
+        // persona, e no volume do follow-up o custo e irrisorio.
+        // 2 tentativas: erro transiente da API nao pode virar mensagem robo.
+        for (let tentativa = 0; tentativa < 2 && !mensagem; tentativa++) {
+          try {
+            const resposta = await getAnthropic().messages.create({
+              model: "claude-sonnet-4-6",
+              max_tokens: 200,
+              system: sys,
+              messages: [{ role: "user", content: userPrompt }],
+            })
+            const bloco = resposta.content.find((b) => b.type === "text")
+            if (bloco && bloco.type === "text") {
+              mensagem = bloco.text.trim().replace(/^["']|["']$/g, "")
+            }
+          } catch (erroIa) {
+            console.error(
+              `[Follow-up] Erro gerando texto via Claude (tentativa ${tentativa + 1}) para conversa ${conversa.id}:`,
+              erroIa instanceof Error ? erroIa.message : erroIa
+            )
+            if (tentativa === 0) {
+              await new Promise((r) => setTimeout(r, 2000))
+            }
+          }
         }
       } catch (erroIa) {
         console.error(
-          `[Follow-up] Erro gerando texto via Claude para conversa ${conversa.id}:`,
+          `[Follow-up] Erro inesperado montando follow-up da conversa ${conversa.id}:`,
           erroIa instanceof Error ? erroIa.message : erroIa
         )
       }
 
-      // Fallback se a IA falhou: pool de variacoes (escolhido pelo hash do dia+conversa)
-      // ATENCAO: NENHUMA dessas frases pode conter "to aqui se precisar", "como esta o seu dia",
-      // "lembrei de voce", "fica a vontade". Todas banidas pelo dono da imobiliaria.
+      // REGRA DE OURO (pedido do Gabriel): follow-up robotizado NUNCA.
+      // Se a IA nao gerou mensagem, NAO cai em template pronto — pula o
+      // lead (ele volta na proxima janela) e alerta o Gabriel UMA vez
+      // por execucao pra causa raiz nao passar despercebida.
       if (!mensagem) {
-        const nomePrefix = nomeCliente ? `${nomeCliente}, ` : ""
-        const FALLBACKS = [
-          `${nomePrefix}pensei numa duvida que vale a pena explorar: o que esta pesando mais na sua decisao agora, a regiao ou o valor?`,
-          `${nomeCliente ? `${nomeCliente}, ` : ""}entre as opcoes que conversamos, alguma fez mais sentido com o que voce procura?`,
-          `${nomePrefix}voce ja teve a chance de pensar no que falamos? Posso te ajudar a destrinchar algum ponto especifico.`,
-          `${nomePrefix}essa decisao costuma envolver bastante reflexao. Tem algum aspecto que voce gostaria de aprofundar antes de decidir?`,
-          `${nomePrefix}quer que eu organize uma visita pra voce conhecer o imovel pessoalmente? As vezes ver no local muda tudo.`,
-          `${nomeCliente ? `${nomeCliente}, ` : ""}me conta uma coisa: voce esta pensando mais em moradia, veraneio ou investimento? Isso ajuda a refinar as opcoes.`,
-          `${nomePrefix}qual seria o melhor momento pra gente conversar com mais calma sobre as opcoes que combinam com voce?`,
-          `${nomePrefix}surgiu uma novidade na regiao que pode te interessar. Quer que eu te conte?`,
-        ]
-        mensagem = FALLBACKS[Math.abs(hash) % FALLBACKS.length]
+        sem_ia++
+        console.error(
+          `[Follow-up] IA indisponivel — lead ${conversa.numero_cliente} pulado (sem template robotizado)`
+        )
+        if (!alertaFalhaEnviado) {
+          alertaFalhaEnviado = true
+          try {
+            const { enviarHumanizado } = await import("@/lib/whatsapp/humanizar")
+            await enviarHumanizado(
+              config as unknown as ConfigWhatsapp,
+              "5527997178981", // Gabriel (Dev IA) — mesmo numero do alerter do agente
+              "⚠️ Follow-up: a geracao via IA falhou nesta execucao. Nenhum template robotizado foi enviado (leads pulados ate a proxima janela). Confira os logs da Vercel e a ANTHROPIC_API_KEY."
+            )
+          } catch {
+            // alerta e melhor-esforco; nao pode travar o loop
+          }
+        }
+        continue
       }
 
       const { enviarHumanizado } = await import("@/lib/whatsapp/humanizar")
@@ -400,6 +424,7 @@ Gere agora a mensagem de re-engajamento seguindo o angulo definido. Lembre: SEMP
     enviados,
     pulados,
     bloqueados_limite,
+    sem_ia,
     total_avaliadas: conversas.length,
   })
 }
