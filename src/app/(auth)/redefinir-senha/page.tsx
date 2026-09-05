@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useActionState } from "react"
+import { Suspense, useState, useActionState } from "react"
+import { useSearchParams } from "next/navigation"
 import { redefinirSenha } from "@/actions/auth"
 import type { EstadoFormulario } from "@/types/formulario"
 import { Button } from "@/components/ui/button"
@@ -17,7 +18,11 @@ import {
 } from "@/components/ui/card"
 import { Eye, EyeOff } from "lucide-react"
 
-export default function RedefinirSenhaPage() {
+function FormularioSenha() {
+  // ?convite=1: primeiro acesso de quem foi convidado por e-mail. Mesma tela,
+  // mas o texto muda e, ao salvar, a pessoa entra direto no painel.
+  const ehConvite = useSearchParams().get("convite") === "1"
+
   const [estado, formAction, pendente] = useActionState<EstadoFormulario, FormData>(
     redefinirSenha,
     {}
@@ -28,14 +33,19 @@ export default function RedefinirSenhaPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">Redefinir senha</CardTitle>
+        <CardTitle className="text-2xl">
+          {ehConvite ? "Bem-vinda ao LyneImob" : "Redefinir senha"}
+        </CardTitle>
         <CardDescription>
-          Digite sua nova senha abaixo
+          {ehConvite
+            ? "Sua conta já está criada. Escolha a senha que você vai usar para entrar."
+            : "Digite sua nova senha abaixo"}
         </CardDescription>
       </CardHeader>
 
       <form action={formAction}>
         <CardContent className="space-y-5">
+          {ehConvite && <input type="hidden" name="convite" value="1" />}
           {estado.erro && (
             <AlertaFormulario tipo="erro" mensagem={estado.erro} />
           )}
@@ -89,10 +99,23 @@ export default function RedefinirSenhaPage() {
 
         <CardFooter>
           <Button type="submit" className="w-full" disabled={pendente}>
-            {pendente ? "Salvando..." : "Salvar nova senha"}
+            {pendente
+              ? "Salvando..."
+              : ehConvite
+                ? "Definir senha e entrar"
+                : "Salvar nova senha"}
           </Button>
         </CardFooter>
       </form>
     </Card>
+  )
+}
+
+export default function RedefinirSenhaPage() {
+  // useSearchParams exige Suspense em pagina pre-renderizada (mesmo padrao do login)
+  return (
+    <Suspense>
+      <FormularioSenha />
+    </Suspense>
   )
 }

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
-import { UserPlus } from "lucide-react"
+import { UserPlus, Copy, Check, Mail, AlertCircle } from "lucide-react"
 import { useListaUsuarios } from "@/hooks/use-lista-usuarios"
 import { criarUsuario, alterarCargo, alternarStatusUsuario, removerUsuario } from "@/actions/usuarios"
 import { Button } from "@/components/ui/button"
@@ -189,6 +189,23 @@ export function PaginaUsuarios({ ehAdmin, usuarioLogadoId }: PaginaUsuariosProps
 function DialogCriarMembro({ onCriar }: { onCriar: () => void }) {
   const [aberto, setAberto] = useState(false)
   const [criando, setCriando] = useState(false)
+  const [copiado, setCopiado] = useState(false)
+  // Depois de criar, o dialog vira a tela do convite: mostra o link de primeiro
+  // acesso. E o plano B se o e-mail nao chegar (spam, endereco errado, envio
+  // fora do ar) — quem criou manda o link pelo WhatsApp.
+  const [convite, setConvite] = useState<{
+    email: string
+    link: string
+    emailEnviado: boolean
+  } | null>(null)
+
+  function alternar(abrir: boolean) {
+    setAberto(abrir)
+    if (!abrir) {
+      setConvite(null)
+      setCopiado(false)
+    }
+  }
 
   async function handleCriar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -201,15 +218,34 @@ function DialogCriarMembro({ onCriar }: { onCriar: () => void }) {
     if (erro) {
       toast.error(erro)
     } else {
-      toast.success(obterSucesso(resultado) ?? "Usuário criado!")
-      setAberto(false)
+      toast.success(obterSucesso(resultado) ?? "Membro criado!")
+      const dados = (resultado as {
+        dados?: { email: string; linkConvite: string; emailEnviado: boolean }
+      }).dados
+      if (dados?.linkConvite) {
+        setConvite({ email: dados.email, link: dados.linkConvite, emailEnviado: dados.emailEnviado })
+      } else {
+        setAberto(false)
+      }
       onCriar()
     }
     setCriando(false)
   }
 
+  async function copiarLink() {
+    if (!convite) return
+    try {
+      await navigator.clipboard.writeText(convite.link)
+      setCopiado(true)
+      toast.success("Link copiado!")
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {
+      toast.error("Não foi possível copiar. Selecione o link e copie manualmente.")
+    }
+  }
+
   return (
-    <Dialog open={aberto} onOpenChange={setAberto}>
+    <Dialog open={aberto} onOpenChange={alternar}>
       <DialogTrigger
         render={
           <Button>
@@ -219,68 +255,100 @@ function DialogCriarMembro({ onCriar }: { onCriar: () => void }) {
         }
       />
       <DialogContent>
-        <form onSubmit={handleCriar}>
-          <DialogHeader>
-            <DialogTitle>Criar membro</DialogTitle>
-            <DialogDescription>
-              Preencha os dados do novo membro. Depois, envie o email e a senha para ele.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome</Label>
-              <Input
-                id="nome"
-                name="nome"
-                type="text"
-                placeholder="Nome completo"
-                required
-              />
+        {convite ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>
+                {convite.emailEnviado ? "Convite enviado" : "Conta criada, mas o e-mail não saiu"}
+              </DialogTitle>
+              <DialogDescription>
+                {convite.emailEnviado
+                  ? `Enviamos para ${convite.email} um e-mail com o link para definir a senha. Se não chegar em alguns minutos, mande o link abaixo pelo WhatsApp.`
+                  : `A conta de ${convite.email} foi criada, mas o e-mail de primeiro acesso não pôde ser enviado. Mande o link abaixo pelo WhatsApp para a pessoa definir a senha.`}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-4">
+              <div
+                className={`flex items-start gap-3 rounded-lg p-3 text-sm ${
+                  convite.emailEnviado ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
+                }`}
+              >
+                {convite.emailEnviado ? (
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0" />
+                ) : (
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                )}
+                <p>
+                  O link é de uso único. Se expirar, a pessoa clica em <strong>Esqueci minha senha</strong> na
+                  tela de login e informa este mesmo e-mail.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={convite.link}
+                  className="font-mono text-xs bg-muted/50"
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={copiarLink}
+                  className="shrink-0"
+                  aria-label="Copiar link de primeiro acesso"
+                >
+                  {copiado ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="email@exemplo.com"
-                required
-              />
+            <DialogFooter>
+              <Button type="button" onClick={() => alternar(false)}>
+                Concluir
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <form onSubmit={handleCriar}>
+            <DialogHeader>
+              <DialogTitle>Criar membro</DialogTitle>
+              <DialogDescription>
+                A pessoa recebe um e-mail com o link para definir a própria senha e já entra no sistema.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome</Label>
+                <Input id="nome" name="nome" type="text" placeholder="Nome completo" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" placeholder="email@exemplo.com" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cargo">Cargo</Label>
+                <Select name="cargo" defaultValue="corretor">
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="corretor">Corretor</SelectItem>
+                    <SelectItem value="gerente">Gerente</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="senha">Senha</Label>
-              <Input
-                id="senha"
-                name="senha"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                minLength={6}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cargo">Cargo</Label>
-              <Select name="cargo" defaultValue="corretor">
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="corretor">Corretor</SelectItem>
-                  <SelectItem value="gerente">Gerente</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAberto(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={criando}>
-              {criando ? "Criando..." : "Criar membro"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => alternar(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={criando}>
+                {criando ? "Enviando convite..." : "Criar e enviar convite"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

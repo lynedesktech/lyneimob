@@ -2,6 +2,9 @@
 
 import { criarClienteServer } from "@/lib/supabase/server"
 import { criarClienteAdmin } from "@/lib/supabase/admin"
+import { headers } from "next/headers"
+import { enviarEmail } from "@/lib/resend"
+import { assuntoEmailConvite, montarEmailConvite } from "@/lib/emails/convite-usuario"
 import { verificarPermissao } from "@/lib/permissoes"
 import { verificarLimiteCorretores } from "@/lib/verificar-limites"
 import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
@@ -48,7 +51,6 @@ export async function criarUsuario(formData: FormData) {
 
   const nome = (formData.get("nome") as string)?.trim()
   const email = (formData.get("email") as string)?.trim().toLowerCase()
-  const senha = formData.get("senha") as string
   const cargo = formData.get("cargo") as string
 
   if (!nome) {
@@ -57,10 +59,6 @@ export async function criarUsuario(formData: FormData) {
 
   if (!email || !email.includes("@")) {
     return { erro: "Email inválido." }
-  }
-
-  if (!senha || senha.length < 6) {
-    return { erro: "Senha deve ter no mínimo 6 caracteres." }
   }
 
   if (!["admin", "corretor", "gerente"].includes(cargo)) {
@@ -87,24 +85,22 @@ export async function criarUsuario(formData: FormData) {
     return { erro: "Já existe um usuário com esse email nesta organização." }
   }
 
-  // Criar auth user — o trigger no banco cria automaticamente
-  // uma org temporaria + registro em usuarios
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({
+  // Convite em vez de senha: a conta nasce SEM senha e recebe um token de
+  // primeiro acesso. A pessoa abre o link do e-mail, escolhe a propria senha e
+  // ja entra. A marca convite_pendente vai no metadata e o middleware segura a
+  // pessoa na tela de definir senha ate ela concluir. O trigger do banco le o
+  // `nome` daqui, igual fazia com o createUser.
+  const { data: convite, error: erroConvite } = await admin.auth.admin.generateLink({
+    type: "invite",
     email,
-    password: senha,
-    email_confirm: true,
-    user_metadata: { nome },
+    options: { data: { nome, convite_pendente: true } },
   })
 
-  if (authError) {
-    return { erro: `Erro ao criar conta: ${authError.message}` }
+  if (erroConvite || !convite?.user) {
+    return { erro: `Erro ao criar conta: ${erroConvite?.message ?? "usuário não retornado."}` }
   }
 
-  if (!authData.user) {
-    return { erro: "Erro ao criar conta: usuário não retornado." }
-  }
-
-  const userId = authData.user.id
+  const userId = convite.user.id
 
   // Buscar registro criado pelo trigger para saber a org temporaria
   const { data: autoUser } = await admin
@@ -141,10 +137,58 @@ export async function criarUsuario(formData: FormData) {
     }
   }
 
-  return {
-    sucesso: "Usuário criado com sucesso!",
-    dados: { nome, email, cargo },
+  // O link e montado aqui (nao pelo Supabase) e validado em /auth/callback com
+  // verifyOtp. Assim nao depende da lista de URLs de redirecionamento do
+  // Supabase nem de cookie no navegador de quem vai clicar.
+  const baseUrl = await descobrirUrlDoApp()
+  const linkConvite =
+    `${baseUrl}/auth/callback?token_hash=${encodeURIComponent(convite.properties.hashed_token)}&type=invite`
+
+  const { data: org } = await admin
+    .from("organizacoes")
+    .select("nome")
+    .eq("id", usuario.organizacao_id)
+    .single()
+  const nomeOrganizacao = org?.nome ?? "sua imobiliária"
+
+  // O e-mail e melhor esforco: a conta ja existe. Se o envio falhar, o link
+  // volta pra tela pra quem criou mandar pelo WhatsApp — nao pode derrubar a
+  // criacao nem deixar a pessoa sem caminho de entrada.
+  let emailEnviado = false
+  try {
+    await enviarEmail({
+      para: email,
+      assunto: assuntoEmailConvite(nomeOrganizacao),
+      html: montarEmailConvite({ nome, emailLogin: email, nomeOrganizacao, link: linkConvite }),
+    })
+    emailEnviado = true
+  } catch (erroEmail) {
+    console.error(
+      "[criarUsuario] Falha ao enviar e-mail de convite:",
+      erroEmail instanceof Error ? erroEmail.message : erroEmail
+    )
   }
+
+  return {
+    sucesso: emailEnviado
+      ? `Convite enviado para ${email}.`
+      : "Conta criada, mas o e-mail não pôde ser enviado. Mande o link pelo WhatsApp.",
+    dados: { nome, email, cargo, linkConvite, emailEnviado },
+  }
+}
+
+/**
+ * URL publica do app para montar links que saem por e-mail.
+ * Prefere NEXT_PUBLIC_APP_URL; se faltar, deriva do proprio request.
+ */
+async function descobrirUrlDoApp(): Promise<string> {
+  const daEnv = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim().replace(/\/+$/, "")
+  if (daEnv) return daEnv
+
+  const h = await headers()
+  const host = h.get("x-forwarded-host") ?? h.get("host")
+  const proto = h.get("x-forwarded-proto") ?? "https"
+  return host ? `${proto}://${host}` : "http://localhost:3000"
 }
 
 // ============================================================

@@ -214,6 +214,7 @@ planejamento/
 
 - **Multi-tenancy com RLS**: toda tabela tem `organizacao_id` e policies que garantem isolamento total entre imobiliarias
 - **Auth**: Supabase Auth com email/senha. Trigger no banco cria organizacao + usuario automaticamente no cadastro
+- **Convite de equipe**: `criarUsuario` nao pede senha. Gera um token de primeiro acesso (`auth.admin.generateLink` tipo `invite`), manda e-mail via Resend (`lib/emails/convite-usuario.ts`) com link para `/auth/callback?token_hash=...&type=invite`, validado no servidor com `verifyOtp`. A pessoa cai em `/redefinir-senha?convite=1`, define a senha e entra. A marca `convite_pendente` no metadata do usuario faz o middleware segurar a pessoa nessa tela ate concluir. O link tambem aparece na tela de quem criou, como plano B se o e-mail nao chegar
 - **Server Components + Server Actions**: dados buscados no servidor, acoes executadas via Server Actions
 - **Middleware**: intercepta todas as requisicoes, valida sessao, redireciona se nao autenticado
 - **Grupos de rotas**: `(auth)` para paginas publicas, `(dashboard)` para paginas protegidas

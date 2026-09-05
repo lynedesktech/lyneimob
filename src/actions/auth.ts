@@ -142,12 +142,27 @@ export async function redefinirSenha(
 
   const supabase = await criarClienteServer()
 
+  // Primeiro acesso por convite: alem da senha, apaga a marca convite_pendente
+  // que o middleware usa para prender a pessoa nesta tela ate ela definir a senha.
+  const ehConvite = formData.get("convite") === "1"
+
   const { error } = await supabase.auth.updateUser({
     password: dados.data.senha,
+    ...(ehConvite ? { data: { convite_pendente: false } } : {}),
   })
 
   if (error) {
-    return { erro: "Erro ao redefinir senha. Tente solicitar um novo link de recuperação." }
+    return {
+      erro: ehConvite
+        ? "Não foi possível definir a senha. Peça um link novo em 'Esqueci minha senha' na tela de login."
+        : "Erro ao redefinir senha. Tente solicitar um novo link de recuperação.",
+    }
+  }
+
+  // No convite a pessoa ja esta autenticada pelo link: entra direto no painel,
+  // sem passar pelo login de novo.
+  if (ehConvite) {
+    redirect("/painel")
   }
 
   await supabase.auth.signOut()

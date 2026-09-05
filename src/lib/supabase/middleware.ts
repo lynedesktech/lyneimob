@@ -85,6 +85,18 @@ export async function atualizarSessao(request: NextRequest) {
     return redirecionarComCookies(url)
   }
 
+  // Primeiro acesso por convite: a pessoa entrou pelo link do e-mail e ainda nao
+  // escolheu a senha. Enquanto a marca convite_pendente existir, qualquer rota
+  // protegida volta para a tela de definir senha — ela nao navega pelo sistema
+  // sem senha propria, mesmo fechando a aba e voltando com a sessao viva.
+  const convitePendente = user?.user_metadata?.convite_pendente === true
+  if (user && convitePendente && ehRotaProtegida) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/redefinir-senha"
+    url.search = "?convite=1"
+    return redirecionarComCookies(url)
+  }
+
   // Se está autenticado e tenta acessar rota de auth → redireciona para painel
   // Exceções:
   // - ?erro= do layout (sessão inválida) → deixar passar para evitar loop
