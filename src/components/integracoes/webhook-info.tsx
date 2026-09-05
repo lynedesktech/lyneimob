@@ -1,26 +1,34 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Webhook, Copy, Check } from "lucide-react"
 import { toast } from "sonner"
+import { buscarUrlWebhookPortais } from "@/actions/webhook-portais"
 
-interface WebhookInfoProps {
-  slug: string
-}
-
-export function WebhookInfo({ slug }: WebhookInfoProps) {
+export function WebhookInfo() {
   const [copiado, setCopiado] = useState(false)
+  const [webhookUrl, setWebhookUrl] = useState("")
+  const [erro, setErro] = useState("")
 
-  const appUrl = typeof window !== "undefined"
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-
-  const webhookUrl = `${appUrl}/api/webhooks/portais`
+  // A URL carrega o token da organização, então ela vem de uma Server Action
+  // com checagem de permissão — não da API do banco com o login do usuário.
+  useEffect(() => {
+    let cancelado = false
+    buscarUrlWebhookPortais().then((r) => {
+      if (cancelado) return
+      if (r.url) setWebhookUrl(r.url)
+      else setErro(r.erro || "Nao foi possivel carregar a URL do webhook.")
+    })
+    return () => {
+      cancelado = true
+    }
+  }, [])
 
   async function copiarUrl() {
+    if (!webhookUrl) return
     await navigator.clipboard.writeText(webhookUrl)
     setCopiado(true)
     toast.success("URL copiada!")
@@ -45,13 +53,15 @@ export function WebhookInfo({ slug }: WebhookInfoProps) {
             <div className="flex gap-2">
               <Input
                 readOnly
-                value={webhookUrl}
+                value={webhookUrl || (erro ? "" : "Carregando...")}
+                placeholder={erro}
                 className="font-mono text-sm bg-muted/50"
               />
               <Button
                 variant="outline"
                 size="icon"
                 onClick={copiarUrl}
+                disabled={!webhookUrl}
                 className="shrink-0"
               >
                 {copiado ? (
@@ -64,9 +74,8 @@ export function WebhookInfo({ slug }: WebhookInfoProps) {
 
             <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
               <p><strong>Configuração nos portais:</strong></p>
-              <p>Envie um POST para esta URL com os headers:</p>
-              <p className="font-mono mt-1">x-org-slug: {slug}</p>
-              <p className="font-mono">x-portal: zap | olx | vivareal</p>
+              <p>Envie um POST para esta URL. O token que vem nela identifica a sua imobiliária — trate como senha e não publique.</p>
+              <p className="font-mono mt-1">x-portal: zap | olx | vivareal</p>
               <p className="mt-2">O webhook aceita payloads do ZAP, OLX, VivaReal e Imovelweb automaticamente.</p>
             </div>
           </div>

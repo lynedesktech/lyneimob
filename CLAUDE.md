@@ -149,7 +149,7 @@ Todo plano deve ser escrito como conversa, nao como documentacao tecnica. Usar l
 - **Backend**: Supabase (PostgreSQL, Auth, Storage)
 - **Server State**: TanStack Query v5
 - **Formularios**: React Hook Form + Zod v4
-- **IA**: OpenAI GPT-4o-mini (SDK `openai`)
+- **IA**: Anthropic Claude (SDK `@anthropic-ai/sdk`) — Sonnet para geração de texto do agente e do follow-up, Haiku para classificações rápidas. A OpenAI ainda aparece em partes antigas do CRM, mas o agente de WhatsApp e o follow-up rodam em Claude
 - **Pagamentos**: Stripe (`stripe`) — checkout, assinaturas, webhooks, customer portal
 - **Email transacional**: Resend (`resend`) — emails de auth (via SMTP no Supabase), convites, notificacoes
 - **Cache/Fila**: Upstash Redis (`@upstash/redis`) — debounce e memoria de conversa do agente WhatsApp
@@ -203,7 +203,7 @@ src/
 └── middleware.ts          # Middleware de auth (protecao de rotas)
 
 supabase/
-└── migrations/            # Migrations SQL do banco (001 a 030)
+└── migrations/            # Migrations SQL do banco (001 a 047)
 
 planejamento/
 ├── pesquisas/             # Pesquisas geradas pela skill /pesquisa
@@ -237,6 +237,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=chave-publica-do-supabase
 SUPABASE_SERVICE_ROLE_KEY=chave-admin-do-supabase (nunca expor no browser)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 OPENAI_API_KEY=chave-da-openai (nunca expor no browser, usada apenas em Server Actions)
+ANTHROPIC_API_KEY=chave-da-anthropic (obrigatoria: agente WhatsApp e cron de follow-up)
+ALERTA_WHATSAPP_NUMERO=5527999999999 (numero que recebe alertas de falha do follow-up)
+ALERTA_WHATSAPP_ORG_ID= (opcional: so alerta quando o lead for dessa organizacao)
 STRIPE_SECRET_KEY=chave-secreta-do-stripe (nunca expor no browser)
 STRIPE_WEBHOOK_SECRET=secret-do-webhook-stripe
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=chave-publica-do-stripe

@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import secrets
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from fastapi import BackgroundTasks, FastAPI, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,7 +22,6 @@ from fastapi.responses import JSONResponse
 
 from agente.config import settings
 from agente.core.agent import FalhaLLM, run_agent
-from agente.core.campanha_guaruja import detectar_lead_guaruja
 from agente.core.sanitizer import extrair_primeiro_nome_valido
 from agente.models.webhook import WebhookMessage
 from agente.services import redis_client
@@ -261,7 +262,7 @@ async def _analisar_e_alertar(
     try:
         conversa = await db.select(
             "conversas_whatsapp",
-            columns="origem_lead,imovel_interesse_id",
+            columns="origem_lead,imovel_interesse_id,modo_campanha",
             filters={"id": f"eq.{conversa_id}"},
             single=True,
         ) or {}
@@ -269,9 +270,14 @@ async def _analisar_e_alertar(
         # Modo campanha Guaruja: "Cumbuco" e mencao legitima (esta na landing
         # page oficial do empreendimento), entao o analyzer precisa saber
         # em que modo a conversa esta antes de flagrar cidade fora.
-        mensagens = await db.buscar_mensagens_recentes(conversa_id, 15)
-        textos = [m.get("conteudo") or "" for m in mensagens] + [full_response]
-        modo_guaruja = detectar_lead_guaruja(textos)
+        #
+        # Le a marca GRAVADA na conversa pelo agente. A deteccao antiga varria
+        # as ultimas 15 mensagens MAIS a propria resposta em analise, com dois
+        # defeitos: uma resposta que citasse o Guaruja indevidamente ativava o
+        # modo e se isentava da checagem (o texto sob auditoria se autoeximia),
+        # e a janela de 15 nao batia com as 30 + memoria que o agente usa pra
+        # decidir, gerando alerta falso em conversa longa.
+        modo_guaruja = conversa.get("modo_campanha") == "guaruja"
 
         violacoes = analisar_resposta(
             full_response,
@@ -297,8 +303,14 @@ async def _analisar_e_alertar(
                     "detalhe": v.get("detalhe", ""),
                     "mensagem_agente": full_response[:2000],
                 })
-            except Exception:
-                pass  # tabela pode nao existir ate a migration rodar
+            except Exception as e:
+                # Nao derruba o alerta, mas precisa aparecer no log: engolir em
+                # silencio fazia a tabela ficar vazia por erro de RLS ou coluna
+                # e o painel reportar "zero violacoes", que parece o oposto.
+                logger.warning(
+                    f"[ANALYZER] Falha ao registrar violacao '{v.get('tipo')}' "
+                    f"da conversa {conversa_id[:8]}: {e}"
+                )
 
         org = await db.select(
             "organizacoes",
@@ -319,6 +331,68 @@ async def _analisar_e_alertar(
         )
     except Exception as e:
         logger.warning(f"[ANALYZER] Falha analisando resposta {conversa_id[:8]}: {e}")
+
+
+def _autorizado(authorization: str | None) -> bool:
+    """Valida o header Authorization: Bearer <INTERNAL_API_SECRET>.
+
+    Usado por todas as rotas de controle (/api/ai/* e /admin/*). Antes so o
+    /admin/limpar-memoria checava: as rotas /api/ai/* ficaram abertas, e a
+    /api/ai/global-toggle desligava a IA de TODAS as organizacoes com um POST
+    anonimo, porque a flag global e uma unica chave no Redis.
+
+    Comparacao em tempo constante pra nao vazar o segredo por medicao de tempo.
+    """
+    secret = settings.internal_api_secret or settings.supabase_service_key
+    if not secret:
+        logger.error("[SEC] Nenhum INTERNAL_API_SECRET configurado — rota negada")
+        return False
+    if not authorization or not authorization.startswith("Bearer "):
+        return False
+    return secrets.compare_digest(authorization[7:], secret)
+
+
+def _nao_autorizado() -> JSONResponse:
+    """Resposta 401 nova a cada chamada (objeto Response nao deve ser reusado)."""
+    return JSONResponse({"erro": "Nao autorizado"}, status_code=401)
+
+
+def _resolver_api_url(candidato: str | None, config: dict) -> str:
+    """Resolve a URL da Uazapi sem confiar cegamente no webhook.
+
+    O campo BaseUrl chega dentro do payload, ou seja, e controlado por quem
+    faz a requisicao. Como o token REAL da organizacao viaja no header das
+    chamadas seguintes, aceitar esse campo permitia forjar um webhook
+    apontando pro servidor do atacante e receber o token de volta.
+
+    Regra: a URL configurada no servidor sempre vence. A que veio no payload
+    so e aceita quando o host bate com o configurado (util quando a Uazapi
+    manda a mesma base com path/porta diferente).
+    """
+    configurada = (config.get("uazapi_url") or "").strip() or (
+        settings.uazapi_default_url or ""
+    ).strip()
+    candidato = (candidato or "").strip()
+
+    if not candidato:
+        return configurada
+    if not configurada:
+        logger.warning(
+            "[SEC] BaseUrl do webhook ignorada: nenhuma URL da Uazapi configurada no servidor"
+        )
+        return ""
+
+    try:
+        if urlparse(candidato).netloc.lower() == urlparse(configurada).netloc.lower():
+            return candidato
+    except Exception:
+        pass
+
+    logger.warning(
+        f"[SEC] BaseUrl do webhook ignorada porque o host nao confere com o "
+        f"configurado: {candidato[:80]}"
+    )
+    return configurada
 
 
 # ─────────────────── Processamento ───────────────────
@@ -349,29 +423,41 @@ async def process_buffered_messages(
         if last_id and last_id != msg.message_id:
             return
 
-        buffer = await redis_client.buffer_get(chat_id, org_id)
-        if not buffer:
-            return
-
-        await redis_client.buffer_delete(chat_id, org_id)
-
         # Lock de processamento. TTL 240s: precisa cobrir o pior caso
         # (7 iteracoes de tool + Sonnet + retry silencioso de 45s) — com 90s
         # o lock expirava no meio e permitia processamento duplo.
+        #
+        # O lock vem ANTES de tocar no buffer. Na ordem antiga o buffer era
+        # apagado primeiro: quando o lock estava ocupado (o retry de 45s chega a
+        # segurar por minutos), a mensagem ja tinha sumido do Redis e era
+        # descartada em silencio — o cliente so era respondido se escrevesse de
+        # novo. Preservando o buffer, a proxima task drena o que ficou.
         lock_key = f"lock:agente:{conversa_id}"
         if not await redis_client.acquire_lock(lock_key, ttl=240):
-            logger.info(f"[AGENT] Conversa {conversa_id} ja em processamento")
+            logger.info(
+                f"[AGENT] Conversa {conversa_id} ja em processamento — buffer preservado"
+            )
             return
 
         try:
-            # Garantir api_url e token validos
-            api_url = msg.api_url or settings.uazapi_default_url
-            token = msg.token or settings.uazapi_default_token
+            buffer = await redis_client.buffer_get(chat_id, org_id)
+            if not buffer:
+                return
+
+            await redis_client.buffer_delete(chat_id, org_id)
+
+            # Host de saida NUNCA sai do payload do webhook sem validacao —
+            # ver _resolver_api_url. O token continua podendo vir do webhook
+            # porque agora ele so viaja pro host ja configurado no servidor.
+            api_url = _resolver_api_url(msg.api_url, config)
+            token = msg.token or settings.uazapi_default_token or config.get("uazapi_token", "")
 
             if not api_url or not token:
-                # Usar credenciais da config
-                api_url = api_url or config.get("uazapi_url", "")
-                token = token or config.get("uazapi_token", "")
+                logger.error(
+                    f"[AGENT] Sem credenciais Uazapi validas pra conversa "
+                    f"{conversa_id[:8]} — abortando"
+                )
+                return
 
             logger.info(
                 f"[AGENT] Processando {len(buffer)} msg(s) de {chat_id} (conversa: {conversa_id})"
@@ -395,7 +481,11 @@ async def process_buffered_messages(
                     )
                     break
                 except FalhaLLM as e:
-                    if tentativa == 0:
+                    # Retry so e seguro quando NENHUMA tool com efeito externo
+                    # rodou. Se o card ja foi enviado ou a atividade ja foi
+                    # criada, repetir o run_agent do zero refaria a acao e o
+                    # cliente receberia tudo em duplicidade.
+                    if tentativa == 0 and not e.efeitos_colaterais:
                         logger.warning(
                             f"[AGENT] Falha LLM na conversa {conversa_id[:8]} — "
                             f"retry silencioso em 45s: {e}"
@@ -403,17 +493,31 @@ async def process_buffered_messages(
                         await asyncio.sleep(45)
                     else:
                         logger.error(
-                            f"[AGENT] Falha LLM persistente na conversa {conversa_id[:8]} — "
+                            f"[AGENT] Falha LLM na conversa {conversa_id[:8]} "
+                            f"(efeitos_colaterais={e.efeitos_colaterais}) — "
                             f"silencio + alerta pro Gabriel: {e}"
                         )
                         try:
                             from agente.services.alerter import NUMERO_ALERTA
                             from agente.services.whatsapp import send_text
+
+                            if e.efeitos_colaterais:
+                                cabecalho = (
+                                    "⚠️ *Agente parou no meio de uma acao*\n"
+                                    "Ele JA tinha enviado algo ao cliente (card/atividade) "
+                                    "quando a IA falhou, entao o retry foi bloqueado pra nao duplicar.\n"
+                                )
+                            else:
+                                cabecalho = (
+                                    "⚠️ *Agente falhou 2x ao responder*\n"
+                                    "O cliente NAO recebeu resposta.\n"
+                                )
+
                             await send_text(
                                 api_url, token, NUMERO_ALERTA,
-                                f"⚠️ *Agente falhou 2x ao responder*\n"
+                                f"{cabecalho}"
                                 f"Conversa: `{conversa_id[:8]}` | Lead: {chat_id}\n"
-                                f"O cliente NAO recebeu resposta — vale assumir manualmente.\n"
+                                f"Vale assumir manualmente.\n"
                                 f"Erro: {str(e)[:200]}",
                             )
                         except Exception as e2:
@@ -570,7 +674,7 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         return JSONResponse({"status": "org_not_found"})
 
     org_id = config["organizacao_id"]
-    api_url = msg.api_url or settings.uazapi_default_url or config.get("uazapi_url", "")
+    api_url = _resolver_api_url(msg.api_url, config)
     token = msg.token or settings.uazapi_default_token or config.get("uazapi_token", "")
 
     # 1. Mensagem saindo (fromMe)
@@ -667,16 +771,25 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks) -
         )
         processed_content = ctx_anuncio + processed_content
 
-        # Marca a conversa como vinda de anuncio SEMPRE que o contexto de
-        # anuncio chegar — mesmo em conversa reaproveitada. Lead que clicou
-        # no anuncio e lead de campanha, nao importa se ja falou antes.
+        # Marca a origem como anuncio apenas quando a conversa e nova ou ainda
+        # nao tem origem definida. Sobrescrever sempre destruia a atribuicao
+        # real do lead: quem entrou pelo site ou por portal e depois clicava num
+        # anuncio era reetiquetado pra sempre, corrompendo o funil por canal e
+        # mudando o comportamento do analyzer na conversa inteira.
         # (Requer migration 041: a constraint antiga rejeitava 'anuncio_meta')
-        try:
-            await db.atualizar_conversa(conversa_id, {
-                "origem_lead": "anuncio_meta",
-            })
-        except Exception as e:
-            logger.warning(f"[AD_CONTEXT] Nao foi possivel salvar origem_lead: {e}")
+        origem_atual = (conversa.get("origem_lead") or "").strip()
+        if is_nova or not origem_atual or origem_atual == "whatsapp":
+            try:
+                await db.atualizar_conversa(conversa_id, {
+                    "origem_lead": "anuncio_meta",
+                })
+            except Exception as e:
+                logger.warning(f"[AD_CONTEXT] Nao foi possivel salvar origem_lead: {e}")
+        else:
+            logger.info(
+                f"[AD_CONTEXT] Conversa {conversa_id[:8]} mantem origem '{origem_atual}' "
+                f"(ja tinha atribuicao anterior)"
+            )
 
     # 7b. Se for um reply citando mensagem anterior, prefixar o conteudo
     # com a citacao pra que o agente entenda do que o cliente esta falando.
@@ -746,11 +859,17 @@ async def webhook_handler_connection(request: Request) -> JSONResponse:
 
 
 @app.post("/api/ai/toggle")
-async def toggle_ai(request: Request) -> JSONResponse:
-    """Ativa ou desativa a IA para um contato.
+async def toggle_ai(
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> JSONResponse:
+    """Ativa ou desativa a IA para um contato. Exige INTERNAL_API_SECRET.
 
     Body: {"phone": "5527...", "org_id": "...", "enabled": true/false}
     """
+    if not _autorizado(authorization):
+        return _nao_autorizado()
+
     body = await request.json()
     phone = body.get("phone", "")
     org_id = body.get("org_id", "")
@@ -770,11 +889,21 @@ async def toggle_ai(request: Request) -> JSONResponse:
 
 
 @app.post("/api/ai/global-toggle")
-async def global_toggle_ai(request: Request) -> JSONResponse:
-    """Ativa ou desativa a IA globalmente.
+async def global_toggle_ai(
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> JSONResponse:
+    """Ativa ou desativa a IA globalmente. Exige INTERNAL_API_SECRET.
+
+    A flag e uma unica chave no Redis, compartilhada por TODAS as organizacoes:
+    sem autenticacao, um POST anonimo derrubava o atendimento de todos os
+    clientes de uma vez.
 
     Body: {"enabled": true/false}
     """
+    if not _autorizado(authorization):
+        return _nao_autorizado()
+
     body = await request.json()
     enabled = body.get("enabled", True)
     await redis_client.set_ai_global(enabled)
@@ -790,8 +919,14 @@ async def global_ai_status() -> JSONResponse:
 
 
 @app.post("/api/ai/clear-memory/{conversa_id}")
-async def clear_ai_memory(conversa_id: str) -> JSONResponse:
-    """Limpa memoria de conversa da IA."""
+async def clear_ai_memory(
+    conversa_id: str,
+    authorization: str | None = Header(default=None),
+) -> JSONResponse:
+    """Limpa memoria de conversa da IA. Exige INTERNAL_API_SECRET."""
+    if not _autorizado(authorization):
+        return _nao_autorizado()
+
     await redis_client.memory_clear(conversa_id)
     return JSONResponse({"status": "cleared", "conversa_id": conversa_id})
 
@@ -802,11 +937,17 @@ async def clear_ai_memory(conversa_id: str) -> JSONResponse:
 
 
 @app.post("/api/ai/unblock")
-async def unblock_chat(request: Request) -> JSONResponse:
-    """Desbloqueia IA para um contato.
+async def unblock_chat(
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> JSONResponse:
+    """Desbloqueia IA para um contato. Exige INTERNAL_API_SECRET.
 
     Body: {"phone": "5527...", "org_id": "..."}
     """
+    if not _autorizado(authorization):
+        return _nao_autorizado()
+
     body = await request.json()
     phone = body.get("phone", "")
     org_id = body.get("org_id", "")
@@ -856,9 +997,8 @@ async def admin_limpar_memoria(
     authorization: str | None = Header(default=None),
 ) -> JSONResponse:
     """Limpa memoria Redis de uma conversa especifica. Protegido por INTERNAL_API_SECRET."""
-    secret = settings.internal_api_secret or settings.supabase_service_key
-    if not authorization or not authorization.startswith("Bearer ") or authorization[7:] != secret:
-        return JSONResponse({"erro": "Nao autorizado"}, status_code=401)
+    if not _autorizado(authorization):
+        return _nao_autorizado()
 
     r = await redis_client.get_redis()
     chaves = [

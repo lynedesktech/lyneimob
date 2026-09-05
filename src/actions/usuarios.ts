@@ -256,6 +256,19 @@ export async function removerUsuario(usuarioAlvoId: string) {
   // Usar admin client para deletar o auth user (cascade remove da tabela usuarios)
   const supabaseAdmin = criarClienteAdmin()
 
+  // O cliente admin ignora RLS, entao o vinculo com a organizacao precisa ser
+  // conferido aqui: sem isso, um admin de qualquer organizacao removeria a conta
+  // de um usuario de outra imobiliaria.
+  const { data: alvo } = await supabaseAdmin
+    .from("usuarios")
+    .select("id, organizacao_id")
+    .eq("id", usuarioAlvoId)
+    .single()
+
+  if (!alvo || alvo.organizacao_id !== usuario.organizacao_id) {
+    return { erro: "Usuario nao encontrado na sua organizacao." }
+  }
+
   const { error } = await supabaseAdmin.auth.admin.deleteUser(usuarioAlvoId)
 
   if (error) {

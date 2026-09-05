@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
+import { MODO_PRODUTO_UNICO } from "@/lib/produto"
 
 export async function atualizarSessao(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -104,7 +105,9 @@ export async function atualizarSessao(request: NextRequest) {
     pathname.startsWith(rota)
   )
 
-  if (user && ehRotaProtegida && !ehRotaLivreTrial) {
+  // No modo produto unico a pagina /financeiro nao existe, entao redirecionar
+  // pra la geraria 404. Nesse modo nao ha cobranca de trial.
+  if (!MODO_PRODUTO_UNICO && user && ehRotaProtegida && !ehRotaLivreTrial) {
     // Buscar organizacao_id do usuário logado
     const { data: usuarioMw } = await supabase
       .from("usuarios")

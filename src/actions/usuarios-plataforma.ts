@@ -61,6 +61,11 @@ export async function listarUsuariosPlataforma(
   pagina = 1,
   porPagina = 12
 ): Promise<{ usuarios: UsuarioPlataforma[]; total: number; organizacoes: { id: string; nome: string }[] }> {
+  const acesso = await verificarAcessoAdmin()
+  if (acesso.erro) {
+    throw new Error(acesso.erro)
+  }
+
   const admin = criarClienteAdmin()
 
   let query = admin
@@ -421,6 +426,11 @@ export async function moverOrganizacaoAdmin(
 // ============================================================
 
 export async function listarOrganizacoesAdmin(): Promise<{ id: string; nome: string }[]> {
+  const acesso = await verificarAcessoAdmin()
+  if (acesso.erro) {
+    throw new Error(acesso.erro)
+  }
+
   const admin = criarClienteAdmin()
 
   const { data } = await admin

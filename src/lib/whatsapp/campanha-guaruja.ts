@@ -29,6 +29,41 @@ export function detectarLeadGuaruja(textos: Array<string | null | undefined>): b
   return textos.some((t) => t && normalizar(t).includes("guaruj"))
 }
 
+/**
+ * Números comerciais do empreendimento, em um lugar só.
+ *
+ * Existe porque o cron de follow-up mantinha uma terceira cópia desses valores
+ * digitada à mão: quem corrigisse o preço aqui deixava o follow-up cotando o
+ * valor antigo para o mesmo lead. Qualquer consumidor que precise só dos
+ * números usa `resumoFatosGuaruja()` em vez de reescrevê-los.
+ *
+ * O bloco de prosa `CONHECIMENTO_GUARUJA` abaixo é o prompt do agente e segue
+ * escrito por extenso de propósito — mas os valores têm que bater com estes.
+ */
+export const FATOS_GUARUJA = {
+  nome: "Guaruja Condominium",
+  cidade: "Caucaia/CE",
+  referencia: "a 12 km da Praia do Cumbuco",
+  areaLote: "150m2",
+  precoMinimo: "R$ 112.500",
+  entrada: "10%",
+  parcelaMinima: "R$ 699,90",
+  entrega: "dezembro de 2028",
+  landingPage: "https://guaruja.dunarealestate.com.br",
+} as const
+
+/** Resumo em uma frase, para consumidores que só precisam dos números. */
+export function resumoFatosGuaruja(): string {
+  const f = FATOS_GUARUJA
+  return (
+    `${f.nome} (condominio fechado de lotes em ${f.cidade}, ${f.referencia}). ` +
+    `Fatos que voce PODE usar: lotes de ${f.areaLote} a partir de ${f.precoMinimo}, ` +
+    `entrada de ${f.entrada}, parcelas a partir de ${f.parcelaMinima} sem juros direto ` +
+    `com a incorporadora, entrega prevista ${f.entrega}, ` +
+    `pagina oficial ${f.landingPage}`
+  )
+}
+
 // Conhecimento extraído da landing page oficial em 03/07/2026
 const CONHECIMENTO_GUARUJA = `# GUARUJA CONDOMINIUM (tudo que voce sabe — e NADA alem disso)
 

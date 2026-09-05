@@ -14,6 +14,23 @@ type ErrorCode =
   | "lead_sem_dados_minimos"
   | "erro_salvar_lead"
   | "erro_interno"
+  | "segredo_ausente"
+  | "segredo_invalido"
+
+/**
+ * Compara dois segredos em tempo constante.
+ *
+ * Evita que a diferença de tempo entre uma comparação que falha no primeiro
+ * caractere e outra que falha no último permita descobrir o segredo aos poucos.
+ */
+function segredosConferem(recebido: string, esperado: string): boolean {
+  if (recebido.length !== esperado.length) return false
+  let diferenca = 0
+  for (let i = 0; i < recebido.length; i++) {
+    diferenca |= recebido.charCodeAt(i) ^ esperado.charCodeAt(i)
+  }
+  return diferenca === 0
+}
 
 export async function POST(request: Request) {
   const inicio = Date.now()
@@ -61,48 +78,46 @@ export async function POST(request: Request) {
 
     const payloadObj = payload as Record<string, unknown>
 
-    // Identificar organizacao pelo header ou campo no body
-    const orgSlug =
-      request.headers.get("x-org-slug") ||
-      (payloadObj.org_slug as string) ||
-      (payloadObj.organizacao_slug as string)
+    // A organizacao de destino vem do SEGREDO, nunca do corpo da requisicao.
+    //
+    // Antes ela era lida de org_slug/org_id/empresa_id — campos que quem chama
+    // escreve à vontade, e o slug é público (é o endereço do site). Isso
+    // permitia injetar leads no CRM de qualquer imobiliária e, pior, fazer o
+    // WhatsApp dela mandar mensagem para um número escolhido pelo atacante,
+    // porque a rota dispara mensagem proativa quando há telefone no payload.
+    const url = new URL(request.url)
+    const segredo =
+      request.headers.get("x-webhook-secret") ||
+      url.searchParams.get("token") ||
+      ""
 
-    const orgId =
-      request.headers.get("x-org-id") ||
-      (payloadObj.org_id as string) ||
-      (payloadObj.organizacao_id as string) ||
-      (payloadObj.empresa_id as string)
-
-    if (!orgSlug && !orgId) {
-      return responder(400, {
-        error_code: "org_nao_identificada",
-        erro: "Organizacao nao identificada. Envie x-org-slug no header ou org_slug no body.",
+    if (!segredo) {
+      return responder(401, {
+        error_code: "segredo_ausente",
+        erro: "Webhook nao autenticado. Use a URL completa disponivel em Configuracoes > Portais (ela ja inclui o token).",
       })
     }
 
     const supabase = criarClienteAdmin()
 
-    // Buscar empresa
-    let empresaId: string
+    const { data: orgs } = await supabase
+      .from("organizacoes")
+      .select("id, webhook_secret")
+      .eq("webhook_secret", segredo)
+      .limit(1)
 
-    if (orgId) {
-      empresaId = orgId
-    } else {
-      const { data: org, error: erroOrg } = await supabase
-        .from("organizacoes")
-        .select("id")
-        .eq("slug", orgSlug!)
-        .single()
+    const org = orgs?.[0]
 
-      if (erroOrg || !org) {
-        return responder(404, {
-          error_code: "org_nao_encontrada",
-          erro: "Organizacao nao encontrada",
-        })
-      }
-      empresaId = org.id
+    // A comparacao em tempo constante roda mesmo com a busca ja tendo filtrado
+    // pelo segredo: mantem o custo uniforme e protege se a busca mudar.
+    if (!org || !segredosConferem(segredo, org.webhook_secret ?? "")) {
+      return responder(401, {
+        error_code: "segredo_invalido",
+        erro: "Token do webhook invalido.",
+      })
     }
 
+    const empresaId: string = org.id
     organizacaoId = empresaId
 
     // Detectar portal de origem (header ou body)

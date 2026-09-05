@@ -8,6 +8,7 @@ import { schemaConfigWhatsapp } from "@/types/whatsapp"
 import type { StatusConversa } from "@/types/whatsapp"
 import type { EstadoFormulario } from "@/types/formulario"
 import { buscarUsuarioLogado } from "@/lib/buscar-usuario-logado"
+import { COLUNAS_CONFIG_WHATSAPP_SEGURAS } from "@/lib/supabase/colunas-seguras"
 
 // ============================================================
 // Atualizar status da conversa
@@ -98,9 +99,11 @@ export async function buscarConfigWhatsapp() {
 
   const supabase = await criarClienteServer()
 
+  // Lista explícita: o token da instância deixou de ser legível com o login do
+  // usuário (migration 047). Quem precisa dele usa a conexão administrativa.
   const { data } = await supabase
     .from("config_whatsapp")
-    .select("*")
+    .select(COLUNAS_CONFIG_WHATSAPP_SEGURAS)
     .eq("organizacao_id", usuario.organizacao_id)
     .single()
 
@@ -310,9 +313,12 @@ export async function limparMemoriasOrganizacao(): Promise<EstadoFormulario> {
 
   const supabase = criarClienteAdmin()
 
+  // Escopar pela organizacao do usuario logado: sem esse filtro o cliente admin
+  // (que ignora RLS) limparia a memoria de TODAS as organizacoes da plataforma.
   const { data: conversas } = await supabase
     .from("conversas_whatsapp")
     .select("id")
+    .eq("organizacao_id", usuario.organizacao_id)
 
   if (!conversas || conversas.length === 0) {
     return { sucesso: "Nenhuma memória para limpar." }

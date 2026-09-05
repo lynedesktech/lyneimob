@@ -1,5 +1,6 @@
 import { cache } from "react"
 import { criarClienteServer } from "./server"
+import { COLUNAS_ORGANIZACAO_SEGURAS } from "./colunas-seguras"
 
 /**
  * Retorna o usuario autenticado do Supabase Auth.
@@ -36,9 +37,11 @@ export const obterDadosUsuario = cache(async (userId: string) => {
  */
 export const obterOrganizacao = cache(async (orgId: string) => {
   const supabase = await criarClienteServer()
+  // Lista explícita: as colunas de credencial não são mais legíveis com o login
+  // do usuário (migration 047).
   const { data, error } = await supabase
     .from("organizacoes")
-    .select("*")
+    .select(COLUNAS_ORGANIZACAO_SEGURAS)
     .eq("id", orgId)
     .single()
   if (error) return null

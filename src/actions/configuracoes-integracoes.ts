@@ -1,7 +1,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { criarClienteServer } from "@/lib/supabase/server"
+// Conexão administrativa de propósito: esta action manipula o JSON de
+// credenciais da organização, que deixou de ser legível com o login do usuário
+// (migration 047). O acesso já é restrito a super admin e toda consulta filtra
+// por `usuario.organizacao_id`.
+import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { ehSuperAdmin } from "@/lib/permissoes"
 import { schemaConfiguracoesIntegracoes } from "@/types/configuracoes-integracoes"
 import type { EstadoFormulario } from "@/types/formulario"
@@ -120,7 +124,7 @@ export async function salvarConfiguracoesIntegracoes(
     return { erro: "Formato de dados inválido." }
   }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   // Buscar configurações atuais do banco para fazer merge
   const { data: orgAtual } = await supabase
@@ -204,7 +208,7 @@ export async function removerChaveIntegracao(
     return { erro: "Campo inválido." }
   }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   // Buscar config atual
   const { data: orgAtual } = await supabase

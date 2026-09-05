@@ -33,7 +33,28 @@ class FalhaLLM(Exception):
     Quem chama (process_buffered_messages) decide o que fazer: retry
     silencioso e, se falhar de novo, alerta pro Gabriel — NUNCA mensagem
     de erro robotica pro cliente.
+
+    efeitos_colaterais indica se alguma tool com efeito externo (card enviado
+    ao cliente, atividade criada, corretor acionado) JA rodou antes da falha.
+    Quando True o retry e proibido: repetir o run_agent do zero refaria essas
+    acoes e o cliente receberia o card duas vezes.
     """
+
+    def __init__(self, mensagem: str, efeitos_colaterais: bool = False):
+        super().__init__(mensagem)
+        self.efeitos_colaterais = efeitos_colaterais
+
+
+# Tools que produzem efeito visivel fora do agente (mensagem ao cliente ou
+# registro novo no CRM). Repetir qualquer uma delas gera duplicata.
+# As tools "buscar_*" sao leitura pura e as "atualizar_*"/"salvar_qualificacao"
+# apenas sobrescrevem campos, entao repeti-las e inofensivo.
+TOOLS_COM_EFEITO_COLATERAL = frozenset({
+    "enviar_card_imovel",
+    "enviar_audio",
+    "criar_atividade",
+    "encaminhar_corretor",
+})
 
 # Sinais textuais que indicam fluxo complexo (escala pra Sonnet)
 SINAIS_FLUXO_COMPLEXO = (
@@ -156,9 +177,40 @@ async def run_agent(
     # 7b. Modo campanha Guaruja: lead que veio do anuncio/landing page do
     # Guaruja Condominium. O Guaruja e loteamento (fora do catalogo de
     # imoveis das tools), entao o conhecimento vai embutido no prompt.
-    textos_conversa = [m.get("conteudo") or "" for m in mensagens_recentes]
-    textos_conversa += [m.get("conteudo") or "" for m in memoria]
-    if detectar_lead_guaruja(textos_conversa):
+    #
+    # Duas regras importantes aqui:
+    #  1) A deteccao olha SO o que o CLIENTE escreveu. Varrer tambem as
+    #     mensagens enviadas pelo agente fazia o modo se auto-ativar pra
+    #     sempre assim que ele citasse o Guaruja numa conversa qualquer.
+    #  2) Uma vez detectado, o modo fica GRAVADO na conversa. Redetectar por
+    #     palavra-chave a cada turno fazia o modo cair sozinho quando a
+    #     mencao original saia da janela de 30 mensagens.
+    modo_campanha = conversa.get("modo_campanha")
+
+    if modo_campanha != "guaruja":
+        textos_cliente = [
+            m.get("conteudo") or ""
+            for m in mensagens_recentes
+            if m.get("direcao") == "recebida"
+        ]
+        textos_cliente += [
+            m.get("conteudo") or ""
+            for m in memoria
+            if m.get("papel") == "usuario"
+        ]
+        textos_cliente += [t or "" for t in (textos_buffer or [])]
+
+        if detectar_lead_guaruja(textos_cliente):
+            modo_campanha = "guaruja"
+            try:
+                await db.atualizar_conversa(conversa_id, {"modo_campanha": "guaruja"})
+            except Exception as e:
+                logger.warning(
+                    f"[AGENT] Nao foi possivel gravar modo_campanha da conversa "
+                    f"{conversa_id[:8]}: {e}"
+                )
+
+    if modo_campanha == "guaruja":
         system_prompt += "\n\n" + bloco_modo_campanha_guaruja()
         logger.info(f"[AGENT] Conversa {conversa_id}: MODO CAMPANHA GUARUJA ativo")
 
@@ -294,19 +346,35 @@ async def run_agent(
     # termina com fala do assistente e a Anthropic recusa com 400
     # ("conversation must end with a user message"), alem da mensagem do
     # cliente se perder sem resposta.
-    if not textos_para_memoria and textos_buffer:
-        for texto in textos_buffer:
-            texto = (texto or "").strip()
-            if not texto:
-                continue
-            messages.append({"role": "user", "content": texto})
-            textos_recentes_user.append(texto)
-            textos_para_memoria.append(texto)
-        if textos_para_memoria:
-            logger.info(
-                f"[AGENT] Conversa {conversa_id}: diff nao achou mensagem nova, "
-                f"usando {len(textos_para_memoria)} texto(s) do buffer (anti-corrida)"
-            )
+    # A comparacao e texto a texto, e nao "so agir quando o diff voltou vazio":
+    # na corrida PARCIAL (cliente manda M1 e M2, a resposta do agente e gravada
+    # entre as duas) o diff acha M2, a condicao de lista vazia nao dispara, e M1
+    # ficava perdida pra sempre — nenhum turno futuro a enxerga, porque ela esta
+    # antes da ultima linha "enviada" no banco.
+    #
+    # Mensagem recuperada entra no fim da lista, entao pode aparecer fora da
+    # ordem original. E um preco baixo perto de perder a pergunta do cliente.
+    ja_no_contexto = {" ".join(t.lower().split()) for t in textos_recentes_user if t}
+    recuperadas = 0
+
+    for texto in (textos_buffer or []):
+        texto = (texto or "").strip()
+        if not texto:
+            continue
+        chave = " ".join(texto.lower().split())
+        if chave in ja_no_contexto:
+            continue
+        messages.append({"role": "user", "content": texto})
+        textos_recentes_user.append(texto)
+        textos_para_memoria.append(texto)
+        ja_no_contexto.add(chave)
+        recuperadas += 1
+
+    if recuperadas:
+        logger.info(
+            f"[AGENT] Conversa {conversa_id}: {recuperadas} mensagem(ns) do buffer "
+            f"recuperada(s) que o diff por timestamp nao enxergou (anti-corrida)"
+        )
 
     # Anthropic exige que a primeira mensagem seja "user"
     while messages and messages[0]["role"] != "user":
@@ -367,7 +435,13 @@ async def run_agent(
             # retry silencioso e alertar o Gabriel se persistir. NUNCA mandar
             # frase de erro robotica pro cliente.
             logger.error(f"Erro Anthropic (iteracao {iteration}): {e}")
-            raise FalhaLLM(str(e)) from e
+            ja_teve_efeito = bool(set(tool_summary) & TOOLS_COM_EFEITO_COLATERAL)
+            if ja_teve_efeito:
+                logger.error(
+                    f"[AGENT] Falha apos tools com efeito colateral ({tool_summary}) — "
+                    f"retry bloqueado pra nao duplicar envio/registro"
+                )
+            raise FalhaLLM(str(e), efeitos_colaterais=ja_teve_efeito) from e
 
         # Coletar blocos de texto e tool_use
         blocos_texto: list[str] = []

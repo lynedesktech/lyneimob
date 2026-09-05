@@ -80,7 +80,7 @@ export function IntegracoesConteudo() {
       {slug ? (
         <div className="grid gap-4 md:grid-cols-2">
           <FeedXmlInfo slug={slug} />
-          <WebhookInfo slug={slug} />
+          <WebhookInfo />
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">

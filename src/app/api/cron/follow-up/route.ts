@@ -19,6 +19,23 @@ import type { ConfigWhatsapp } from "@/types/whatsapp"
 
 export const maxDuration = 60
 
+// Corte de segurança: para de pegar leads novos faltando ~12s pro teto da
+// Vercel, tempo suficiente pra terminar o envio em curso e devolver o resumo.
+const ORCAMENTO_MS = (maxDuration - 12) * 1000
+
+// Número que recebe os alertas de falha. Vem do ambiente pra não existir uma
+// segunda cópia do número: o agente Python já usa NUMERO_ALERTA em
+// services/alerter.py, e um número cravado aqui ficaria para trás quando o
+// outro fosse trocado — justo no alerta que avisa que o follow-up parou.
+const NUMERO_ALERTA = process.env.ALERTA_WHATSAPP_NUMERO || ""
+
+// Opcional. O alerta sai pela instância de WhatsApp da organização do lead que
+// falhou, então num cenário com várias imobiliárias o número de uma cliente
+// mandaria mensagem para o celular do dev. Definindo esta variável, o alerta só
+// é enviado quando a organização confere. Vazio = comportamento atual (correto
+// enquanto o produto roda em modo single-tenant).
+const ALERTA_ORG_ID = process.env.ALERTA_WHATSAPP_ORG_ID || ""
+
 const HORAS_SEM_RESPOSTA = 2
 // Janelas validas em horario de Sao Paulo (-3 BRT)
 // Defesa em profundidade: o cron Vercel ja agenda nesses horarios,
@@ -31,6 +48,7 @@ const JANELAS_VALIDAS = [
 const DIAS_VALIDOS = [1, 3, 5] // seg, qua, sex
 
 export async function GET(request: Request) {
+  const inicioExecucao = Date.now()
   const authHeader = request.headers.get("authorization")
   const cronSecret = process.env.CRON_SECRET
 
@@ -68,7 +86,7 @@ export async function GET(request: Request) {
   // Tem que ter ultima mensagem ENVIADA pela IA (esperando lead responder)
   const { data: conversas, error: erroBusca } = await supabase
     .from("conversas_whatsapp")
-    .select("id, organizacao_id, numero_cliente, nome_cliente, status, ultima_mensagem_em")
+    .select("id, organizacao_id, numero_cliente, nome_cliente, status, ultima_mensagem_em, modo_campanha")
     .in("status", ["em_andamento", "qualificado"])
     .lt("ultima_mensagem_em", limiteIso)
 
@@ -89,6 +107,7 @@ export async function GET(request: Request) {
   let bloqueados_limite = 0
   let sem_ia = 0
   let alertaFalhaEnviado = false
+  let interrompidoPorTempo = false
 
   for (const conversa of conversas) {
     try {
@@ -114,6 +133,43 @@ export async function GET(request: Request) {
           bloqueados_limite++
           continue
         }
+      }
+
+      // Hash determinista do conversa.id + dia. Serve pra duas coisas: escolher
+      // o angulo do texto (mais abaixo) e decidir a hora preferida do lead.
+      const hoje = new Date().toISOString().slice(0, 10)
+      const semente = `${conversa.id}-${hoje}`
+      let hash = 0
+      for (let i = 0; i < semente.length; i++) {
+        hash = (hash * 31 + semente.charCodeAt(i)) | 0
+      }
+
+      // Anti-robô: espalhar envios entre as duas horas de cada golden hour
+      // (12h/13h e 18h/19h). Sem isso TODOS os follow-ups saem às 12:00 em
+      // ponto, que é assinatura de automação. Cada lead tem uma hora
+      // "preferida" determinística; na outra hora ele é pulado.
+      //
+      // Este filtro fica ANTES de qualquer consulta ou chamada de IA. Quando
+      // rodava depois da classificação, metade dos leads pagava uma chamada de
+      // LLM e quatro consultas para ser descartada em seguida — e a
+      // classificação ainda podia marcar a conversa como "finalizado" numa
+      // passada em que o lead nem seria contatado.
+      const horaPreferidaImpar = (Math.abs(hash) >> 4) % 2 === 1
+      if ((horaAtual % 2 === 1) !== horaPreferidaImpar) {
+        pulados++
+        continue
+      }
+
+      // Orçamento de tempo: a rota tem maxDuration de 60s e cada envio custa
+      // geração no Sonnet + digitação humanizada. Sem esta trava a função era
+      // cortada no meio do laço, os leads restantes ficavam sem contato no dia
+      // e o resumo nunca era devolvido — o corte não aparecia em lugar nenhum.
+      if (Date.now() - inicioExecucao > ORCAMENTO_MS) {
+        interrompidoPorTempo = true
+        console.warn(
+          `[Follow-up] Orcamento de tempo atingido — ${conversas.length - (enviados + pulados + bloqueados_limite + sem_ia)} conversa(s) nao processada(s) nesta execucao`
+        )
+        break
       }
 
       // Buscar ultimas 15 msgs pra contexto + validar que ultima foi da IA
@@ -237,35 +293,21 @@ Responda SEGUIR se e um comprador em potencial que apenas parou de responder e a
         "COMENTARIO DE OPORTUNIDADE: comente sobre o momento do mercado de forma genuina, sem ser apelativo. Ex: 'O mercado da Taiba esta numa fase interessante de valorizacao consistente.'",
         "CONVITE PRA CONTINUAR: pergunte se ele quer continuar a conversa por aqui ou prefere agendar uma ligacao/call pra falar com mais calma.",
       ]
-      // Hash determinista do conversa.id + dia pra escolher angulo (evita repetir mesmo angulo no mesmo dia)
-      const hoje = new Date().toISOString().slice(0, 10)
-      const semente = `${conversa.id}-${hoje}`
-      let hash = 0
-      for (let i = 0; i < semente.length; i++) {
-        hash = (hash * 31 + semente.charCodeAt(i)) | 0
-      }
+      // Angulo do dia (o hash ja foi calculado no topo do laco)
       const anguloEscolhido = ANGULOS[Math.abs(hash) % ANGULOS.length]
 
-      // Anti-robô: espalhar envios entre as duas horas de cada golden hour
-      // (12h/13h e 18h/19h). Sem isso TODOS os follow-ups saem às 12:00 em
-      // ponto, que é assinatura de automação. Cada lead tem uma hora
-      // "preferida" determinística; na outra hora ele é pulado.
-      const horaPreferidaImpar = (Math.abs(hash) >> 4) % 2 === 1
-      if ((horaAtual % 2 === 1) !== horaPreferidaImpar) {
-        pulados++
-        continue
-      }
-
-      // Modo campanha Guarujá: o follow-up deve girar em torno do Guarujá
-      // com os fatos oficiais, sem inventar outros imóveis
-      const { detectarLeadGuaruja } = await import("@/lib/whatsapp/campanha-guaruja")
-      const ehLeadGuaruja = detectarLeadGuaruja(
-        msgsHistorico.map((m) => m.conteudo)
-      )
+      // Modo campanha Guarujá: lê a marca GRAVADA na conversa pelo agente.
+      // Antes o follow-up redetectava a campanha nas últimas 15 mensagens,
+      // enquanto o agente decide com 30 mensagens mais a memória — como cada
+      // resposta é fragmentada em várias linhas, uma conversa de campanha
+      // passava de 15 rápido, o contexto sumia e o follow-up oferecia outros
+      // imóveis, contrariando a própria regra da campanha.
+      const { resumoFatosGuaruja } = await import("@/lib/whatsapp/campanha-guaruja")
+      const ehLeadGuaruja = conversa.modo_campanha === "guaruja"
       const contextoGuaruja = ehLeadGuaruja
         ? `
 
-CONTEXTO OBRIGATORIO: esse lead veio da campanha do GUARUJA CONDOMINIUM (condominio fechado de lotes em Caucaia, a 12 km do Cumbuco). Fatos que voce PODE usar: lotes de 150m2 a partir de R$ 112.500, entrada de 10%, parcelas a partir de R$ 699,90 sem juros direto com a incorporadora, entrega prevista dez/2028, pagina oficial https://guaruja.dunarealestate.com.br . O follow-up deve girar em torno do Guaruja. NAO mencione outros imoveis nem invente dados fora desses.`
+CONTEXTO OBRIGATORIO: esse lead veio da campanha do GUARUJA CONDOMINIUM. ${resumoFatosGuaruja()}. O follow-up deve girar em torno do Guaruja. NAO mencione outros imoveis nem invente dados fora desses.`
         : ""
 
       // Gerar mensagem de re-engajamento contextual com Claude Haiku
@@ -363,17 +405,27 @@ Gere agora a mensagem de re-engajamento seguindo o angulo definido. Lembre: SEMP
         console.error(
           `[Follow-up] IA indisponivel — lead ${conversa.numero_cliente} pulado (sem template robotizado)`
         )
-        if (!alertaFalhaEnviado) {
-          alertaFalhaEnviado = true
+        // A flag só é marcada DEPOIS do envio dar certo. Marcá-la antes fazia o
+        // alerta se perder de vez quando o envio falhava: os leads seguintes
+        // eram pulados em silêncio e ninguém ficava sabendo — justamente o
+        // cenário que a regra de ouro queria impedir.
+        const podeAlertarPorEstaOrg =
+          !ALERTA_ORG_ID || ALERTA_ORG_ID === conversa.organizacao_id
+
+        if (!alertaFalhaEnviado && NUMERO_ALERTA && podeAlertarPorEstaOrg) {
           try {
             const { enviarHumanizado } = await import("@/lib/whatsapp/humanizar")
             await enviarHumanizado(
               config as unknown as ConfigWhatsapp,
-              "5527997178981", // Gabriel (Dev IA) — mesmo numero do alerter do agente
+              NUMERO_ALERTA,
               "⚠️ Follow-up: a geracao via IA falhou nesta execucao. Nenhum template robotizado foi enviado (leads pulados ate a proxima janela). Confira os logs da Vercel e a ANTHROPIC_API_KEY."
             )
-          } catch {
-            // alerta e melhor-esforco; nao pode travar o loop
+            alertaFalhaEnviado = true
+          } catch (erroAlerta) {
+            console.error(
+              "[Follow-up] Falha ao enviar o alerta de IA indisponivel:",
+              erroAlerta instanceof Error ? erroAlerta.message : erroAlerta
+            )
           }
         }
         continue
@@ -426,5 +478,11 @@ Gere agora a mensagem de re-engajamento seguindo o angulo definido. Lembre: SEMP
     bloqueados_limite,
     sem_ia,
     total_avaliadas: conversas.length,
+    // Deixa explícito quando a execução foi cortada pelo tempo: sem isso, uma
+    // rodada truncada era indistinguível de uma rodada completa.
+    interrompido_por_tempo: interrompidoPorTempo,
+    nao_processadas: interrompidoPorTempo
+      ? conversas.length - (enviados + pulados + bloqueados_limite + sem_ia)
+      : 0,
   })
 }

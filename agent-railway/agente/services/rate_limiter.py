@@ -64,6 +64,7 @@ class RateLimiter:
     async def _worker(self, chat_id: str) -> None:
         """Processa fila de um contato respeitando limites de taxa."""
         queue = self._contact_queues[chat_id]
+        cancelado = False
 
         try:
             while not queue.empty():
@@ -104,6 +105,7 @@ class RateLimiter:
 
         except asyncio.CancelledError:
             logger.info(f"[RATE] Worker cancelado para {chat_id}")
+            cancelado = True
         except Exception as e:
             logger.error(f"[RATE] Erro no worker {chat_id}: {e}")
         finally:
@@ -112,7 +114,13 @@ class RateLimiter:
             # Anti-corrida: se chegou item na fila ENTRE o "queue.empty()"
             # e a remocao do worker, ele ficaria orfao ate a proxima
             # mensagem. Respawna o worker pra drenar.
-            if not queue.empty():
+            #
+            # Nao respawna quando o worker foi CANCELADO: no shutdown do
+            # Railway o uvicorn cancela as tasks, e recriar uma task num event
+            # loop em encerramento gerava "Task was destroyed but it is
+            # pending" e tentativa de envio depois do desligamento. Tambem
+            # tornava impossivel cancelar um worker com fila pendente.
+            if not cancelado and not queue.empty():
                 self._worker_tasks[chat_id] = asyncio.create_task(
                     self._worker(chat_id)
                 )

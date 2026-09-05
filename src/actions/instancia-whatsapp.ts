@@ -1,6 +1,9 @@
 "use server"
 
-import { criarClienteServer } from "@/lib/supabase/server"
+// Conexão administrativa de propósito: esta action lê e grava credenciais da
+// Uazapi, e essas colunas deixaram de ser legíveis com o login do usuário
+// (migration 047). Toda consulta aqui filtra por `usuario.organizacao_id`
+// explicitamente, que é o que substitui a proteção do RLS.
 import { criarClienteAdmin } from "@/lib/supabase/admin"
 import { ehSuperAdmin } from "@/lib/permissoes"
 import {
@@ -94,7 +97,7 @@ export async function configurarCredenciaisUazapi(
     return { erro: "Não foi possível conectar à Uazapi. Verifique a URL e o token e tente novamente." }
   }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   const { data: org } = await supabase
     .from("organizacoes")
@@ -135,7 +138,7 @@ export async function criarEConectarInstancia(): Promise<
     return { erro: "Configure a URL e o token da Uazapi em Configurações antes de conectar." }
   }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   // Verificar se já existe config para a org
   const { data: configExistente } = await supabase
@@ -256,7 +259,7 @@ export async function verificarStatusInstancia(): Promise<
     return { sucesso: "Sem credenciais", configurado: false, status: "disconnected" }
   }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   // Buscar config da instância
   const { data: config } = await supabase
@@ -345,7 +348,7 @@ export async function desconectarInstancia(): Promise<EstadoFormulario> {
   const credenciais = await buscarCredenciaisAdmin(usuario.organizacao_id)
   if (!credenciais) return { erro: "Credenciais Uazapi não configuradas" }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   const { data: config } = await supabase
     .from("config_whatsapp")
@@ -397,7 +400,7 @@ export async function reconfigurarWebhook(): Promise<EstadoFormulario> {
   const credenciais = await buscarCredenciaisAdmin(usuario.organizacao_id)
   if (!credenciais) return { erro: "Credenciais Uazapi não configuradas" }
 
-  const supabase = await criarClienteServer()
+  const supabase = criarClienteAdmin()
 
   const { data: config } = await supabase
     .from("config_whatsapp")
