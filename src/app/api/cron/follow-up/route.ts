@@ -23,11 +23,17 @@ export const maxDuration = 60
 // Vercel, tempo suficiente pra terminar o envio em curso e devolver o resumo.
 const ORCAMENTO_MS = (maxDuration - 12) * 1000
 
-// Número que recebe os alertas de falha. Vem do ambiente pra não existir uma
-// segunda cópia do número: o agente Python já usa NUMERO_ALERTA em
-// services/alerter.py, e um número cravado aqui ficaria para trás quando o
-// outro fosse trocado — justo no alerta que avisa que o follow-up parou.
-const NUMERO_ALERTA = process.env.ALERTA_WHATSAPP_NUMERO || ""
+// Número que recebe os alertas de falha do follow-up.
+//
+// Constante única e nomeada, em vez do número cravado no meio da rota: o agente
+// Python tem o equivalente em services/alerter.py (NUMERO_ALERTA), e um número
+// solto lá embaixo ficava para trás quando o outro era trocado — justo no
+// alerta que avisa que o follow-up parou de funcionar.
+//
+// A variável de ambiente ALERTA_WHATSAPP_NUMERO tem prioridade, então dá pra
+// trocar o destino sem mexer no código. O padrão existe para o alerta nunca
+// ficar mudo por esquecimento de configurar a variável.
+const NUMERO_ALERTA = process.env.ALERTA_WHATSAPP_NUMERO || "5527997178981"
 
 // Opcional. O alerta sai pela instância de WhatsApp da organização do lead que
 // falhou, então num cenário com várias imobiliárias o número de uma cliente
